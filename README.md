@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EducaPilot Web
 
-## Getting Started
+Frontend novo do EducaPilot, em Next.js/React/TypeScript — substitui o app Flutter
+(`sistema_reunioes`), que continua rodando em paralelo até este atingir paridade.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Turbopack) + TypeScript
+- **Tailwind CSS v4** + **shadcn/ui**
+- **TanStack Query** para dados de servidor
+- **Zustand** para estado de UI (quando necessário)
+- **React Hook Form + Zod** para formulários
+- **openapi-fetch** + tipos gerados via **openapi-typescript** a partir do Swagger real
+  do backend (`EducaPilot.API`)
+- **@microsoft/signalr** para tempo real (pedidos de Events)
+
+## Como rodar
 
 ```bash
+npm install
+cp .env.local.example .env.local   # ajuste NEXT_PUBLIC_API_BASE_URL se precisar
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Precisa do backend (`EducaPilot - core/EducaPilot.API`) rodando — ver `SECRETS.md` lá
+pra configurar `JwtSettings:MasterKey` etc. antes de `dotnet run`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Clientes de API tipados
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Os arquivos em `src/lib/api/generated/*.d.ts` são gerados a partir do Swagger real do
+backend (um por módulo: Core/Tasks/Flow/Events/Finance), e os `.json` em `openapi/`
+são o snapshot usado pra gerar. Pra regenerar depois de mudar o backend:
 
-## Learn More
+```bash
+# com o backend rodando em https://localhost:7141
+curl -s https://localhost:7141/swagger/Core/swagger.json -o openapi/Core.json
+curl -s https://localhost:7141/swagger/Tasks/swagger.json -o openapi/Tasks.json
+curl -s https://localhost:7141/swagger/Flow/swagger.json -o openapi/Flow.json
+curl -s https://localhost:7141/swagger/Events/swagger.json -o openapi/Events.json
+curl -s https://localhost:7141/swagger/Finance/swagger.json -o openapi/Finance.json
 
-To learn more about Next.js, take a look at the following resources:
+npx openapi-typescript openapi/Core.json -o src/lib/api/generated/core.d.ts
+npx openapi-typescript openapi/Tasks.json -o src/lib/api/generated/tasks.d.ts
+npx openapi-typescript openapi/Flow.json -o src/lib/api/generated/flow.d.ts
+npx openapi-typescript openapi/Events.json -o src/lib/api/generated/events.d.ts
+npx openapi-typescript openapi/Finance.json -o src/lib/api/generated/finance.d.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Atenção**: alguns controllers do backend não usam `[ProducesResponseType]`, então o
+Swagger não documenta o formato de resposta (ex: `POST /api/Auth/login`). Nesses casos
+o tipo de resposta é definido manualmente no frontend (ver `src/lib/auth/types.ts`) a
+partir do código real do controller, não do OpenAPI gerado — confira o comentário em
+cada arquivo assim.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estrutura por módulo (planejada, espelha o backend)
 
-## Deploy on Vercel
+```
+src/app/
+  (auth)/         → Kernel: login, convites, primeiro acesso, reset de senha
+  admin/          → Kernel: tenants, módulos, usuários, turmas, alunos
+  tasks/          → attendance, absence, occurrence, meetings, checklist,
+                    weekly seminar, reports, materials, notifications
+  events/         → sales groups, products, subproducts, orders (+ SignalR)
+  flow/           → forms, fields, responses, automations
+  finance/        → expenses, revenue, projections
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Status
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [x] Base técnica (Next.js, Tailwind, shadcn/ui, TanStack Query, clientes tipados)
+- [x] Login (fatia vertical completa, testada contra o backend real)
+- [ ] Kernel: admin, usuários, turmas, alunos, convites
+- [ ] Tasks
+- [ ] Events
+- [ ] Flow
+- [ ] Finance
