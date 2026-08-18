@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#EDECE8; -webkit-font-smoothing:antialiased; }
+  a { color:#5B4E86; }
+  a:hover { color:#453A69; }
+</style>
+</helmet>
+
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:#2C2C29;padding:48px 48px 96px;display:flex;flex-direction:column;gap:56px">
+
+  <header style="display:flex;align-items:flex-start;justify-content:space-between;gap:40px;max-width:1400px">
+    <div style="display:flex;flex-direction:column;gap:14px;max-width:720px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="logo2.PNG" alt="EducaPilot" style="height:44px;width:auto;display:block">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#8C8C85">Wireframes · v0.1</span>
+      </div>
+      <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:40px;line-height:1.05;letter-spacing:-0.03em;margin:0;color:#1D1D1B">Mapa de telas — 6 áreas</h1>
+      <p style="margin:0;font-size:15px;line-height:1.65;color:#5A5A54;text-wrap:pretty">Fidelidade média: estrutura, hierarquia e dados reais; sem tratamento visual final. UI neutra com um único destaque roxo dessaturado derivado do logo (<span style="font-family:'IBM Plex Mono',monospace;font-size:13px">#5B4E86</span>) — o laranja fica reservado à marca. Cada quadro tem um id (<span style="font-family:'IBM Plex Mono',monospace;font-size:13px">R1</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:13px">A3</span>…) para referência no chat.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;background:#FFFFFF;border:1px solid #D9D7D2;border-radius:10px;padding:16px 18px;min-width:230px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8C8C85">Áreas</span>
+      <span style="font-size:13px;color:#43433E">R · Rotina Escolar — 13</span>
+      <span style="font-size:13px;color:#43433E">L · Autenticação — 4</span>
+      <span style="font-size:13px;color:#43433E">A · Administração — 10</span>
+      <span style="font-size:13px;color:#43433E">E · Eventos & Vendas — 7</span>
+      <span style="font-size:13px;color:#43433E">F · Formulários (Flow) — 5</span>
+      <span style="font-size:13px;color:#43433E">$ · Financeiro — 5</span>
+    </div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">R</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Rotina Escolar / Diário</h2>
+      <span style="font-size:13px;color:#77776F">professor e coordenação · uso diário, tablet-friendly</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R1</span><span style="font-size:12px;color:#5A5A54">Chamada / frequência diária por turma</span></div>
+        <div style="width:820px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex">
+          <div style="width:46px;border-right:1px solid #ECEAE6;background:#FAFAF9;display:flex;flex-direction:column;gap:8px;padding:12px 0;align-items:center">
+            <div style="width:22px;height:22px;border-radius:6px;background:#5B4E86"></div>
+            <div style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></div>
+            <div style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></div>
+            <div style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></div>
+            <div style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></div>
+            <div style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+            <div style="padding:10px 16px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:12px">
+              <span style="font-size:12px;font-weight:600">Colégio Vila Nova</span>
+              <span style="font-size:11px;color:#9C9C95">/ Rotina / Chamada</span>
+              <div style="flex:1"></div>
+              <div style="width:60px;height:8px;border-radius:4px;background:#E3E1DC"></div>
+              <div style="width:20px;height:20px;border-radius:999px;background:#E3E1DC"></div>
+            </div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px">Chamada · 4º ano B</span>
+                <span style="font-size:11px;padding:3px 9px;border-radius:999px;background:#EDEBF3;color:#5B4E86;border:1px solid #D9D4E6">18/08 · manhã</span>
+                <div style="flex:1"></div>
+                <span style="font-size:11px;color:#77776F">24 alunos · 21 presentes</span>
+                <span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:7px 14px;border-radius:7px">Salvar chamada</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #D9D7D2;background:#F5F5F3">Turma: 4º ano B ▾</span>
+                <span style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #D9D7D2;background:#F5F5F3">Data: 18/08/2026</span>
+                <span style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #D9D7D2;background:#F5F5F3">Marcar todos presentes</span>
+              </div>
+              <div style="border:1px solid #ECEAE6;border-radius:8px;overflow:hidden">
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;padding:8px 14px;background:#F5F5F3;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:#8C8C85">
+                  <span>Aluno</span><span>Presença</span><span>Chegada</span><span>Observação</span>
+                </div>
+                <sc-for list="{{ chamada }}" as="r" hint-placeholder-count="5">
+                  <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;padding:9px 14px;border-top:1px solid #F2F1EE;font-size:12px;align-items:center">
+                    <span style="display:flex;align-items:center;gap:8px"><span style="width:20px;height:20px;border-radius:999px;background:#E3E1DC"></span>{{ r.nome }}</span>
+                    <span style="display:flex;gap:5px"><span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:{{ r.pBg }};color:{{ r.pFg }};font-weight:600">{{ r.presenca }}</span></span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ r.hora }}</span>
+                    <span style="font-size:11px;color:#9C9C95">{{ r.obs }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <span style="font-size:11px;color:#9C9C95">Rodapé fixo com contador de presentes/ausentes e botão salvar; linha de 44px para toque em tablet.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R2</span><span style="font-size:12px;color:#5A5A54">Faltas — lista + justificativa (drawer)</span></div>
+        <div style="width:560px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 16px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:10px">
+            <span style="font-size:12px;font-weight:600">Faltas</span><span style="font-size:11px;color:#9C9C95">/ agosto</span>
+          </div>
+          <div style="display:flex;min-height:280px">
+            <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:10px;border-right:1px solid #ECEAE6">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span style="font-size:10.5px;padding:4px 9px;border-radius:6px;background:#5B4E86;color:#FFF">Não justificadas (7)</span>
+                <span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Justificadas (12)</span>
+              </div>
+              <sc-for list="{{ faltas }}" as="f" hint-placeholder-count="4">
+                <div style="border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px">
+                  <span style="font-size:12px;font-weight:500">{{ f.nome }}</span>
+                  <span style="font-size:11px;color:#77776F">{{ f.turma }} · {{ f.data }}</span>
+                  <span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:{{ f.bg }};color:{{ f.fg }};align-self:flex-start;font-weight:600">{{ f.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:230px;padding:14px;display:flex;flex-direction:column;gap:10px;background:#FAFAF9">
+              <span style="font-size:12px;font-weight:600">Justificar falta</span>
+              <span style="font-size:11px;color:#77776F">Helena Sousa Prado · 14/08</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Motivo</span>
+              <div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;background:#FFF;display:flex;align-items:center;padding:0 9px;font-size:11px;color:#5A5A54">Atestado médico ▾</div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Anexo</span>
+              <div style="height:56px;border:1px dashed #C4C4BE;border-radius:7px;background:#FFF;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9C9C95">Arraste o arquivo</div>
+              <div style="height:56px;border:1px solid #D9D7D2;border-radius:7px;background:#FFF"></div>
+              <span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px 14px;border-radius:7px;text-align:center">Registrar justificativa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R3</span><span style="font-size:12px;color:#5A5A54">Checklist da sala — configuração</span></div>
+        <div style="width:430px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Checklist — configuração</span><div style="flex:1"></div><span style="font-size:10.5px;color:#5B4E86;font-weight:600">+ Novo item</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;color:#77776F">Itens aplicados a: Infantil II, Infantil III</span>
+            <sc-for list="{{ checklistCfg }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;border:1px solid #ECEAE6;border-radius:8px;padding:9px 10px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#C4C4BE">⋮⋮</span>
+                <span style="font-size:12px;flex:1">{{ c.item }}</span>
+                <span style="font-size:10px;padding:3px 7px;border-radius:5px;background:#F5F5F3;color:#77776F">{{ c.tipo }}</span>
+                <span style="width:28px;height:16px;border-radius:999px;background:{{ c.sw }};position:relative"></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R4</span><span style="font-size:12px;color:#5A5A54">Checklist diário — preenchimento</span></div>
+        <div style="width:360px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:12px 14px;border-bottom:1px solid #ECEAE6;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Infantil II · 18/08</span>
+            <span style="font-size:11px;color:#77776F">4 de 6 itens concluídos</span>
+            <div style="height:5px;border-radius:999px;background:#ECEAE6;margin-top:6px"><div style="width:66%;height:5px;border-radius:999px;background:#5B4E86"></div></div>
+          </div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ checklistDia }}" as="c" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #ECEAE6;border-radius:8px">
+                <span style="width:18px;height:18px;border-radius:5px;background:{{ c.box }};border:1px solid {{ c.bd }}"></span>
+                <span style="font-size:12px;flex:1;color:{{ c.fg }}">{{ c.item }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95">{{ c.hora }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R5</span><span style="font-size:12px;color:#5A5A54">Saúde do aluno</span></div>
+        <div style="width:480px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:12px 14px;border-bottom:1px solid #ECEAE6;display:flex;align-items:center;gap:10px">
+            <span style="width:34px;height:34px;border-radius:999px;background:#E3E1DC"></span>
+            <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600">Davi Nogueira Lima</span><span style="font-size:11px;color:#77776F">Infantil II · resp. Rafael Lima</span></div>
+            <div style="flex:1"></div>
+            <span style="font-size:10.5px;padding:4px 9px;border-radius:999px;background:#FBEAE8;color:#8F1F19;border:1px solid #F0CCC8;font-weight:600">Alergia: amendoim</span>
+          </div>
+          <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <sc-for list="{{ saude }}" as="s" hint-placeholder-count="4">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;flex-direction:column;gap:4px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85">{{ s.k }}</span>
+                <span style="font-size:12px;color:#43433E">{{ s.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85">Registros recentes</span>
+            <div style="border-left:2px solid #ECEAE6;padding-left:12px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11.5px;color:#43433E">12/08 · Medicação administrada (antitérmico) — enfermaria</span>
+              <span style="font-size:11.5px;color:#43433E">03/08 · Queda no pátio, sem intercorrência — responsável avisado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R6</span><span style="font-size:12px;color:#5A5A54">Materiais — catálogo (somente leitura)</span></div>
+        <div style="width:430px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;font-weight:600">Materiais</span>
+            <div style="flex:1"></div>
+            <span style="font-size:10px;padding:3px 8px;border-radius:5px;background:#EDEBF3;color:#5B4E86">leitura</span>
+          </div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#9C9C95">Buscar material…</div>
+            <sc-for list="{{ materiais }}" as="m" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F2F1EE">
+                <span style="width:26px;height:26px;border-radius:6px;background:#E3E1DC"></span>
+                <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:12px">{{ m.nome }}</span><span style="font-size:10.5px;color:#9C9C95">{{ m.cat }}</span></div>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ m.qtd }}</span>
+              </div>
+            </sc-for>
+            <span style="font-size:10.5px;color:#9C9C95">Sem CRUD no backend ainda — tela preparada para receber ações depois.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R7</span><span style="font-size:12px;color:#5A5A54">Reuniões — agenda, iniciar/encerrar, histórico</span></div>
+        <div style="width:600px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Reuniões</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Agendar</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="border:1px solid #D9D4E6;background:#F7F5FB;border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+                <span style="font-size:12.5px;font-weight:600">Conselho de classe — 4º ano B</span>
+                <span style="font-size:11px;color:#77776F">Em andamento desde 14:05 · 6 participantes · ata aberta</span>
+              </div>
+              <span style="font-size:11px;padding:6px 12px;border-radius:7px;border:1px solid #D9D7D2;background:#FFF">Abrir ata</span>
+              <span style="font-size:11px;font-weight:600;color:#FFF;background:#8F1F19;padding:6px 12px;border-radius:7px">Encerrar</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 0.8fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85;border-bottom:1px solid #ECEAE6">
+              <span>Pauta</span><span>Data</span><span>Participantes</span><span>Status</span>
+            </div>
+            <sc-for list="{{ reunioes }}" as="r" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 0.8fr;padding:8px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span>{{ r.pauta }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ r.data }}</span>
+                <span style="font-size:11px;color:#77776F">{{ r.part }}</span>
+                <span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:{{ r.bg }};color:{{ r.fg }};justify-self:start;font-weight:600">{{ r.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R8</span><span style="font-size:12px;color:#5A5A54">Ocorrências — registro</span></div>
+        <div style="width:420px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;font-size:12px;font-weight:600">Nova ocorrência</div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Turma</span><div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 9px;font-size:11px">2º ano C ▾</div></div>
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Aluno</span><div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 9px;font-size:11px">Théo Ribeiro ▾</div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Categoria</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span style="font-size:10.5px;padding:5px 10px;border-radius:999px;background:#5B4E86;color:#FFF">Comportamento</span>
+                <span style="font-size:10.5px;padding:5px 10px;border-radius:999px;border:1px solid #D9D7D2">Saúde</span>
+                <span style="font-size:10.5px;padding:5px 10px;border-radius:999px;border:1px solid #D9D7D2">Pedagógica</span>
+                <span style="font-size:10.5px;padding:5px 10px;border-radius:999px;border:1px solid #D9D7D2">Atraso</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Descrição</span><div style="height:74px;border:1px solid #D9D7D2;border-radius:7px;padding:9px;font-size:11px;color:#9C9C95">Relato objetivo do fato, com horário e providências…</div></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="width:16px;height:16px;border-radius:4px;border:1px solid #C4C4BE"></span><span style="font-size:11.5px;color:#43433E">Notificar responsável</span></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end"><span style="font-size:11.5px;padding:8px 14px;border-radius:7px;border:1px solid #D9D7D2">Cancelar</span><span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px 14px;border-radius:7px">Registrar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R9</span><span style="font-size:12px;color:#5A5A54">Ocorrências — relatório semanal (turma e aluno)</span></div>
+        <div style="width:620px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:10px"><span style="font-size:12px;font-weight:600">Relatório semanal · 11–15/08</span><div style="flex:1"></div><span style="font-size:11px;padding:5px 11px;border-radius:7px;border:1px solid #D9D7D2">Exportar PDF</span></div>
+          <div style="padding:14px;display:flex;gap:14px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Por turma</span>
+              <div style="display:flex;align-items:flex-end;gap:8px;height:110px">
+                <sc-for list="{{ ocorGraf }}" as="g" hint-placeholder-count="6">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                    <div style="width:100%;background:#5B4E86;border-radius:4px 4px 0 0;height:{{ g.h }}"></div>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#9C9C95">{{ g.t }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="width:250px;display:flex;flex-direction:column;gap:8px;border-left:1px solid #ECEAE6;padding-left:14px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Alunos com mais registros</span>
+              <sc-for list="{{ ocorAlunos }}" as="a" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2F1EE">
+                  <span style="font-size:11.5px;flex:1">{{ a.nome }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ a.n }}</span>
+                  <span style="width:8px;height:8px;border-radius:999px;background:{{ a.dot }}"></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R10</span><span style="font-size:12px;color:#5A5A54">Observação semanal por turma</span></div>
+        <div style="width:420px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Observação semanal · 3º ano A</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:6px"><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;background:#5B4E86;color:#FFF">Semana 33</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Semana 32</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Semana 31</span></div>
+            <div style="height:96px;border:1px solid #D9D7D2;border-radius:8px;padding:10px;font-size:11.5px;line-height:1.55;color:#5A5A54">Turma engajada nas atividades de leitura; dois alunos precisam de apoio em cálculo mental. Proposta: reforço em duplas na terça.</div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Encaminhamentos</span>
+              <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span style="width:15px;height:15px;border-radius:4px;background:#5B4E86"></span>Falar com coordenação</div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:11.5px"><span style="width:15px;height:15px;border-radius:4px;border:1px solid #C4C4BE"></span>Agendar reunião com responsáveis</div>
+            </div>
+            <span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px 14px;border-radius:7px;text-align:center">Enviar à coordenação</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R11</span><span style="font-size:12px;color:#5A5A54">Seminários semanais</span></div>
+        <div style="width:470px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Seminários</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Novo seminário</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ seminarios }}" as="s" hint-placeholder-count="3">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;gap:12px;align-items:center">
+                <div style="width:44px;height:44px;border-radius:8px;background:#E3E1DC;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A5A54">{{ s.dia }}</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:12.5px;font-weight:600">{{ s.tema }}</span>
+                  <span style="font-size:11px;color:#77776F">{{ s.resp }} · {{ s.local }}</span>
+                </div>
+                <span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:{{ s.bg }};color:{{ s.fg }};font-weight:600">{{ s.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R12</span><span style="font-size:12px;color:#5A5A54">Central de notificações</span></div>
+        <div style="width:400px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Notificações</span><div style="flex:1"></div><span style="font-size:10.5px;color:#5B4E86;font-weight:600">Marcar todas como lidas</span></div>
+          <div style="padding:6px 0;display:flex;flex-direction:column">
+            <sc-for list="{{ notificacoes }}" as="n" hint-placeholder-count="5">
+              <div style="padding:11px 14px;border-bottom:1px solid #F2F1EE;display:flex;gap:10px;background:{{ n.bg }}">
+                <span style="width:7px;height:7px;border-radius:999px;background:{{ n.dot }};margin-top:5px"></span>
+                <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+                  <span style="font-size:12px;font-weight:500">{{ n.titulo }}</span>
+                  <span style="font-size:11px;color:#77776F;line-height:1.5">{{ n.texto }}</span>
+                </div>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#9C9C95">{{ n.quando }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">R13</span><span style="font-size:12px;color:#5A5A54">Central de relatórios disponíveis</span></div>
+        <div style="width:520px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;font-size:12px;font-weight:600">Relatórios disponíveis</div>
+          <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ relatorios }}" as="r" hint-placeholder-count="4">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:12.5px;font-weight:600">{{ r.nome }}</span>
+                <span style="font-size:11px;color:#77776F;line-height:1.5">{{ r.desc }}</span>
+                <span style="font-size:10.5px;color:#5B4E86;font-weight:600">Gerar ›</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:0 14px 14px"><span style="font-size:10.5px;color:#9C9C95">Sem geração customizada no backend: a central apenas lista os tipos disponíveis (GET available).</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">L</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Autenticação</h2>
+      <span style="font-size:13px;color:#77776F">4 telas · validação inline de e-mail/CPF em uso</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">L1</span><span style="font-size:12px;color:#5A5A54">Login (tenant)</span></div>
+        <div style="width:380px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:28px;display:flex;flex-direction:column;gap:16px">
+          <img src="logo2.PNG" alt="EducaPilot" style="height:52px;width:auto;align-self:center">
+          <div style="display:flex;flex-direction:column;gap:3px;align-items:center"><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px">Entrar na sua escola</span><span style="font-size:11.5px;color:#77776F">Colégio Vila Nova · vilanova.educapilot.com</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">E-mail</span><div style="height:36px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#43433E">coordenacao@vilanova.edu.br</div></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Senha</span><div style="height:36px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12px;color:#9C9C95">••••••••<span style="font-size:10.5px;color:#5B4E86">mostrar</span></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#43433E"><span style="width:15px;height:15px;border-radius:4px;border:1px solid #C4C4BE"></span>Manter conectado</span><span style="font-size:11.5px;color:#5B4E86">Esqueci a senha</span></div>
+          <span style="font-size:12.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:11px;border-radius:8px;text-align:center">Entrar</span>
+          <span style="font-size:10.5px;color:#9C9C95;text-align:center">Erro de credencial aparece como faixa acima do formulário, não em alert.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">L2</span><span style="font-size:12px;color:#5A5A54">Login master (admin geral)</span></div>
+        <div style="width:380px;background:#1D1D1B;border:1px solid #35352F;border-radius:10px;padding:28px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:7px;background:#8B7EB8"></span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#F5F5F3">Kernel · acesso master</span></div>
+          <span style="font-size:11.5px;color:#9C9C95;line-height:1.55">Área restrita à equipe EducaPilot. Todo acesso é auditado.</span>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#77776F">E-mail corporativo</span><div style="height:36px;border:1px solid #43433E;border-radius:7px;background:#232320"></div></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#77776F">Senha</span><div style="height:36px;border:1px solid #43433E;border-radius:7px;background:#232320"></div></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#77776F">Código 2FA</span><div style="display:flex;gap:6px"><div style="flex:1;height:36px;border:1px solid #43433E;border-radius:7px;background:#232320"></div><div style="flex:1;height:36px;border:1px solid #43433E;border-radius:7px;background:#232320"></div><div style="flex:1;height:36px;border:1px solid #43433E;border-radius:7px;background:#232320"></div><div style="flex:1;height:36px;border:1px solid #43433E;border-radius:7px;background:#232320"></div></div></div>
+          <span style="font-size:12.5px;font-weight:600;color:#1D1D1B;background:#B9AEDD;padding:11px;border-radius:8px;text-align:center">Acessar kernel</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">L3</span><span style="font-size:12px;color:#5A5A54">Esqueci a senha → redefinir (2 estados)</span></div>
+        <div style="display:flex;gap:14px">
+          <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:14px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Recuperar acesso</span>
+            <span style="font-size:11.5px;color:#77776F;line-height:1.55">Enviamos um link de redefinição válido por 30 minutos.</span>
+            <div style="height:36px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#9C9C95">seu@email.com</div>
+            <span style="font-size:12.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:10px;border-radius:8px;text-align:center">Enviar link</span>
+            <div style="border-top:1px solid #ECEAE6;padding-top:10px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;padding:8px 10px;border-radius:7px;background:#E7F3EC;color:#22664A;line-height:1.5">Se existir uma conta com esse e-mail, o link foi enviado.</span>
+            </div>
+          </div>
+          <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:14px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Nova senha</span>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Senha</span><div style="height:36px;border:1px solid #D9D7D2;border-radius:7px"></div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Confirmar</span><div style="height:36px;border:1px solid #D9D7D2;border-radius:7px"></div></div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;gap:4px"><div style="flex:1;height:4px;border-radius:999px;background:#22664A"></div><div style="flex:1;height:4px;border-radius:999px;background:#22664A"></div><div style="flex:1;height:4px;border-radius:999px;background:#ECEAE6"></div></div>
+              <span style="font-size:10.5px;color:#77776F">Mínimo 8 caracteres, 1 número · força: boa</span>
+            </div>
+            <span style="font-size:12.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:10px;border-radius:8px;text-align:center">Redefinir senha</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">L4</span><span style="font-size:12px;color:#5A5A54">Aceitar convite / primeiro acesso — com validação inline de e-mail e CPF</span></div>
+        <div style="width:400px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;padding:26px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px">Você foi convidado</span>
+            <span style="font-size:11.5px;color:#77776F">Colégio Vila Nova convidou você como <strong style="font-weight:600">Professor</strong> · 3 turmas</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Nome completo</span><div style="height:34px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:12px">Juliana Alencar Ferreira</div></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">E-mail</span>
+            <div style="height:34px;border:1px solid #F0CCC8;background:#FDF6F5;border-radius:7px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12px">juliana@vilanova.edu.br<span style="font-size:10px;color:#8F1F19">✕</span></div>
+            <span style="font-size:10.5px;color:#8F1F19">Este e-mail já está em uso nesta escola.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">CPF</span>
+            <div style="height:34px;border:1px solid #BFE0CE;background:#F5FBF7;border-radius:7px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:12px">311.482.907-55<span style="font-size:10px;color:#22664A">✓</span></div>
+            <span style="font-size:10.5px;color:#22664A">CPF disponível · verificado ao sair do campo</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Definir senha</span><div style="height:34px;border:1px solid #D9D7D2;border-radius:7px"></div></div>
+          <span style="font-size:12.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:11px;border-radius:8px;text-align:center">Aceitar convite e entrar</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">A</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Administração (Kernel)</h2>
+      <span style="font-size:13px;color:#77776F">10 telas · master e diretor/coordenação</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A1</span><span style="font-size:12px;color:#5A5A54">Gestão de tenants — lista</span></div>
+        <div style="width:640px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:10px"><span style="font-size:12px;font-weight:600">Escolas (tenants)</span><span style="font-size:11px;color:#9C9C95">4 ativas</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Nova escola</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:8px"><div style="flex:1;height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#9C9C95">Buscar por nome ou domínio…</div><span style="font-size:11px;padding:7px 11px;border-radius:7px;border:1px solid #D9D7D2">Status ▾</span></div>
+            <div style="display:grid;grid-template-columns:1.6fr 1fr 0.7fr 0.9fr 0.9fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Escola</span><span>Subdomínio</span><span>Alunos</span><span>Plano</span><span>Status</span></div>
+            <sc-for list="{{ tenants }}" as="t" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.6fr 1fr 0.7fr 0.9fr 0.9fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></span>{{ t.nome }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ t.dominio }}</span>
+                <span style="font-variant-numeric:tabular-nums;color:#5A5A54">{{ t.alunos }}</span>
+                <span style="color:#5A5A54">{{ t.plano }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ t.bg }};color:{{ t.fg }};justify-self:start">{{ t.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A2</span><span style="font-size:12px;color:#5A5A54">Criar tenant (modal, 3 passos)</span></div>
+        <div style="width:400px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.08);display:flex;flex-direction:column">
+          <div style="padding:14px;border-bottom:1px solid #ECEAE6;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Nova escola</span>
+            <div style="display:flex;gap:6px;align-items:center;font-size:10.5px">
+              <span style="padding:3px 8px;border-radius:999px;background:#5B4E86;color:#FFF">1 Dados</span>
+              <span style="color:#C4C4BE">—</span>
+              <span style="padding:3px 8px;border-radius:999px;border:1px solid #D9D7D2;color:#77776F">2 Módulos</span>
+              <span style="color:#C4C4BE">—</span>
+              <span style="padding:3px 8px;border-radius:999px;border:1px solid #D9D7D2;color:#77776F">3 Admin</span>
+            </div>
+          </div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Nome da escola</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:12px">Escola Recanto Feliz</div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Subdomínio</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px">recanto<span style="color:#9C9C95">.educapilot.com</span></div><span style="font-size:10.5px;color:#22664A">Disponível</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">CNPJ</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px"></div></div>
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Etapas</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 9px;font-size:11px">Infantil + Fund. I ▾</div></div>
+            </div>
+          </div>
+          <div style="padding:12px 14px;border-top:1px solid #ECEAE6;display:flex;justify-content:flex-end;gap:8px;background:#FAFAF9"><span style="font-size:11.5px;padding:8px 13px;border-radius:7px;border:1px solid #D9D7D2">Cancelar</span><span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px 13px;border-radius:7px">Continuar</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A3</span><span style="font-size:12px;color:#5A5A54">Módulos por tenant — ativar/desativar</span></div>
+        <div style="width:470px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:12px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;flex-direction:column;gap:3px"><span style="font-size:12px;font-weight:600">Módulos · Colégio Vila Nova</span><span style="font-size:11px;color:#9C9C95">O menu do tenant é montado a partir daqui</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ modulosTenant }}" as="m" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid #ECEAE6;border-radius:8px;padding:11px">
+                <div style="display:flex;flex-direction:column;gap:2px;flex:1"><span style="font-size:12.5px;font-weight:500">{{ m.nome }}</span><span style="font-size:10.5px;color:#9C9C95">{{ m.desc }}</span></div>
+                <span style="font-size:10px;color:#77776F">{{ m.label }}</span>
+                <span style="width:32px;height:18px;border-radius:999px;background:{{ m.on }}"></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A4</span><span style="font-size:12px;color:#5A5A54">Catálogo de módulos (CRUD master)</span></div>
+        <div style="width:520px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#1D1D1B;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600;color:#F5F5F3">Kernel · catálogo de módulos</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#1D1D1B;background:#B9AEDD;padding:5px 11px;border-radius:7px">Novo módulo</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:0.9fr 1.4fr 0.9fr 0.7fr 0.7fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Chave</span><span>Nome</span><span>Escopo</span><span>Versão</span><span>Depende</span></div>
+            <sc-for list="{{ catalogo }}" as="c" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:0.9fr 1.4fr 0.9fr 0.7fr 0.7fr;padding:8px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">{{ c.chave }}</span>
+                <span>{{ c.nome }}</span>
+                <span style="font-size:11px;color:#77776F">{{ c.rotas }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ c.versao }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ c.dep }}</span>
+              </div>
+            </sc-for>
+            <span style="font-size:10.5px;color:#9C9C95">Distinto de <a href="#" style="text-decoration:none">A3</a>: aqui define-se o que existe no sistema; lá, o que cada escola contratou.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A5</span><span style="font-size:12px;color:#5A5A54">Usuários — lista + convites</span></div>
+        <div style="width:660px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:10px"><span style="font-size:12px;font-weight:600">Usuários</span><div style="flex:1"></div><span style="font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid #D9D7D2">Importar</span><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Convidar</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;background:#5B4E86;color:#FFF">Todos (37)</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Professores (21)</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Coordenação (4)</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Convites pendentes (5)</span></div>
+            <div style="display:grid;grid-template-columns:1.4fr 1.6fr 1fr 1.2fr 1fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Nome</span><span>E-mail</span><span>Papel</span><span>Turmas</span><span>Status</span></div>
+            <sc-for list="{{ usuarios }}" as="u" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.4fr 1.6fr 1fr 1.2fr 1fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:999px;background:#E3E1DC"></span>{{ u.nome }}</span>
+                <span style="font-size:11px;color:#5A5A54">{{ u.email }}</span>
+                <span style="font-size:11.5px">{{ u.papel }}</span>
+                <span style="font-size:11px;color:#77776F">{{ u.turmas }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ u.bg }};color:{{ u.fg }};justify-self:start">{{ u.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A6</span><span style="font-size:12px;color:#5A5A54">Usuário — edição e permissões</span></div>
+        <div style="width:400px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:14px;border-bottom:1px solid #ECEAE6;display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:999px;background:#E3E1DC"></span><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600">Juliana Alencar</span><span style="font-size:11px;color:#77776F">Professor · convite pendente</span></div></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Papel</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:12px">Professor ▾</div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Turmas atribuídas</span><div style="display:flex;gap:6px;flex-wrap:wrap"><span style="font-size:10.5px;padding:4px 9px;border-radius:999px;background:#EDEBF3;color:#5B4E86">2º ano C ✕</span><span style="font-size:10.5px;padding:4px 9px;border-radius:999px;background:#EDEBF3;color:#5B4E86">3º ano A ✕</span><span style="font-size:10.5px;padding:4px 9px;border-radius:999px;border:1px dashed #C4C4BE;color:#77776F">+ turma</span></div></div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:grid;grid-template-columns:1.6fr 0.5fr 0.5fr;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;padding-bottom:6px;border-bottom:1px solid #ECEAE6"><span>Permissão</span><span>Ver</span><span>Editar</span></div>
+              <sc-for list="{{ permissoes }}" as="p" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:1.6fr 0.5fr 0.5fr;font-size:11.5px;align-items:center;padding:5px 0;border-bottom:1px solid #F2F1EE">
+                  <span>{{ p.mod }}</span>
+                  <sc-if value="{{ p.ver }}" hint-placeholder-val="{{ true }}"><span style="width:15px;height:15px;border-radius:4px;background:#5B4E86"></span></sc-if>
+                  <sc-if value="{{ p.edit }}" hint-placeholder-val="{{ true }}"><span style="width:15px;height:15px;border-radius:4px;background:#5B4E86"></span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:8px"><span style="font-size:11.5px;padding:8px 13px;border-radius:7px;border:1px solid #D9D7D2">Reenviar convite</span><span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px 13px;border-radius:7px">Salvar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A7</span><span style="font-size:12px;color:#5A5A54">Turmas — lista + cadastro/edição</span></div>
+        <div style="width:600px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex">
+          <div style="flex:1;display:flex;flex-direction:column;border-right:1px solid #ECEAE6">
+            <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Turmas</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#5B4E86">+ Nova</span></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ turmas }}" as="t" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #ECEAE6;border-radius:8px">
+                  <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:12px;font-weight:500">{{ t.nome }}</span><span style="font-size:10.5px;color:#9C9C95">{{ t.etapa }} · {{ t.prof }}</span></div>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ t.alunos }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="width:230px;padding:14px;display:flex;flex-direction:column;gap:10px;background:#FAFAF9">
+            <span style="font-size:12px;font-weight:600">Editar turma</span>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Nome</span><div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;background:#FFF;display:flex;align-items:center;padding:0 9px;font-size:11.5px">4º ano B</div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Etapa / turno</span><div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;background:#FFF;display:flex;align-items:center;padding:0 9px;font-size:11.5px">Fund. I · manhã ▾</div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Professor regente</span><div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;background:#FFF;display:flex;align-items:center;padding:0 9px;font-size:11.5px">Sérgio Antunes ▾</div></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Capacidade</span><div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;background:#FFF;display:flex;align-items:center;padding:0 9px;font-family:'IBM Plex Mono',monospace;font-size:11.5px">28</div></div>
+            <span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px;border-radius:7px;text-align:center">Salvar turma</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A8</span><span style="font-size:12px;color:#5A5A54">Importação (turmas e alunos) — pré-visualização</span></div>
+        <div style="width:520px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;font-size:12px;font-weight:600">Importar planilha</div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:6px;align-items:center;font-size:10.5px"><span style="padding:3px 8px;border-radius:999px;background:#EDEBF3;color:#5B4E86">1 Arquivo</span><span style="color:#C4C4BE">—</span><span style="padding:3px 8px;border-radius:999px;background:#5B4E86;color:#FFF">2 Conferir</span><span style="color:#C4C4BE">—</span><span style="padding:3px 8px;border-radius:999px;border:1px solid #D9D7D2;color:#77776F">3 Confirmar</span></div>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #ECEAE6;border-radius:8px;padding:10px;background:#FAFAF9"><span style="width:26px;height:26px;border-radius:6px;background:#E3E1DC"></span><div style="display:flex;flex-direction:column;flex:1"><span style="font-size:11.5px;font-weight:500">alunos-3ano-2026.xlsx</span><span style="font-size:10.5px;color:#9C9C95">124 linhas · 3 avisos · 1 duplicado</span></div><span style="font-size:10.5px;color:#5B4E86;font-weight:600">Trocar</span></div>
+            <div style="border:1px solid #ECEAE6;border-radius:8px;overflow:hidden">
+              <div style="display:grid;grid-template-columns:0.4fr 1.4fr 0.9fr 1.4fr;padding:8px 12px;background:#F5F5F3;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85"><span>#</span><span>Nome</span><span>Turma</span><span>Validação</span></div>
+              <sc-for list="{{ importPreview }}" as="i" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:0.4fr 1.4fr 0.9fr 1.4fr;padding:8px 12px;border-top:1px solid #F2F1EE;font-size:11.5px;align-items:center">
+                  <span style="font-family:'IBM Plex Mono',monospace;color:#9C9C95">{{ i.linha }}</span>
+                  <span>{{ i.nome }}</span>
+                  <span style="color:#77776F">{{ i.turma }}</span>
+                  <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ i.bg }};color:{{ i.fg }};justify-self:start">{{ i.aviso }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px"><span style="font-size:11.5px;padding:8px 13px;border-radius:7px;border:1px solid #D9D7D2">Baixar erros</span><span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px 13px;border-radius:7px">Importar 123 alunos</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A9</span><span style="font-size:12px;color:#5A5A54">Alunos — lista com filtro por turma</span></div>
+        <div style="width:700px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex">
+          <div style="width:150px;border-right:1px solid #ECEAE6;padding:14px 12px;display:flex;flex-direction:column;gap:8px;background:#FAFAF9">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Turmas</span>
+            <span style="font-size:11.5px;padding:5px 8px;border-radius:6px;background:#5B4E86;color:#FFF">Todas · 412</span>
+            <span style="font-size:11.5px;padding:5px 8px;color:#43433E">Infantil II · 18</span>
+            <span style="font-size:11.5px;padding:5px 8px;color:#43433E">1º ano A · 22</span>
+            <span style="font-size:11.5px;padding:5px 8px;color:#43433E">2º ano C · 20</span>
+            <span style="font-size:11.5px;padding:5px 8px;color:#43433E">4º ano B · 24</span>
+            <span style="font-size:11.5px;padding:5px 8px;color:#43433E">5º ano A · 25</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+            <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Alunos</span><div style="flex:1"></div><span style="font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid #D9D7D2">Importar</span><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Novo aluno</span></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#9C9C95">Buscar por nome, matrícula ou responsável…</div>
+              <div style="display:grid;grid-template-columns:1.5fr 1.2fr 0.8fr 1.1fr 0.9fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Aluno</span><span>Matrícula</span><span>Turma</span><span>Responsável</span><span>Status</span></div>
+              <sc-for list="{{ alunos }}" as="a" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:1.5fr 1.2fr 0.8fr 1.1fr 0.9fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                  <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:999px;background:#E3E1DC"></span>{{ a.nome }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#77776F">{{ a.mat }}</span>
+                  <span style="font-size:11.5px;color:#5A5A54">{{ a.turma }}</span>
+                  <span style="font-size:11px;color:#77776F">{{ a.resp }}</span>
+                  <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ a.bg }};color:{{ a.fg }};justify-self:start">{{ a.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">A10</span><span style="font-size:12px;color:#5A5A54">Ficha do aluno (abas) + cadastro/edição</span></div>
+        <div style="width:560px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:14px;border-bottom:1px solid #ECEAE6;display:flex;align-items:center;gap:12px">
+            <span style="width:44px;height:44px;border-radius:999px;background:#E3E1DC"></span>
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+              <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px">Helena Sousa Prado</span>
+              <span style="font-size:11px;color:#77776F">MAT-2026-004711 · 4º ano B · 9 anos</span>
+            </div>
+            <span style="font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:999px;background:#FBF2DF;color:#8A5A16">Pendência documental</span>
+            <span style="font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid #D9D7D2">Editar</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 14px;border-bottom:1px solid #ECEAE6">
+            <span style="font-size:11.5px;padding:9px 11px;border-bottom:2px solid #5B4E86;color:#5B4E86;font-weight:600">Dados</span>
+            <span style="font-size:11.5px;padding:9px 11px;color:#77776F">Responsáveis</span>
+            <span style="font-size:11.5px;padding:9px 11px;color:#77776F">Frequência</span>
+            <span style="font-size:11.5px;padding:9px 11px;color:#77776F">Ocorrências</span>
+            <span style="font-size:11.5px;padding:9px 11px;color:#77776F">Saúde</span>
+            <span style="font-size:11.5px;padding:9px 11px;color:#77776F">Documentos</span>
+          </div>
+          <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Nascimento</span><span style="font-size:12px">14/03/2017</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">CPF</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">073.221.480-11</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Turno</span><span style="font-size:12px">Manhã</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Responsável principal</span><span style="font-size:12px">Marcos Prado</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Telefone</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">(11) 98842-7710</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Autorizado a sair só</span><span style="font-size:12px">Não</span></div>
+          </div>
+          <div style="padding:0 14px 14px;display:flex;gap:12px">
+            <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Frequência 30d</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px">88,0%</span></div>
+            <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Ocorrências</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px">3</span></div>
+            <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Pendências</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px;color:#8A5A16">2</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">E</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Eventos &amp; Vendas</h2>
+      <span style="font-size:13px;color:#77776F">7 telas · festa junina como caso de referência · Pix via Asaas</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">E1</span><span style="font-size:12px;color:#5A5A54">Dashboard do evento</span></div>
+        <div style="width:700px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:12px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:10px"><span style="font-size:12px;font-weight:600">Festa Junina 2026</span><span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:#EDEBF3;color:#5B4E86">Vendas abertas</span><div style="flex:1"></div><span style="font-size:11px;color:#77776F">Encerra em 6 dias</span><span style="font-size:11px;padding:5px 11px;border-radius:7px;border:1px solid #D9D7D2">Exportar</span></div>
+          <div style="padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+            <sc-for list="{{ evKpis }}" as="k" hint-placeholder-count="4">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:5px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:#8C8C85">{{ k.k }}</span>
+                <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.02em">{{ k.v }}</span>
+                <span style="font-size:10.5px;color:#9C9C95">{{ k.s }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:0 14px 14px;display:flex;gap:14px">
+            <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Vendas por grupo</span>
+              <sc-for list="{{ evGrupos }}" as="g" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  <div style="display:flex;justify-content:space-between;font-size:11.5px"><span>{{ g.nome }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#77776F">{{ g.arrec }}</span></div>
+                  <div style="height:6px;border-radius:999px;background:#ECEAE6"><div style="height:6px;border-radius:999px;background:#5B4E86;width:{{ g.pct }}"></div></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:220px;border:1px solid #ECEAE6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Pendências</span>
+              <span style="font-size:11.5px;color:#43433E;line-height:1.5">21 Pix aguardando pagamento</span>
+              <span style="font-size:11.5px;color:#43433E;line-height:1.5">4 pré-pedidos sem confirmação</span>
+              <span style="font-size:11.5px;color:#43433E;line-height:1.5">2 produtos com estoque baixo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">E2</span><span style="font-size:12px;color:#5A5A54">Grupos de venda</span></div>
+        <div style="width:460px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Grupos de venda</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Novo grupo</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ evGrupos }}" as="g" hint-placeholder-count="3">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;font-weight:600;flex:1">{{ g.nome }}</span><span style="font-size:10.5px;color:#77776F">meta {{ g.meta }}</span></div>
+                <span style="font-size:11px;color:#9C9C95">Responsável: {{ g.resp }}</span>
+                <div style="height:6px;border-radius:999px;background:#ECEAE6"><div style="height:6px;border-radius:999px;background:#5B4E86;width:{{ g.pct }}"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#77776F"><span>{{ g.arrec }} arrecadado</span><span>{{ g.pct }} da meta</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">E3</span><span style="font-size:12px;color:#5A5A54">Produtos e subprodutos</span></div>
+        <div style="width:560px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Produtos do evento</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Novo produto</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:1.6fr 1.2fr 0.8fr 0.7fr 1fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Produto</span><span>Subprodutos</span><span>Preço</span><span>Estoque</span><span>Grupo</span></div>
+            <sc-for list="{{ evProdutos }}" as="p" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.6fr 1.2fr 0.8fr 0.7fr 1fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:#E3E1DC"></span>{{ p.nome }}</span>
+                <span style="font-size:10.5px;color:#77776F">{{ p.sub }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ p.preco }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ p.estoque }}</span>
+                <span style="font-size:10.5px;color:#77776F">{{ p.grupo }}</span>
+              </div>
+            </sc-for>
+            <span style="font-size:10.5px;color:#9C9C95">Subproduto = variação sem preço próprio (ex.: com/sem farofa); afeta produção, não o total.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">E4</span><span style="font-size:12px;color:#5A5A54">Pedidos — lista</span></div>
+        <div style="width:560px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Pedidos</span><span style="font-size:11px;color:#9C9C95">201 no total</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Novo pedido</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:6px"><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;background:#5B4E86;color:#FFF">Todos</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Aguardando Pix (21)</span><span style="font-size:10.5px;padding:4px 9px;border-radius:6px;border:1px solid #D9D7D2">Pagos (164)</span></div>
+            <div style="display:grid;grid-template-columns:0.7fr 1.5fr 0.6fr 0.9fr 0.8fr 0.9fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Pedido</span><span>Comprador</span><span>Itens</span><span>Total</span><span>Pgto</span><span>Status</span></div>
+            <sc-for list="{{ evPedidos }}" as="o" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:0.7fr 1.5fr 0.6fr 0.9fr 0.8fr 0.9fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">{{ o.id }}</span>
+                <span>{{ o.comprador }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ o.itens }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ o.total }}</span>
+                <span style="font-size:11px;color:#77776F">{{ o.pgto }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ o.bg }};color:{{ o.fg }};justify-self:start">{{ o.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">E5</span><span style="font-size:12px;color:#5A5A54">Novo pedido → finalizar (balcão)</span></div>
+        <div style="width:520px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex">
+          <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:10px;border-right:1px solid #ECEAE6">
+            <div style="height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#9C9C95">Buscar produto…</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px"><div style="height:34px;border-radius:6px;background:#E3E1DC"></div><span style="font-size:11.5px">Espetinho</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">R$ 12,00</span></div>
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px"><div style="height:34px;border-radius:6px;background:#E3E1DC"></div><span style="font-size:11.5px">Milho cozido</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">R$ 8,00</span></div>
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px"><div style="height:34px;border-radius:6px;background:#E3E1DC"></div><span style="font-size:11.5px">Combo família</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">R$ 45,00</span></div>
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px"><div style="height:34px;border-radius:6px;background:#E3E1DC"></div><span style="font-size:11.5px">Pescaria</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">R$ 10,00</span></div>
+            </div>
+          </div>
+          <div style="width:210px;padding:14px;background:#FAFAF9;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;font-weight:600">Pedido #1043</span>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;justify-content:space-between;font-size:11.5px"><span>2× Espetinho</span><span style="font-family:'IBM Plex Mono',monospace">24,00</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px"><span>1× Combo família</span><span style="font-family:'IBM Plex Mono',monospace">45,00</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px"><span>3× Milho</span><span style="font-family:'IBM Plex Mono',monospace">24,00</span></div>
+            </div>
+            <div style="border-top:1px solid #ECEAE6;padding-top:8px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;color:#77776F">Total</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px">R$ 93,00</span></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Pagamento</span><div style="display:flex;gap:6px"><span style="font-size:10.5px;padding:5px 9px;border-radius:6px;background:#5B4E86;color:#FFF">Pix</span><span style="font-size:10.5px;padding:5px 9px;border-radius:6px;border:1px solid #D9D7D2">Dinheiro</span></div></div>
+            <span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:10px;border-radius:7px;text-align:center">Finalizar pedido</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">E6/E7</span><span style="font-size:12px;color:#5A5A54">Pré-pedido do responsável + checkout Pix (mobile)</span></div>
+        <div style="display:flex;gap:16px">
+          <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;flex-direction:column">
+            <div style="padding:10px 16px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95"><span>9:41</span><span>▮▮▮</span></div>
+            <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:8px"><img src="logo2.PNG" alt="" style="height:26px;width:auto"><span style="font-size:11px;color:#77776F">Festa Junina 2026</span></div>
+              <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;line-height:1.2">Faça seu pré-pedido até 24/08</span>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="border:1px solid #ECEAE6;border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:8px;background:#E3E1DC"></div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:12px">Espetinho de frango</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">R$ 12,00</span></div><div style="display:flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;border:1px solid #D9D7D2;display:flex;align-items:center;justify-content:center;font-size:13px">−</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">2</span><span style="width:26px;height:26px;border-radius:7px;background:#5B4E86;color:#FFF;display:flex;align-items:center;justify-content:center;font-size:13px">+</span></div></div>
+                <div style="border:1px solid #ECEAE6;border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:8px;background:#E3E1DC"></div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:12px">Combo família</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5B4E86">R$ 45,00</span></div><div style="display:flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:7px;border:1px solid #D9D7D2;display:flex;align-items:center;justify-content:center;font-size:13px">−</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">1</span><span style="width:26px;height:26px;border-radius:7px;background:#5B4E86;color:#FFF;display:flex;align-items:center;justify-content:center;font-size:13px">+</span></div></div>
+              </div>
+              <div style="border-top:1px solid #ECEAE6;padding-top:10px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:#77776F">3 itens</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px">R$ 69,00</span></div>
+              <span style="font-size:13px;font-weight:600;color:#FFF;background:#5B4E86;padding:13px;border-radius:10px;text-align:center">Ir para pagamento</span>
+              <span style="font-size:10.5px;color:#9C9C95;text-align:center">Retirada na barraca do 4º ano B</span>
+            </div>
+          </div>
+          <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;flex-direction:column">
+            <div style="padding:10px 16px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95"><span>9:43</span><span>▮▮▮</span></div>
+            <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px;align-items:center">
+              <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;align-self:flex-start">Pagamento via Pix</span>
+              <span style="font-size:11px;color:#77776F;align-self:flex-start">Pedido #1043 · R$ 69,00 · expira em 29:41</span>
+              <div style="width:150px;height:150px;border-radius:12px;background:repeating-linear-gradient(45deg,#E3E1DC 0 6px,#F5F5F3 6px 12px);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A5A54">QR CODE</div>
+              <div style="width:100%;border:1px solid #D9D7D2;border-radius:8px;padding:9px;display:flex;align-items:center;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#77776F;flex:1;overflow:hidden">00020126580014BR.GOV.BCB.PIX…</span><span style="font-size:10.5px;font-weight:600;color:#5B4E86">Copiar</span></div>
+              <span style="width:100%;font-size:13px;font-weight:600;color:#FFF;background:#5B4E86;padding:13px;border-radius:10px;text-align:center">Já paguei</span>
+              <span style="font-size:10.5px;color:#9C9C95;text-align:center;line-height:1.5">Confirmação automática via webhook Asaas; a tela troca para "Pagamento confirmado" sem recarregar.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">F</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Formulários Dinâmicos (Flow)</h2>
+      <span style="font-size:13px;color:#77776F">5 telas</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">F1</span><span style="font-size:12px;color:#5A5A54">Construtor de formulários</span></div>
+        <div style="width:720px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex">
+          <div style="width:150px;border-right:1px solid #ECEAE6;background:#FAFAF9;padding:14px 12px;display:flex;flex-direction:column;gap:7px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Tipos de campo</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Texto curto</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Texto longo</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Seleção</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Sim/Não</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Data</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Anexo</span>
+            <span style="font-size:11.5px;padding:6px 8px;border:1px solid #D9D7D2;border-radius:6px;background:#FFF">Dado de referência</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+            <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Autorização de saída antecipada</span><span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:#FBF2DF;color:#8A5A16">Rascunho</span><div style="flex:1"></div><span style="font-size:11px;padding:5px 11px;border-radius:7px;border:1px solid #D9D7D2">Pré-visualizar</span><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:5px 11px;border-radius:7px">Publicar</span></div>
+            <div style="padding:14px;display:flex;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ flowCampos }}" as="c" hint-placeholder-count="4">
+                  <div style="border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;align-items:center;gap:10px">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#C4C4BE">⋮⋮</span>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:500">{{ c.label }}</span><span style="font-size:10.5px;color:#9C9C95">{{ c.tipo }}</span></div>
+                    <span style="font-size:10px;padding:3px 7px;border-radius:5px;background:#F5F5F3;color:#77776F">{{ c.req }}</span>
+                  </div>
+                </sc-for>
+                <div style="border:1px dashed #C4C4BE;border-radius:8px;padding:14px;text-align:center;font-size:11px;color:#9C9C95">Arraste um tipo de campo aqui</div>
+              </div>
+              <div style="width:190px;border-left:1px solid #ECEAE6;padding-left:14px;display:flex;flex-direction:column;gap:9px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Campo selecionado</span>
+                <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10.5px;color:#77776F">Rótulo</span><div style="height:28px;border:1px solid #D9D7D2;border-radius:6px;display:flex;align-items:center;padding:0 8px;font-size:11px">Turma</div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:10.5px;color:#77776F">Fonte de dados</span><div style="height:28px;border:1px solid #D9D7D2;border-radius:6px;display:flex;align-items:center;padding:0 8px;font-size:11px">Tabela: Turmas ▾</div></div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="width:15px;height:15px;border-radius:4px;background:#5B4E86"></span>Obrigatório</div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:11px"><span style="width:15px;height:15px;border-radius:4px;border:1px solid #C4C4BE"></span>Visível ao responsável</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">F2</span><span style="font-size:12px;color:#5A5A54">Automações do formulário</span></div>
+        <div style="width:430px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Automações</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#5B4E86">+ Nova regra</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ flowAuto }}" as="a" hint-placeholder-count="3">
+              <div style="border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;align-items:center;gap:10px">
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                  <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;color:#8C8C85">Quando</span>
+                  <span style="font-size:11.5px">{{ a.quando }}</span>
+                  <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;color:#8C8C85">Então</span>
+                  <span style="font-size:11.5px">{{ a.entao }}</span>
+                </div>
+                <span style="width:30px;height:17px;border-radius:999px;background:{{ a.on }}"></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">F3/F4</span><span style="font-size:12px;color:#5A5A54">Respostas — lista e detalhe</span></div>
+        <div style="width:620px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex">
+          <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:8px;border-right:1px solid #ECEAE6">
+            <div style="display:grid;grid-template-columns:1.2fr 1.4fr 1fr 0.9fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Quem</span><span>Formulário</span><span>Enviado</span><span>Status</span></div>
+            <sc-for list="{{ flowRespostas }}" as="r" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.2fr 1.4fr 1fr 0.9fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:11.5px;align-items:center">
+                <span>{{ r.quem }}</span>
+                <span style="color:#5A5A54">{{ r.form }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#77776F">{{ r.quando }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ r.bg }};color:{{ r.fg }};justify-self:start">{{ r.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="width:230px;padding:14px;background:#FAFAF9;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;font-weight:600">Resposta · Marcos Prado</span>
+            <span style="font-size:10.5px;color:#9C9C95">Autorização de saída · 17/08 18:02</span>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Aluno</span><span style="font-size:11.5px">Helena Sousa Prado</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Turma</span><span style="font-size:11.5px">4º ano B</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Autorizo saída</span><span style="font-size:11.5px">Não</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Observações</span><span style="font-size:11.5px;line-height:1.5">Somente com a avó, mediante aviso prévio.</span></div>
+            </div>
+            <div style="border-top:1px solid #ECEAE6;padding-top:10px;display:flex;flex-direction:column;gap:6px"><span style="font-size:10.5px;color:#77776F">Automação disparada: ocorrência pedagógica criada</span><span style="font-size:11.5px;font-weight:600;color:#FFF;background:#5B4E86;padding:8px;border-radius:7px;text-align:center">Marcar como revisada</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">F5</span><span style="font-size:12px;color:#5A5A54">Dados de referência (tabelas auxiliares)</span></div>
+        <div style="width:420px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Dados de referência</span><div style="flex:1"></div><span style="font-size:11px;font-weight:600;color:#5B4E86">+ Nova tabela</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ flowRef }}" as="t" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #ECEAE6;border-radius:8px">
+                <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:12px;font-weight:500">{{ t.tabela }}</span><span style="font-size:10.5px;color:#9C9C95">usada em {{ t.uso }}</span></div>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ t.reg }} reg.</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">$</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Financeiro</h2>
+      <span style="font-size:13px;color:#77776F">5 telas · diretoria e mantenedora</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">$1</span><span style="font-size:12px;color:#5A5A54">Despesas — lista</span></div>
+        <div style="width:640px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Despesas</span><span style="font-size:11px;color:#9C9C95">agosto/2026</span><div style="flex:1"></div><span style="font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid #D9D7D2">Importar Excel</span><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Nova despesa</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">A pagar</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px">R$ 5.630,00</span></div>
+              <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Atrasado</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#8F1F19">R$ 890,00</span></div>
+              <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Pago no mês</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px">R$ 96.320,00</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 0.8fr 1fr 0.9fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Descrição</span><span>Categoria</span><span>Vence</span><span>Valor</span><span>Status</span></div>
+            <sc-for list="{{ despesas }}" as="d" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:2fr 1fr 0.8fr 1fr 0.9fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span>{{ d.desc }}</span>
+                <span style="font-size:11px;color:#77776F">{{ d.cat }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ d.venc }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-variant-numeric:tabular-nums">{{ d.valor }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ d.bg }};color:{{ d.fg }};justify-self:start">{{ d.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">$2</span><span style="font-size:12px;color:#5A5A54">Despesa — cadastro + confirmar pagamento</span></div>
+        <div style="width:400px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;font-size:12px;font-weight:600">Nova despesa</div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Descrição</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:12px">Insumos festa junina</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Valor</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:12px">R$ 4.150,00</div></div>
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Vencimento</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-family:'IBM Plex Mono',monospace;font-size:12px">28/08/2026</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Categoria</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:11.5px">Eventos ▾</div></div>
+              <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Centro de custo</span><div style="height:32px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 10px;font-size:11.5px">Festa Junina ▾</div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Comprovante</span><div style="height:52px;border:1px dashed #C4C4BE;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9C9C95">Anexar nota fiscal</div></div>
+            <div style="border-top:1px solid #ECEAE6;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Confirmar pagamento</span>
+              <div style="display:flex;gap:8px;align-items:center"><div style="flex:1;height:30px;border:1px solid #D9D7D2;border-radius:7px;display:flex;align-items:center;padding:0 9px;font-size:11px;color:#9C9C95">Data do pagamento</div><span style="font-size:11.5px;font-weight:600;color:#FFF;background:#22664A;padding:8px 13px;border-radius:7px">Marcar como pago</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">$3</span><span style="font-size:12px;color:#5A5A54">Receitas — lista + importação</span></div>
+        <div style="width:620px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600">Receitas</span><div style="flex:1"></div><span style="font-size:11px;padding:6px 11px;border-radius:7px;border:1px solid #D9D7D2">Importar Excel</span><span style="font-size:11px;font-weight:600;color:#FFF;background:#5B4E86;padding:6px 12px;border-radius:7px">Nova receita</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 0.8fr 1.1fr 0.9fr;padding:8px 0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85;border-bottom:1px solid #ECEAE6"><span>Descrição</span><span>Categoria</span><span>Previsão</span><span>Valor</span><span>Status</span></div>
+            <sc-for list="{{ receitas }}" as="r" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:2fr 1fr 0.8fr 1.1fr 0.9fr;padding:9px 0;border-bottom:1px solid #F2F1EE;font-size:12px;align-items:center">
+                <span>{{ r.desc }}</span>
+                <span style="font-size:11px;color:#77776F">{{ r.cat }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F">{{ r.prev }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-variant-numeric:tabular-nums">{{ r.valor }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ r.bg }};color:{{ r.fg }};justify-self:start">{{ r.status }}</span>
+              </div>
+            </sc-for>
+            <div style="border:1px solid #ECEAE6;border-radius:8px;padding:11px;display:flex;align-items:center;gap:10px;background:#FAFAF9">
+              <span style="width:24px;height:24px;border-radius:6px;background:#E3E1DC"></span>
+              <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:11.5px;font-weight:500">Importar planilha de receitas</span><span style="font-size:10.5px;color:#9C9C95">Mesmo fluxo de 3 passos da importação de alunos (A8)</span></div>
+              <span style="font-size:10.5px;font-weight:600;color:#5B4E86">Abrir</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">$4/$5</span><span style="font-size:12px;color:#5A5A54">Fluxo de caixa — resumo mensal e projeção por período</span></div>
+        <div style="width:660px;background:#FFF;border:1px solid #D9D7D2;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column">
+          <div style="padding:10px 14px;border-bottom:1px solid #ECEAE6;background:#FAFAF9;display:flex;align-items:center;gap:10px"><span style="font-size:12px;font-weight:600">Fluxo de caixa</span><div style="flex:1"></div><span style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #D9D7D2">Mai — Out 2026 ▾</span><span style="font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #D9D7D2">Exportar</span></div>
+          <div style="padding:14px;display:flex;gap:14px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:10px">
+                <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Entradas (ago)</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px">R$ 265.240</span></div>
+                <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Saídas (ago)</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px">R$ 178.910</span></div>
+                <div style="flex:1;border:1px solid #ECEAE6;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Saldo projetado</span><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:17px;color:#22664A">R$ 86.330</span></div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:14px;height:150px">
+                <sc-for list="{{ fluxo }}" as="f" hint-placeholder-count="6">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px">
+                    <div style="width:100%;display:flex;align-items:flex-end;gap:4px;height:126px">
+                      <div style="flex:1;border-radius:4px 4px 0 0;background:#5B4E86;height:{{ f.e }}"></div>
+                      <div style="flex:1;border-radius:4px 4px 0 0;background:#C4C0D4;height:{{ f.s }}"></div>
+                    </div>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95">{{ f.mes }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:16px"><span style="display:flex;align-items:center;gap:6px;font-size:11px;color:#5A5A54"><span style="width:10px;height:10px;border-radius:3px;background:#5B4E86"></span>Entradas</span><span style="display:flex;align-items:center;gap:6px;font-size:11px;color:#5A5A54"><span style="width:10px;height:10px;border-radius:3px;background:#C4C0D4"></span>Saídas</span><span style="font-size:11px;color:#9C9C95">Set–Out são projeção (barra tracejada no visual final)</span></div>
+            </div>
+            <div style="width:200px;border-left:1px solid #ECEAE6;padding-left:14px;display:flex;flex-direction:column;gap:9px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;color:#8C8C85">Resumo mensal</span>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;padding-bottom:6px;border-bottom:1px solid #F2F1EE"><span>Mensalidades</span><span style="font-family:'IBM Plex Mono',monospace;color:#22664A">+214.800</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;padding-bottom:6px;border-bottom:1px solid #F2F1EE"><span>Eventos</span><span style="font-family:'IBM Plex Mono',monospace;color:#22664A">+18.740</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;padding-bottom:6px;border-bottom:1px solid #F2F1EE"><span>Pessoal</span><span style="font-family:'IBM Plex Mono',monospace;color:#8F1F19">−96.320</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px;padding-bottom:6px;border-bottom:1px solid #F2F1EE"><span>Manutenção</span><span style="font-family:'IBM Plex Mono',monospace;color:#8F1F19">−12.480</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11.5px"><span style="font-weight:600">Saldo</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600">+86.330</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #D9D7D2;padding-bottom:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C8C85">M</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;margin:0">Mobile — professor e responsável</h2>
+      <span style="font-size:13px;color:#77776F">recortes das telas de uso em pé/na sala</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">M1</span><span style="font-size:12px;color:#5A5A54">Chamada (mobile)</span></div>
+        <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;flex-direction:column">
+          <div style="padding:10px 16px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95"><span>7:38</span><span>▮▮▮</span></div>
+          <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;flex:1">4º ano B</span><span style="font-size:10.5px;padding:3px 8px;border-radius:6px;background:#EDEBF3;color:#5B4E86">18/08</span></div>
+            <span style="font-size:11px;color:#77776F">21 de 24 marcados</span>
+            <sc-for list="{{ chamada }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #ECEAE6;border-radius:10px;min-height:44px">
+                <span style="width:30px;height:30px;border-radius:999px;background:#E3E1DC"></span>
+                <span style="font-size:12px;flex:1">{{ r.nome }}</span>
+                <span style="font-size:10.5px;font-weight:600;padding:5px 9px;border-radius:7px;background:{{ r.pBg }};color:{{ r.pFg }}">{{ r.presenca }}</span>
+              </div>
+            </sc-for>
+            <span style="font-size:13px;font-weight:600;color:#FFF;background:#5B4E86;padding:13px;border-radius:10px;text-align:center">Salvar chamada</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">M2</span><span style="font-size:12px;color:#5A5A54">Notificações (mobile)</span></div>
+        <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;flex-direction:column">
+          <div style="padding:10px 16px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95"><span>14:02</span><span>▮▮▮</span></div>
+          <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Notificações</span>
+            <sc-for list="{{ notificacoes }}" as="n" hint-placeholder-count="5">
+              <div style="display:flex;gap:9px;padding:11px;border:1px solid #ECEAE6;border-radius:10px;background:{{ n.bg }}">
+                <span style="width:7px;height:7px;border-radius:999px;background:{{ n.dot }};margin-top:5px"></span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:12px;font-weight:500">{{ n.titulo }}</span><span style="font-size:11px;color:#77776F;line-height:1.45">{{ n.texto }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;background:#1D1D1B;color:#FAFAF9;border-radius:4px">M3</span><span style="font-size:12px;color:#5A5A54">Checklist diário (mobile)</span></div>
+        <div style="width:300px;background:#FFF;border:1px solid #D9D7D2;border-radius:22px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;flex-direction:column">
+          <div style="padding:10px 16px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95"><span>10:05</span><span>▮▮▮</span></div>
+          <div style="padding:0 16px 12px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px">Infantil II · checklist</span>
+            <div style="height:5px;border-radius:999px;background:#ECEAE6"><div style="width:66%;height:5px;border-radius:999px;background:#5B4E86"></div></div>
+            <sc-for list="{{ checklistDia }}" as="c" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:11px;padding:12px;border:1px solid #ECEAE6;border-radius:10px;min-height:44px">
+                <span style="width:22px;height:22px;border-radius:6px;background:{{ c.box }};border:1px solid {{ c.bd }}"></span>
+                <span style="font-size:12px;flex:1;color:{{ c.fg }}">{{ c.item }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95">{{ c.hora }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p style="margin:0;font-size:12.5px;color:#77776F;line-height:1.6;max-width:860px">Próximos passos possíveis: “detalhar <strong style="font-weight:600">R1</strong> em alta fidelidade”, “gerar o shell navegável com sidebar e as 6 áreas”, “aplicar a paleta roxa nos tokens do guia de identidade”.</p>
+  </section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() {
+    const P = { bg: '#E7F3EC', fg: '#22664A' }, A = { bg: '#FBF2DF', fg: '#8A5A16' }, E = { bg: '#FBEAE8', fg: '#8F1F19' }, N = { bg: '#F5F5F3', fg: '#5A5A54' };
+    return {
+      chamada: [
+        { nome: 'Ana Beatriz Moreira', presenca: 'Presente', pBg: P.bg, pFg: P.fg, hora: '07:42', obs: '' },
+        { nome: 'Bruno Kenji Tanaka', presenca: 'Presente', pBg: P.bg, pFg: P.fg, hora: '07:48', obs: '' },
+        { nome: 'Helena Sousa Prado', presenca: 'Ausente', pBg: E.bg, pFg: E.fg, hora: '—', obs: 'Responsável não avisou' },
+        { nome: 'Théo Ribeiro Alencar', presenca: 'Atrasado', pBg: A.bg, pFg: A.fg, hora: '08:15', obs: 'Trânsito' },
+        { nome: 'Valentina Duarte Sá', presenca: 'Presente', pBg: P.bg, pFg: P.fg, hora: '07:39', obs: '' },
+      ],
+      faltas: [
+        { nome: 'Helena Sousa Prado', turma: '4º ano B', data: '14/08', status: 'Não justificada', bg: E.bg, fg: E.fg },
+        { nome: 'Miguel Arantes Costa', turma: '2º ano C', data: '13/08', status: 'Aguardando anexo', bg: A.bg, fg: A.fg },
+        { nome: 'Lívia Bastos Ferraz', turma: '1º ano A', data: '12/08', status: 'Justificada', bg: P.bg, fg: P.fg },
+        { nome: 'Pedro Henrique Vaz', turma: '5º ano A', data: '12/08', status: 'Não justificada', bg: E.bg, fg: E.fg },
+      ],
+      checklistCfg: [
+        { item: 'Sala higienizada antes da entrada', tipo: 'Sim/Não', sw: '#5B4E86' },
+        { item: 'Lancheiras conferidas', tipo: 'Sim/Não', sw: '#5B4E86' },
+        { item: 'Troca de fraldas registrada', tipo: 'Contagem', sw: '#5B4E86' },
+        { item: 'Material de arte reposto', tipo: 'Sim/Não', sw: '#C4C4BE' },
+      ],
+      checklistDia: [
+        { item: 'Sala higienizada antes da entrada', box: '#5B4E86', bd: '#5B4E86', fg: '#9C9C95', hora: '07:10' },
+        { item: 'Lancheiras conferidas', box: '#5B4E86', bd: '#5B4E86', fg: '#9C9C95', hora: '07:55' },
+        { item: 'Água trocada nos bebedouros', box: '#5B4E86', bd: '#5B4E86', fg: '#9C9C95', hora: '09:20' },
+        { item: 'Troca de fraldas registrada', box: '#5B4E86', bd: '#5B4E86', fg: '#9C9C95', hora: '10:05' },
+        { item: 'Material de arte reposto', box: '#FFF', bd: '#C4C4BE', fg: '#2C2C29', hora: '—' },
+        { item: 'Sala organizada na saída', box: '#FFF', bd: '#C4C4BE', fg: '#2C2C29', hora: '—' },
+      ],
+      saude: [
+        { k: 'Alergias', v: 'Amendoim, corante artificial' },
+        { k: 'Medicação de uso contínuo', v: 'Nenhuma' },
+        { k: 'Restrição alimentar', v: 'Sem lactose' },
+        { k: 'Convênio', v: 'Unimed · carteirinha 8842-1' },
+      ],
+      materiais: [
+        { nome: 'Caderno de caligrafia — 1º ano', cat: 'Papelaria · lista 2026', qtd: '48 un' },
+        { nome: 'Kit de pintura a dedo', cat: 'Arte · infantil', qtd: '12 un' },
+        { nome: 'Jogo de blocos lógicos', cat: 'Pedagógico', qtd: '6 un' },
+        { nome: 'Colchonete de descanso', cat: 'Infantil I e II', qtd: '30 un' },
+      ],
+      reunioes: [
+        { pauta: 'Reunião de pais — 2º ano C', data: '21/08 19:00', part: '18 confirmados', status: 'Agendada', bg: '#EDEBF3', fg: '#5B4E86' },
+        { pauta: 'Alinhamento pedagógico infantil', data: '15/08 14:00', part: '9 presentes', status: 'Encerrada', bg: P.bg, fg: P.fg },
+        { pauta: 'Plano de ação — Helena S. Prado', data: '13/08 09:30', part: '4 presentes', status: 'Ata pendente', bg: A.bg, fg: A.fg },
+        { pauta: 'Conselho de classe — 5º ano A', data: '08/08 16:00', part: '11 presentes', status: 'Encerrada', bg: P.bg, fg: P.fg },
+      ],
+      ocorGraf: [
+        { t: 'Inf II', h: '28%' }, { t: '1ºA', h: '45%' }, { t: '2ºC', h: '82%' },
+        { t: '3ºA', h: '38%' }, { t: '4ºB', h: '64%' }, { t: '5ºA', h: '52%' },
+      ],
+      ocorAlunos: [
+        { nome: 'Théo Ribeiro Alencar', n: '5', dot: '#8F1F19' },
+        { nome: 'Miguel Arantes Costa', n: '3', dot: '#B7791F' },
+        { nome: 'Helena Sousa Prado', n: '3', dot: '#B7791F' },
+        { nome: 'Lucas Prado Nunes', n: '2', dot: '#5B4E86' },
+      ],
+      seminarios: [
+        { dia: '19/08', tema: 'Alfabetização e ludicidade', resp: 'Coord. Patrícia Reis', local: 'Sala multiuso', status: 'Confirmado', bg: P.bg, fg: P.fg },
+        { dia: '26/08', tema: 'Mediação de conflitos na sala', resp: 'Psicóloga Ana Lúcia', local: 'Auditório', status: 'Aberto', bg: '#EDEBF3', fg: '#5B4E86' },
+        { dia: '02/09', tema: 'Uso de dados de frequência', resp: 'Direção', local: 'Online', status: 'Rascunho', bg: N.bg, fg: N.fg },
+      ],
+      notificacoes: [
+        { titulo: 'Chamada pendente · 3º ano A', texto: 'A frequência de hoje ainda não foi lançada.', quando: '14:02', dot: '#B7791F', bg: '#FCFAF4' },
+        { titulo: 'Nova ocorrência registrada', texto: 'Théo Ribeiro Alencar — comportamento, 2º ano C.', quando: '11:30', dot: '#8F1F19', bg: '#FDF6F5' },
+        { titulo: 'Pedido do evento confirmado', texto: 'Festa Junina · pedido #1042 pago via Pix.', quando: '09:15', dot: '#22664A', bg: '#FFF' },
+        { titulo: 'Convite aceito', texto: 'Juliana Alencar concluiu o primeiro acesso.', quando: 'Ontem', dot: '#5B4E86', bg: '#FFF' },
+        { titulo: 'Importação concluída', texto: '124 alunos importados · 3 linhas com aviso.', quando: 'Ontem', dot: '#5B4E86', bg: '#FFF' },
+      ],
+      evKpis: [
+        { k: 'Vendas confirmadas', v: 'R$ 18.740', s: '312 itens' },
+        { k: 'Pedidos pagos', v: '164', s: '82% do total' },
+        { k: 'Aguardando Pix', v: 'R$ 2.310', s: '21 pedidos' },
+        { k: 'Ticket médio', v: 'R$ 114,27', s: '+R$ 8 vs. 2025' },
+      ],
+      evGrupos: [
+        { nome: '4º ano B — Barraca do milho', resp: 'Sérgio Antunes', meta: 'R$ 3.000', arrec: 'R$ 2.480', pct: '83%' },
+        { nome: 'Infantil — Pescaria', resp: 'Camila Otero', meta: 'R$ 1.500', arrec: 'R$ 1.610', pct: '100%' },
+        { nome: '5º ano A — Doces', resp: 'Débora Mattos', meta: 'R$ 2.000', arrec: 'R$ 940', pct: '47%' },
+      ],
+      evProdutos: [
+        { nome: 'Espetinho de frango', sub: 'com/sem farofa', preco: 'R$ 12,00', estoque: '180', grupo: 'Barraca do milho' },
+        { nome: 'Milho cozido', sub: 'manteiga · sal', preco: 'R$ 8,00', estoque: '240', grupo: 'Barraca do milho' },
+        { nome: 'Combo família', sub: '4 itens + bebida', preco: 'R$ 45,00', estoque: '60', grupo: 'Geral' },
+        { nome: 'Cartela de pescaria', sub: '10 tentativas', preco: 'R$ 10,00', estoque: '—', grupo: 'Pescaria' },
+      ],
+      evPedidos: [
+        { id: '#1042', comprador: 'Rafael Lima', itens: '5', total: 'R$ 96,00', pgto: 'Pix', status: 'Pago', bg: P.bg, fg: P.fg },
+        { id: '#1041', comprador: 'Cláudia Moreira', itens: '3', total: 'R$ 44,00', pgto: 'Pix', status: 'Aguardando', bg: A.bg, fg: A.fg },
+        { id: '#1040', comprador: 'Marcos Prado', itens: '8', total: 'R$ 158,00', pgto: 'Dinheiro', status: 'Pago', bg: P.bg, fg: P.fg },
+        { id: '#1039', comprador: 'Renata Sá', itens: '2', total: 'R$ 20,00', pgto: 'Pix', status: 'Expirado', bg: E.bg, fg: E.fg },
+      ],
+      flowCampos: [
+        { label: 'Nome do aluno', tipo: 'Texto', req: 'Obrigatório' },
+        { label: 'Turma', tipo: 'Seleção (ref. Turmas)', req: 'Obrigatório' },
+        { label: 'Autorizo a saída antecipada', tipo: 'Sim/Não', req: 'Obrigatório' },
+        { label: 'Observações', tipo: 'Texto longo', req: 'Opcional' },
+      ],
+      flowAuto: [
+        { quando: 'Ao enviar resposta', entao: 'Notificar coordenação do turno', on: '#5B4E86' },
+        { quando: 'Se "Autorizo" = Não', entao: 'Criar ocorrência pedagógica', on: '#5B4E86' },
+        { quando: 'Após 3 dias sem resposta', entao: 'Reenviar ao responsável', on: '#C4C4BE' },
+      ],
+      flowRespostas: [
+        { quem: 'Rafael Lima', form: 'Autorização de saída', quando: '18/08 09:12', status: 'Concluída', bg: P.bg, fg: P.fg },
+        { quem: 'Cláudia Moreira', form: 'Ficha de saúde 2026', quando: '17/08 21:40', status: 'Concluída', bg: P.bg, fg: P.fg },
+        { quem: 'Marcos Prado', form: 'Autorização de saída', quando: '17/08 18:02', status: 'Revisar', bg: A.bg, fg: A.fg },
+        { quem: 'Renata Sá', form: 'Passeio ao museu', quando: '16/08 12:55', status: 'Pendente', bg: N.bg, fg: N.fg },
+      ],
+      flowRef: [
+        { tabela: 'Turmas', reg: '18', uso: '4 formulários' },
+        { tabela: 'Motivos de falta', reg: '9', uso: '2 formulários' },
+        { tabela: 'Categorias de ocorrência', reg: '6', uso: '3 formulários' },
+        { tabela: 'Etapas de ensino', reg: '4', uso: '1 formulário' },
+      ],
+      despesas: [
+        { desc: 'Material de limpeza — agosto', cat: 'Manutenção', venc: '20/08', valor: 'R$ 1.480,00', status: 'A pagar', bg: A.bg, fg: A.fg },
+        { desc: 'Folha de pagamento — julho', cat: 'Pessoal', venc: '05/08', valor: 'R$ 96.320,00', status: 'Pago', bg: P.bg, fg: P.fg },
+        { desc: 'Internet e telefonia', cat: 'Utilidades', venc: '12/08', valor: 'R$ 890,00', status: 'Atrasado', bg: E.bg, fg: E.fg },
+        { desc: 'Insumos festa junina', cat: 'Eventos', venc: '28/08', valor: 'R$ 4.150,00', status: 'A pagar', bg: A.bg, fg: A.fg },
+      ],
+      receitas: [
+        { desc: 'Mensalidades — agosto', cat: 'Mensalidade', prev: '18/08', valor: 'R$ 214.800,00', status: 'Parcial', bg: A.bg, fg: A.fg },
+        { desc: 'Festa junina — vendas', cat: 'Eventos', prev: '30/08', valor: 'R$ 18.740,00', status: 'Recebido', bg: P.bg, fg: P.fg },
+        { desc: 'Material didático', cat: 'Material', prev: '10/08', valor: 'R$ 32.100,00', status: 'Recebido', bg: P.bg, fg: P.fg },
+        { desc: 'Contraturno', cat: 'Serviços', prev: '20/08', valor: 'R$ 9.600,00', status: 'A receber', bg: N.bg, fg: N.fg },
+      ],
+      fluxo: [
+        { mes: 'Mai', e: '72%', s: '54%' }, { mes: 'Jun', e: '80%', s: '62%' },
+        { mes: 'Jul', e: '68%', s: '71%' }, { mes: 'Ago', e: '86%', s: '58%' },
+        { mes: 'Set', e: '64%', s: '49%' }, { mes: 'Out', e: '58%', s: '44%' },
+      ],
+      tenants: [
+        { nome: 'Colégio Vila Nova', dominio: 'vilanova', alunos: '412', plano: 'Completo', status: 'Ativo', bg: P.bg, fg: P.fg },
+        { nome: 'Escola Recanto Feliz', dominio: 'recanto', alunos: '188', plano: 'Essencial', status: 'Ativo', bg: P.bg, fg: P.fg },
+        { nome: 'Instituto Semear', dominio: 'semear', alunos: '96', plano: 'Essencial', status: 'Implantação', bg: A.bg, fg: A.fg },
+        { nome: 'Centro Educ. Aurora', dominio: 'aurora', alunos: '0', plano: '—', status: 'Suspenso', bg: E.bg, fg: E.fg },
+      ],
+      modulosTenant: [
+        { nome: 'Rotina Escolar / Diário', desc: 'Chamada, checklist, ocorrências', on: '#5B4E86', label: 'Contratado' },
+        { nome: 'Eventos & Vendas', desc: 'Pedidos, produtos, Pix (Asaas)', on: '#5B4E86', label: 'Contratado' },
+        { nome: 'Formulários Dinâmicos', desc: 'Construtor e automações', on: '#C4C4BE', label: 'Não contratado' },
+        { nome: 'Financeiro', desc: 'Despesas, receitas, fluxo de caixa', on: '#5B4E86', label: 'Contratado' },
+        { nome: 'Portal do responsável', desc: 'Pré-pedido e comunicados', on: '#C4C4BE', label: 'Roadmap' },
+      ],
+      catalogo: [
+        { chave: 'routine', nome: 'Rotina Escolar', rotas: '13 telas', versao: '2.4.0', dep: '—' },
+        { chave: 'events', nome: 'Eventos & Vendas', rotas: '7 telas', versao: '1.9.2', dep: 'finance' },
+        { chave: 'flow', nome: 'Formulários (Flow)', rotas: '5 telas', versao: '1.2.0', dep: '—' },
+        { chave: 'finance', nome: 'Financeiro', rotas: '5 telas', versao: '2.0.1', dep: '—' },
+      ],
+      usuarios: [
+        { nome: 'Patrícia Reis', email: 'patricia@vilanova.edu.br', papel: 'Coordenação', turmas: 'Infantil, Fund. I', status: 'Ativo', bg: P.bg, fg: P.fg },
+        { nome: 'Juliana Alencar', email: 'juliana@vilanova.edu.br', papel: 'Professor', turmas: '2º C, 3º A', status: 'Convite pendente', bg: A.bg, fg: A.fg },
+        { nome: 'Marcos Pinheiro', email: 'direcao@vilanova.edu.br', papel: 'Diretor', turmas: 'Todas', status: 'Ativo', bg: P.bg, fg: P.fg },
+        { nome: 'Rafael Lima', email: 'rafael.lima@gmail.com', papel: 'Responsável', turmas: 'Infantil II', status: 'Aguardando', bg: N.bg, fg: N.fg },
+      ],
+      permissoes: [
+        { mod: 'Chamada / frequência', ver: true, edit: true },
+        { mod: 'Ocorrências', ver: true, edit: true },
+        { mod: 'Ficha do aluno', ver: true, edit: false },
+        { mod: 'Financeiro', ver: false, edit: false },
+      ],
+      turmas: [
+        { nome: 'Infantil II — Manhã', etapa: 'Ed. Infantil', alunos: '18', prof: 'Camila Otero', sala: 'Sala 3' },
+        { nome: '1º ano A', etapa: 'Fundamental I', alunos: '22', prof: 'Juliana Alencar', sala: 'Sala 7' },
+        { nome: '4º ano B', etapa: 'Fundamental I', alunos: '24', prof: 'Sérgio Antunes', sala: 'Sala 11' },
+        { nome: '5º ano A', etapa: 'Fundamental I', alunos: '25', prof: 'Débora Mattos', sala: 'Sala 12' },
+      ],
+      alunos: [
+        { nome: 'Ana Beatriz Moreira', mat: 'MAT-2026-004518', turma: '1º ano A', resp: 'Cláudia Moreira', status: 'Matriculado', bg: P.bg, fg: P.fg },
+        { nome: 'Davi Nogueira Lima', mat: 'MAT-2026-004602', turma: 'Infantil II', resp: 'Rafael Lima', status: 'Matriculado', bg: P.bg, fg: P.fg },
+        { nome: 'Helena Sousa Prado', mat: 'MAT-2026-004711', turma: '4º ano B', resp: 'Marcos Prado', status: 'Pendência', bg: A.bg, fg: A.fg },
+        { nome: 'Théo Ribeiro Alencar', mat: 'MAT-2026-004804', turma: '2º ano C', resp: 'Juliana Alencar', status: 'Matriculado', bg: P.bg, fg: P.fg },
+        { nome: 'Valentina Duarte Sá', mat: 'MAT-2026-004890', turma: '5º ano A', resp: 'Renata Sá', status: 'Transferida', bg: N.bg, fg: N.fg },
+      ],
+      importPreview: [
+        { linha: '1', nome: 'Lucas Prado Nunes', turma: '3º ano A', aviso: 'ok', bg: P.bg, fg: P.fg },
+        { linha: '2', nome: 'Mariana Selles', turma: '3º ano A', aviso: 'CPF do responsável vazio', bg: A.bg, fg: A.fg },
+        { linha: '3', nome: 'Otávio B. Ramos', turma: '3ºA', aviso: 'Turma normalizada', bg: A.bg, fg: A.fg },
+        { linha: '4', nome: 'Ana Beatriz Moreira', turma: '1º ano A', aviso: 'Duplicado — será ignorado', bg: E.bg, fg: E.fg },
+      ],
+      relatorios: [
+        { nome: 'Frequência por turma', desc: 'Presenças, faltas e justificativas no período.' },
+        { nome: 'Ocorrências semanais', desc: 'Consolidado por turma e por aluno.' },
+        { nome: 'Checklist de sala', desc: 'Cumprimento diário por turma e responsável.' },
+        { nome: 'Financeiro do evento', desc: 'Vendas, pedidos pagos e pendências.' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

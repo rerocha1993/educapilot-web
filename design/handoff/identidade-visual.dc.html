@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#FAFAF9; -webkit-font-smoothing:antialiased; }
+  a { color:#275F86; text-decoration:none; }
+  a:hover { color:#1F4C6C; text-decoration:underline; }
+  ::selection { background:#DCEAF4; }
+</style>
+</helmet>
+
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:#2C2C29;background:#FAFAF9;padding:56px 40px 96px">
+<div style="max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:72px">
+
+  <header style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <svg viewBox="0 0 48 48" width="44" height="44" aria-label="EducaPilot">
+        <rect x="2" y="3" width="12" height="42" rx="6" fill="#C97328"></rect>
+        <rect x="8" y="3" width="38" height="42" rx="11" fill="#275F86"></rect>
+        <polyline points="18,25 24,31 36,17" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.02em;color:#1D1D1B">EducaPilot</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#77776F">Gestão escolar</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:18px;max-width:760px">
+      <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:56px;line-height:1.05;letter-spacing:-0.035em;margin:0;color:#1D1D1B;text-wrap:pretty">Identidade visual</h1>
+      <p style="margin:0;font-size:19px;line-height:1.6;color:#5A5A54;text-wrap:pretty">Base neutra e quente, dois destaques. Azul-ardósia para confiança e estrutura; terracota para calor humano e sinalização de ação. Pensada primeiro para telas densas de dados — dashboards, listas de turmas, tabelas de frequência — e depois para marketing.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:#ECECE9;color:#43433E">v1.0</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:#ECECE9;color:#43433E">Tailwind + shadcn/ui</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:#ECECE9;color:#43433E">Claro + escuro</span>
+      </div>
+    </div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #DEDEDA;padding-bottom:14px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C95">01</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.02em;margin:0;color:#1D1D1B">Símbolo e logotipo</h2>
+    </div>
+    <p style="margin:0;max-width:700px;font-size:16px;line-height:1.65;color:#5A5A54">O símbolo combina duas leituras: a <strong style="font-weight:600;color:#2C2C29">lombada de um caderno/prancheta</strong> (a faixa terracota à esquerda) e um <strong style="font-weight:600;color:#2C2C29">check de conferência</strong> — organização e educação, sem desenhar um lápis ou uma maçã. Só formas grandes: sobrevive a 16px.</p>
+
+    <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px">
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:32px;align-items:center;justify-content:center">
+        <svg viewBox="0 0 48 48" width="132" height="132">
+          <rect x="2" y="3" width="12" height="42" rx="6" fill="#C97328"></rect>
+          <rect x="8" y="3" width="38" height="42" rx="11" fill="#275F86"></rect>
+          <polyline points="18,25 24,31 36,17" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        </svg>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Símbolo primário</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Lockup horizontal</span>
+          <div style="display:flex;align-items:center;gap:12px">
+            <svg viewBox="0 0 48 48" width="36" height="36">
+              <rect x="2" y="3" width="12" height="42" rx="6" fill="#C97328"></rect>
+              <rect x="8" y="3" width="38" height="42" rx="11" fill="#275F86"></rect>
+              <polyline points="18,25 24,31 36,17" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:26px;letter-spacing:-0.03em;color:#1D1D1B">EducaPilot</span>
+          </div>
+          <div style="height:1px;background:#ECECE9"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Empilhado</span>
+          <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+            <svg viewBox="0 0 48 48" width="32" height="32">
+              <rect x="2" y="3" width="12" height="42" rx="6" fill="#C97328"></rect>
+              <rect x="8" y="3" width="38" height="42" rx="11" fill="#275F86"></rect>
+              <polyline points="18,25 24,31 36,17" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+            <div style="display:flex;flex-direction:column">
+              <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;letter-spacing:-0.03em;color:#1D1D1B">EducaPilot</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#77776F">Gestão escolar</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div style="background:#1D1D1B;border-radius:16px;padding:28px;display:flex;align-items:center;gap:10px">
+            <svg viewBox="0 0 48 48" width="28" height="28">
+              <rect x="2" y="3" width="12" height="42" rx="6" fill="#E08C45"></rect>
+              <rect x="8" y="3" width="38" height="42" rx="11" fill="#6FA8CE"></rect>
+              <polyline points="18,25 24,31 36,17" fill="none" stroke="#16211C" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:19px;letter-spacing:-0.03em;color:#FAFAF9">EducaPilot</span>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:28px;display:flex;align-items:center;gap:10px">
+            <svg viewBox="0 0 48 48" width="28" height="28">
+              <rect x="2" y="3" width="12" height="42" rx="6" fill="#77776F"></rect>
+              <rect x="8" y="3" width="38" height="42" rx="11" fill="#1D1D1B"></rect>
+              <polyline points="18,25 24,31 36,17" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:19px;letter-spacing:-0.03em;color:#1D1D1B">EducaPilot</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Escala mínima — ícone de app e favicon</span>
+      <div style="display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap">
+        <sc-for list="{{ iconSizes }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+            <svg viewBox="0 0 48 48" width="{{ s.px }}" height="{{ s.px }}">
+              <rect x="2" y="3" width="12" height="42" rx="6" fill="#C97328"></rect>
+              <rect x="8" y="3" width="38" height="42" rx="11" fill="#275F86"></rect>
+              <polyline points="18,25 24,31 36,17" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95">{{ s.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:8px;border-top:1px solid #ECECE9">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:600;color:#2E7D5B">Faça</span>
+          <span style="font-size:14px;line-height:1.6;color:#5A5A54">Respiro mínimo igual à altura da lombada. Abaixo de 20px, use a versão sem lombada (só o quadrado azul com o check).</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:600;color:#B3261E">Não faça</span>
+          <span style="font-size:14px;line-height:1.6;color:#5A5A54">Não aplique gradiente, sombra ou contorno no símbolo; não troque as cores por tons da paleta semântica; não incline o check.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #DEDEDA;padding-bottom:14px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C95">02</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.02em;margin:0;color:#1D1D1B">Paleta</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:#275F86;border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;min-height:190px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#BAD5E8">Primária</span>
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.02em;color:#FFFFFF">Azul-ardósia</span>
+          <span style="font-size:14px;line-height:1.6;color:#DCEAF4;max-width:320px">Marca, navegação, ações primárias. Sério sem ser cinza corporativo.</span>
+        </div>
+        <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#DCEAF4">
+          <span>#275F86</span><span>hsl(205 55% 34%)</span>
+        </div>
+      </div>
+      <div style="background:#C97328;border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;min-height:190px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#FAE6D2">Secundária</span>
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.02em;color:#FFFFFF">Terracota</span>
+          <span style="font-size:14px;line-height:1.6;color:#FDF4EC;max-width:320px">Calor humano: destaques, dados em gráficos, elementos de marca. Nunca em massa.</span>
+        </div>
+        <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FDF4EC">
+          <span>#C97328</span><span>hsl(29 67% 47%)</span>
+        </div>
+      </div>
+    </div>
+
+    <sc-for list="{{ scales }}" as="scale" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:baseline;gap:12px">
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#1D1D1B">{{ scale.name }}</span>
+          <span style="font-size:13px;color:#77776F">{{ scale.note }}</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:nowrap">
+          <sc-for list="{{ scale.steps }}" as="c" hint-placeholder-count="10">
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+              <div style="height:64px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:{{ c.hex }}"></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#43433E">{{ c.step }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#9C9C95">{{ c.hex }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <sc-for list="{{ semantic }}" as="s" hint-placeholder-count="4">
+        <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="height:56px;background:{{ s.hex }}"></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#1D1D1B">{{ s.name }}</span>
+            <span style="font-size:13px;line-height:1.55;color:#5A5A54">{{ s.use }}</span>
+            <div style="display:flex;flex-direction:column;gap:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#77776F;padding-top:4px;border-top:1px solid #ECECE9">
+              <span>claro {{ s.hex }}</span>
+              <span>escuro {{ s.dark }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background:#F5F5F3;border:1px solid #DEDEDA;border-radius:14px;padding:20px 24px;font-size:14px;line-height:1.65;color:#43433E">
+      <strong style="font-weight:600">Contraste:</strong> em fundo claro use primária 600 / secundária 500 ou mais escuro para texto e ícones (≥ 4.5:1 sobre branco). Em fundo escuro, suba dois passos: primária 300/400 e secundária 300/400 — os tons 500+ perdem legibilidade sobre superfícies escuras.
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #DEDEDA;padding-bottom:14px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C95">03</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.02em;margin:0;color:#1D1D1B">Tipografia</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:16px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Títulos</span>
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:46px;line-height:1;letter-spacing:-0.035em;color:#1D1D1B">Plus Jakarta Sans</span>
+        <span style="font-size:15px;line-height:1.6;color:#5A5A54">Geométrica com terminações levemente humanas — acolhedora sem ser lúdica. Pesos 600/700/800, tracking negativo a partir de 24px.</span>
+        <div style="display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px solid #ECECE9">
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:28px;letter-spacing:-0.03em;color:#1D1D1B">Frequência da turma 4º B</span>
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:18px;color:#43433E">Coordenação pedagógica</span>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:16px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Texto e dados</span>
+        <span style="font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:46px;line-height:1;letter-spacing:-0.02em;color:#1D1D1B">IBM Plex Sans</span>
+        <span style="font-size:15px;line-height:1.6;color:#5A5A54">Feita para interface densa: números tabulares, 1/l/I distinguíveis, ótima em 13–14px. IBM Plex Mono para IDs, matrículas e tokens.</span>
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid #ECECE9;font-variant-numeric:tabular-nums">
+          <span style="font-size:14px;color:#43433E">0123456789 — 1l I O0 · 92,4% presença</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#43433E">MAT-2026-004518</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1.1fr 1.4fr 1fr 1.4fr;padding:14px 24px;background:#F5F5F3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#77776F">
+        <span>Token</span><span>Fonte / peso</span><span>Tamanho / linha</span><span>Uso</span>
+      </div>
+      <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="7">
+        <div style="display:grid;grid-template-columns:1.1fr 1.4fr 1fr 1.4fr;padding:14px 24px;border-top:1px solid #ECECE9;font-size:13.5px;color:#43433E;align-items:center">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#275F86">{{ t.token }}</span>
+          <span>{{ t.font }}</span>
+          <span style="font-variant-numeric:tabular-nums">{{ t.size }}</span>
+          <span style="color:#77776F">{{ t.use }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #DEDEDA;padding-bottom:14px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C95">04</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.02em;margin:0;color:#1D1D1B">Aplicação em UI</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Botões</span>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#FFFFFF;background:#275F86;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;box-shadow:0 1px 2px rgba(24,47,65,0.24)" style-hover="background:#1F4C6C">Lançar notas</button>
+          <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#275F86;background:#FFFFFF;border:1px solid #C4C4BE;border-radius:8px;padding:10px 18px;cursor:pointer" style-hover="background:#F0F6FA;border-color:#8FB9D6">Ver turma</button>
+          <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#FFFFFF;background:#C97328;border:none;border-radius:8px;padding:10px 18px;cursor:pointer" style-hover="background:#A85D1E">Convidar responsável</button>
+          <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#5A5A54;background:transparent;border:none;border-radius:8px;padding:10px 14px;cursor:pointer" style-hover="background:#ECECE9;color:#2C2C29">Cancelar</button>
+          <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#9C9C95;background:#ECECE9;border:none;border-radius:8px;padding:10px 18px;cursor:not-allowed">Salvar</button>
+        </div>
+        <div style="height:1px;background:#ECECE9"></div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Badges de status</span>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <sc-for list="{{ badges }}" as="b" hint-placeholder-count="4">
+            <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:5px 11px 5px 9px;border-radius:999px;background:{{ b.bg }};color:{{ b.fg }};border:1px solid {{ b.bd }}">
+              <span style="width:7px;height:7px;border-radius:999px;background:{{ b.dot }}"></span>{{ b.label }}
+            </span>
+          </sc-for>
+        </div>
+        <span style="font-size:13px;line-height:1.6;color:#77776F">Status usa só a paleta semântica; o azul nunca vira status para não competir com a marca.</span>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#1D1D1B">Frequência semanal</span>
+            <span style="font-size:13px;color:#77776F">Ensino fundamental I · 12 turmas</span>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#E7F3EC;color:#22664A;border:1px solid #BFE0CE">+2,1 pp</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:40px;letter-spacing:-0.03em;color:#1D1D1B;font-variant-numeric:tabular-nums">92,4%</span>
+          <span style="font-size:13px;color:#77776F">média de presença</span>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px;height:120px">
+          <sc-for list="{{ chart }}" as="c" hint-placeholder-count="6">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px">
+              <div style="width:100%;display:flex;align-items:flex-end;gap:3px;height:96px">
+                <div style="flex:1;border-radius:5px 5px 0 0;background:#275F86;height:{{ c.a }}"></div>
+                <div style="flex:1;border-radius:5px 5px 0 0;background:#E08C45;height:{{ c.b }}"></div>
+              </div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9C9C95">{{ c.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:18px;padding-top:14px;border-top:1px solid #ECECE9">
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#5A5A54"><span style="width:10px;height:10px;border-radius:3px;background:#275F86"></span>Presenças</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#5A5A54"><span style="width:10px;height:10px;border-radius:3px;background:#E08C45"></span>Justificadas</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:16px;overflow:hidden">
+      <div style="padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #ECECE9">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#1D1D1B">Matrículas pendentes</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9C9C95">Tabela densa · 14px</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 0.9fr;padding:12px 24px;background:#F5F5F3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#77776F">
+        <span>Aluno</span><span>Turma</span><span>Responsável</span><span>Status</span>
+      </div>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 0.9fr;padding:13px 24px;border-top:1px solid #ECECE9;font-size:14px;color:#2C2C29;align-items:center" style-hover="background:#FAFAF9">
+          <span style="font-weight:500">{{ r.aluno }}</span>
+          <span style="color:#5A5A54">{{ r.turma }}</span>
+          <span style="color:#5A5A54">{{ r.resp }}</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};justify-self:start">{{ r.status }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background:#1A1A18;border:1px solid #2C2C29;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:20px;color:#F5F5F3;letter-spacing:-0.02em">Modo escuro</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#77776F">bg #1A1A18 · surface #232320</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="background:#232320;border:1px solid #35352F;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#F5F5F3">Frequência semanal</span>
+            <span style="font-size:13px;color:#9C9C95">Ensino fundamental I · 12 turmas</span>
+          </div>
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:36px;letter-spacing:-0.03em;color:#F5F5F3;font-variant-numeric:tabular-nums">92,4%</span>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:80px">
+            <sc-for list="{{ chart }}" as="c" hint-placeholder-count="6">
+              <div style="flex:1;display:flex;align-items:flex-end;gap:3px;height:80px">
+                <div style="flex:1;border-radius:5px 5px 0 0;background:#6FA8CE;height:{{ c.a }}"></div>
+                <div style="flex:1;border-radius:5px 5px 0 0;background:#EBA96F;height:{{ c.b }}"></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-wrap:wrap;gap:12px">
+            <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#122130;background:#6FA8CE;border:none;border-radius:8px;padding:10px 18px;cursor:pointer" style-hover="background:#8FB9D6">Lançar notas</button>
+            <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#DCEAF4;background:transparent;border:1px solid #43433E;border-radius:8px;padding:10px 18px;cursor:pointer" style-hover="background:#2C2C29">Ver turma</button>
+            <button style="font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#2A1808;background:#EBA96F;border:none;border-radius:8px;padding:10px 18px;cursor:pointer" style-hover="background:#F3C9A2">Convidar</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <sc-for list="{{ badgesDark }}" as="b" hint-placeholder-count="4">
+              <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:5px 11px 5px 9px;border-radius:999px;background:{{ b.bg }};color:{{ b.fg }};border:1px solid {{ b.bd }}">
+                <span style="width:7px;height:7px;border-radius:999px;background:{{ b.dot }}"></span>{{ b.label }}
+              </span>
+            </sc-for>
+          </div>
+          <span style="font-size:13.5px;line-height:1.65;color:#9C9C95">O escuro é neutro quente (não azulado) para conversar com a base clara. Superfícies sobem em luminância, nunca em saturação; texto principal #F5F5F3, secundário #9C9C95.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #DEDEDA;padding-bottom:14px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9C9C95">05</span>
+      <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.02em;margin:0;color:#1D1D1B">Tokens — Tailwind + shadcn/ui</h2>
+    </div>
+    <p style="margin:0;max-width:700px;font-size:16px;line-height:1.65;color:#5A5A54">Variáveis HSL no padrão shadcn (<code style="font-family:'IBM Plex Mono',monospace;font-size:14px;background:#ECECE9;padding:2px 6px;border-radius:4px">hsl(var(--primary))</code>). Cole em <code style="font-family:'IBM Plex Mono',monospace;font-size:14px;background:#ECECE9;padding:2px 6px;border-radius:4px">globals.css</code>; o bloco <code style="font-family:'IBM Plex Mono',monospace;font-size:14px;background:#ECECE9;padding:2px 6px;border-radius:4px">.dark</code> já traz os tons elevados.</p>
+    <pre style="margin:0;background:#1D1D1B;color:#DEDEDA;border-radius:16px;padding:28px;overflow:auto;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.75">@layer base {
+  :root {
+    --background: 40 20% 98%;        /* #FAFAF9 */
+    --foreground: 60 3% 11%;         /* #1D1D1B */
+    --card: 0 0% 100%;
+    --card-foreground: 60 3% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 60 3% 11%;
+    --muted: 40 6% 96%;              /* #F5F5F3 */
+    --muted-foreground: 51 4% 45%;   /* #77776F */
+    --border: 45 6% 86%;             /* #DEDEDA */
+    --input: 45 6% 86%;
+    --ring: 205 55% 34%;
+
+    --primary: 205 55% 34%;          /* #275F86 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 29 67% 47%;         /* #C97328 */
+    --secondary-foreground: 0 0% 100%;
+    --accent: 205 55% 96%;           /* #F0F6FA  hover suave */
+    --accent-foreground: 205 55% 27%;
+
+    --success: 154 46% 33%;          /* #2E7D5B */
+    --success-foreground: 0 0% 100%;
+    --warning: 35 71% 42%;           /* #B7791F */
+    --warning-foreground: 0 0% 100%;
+    --destructive: 3 71% 41%;        /* #B3261E */
+    --destructive-foreground: 0 0% 100%;
+
+    --chart-1: 205 55% 34%;
+    --chart-2: 29 67% 47%;
+    --chart-3: 205 40% 58%;
+    --chart-4: 29 60% 68%;
+    --chart-5: 51 4% 45%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 60 4% 10%;         /* #1A1A18 */
+    --foreground: 40 6% 96%;         /* #F5F5F3 */
+    --card: 51 5% 13%;               /* #232320 */
+    --card-foreground: 40 6% 96%;
+    --popover: 51 5% 13%;
+    --popover-foreground: 40 6% 96%;
+    --muted: 55 5% 17%;              /* #2C2C29 */
+    --muted-foreground: 51 4% 60%;   /* #9C9C95 */
+    --border: 51 6% 20%;             /* #35352F */
+    --input: 51 6% 20%;
+    --ring: 205 47% 62%;
+
+    --primary: 205 47% 62%;          /* #6FA8CE */
+    --primary-foreground: 208 45% 13%;
+    --secondary: 29 71% 68%;         /* #EBA96F */
+    --secondary-foreground: 27 68% 10%;
+    --accent: 205 30% 20%;
+    --accent-foreground: 205 60% 88%;
+
+    --success: 153 42% 56%;          /* #5FBF92 */
+    --success-foreground: 155 40% 10%;
+    --warning: 41 75% 60%;           /* #E8B44A */
+    --warning-foreground: 38 60% 10%;
+    --destructive: 5 82% 73%;        /* #F08A82 */
+    --destructive-foreground: 5 50% 12%;
+
+    --chart-1: 205 47% 62%;
+    --chart-2: 29 71% 68%;
+    --chart-3: 205 35% 45%;
+    --chart-4: 29 50% 50%;
+    --chart-5: 51 4% 60%;
+  }
+}
+
+/* tailwind.config.ts — extensões além do preset shadcn */
+theme.extend = {
+  fontFamily: {
+    sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+    display: ['"Plus Jakarta Sans"', 'sans-serif'],
+    mono: ['"IBM Plex Mono"', 'monospace'],
+  },
+  colors: {
+    success: { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+    warning: { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+  },
+}</pre>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#1D1D1B">Raio e sombra</span>
+        <span style="font-size:13.5px;line-height:1.6;color:#5A5A54">radius 8px em controles, 14–16px em cards. Uma sombra só: 0 1px 2px rgba(24,47,65,.08) — profundidade vem da borda, não do blur.</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#1D1D1B">Multi-tenant</span>
+        <span style="font-size:13.5px;line-height:1.6;color:#5A5A54">A escola personaliza apenas <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">--primary</code> e o logo do cabeçalho. Semânticas, neutros e a terracota permanecem do EducaPilot.</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #DEDEDA;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:#1D1D1B">Densidade</span>
+        <span style="font-size:13.5px;line-height:1.6;color:#5A5A54">Linha de tabela 44px (toque de responsável no mobile), texto 14px, números com tabular-nums sempre.</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() {
+    const mk = (arr) => arr.map(([step, hex]) => ({ step, hex }));
+    return {
+      iconSizes: [{px:16,label:'16px'},{px:24,label:'24px'},{px:32,label:'32px'},{px:48,label:'48px'},{px:64,label:'64px'}],
+      scales: [
+        { name: 'Primária — Azul-ardósia', note: 'texto/ícone em fundo claro a partir de 600; em escuro use 300/400', steps: mk([['50','#F0F6FA'],['100','#DCEAF4'],['200','#BAD5E8'],['300','#8FB9D6'],['400','#5B95BC'],['500','#37769F'],['600','#275F86'],['700','#1F4C6C'],['800','#1B3D55'],['900','#182F41']]) },
+        { name: 'Secundária — Terracota', note: 'destaques e séries de dados; nunca como cor de fundo de tela', steps: mk([['50','#FDF4EC'],['100','#FAE6D2'],['200','#F3C9A2'],['300','#EBA96F'],['400','#E08C45'],['500','#C97328'],['600','#A85D1E'],['700','#85491A'],['800','#663913'],['900','#4A2A10']]) },
+        { name: 'Neutros — cinza quente', note: 'fundo, superfícies, bordas e texto', steps: mk([['0','#FFFFFF'],['25','#FAFAF9'],['50','#F5F5F3'],['100','#ECECE9'],['200','#DEDEDA'],['300','#C4C4BE'],['400','#9C9C95'],['500','#77776F'],['600','#5A5A54'],['700','#43433E'],['800','#2C2C29'],['900','#1D1D1B']]) },
+      ],
+      semantic: [
+        { name: 'Sucesso', hex: '#2E7D5B', dark: '#5FBF92', use: 'Aprovado, matrícula confirmada, presença lançada.' },
+        { name: 'Alerta', hex: '#B7791F', dark: '#E8B44A', use: 'Pendente de revisão, prazo próximo, dado incompleto.' },
+        { name: 'Erro', hex: '#B3261E', dark: '#F08A82', use: 'Atrasado, falha de validação, ação destrutiva.' },
+        { name: 'Informação', hex: '#37769F', dark: '#8FB9D6', use: 'Avisos do sistema — tom da primária, um passo mais claro.' },
+      ],
+      typeScale: [
+        { token: 'display', font: 'Plus Jakarta Sans 800', size: '40 / 44', use: 'Título de página de marketing' },
+        { token: 'h1', font: 'Plus Jakarta Sans 700', size: '28 / 34', use: 'Título de tela do dashboard' },
+        { token: 'h2', font: 'Plus Jakarta Sans 700', size: '20 / 28', use: 'Título de card, seção' },
+        { token: 'body', font: 'IBM Plex Sans 400', size: '15 / 24', use: 'Texto corrido, formulários' },
+        { token: 'body-sm', font: 'IBM Plex Sans 400', size: '14 / 20', use: 'Célula de tabela, listas densas' },
+        { token: 'label', font: 'IBM Plex Sans 600', size: '13 / 18', use: 'Rótulo de campo, badge' },
+        { token: 'overline', font: 'IBM Plex Mono 500', size: '11 / 16 · 0.08em', use: 'Cabeçalho de coluna, metadados' },
+      ],
+      badges: [
+        { label: 'Aprovado', bg: '#E7F3EC', fg: '#22664A', bd: '#BFE0CE', dot: '#2E7D5B' },
+        { label: 'Pendente', bg: '#FBF2DF', fg: '#8A5A16', bd: '#EBD8AC', dot: '#B7791F' },
+        { label: 'Atrasado', bg: '#FBEAE8', fg: '#8F1F19', bd: '#F0CCC8', dot: '#B3261E' },
+        { label: 'Rascunho', bg: '#ECECE9', fg: '#5A5A54', bd: '#DEDEDA', dot: '#9C9C95' },
+      ],
+      badgesDark: [
+        { label: 'Aprovado', bg: '#172C22', fg: '#8FD8B4', bd: '#254A38', dot: '#5FBF92' },
+        { label: 'Pendente', bg: '#2E2413', fg: '#E8C685', bd: '#4C3C1D', dot: '#E8B44A' },
+        { label: 'Atrasado', bg: '#301B19', fg: '#F0AAA4', bd: '#4E2A27', dot: '#F08A82' },
+        { label: 'Rascunho', bg: '#2C2C29', fg: '#9C9C95', bd: '#35352F', dot: '#77776F' },
+      ],
+      chart: [
+        { label: 'Seg', a: '78%', b: '22%' },
+        { label: 'Ter', a: '86%', b: '16%' },
+        { label: 'Qua', a: '72%', b: '30%' },
+        { label: 'Qui', a: '90%', b: '12%' },
+        { label: 'Sex', a: '64%', b: '34%' },
+      ],
+      rows: [
+        { aluno: 'Ana Beatriz Moreira', turma: '1º ano A', resp: 'Cláudia Moreira', status: 'Pendente', bg: '#FBF2DF', fg: '#8A5A16' },
+        { aluno: 'Davi Nogueira Lima', turma: 'Infantil II', resp: 'Rafael Lima', status: 'Aprovado', bg: '#E7F3EC', fg: '#22664A' },
+        { aluno: 'Helena Sousa Prado', turma: '4º ano B', resp: 'Marcos Prado', status: 'Atrasado', bg: '#FBEAE8', fg: '#8F1F19' },
+        { aluno: 'Théo Ribeiro Alencar', turma: '2º ano C', resp: 'Juliana Alencar', status: 'Pendente', bg: '#FBF2DF', fg: '#8A5A16' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

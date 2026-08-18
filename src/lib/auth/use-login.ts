@@ -6,11 +6,12 @@ import type { LoginResponse } from "./types";
 export interface LoginInput {
   email: string;
   password: string;
+  rememberMe: boolean;
 }
 
 export function useLogin() {
   return useMutation({
-    mutationFn: async ({ email, password }: LoginInput) => {
+    mutationFn: async ({ email, password, rememberMe }: LoginInput) => {
       const { data, error, response } = await coreApi.POST("/api/Auth/login", {
         body: { email, password },
       });
@@ -26,7 +27,7 @@ export function useLogin() {
       // Resposta real não está no schema do Swagger (sem [ProducesResponseType]) —
       // ver src/lib/auth/types.ts.
       const login = data as unknown as LoginResponse;
-      saveSession(login);
+      saveSession(login, rememberMe);
       return login;
     },
   });

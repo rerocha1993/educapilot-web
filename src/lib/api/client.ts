@@ -1,4 +1,5 @@
 import createClient, { type Middleware } from "openapi-fetch";
+import { getToken } from "../auth/session";
 import type { paths as CorePaths } from "./generated/core";
 import type { paths as TasksPaths } from "./generated/tasks";
 import type { paths as FlowPaths } from "./generated/flow";
@@ -14,11 +15,9 @@ const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141"
  */
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
-    if (typeof window !== "undefined") {
-      const token = window.localStorage.getItem("educapilot_token");
-      if (token) {
-        request.headers.set("Authorization", `Bearer ${token}`);
-      }
+    const token = getToken();
+    if (token) {
+      request.headers.set("Authorization", `Bearer ${token}`);
     }
     return request;
   },

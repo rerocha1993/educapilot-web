@@ -4,12 +4,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Tokens de design do EducaPilot (2026-08), a partir do handoff
+ * "EducaPilot Identidade Visual" — ver design_handoff_educapilot/README.md.
+ * Roxo dessaturado é a cor de destaque (decisão do cliente); o laranja da
+ * marca (#F58220) é EXCLUSIVO do logo, nunca usado como cor de UI.
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -27,6 +33,20 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-soft-foreground: var(--destructive-soft-foreground);
+  --color-destructive-border: var(--destructive-border);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-warning-border: var(--warning-border);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -35,10 +55,15 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-kernel: var(--kernel);
+  --color-kernel-foreground: var(--kernel-foreground);
+  --color-kernel-accent: var(--kernel-accent);
+  --color-kernel-border: var(--kernel-border);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,72 +74,129 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #FAFAF9;
+  --foreground: #1D1D1B;
+  --card: #FFFFFF;
+  --card-foreground: #1D1D1B;
+  --popover: #FFFFFF;
+  --popover-foreground: #1D1D1B;
+  --muted: #F5F5F3;
+  --muted-foreground: #77776F;
+  --border: #D9D7D2;
+  --input: #D9D7D2;
+  --ring: #5B4E86;
+
+  --primary: #5B4E86;
+  --primary-hover: #4A3F70;
+  --primary-foreground: #FFFFFF;
+  /* Secundário fica neutro de propósito — o laranja da marca não é cor de UI. */
+  --secondary: #F5F5F3;
+  --secondary-foreground: #2C2C29;
+  --accent: #EDEBF3;
+  --accent-foreground: #4A3F70;
+
+  --success: #2E7D5B;
+  --success-foreground: #FFFFFF;
+  --success-soft: #E7F3EC;
+  --success-soft-foreground: #22664A;
+  --success-border: #BFE0CE;
+
+  --warning: #B7791F;
+  --warning-foreground: #FFFFFF;
+  --warning-soft: #FBF2DF;
+  --warning-soft-foreground: #8A5A16;
+  --warning-border: #EBD8AC;
+
+  --destructive: #B3261E;
+  --destructive-foreground: #FFFFFF;
+  --destructive-soft: #FBEAE8;
+  --destructive-soft-foreground: #8F1F19;
+  --destructive-border: #F0CCC8;
+
+  --chart-1: #5B4E86;
+  --chart-2: #C4C0D4;
+  --chart-3: #8C82AE;
+  --chart-4: #77776F;
+  --chart-5: #9C9C95;
+
+  --radius: 0.5rem;
+
+  --sidebar: #FAFAF9;
+  --sidebar-foreground: #1D1D1B;
+  --sidebar-primary: #5B4E86;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EDEBF3;
+  --sidebar-accent-foreground: #4A3F70;
+  --sidebar-border: #ECEAE6;
+  --sidebar-ring: #5B4E86;
+
+  /* Superfície escura exclusiva do kernel/master (não é o .dark de preferência
+     do usuário — é uma área do produto sempre escura, pra deixar explícito que
+     é outro escopo). Ver README do handoff, seção "Estrutura de navegação". */
+  --kernel: #1D1D1B;
+  --kernel-foreground: #F5F5F3;
+  --kernel-accent: #B9AEDD;
+  --kernel-border: #35352F;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1A1A18;
+  --foreground: #F5F5F3;
+  --card: #232320;
+  --card-foreground: #F5F5F3;
+  --popover: #232320;
+  --popover-foreground: #F5F5F3;
+  --muted: #232320;
+  --muted-foreground: #9C9C95;
+  --border: #35352F;
+  --input: #35352F;
+  --ring: #B9AEDD;
+
+  --primary: #B9AEDD;
+  --primary-hover: #C9C0E6;
+  --primary-foreground: #1D1D1B;
+  --secondary: #2C2C29;
+  --secondary-foreground: #F5F5F3;
+  --accent: #35304A;
+  --accent-foreground: #D9D4E6;
+
+  --success: #5FBF92;
+  --success-foreground: #12331F;
+  --success-soft: #1E3328;
+  --success-soft-foreground: #8FD9B4;
+  --success-border: #2E5B44;
+
+  --warning: #E8B44A;
+  --warning-foreground: #3A2B0A;
+  --warning-soft: #3A2E14;
+  --warning-soft-foreground: #F0CC85;
+  --warning-border: #6B5323;
+
+  --destructive: #F08A82;
+  --destructive-foreground: #330E0B;
+  --destructive-soft: #3A1D19;
+  --destructive-soft-foreground: #F5AFA9;
+  --destructive-border: #6B3530;
+
+  --chart-1: #B9AEDD;
+  --chart-2: #6F6785;
+  --chart-3: #8C82AE;
+  --chart-4: #77776F;
+  --chart-5: #9C9C95;
+
+  --sidebar: #1D1D1B;
+  --sidebar-foreground: #F5F5F3;
+  --sidebar-primary: #B9AEDD;
+  --sidebar-primary-foreground: #1D1D1B;
+  --sidebar-accent: #35304A;
+  --sidebar-accent-foreground: #D9D4E6;
+  --sidebar-border: #35352F;
+  --sidebar-ring: #B9AEDD;
+
+  --kernel: #1D1D1B;
+  --kernel-foreground: #F5F5F3;
+  --kernel-accent: #B9AEDD;
+  --kernel-border: #35352F;
 }
 
 @layer base {
@@ -126,5 +208,15 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+  .font-numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 }
