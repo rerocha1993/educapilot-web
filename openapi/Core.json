@@ -1520,10 +1520,6 @@
             "type": "string",
             "format": "date-time"
           },
-          "jwtSecret": {
-            "type": "string",
-            "nullable": true
-          },
           "urlSistema": {
             "type": "string",
             "nullable": true
@@ -1616,10 +1612,6 @@
             "nullable": true
           },
           "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "passwordHash": {
             "type": "string",
             "nullable": true
           },

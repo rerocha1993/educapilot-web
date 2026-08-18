@@ -1406,7 +1406,6 @@ export interface components {
             ativo?: boolean;
             /** Format: date-time */
             dataCriacao?: string;
-            jwtSecret?: string | null;
             urlSistema?: string | null;
             users?: components["schemas"]["User"][] | null;
             asaasCustomerId?: string | null;
@@ -1434,7 +1433,6 @@ export interface components {
             fullName?: string | null;
             cpf?: string | null;
             email?: string | null;
-            passwordHash?: string | null;
             userType?: string | null;
             ativo?: boolean;
             /** Format: date-time */
