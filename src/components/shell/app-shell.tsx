@@ -3,15 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  CalendarCheck,
-  Settings,
-  ShoppingBag,
-  FileStack,
-  Wallet,
-  SlidersHorizontal,
-  LogOut,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,19 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { StoredSession } from "@/lib/auth/types";
 import { clearSession } from "@/lib/auth/session";
+import { useActiveModules } from "@/lib/kernel/use-active-modules";
+import { NAV_ITEMS } from "@/lib/kernel/nav-items";
 import { cn } from "@/lib/utils";
-
-// Áreas do menu — ver design_handoff_educapilot/README.md, "Estrutura de navegação".
-// TODO: montar dinamicamente a partir dos módulos contratados (GET /api/tenants/modules)
-// em vez de fixo, quando o gate de módulo por tenant estiver ligado no front.
-const NAV_ITEMS = [
-  { href: "/", label: "Rotina", icon: CalendarCheck },
-  { href: "/admin", label: "Administração", icon: Settings },
-  { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag },
-  { href: "/flow", label: "Formulários", icon: FileStack },
-  { href: "/finance", label: "Financeiro", icon: Wallet },
-  { href: "/settings", label: "Configurações", icon: SlidersHorizontal },
-];
 
 export function AppShell({
   session,
@@ -44,6 +26,15 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: activeModules, isLoading: modulesLoading } = useActiveModules();
+
+  const activeSlug = new Set((activeModules ?? []).map((m) => m.slug));
+
+  // Enquanto carrega, mostra só o que não depende de módulo — evita um flash de
+  // itens que o tenant não tem, e falha fechado (não aberto) se a busca der erro.
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => item.moduleSlug === null || (!modulesLoading && activeSlug.has(item.moduleSlug))
+  );
 
   function handleLogout() {
     clearSession();
@@ -68,7 +59,7 @@ export function AppShell({
         </Link>
 
         <nav className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
+          {visibleItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
