@@ -13,6 +13,7 @@ const ITEMS = [
   { href: "/faltas", label: "Faltas" },
   { href: "/checklist", label: "Checklist" },
   { href: "/ocorrencias", label: "Ocorrências" },
+  { href: "/materiais", label: "Materiais" },
 ];
 
 export function RotinaNav() {
