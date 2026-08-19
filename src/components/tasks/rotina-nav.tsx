@@ -15,6 +15,7 @@ const ITEMS = [
   { href: "/ocorrencias", label: "Ocorrências" },
   { href: "/materiais", label: "Materiais" },
   { href: "/reunioes", label: "Reuniões" },
+  { href: "/observacao-semanal", label: "Observação semanal" },
 ];
 
 export function RotinaNav() {
