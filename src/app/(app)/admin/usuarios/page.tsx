@@ -266,7 +266,7 @@ export default function UsuariosPage() {
               </Label>
               <Select value={userType} onValueChange={(v) => v && setUserType(v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>{(v: string) => ROLE_LABELS[v] ?? v}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Admin">Administrador</SelectItem>
