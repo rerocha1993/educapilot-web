@@ -1755,6 +1755,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Occurrence/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    startDate?: string;
+                    endDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Reports/available": {
         parameters: {
             query?: never;
@@ -2136,11 +2172,13 @@ export interface components {
             observation?: string | null;
             weeklyObservation?: string | null;
             solution?: string | null;
+            categoria?: string | null;
             parentsNotified?: boolean;
             isWeeklyReport?: boolean;
             /** Format: date-time */
             createdAt?: string;
             students?: components["schemas"]["Student"][] | null;
+            student?: components["schemas"]["Student"];
             teacher?: components["schemas"]["User"];
             class?: components["schemas"]["Class"];
             /** Format: uuid */
