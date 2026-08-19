@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RotinaNav } from "@/components/tasks/rotina-nav";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useAttendanceByClass,
@@ -115,6 +116,8 @@ export default function ChamadaPage() {
 
   return (
     <div className="flex flex-col gap-4 pb-20">
+      <RotinaNav />
+
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-heading text-xl font-bold">
