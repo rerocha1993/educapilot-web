@@ -532,7 +532,32 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChecklistTemplates"];
+                    "text/json": components["schemas"]["ChecklistTemplates"];
+                    "application/*+json": components["schemas"]["ChecklistTemplates"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         post?: never;
         delete: {
             parameters: {
@@ -554,6 +579,47 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ClassroomChecklist/checklists/{id}/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": number[];
+                    "text/json": number[];
+                    "application/*+json": number[];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -608,7 +674,32 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChecklistItem"];
+                    "text/json": components["schemas"]["ChecklistItem"];
+                    "application/*+json": components["schemas"]["ChecklistItem"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         post?: never;
         delete: {
             parameters: {
@@ -630,6 +721,47 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ClassroomChecklist/checklists/{checklistId}/items/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    checklistId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": number[];
+                    "text/json": number[];
+                    "application/*+json": number[];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -738,6 +870,79 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ClassroomChecklist/classes/{classId}/checklists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    classId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ClassroomChecklist/checklists/{checklistId}/fill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    classId?: number;
+                    date?: string;
+                };
+                header?: never;
+                path: {
+                    checklistId: number;
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -1826,6 +2031,10 @@ export interface components {
             /** Format: int32 */
             checklistTemplateId?: number;
             description?: string | null;
+            /** Format: int32 */
+            order?: number;
+            tipo?: string | null;
+            ativo?: boolean;
             checklistTemplates?: components["schemas"]["ChecklistTemplates"];
             /** Format: uuid */
             tenantId?: string;
@@ -1854,8 +2063,22 @@ export interface components {
             /** Format: int32 */
             checklistItemId?: number;
             isChecked?: boolean;
+            /** Format: int32 */
+            countValue?: number | null;
+            /** Format: date-time */
+            checkedAt?: string | null;
             checklistResponse?: components["schemas"]["ChecklistResponse"];
             checklistItem?: components["schemas"]["ChecklistItem"];
+            /** Format: uuid */
+            tenantId?: string;
+        };
+        ChecklistTemplateClass: {
+            /** Format: int32 */
+            checklistTemplateId?: number;
+            checklistTemplates?: components["schemas"]["ChecklistTemplates"];
+            /** Format: int32 */
+            classId?: number;
+            class?: components["schemas"]["Class"];
             /** Format: uuid */
             tenantId?: string;
         };
@@ -1866,6 +2089,7 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             items?: components["schemas"]["ChecklistItem"][] | null;
+            templateClasses?: components["schemas"]["ChecklistTemplateClass"][] | null;
             /** Format: uuid */
             tenantId?: string;
         };
@@ -1959,7 +2183,6 @@ export interface components {
             ativo?: boolean;
             /** Format: date-time */
             dataCriacao?: string;
-            jwtSecret?: string | null;
             urlSistema?: string | null;
             users?: components["schemas"]["User"][] | null;
             asaasCustomerId?: string | null;
@@ -1977,7 +2200,6 @@ export interface components {
             fullName?: string | null;
             cpf?: string | null;
             email?: string | null;
-            passwordHash?: string | null;
             userType?: string | null;
             ativo?: boolean;
             /** Format: date-time */
