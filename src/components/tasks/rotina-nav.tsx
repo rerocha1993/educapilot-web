@@ -16,6 +16,9 @@ const ITEMS = [
   { href: "/materiais", label: "Materiais" },
   { href: "/reunioes", label: "Reuniões" },
   { href: "/observacao-semanal", label: "Observação semanal" },
+  { href: "/planejamento-semanal", label: "Planejamento semanal" },
+  { href: "/notificacoes", label: "Notificações" },
+  { href: "/relatorios", label: "Relatórios" },
 ];
 
 export function RotinaNav() {

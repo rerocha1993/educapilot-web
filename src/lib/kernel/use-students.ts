@@ -12,6 +12,11 @@ export interface StudentDto {
   classId: number;
   createdAt: string;
   tenantId: string;
+  // Saúde do aluno (R5) — adicionado 2026-08, não existia antes.
+  allergies: string | null;
+  continuousMedication: string | null;
+  dietaryRestriction: string | null;
+  healthInsurance: string | null;
 }
 
 export function useStudentsByClass(classId: number | null) {
@@ -33,6 +38,10 @@ export interface SaveStudentInput {
   fullName: string;
   birthDate: string;
   classId: number;
+  allergies?: string | null;
+  continuousMedication?: string | null;
+  dietaryRestriction?: string | null;
+  healthInsurance?: string | null;
 }
 
 export function useSaveStudent() {

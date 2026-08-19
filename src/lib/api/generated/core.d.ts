@@ -1387,6 +1387,10 @@ export interface components {
             class?: components["schemas"]["Class"];
             /** Format: uuid */
             tenantId?: string;
+            allergies?: string | null;
+            continuousMedication?: string | null;
+            dietaryRestriction?: string | null;
+            healthInsurance?: string | null;
         };
         Tenant: {
             /** Format: uuid */

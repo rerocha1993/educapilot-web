@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -55,14 +57,26 @@ export default function AlunosPage() {
   const [editing, setEditing] = useState<StudentDto | "new" | null>(null);
   const [fullName, setFullName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [continuousMedication, setContinuousMedication] = useState("");
+  const [dietaryRestriction, setDietaryRestriction] = useState("");
+  const [healthInsurance, setHealthInsurance] = useState("");
 
   useEffect(() => {
     if (editing === "new") {
       setFullName("");
       setBirthDate("");
+      setAllergies("");
+      setContinuousMedication("");
+      setDietaryRestriction("");
+      setHealthInsurance("");
     } else if (editing) {
       setFullName(editing.fullName);
       setBirthDate(editing.birthDate.slice(0, 10));
+      setAllergies(editing.allergies ?? "");
+      setContinuousMedication(editing.continuousMedication ?? "");
+      setDietaryRestriction(editing.dietaryRestriction ?? "");
+      setHealthInsurance(editing.healthInsurance ?? "");
     }
   }, [editing]);
 
@@ -78,6 +92,10 @@ export default function AlunosPage() {
         fullName: fullName.trim(),
         birthDate,
         classId: selectedClassId,
+        allergies: allergies.trim() || null,
+        continuousMedication: continuousMedication.trim() || null,
+        dietaryRestriction: dietaryRestriction.trim() || null,
+        healthInsurance: healthInsurance.trim() || null,
       });
       toast.success(editing === "new" ? "Aluno cadastrado." : "Aluno atualizado.");
       setEditing(null);
@@ -181,7 +199,17 @@ export default function AlunosPage() {
 
               {filteredStudents.map((s) => (
                 <TableRow key={s.id}>
-                  <TableCell className="font-medium">{s.fullName}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1.5">
+                      {s.fullName}
+                      {s.allergies && (
+                        <Badge className="gap-1 bg-destructive-soft text-destructive-soft-foreground">
+                          <AlertTriangle className="size-3" />
+                          Alergia
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-mono text-sm tabular-nums">
                     {formatDate(s.birthDate)}
                   </TableCell>
@@ -232,6 +260,49 @@ export default function AlunosPage() {
                 Data de nascimento
               </Label>
               <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+            </div>
+
+            <div className="border-t border-border pt-3">
+              <p className="mb-3 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Saúde (R5)
+              </p>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Alergias</Label>
+                  <Textarea
+                    value={allergies}
+                    onChange={(e) => setAllergies(e.target.value)}
+                    rows={2}
+                    placeholder="Nenhuma conhecida"
+                  />
+                </div>
+                <div className="flex flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Medicação contínua</Label>
+                  <Textarea
+                    value={continuousMedication}
+                    onChange={(e) => setContinuousMedication(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="flex flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Restrição alimentar</Label>
+                  <Textarea
+                    value={dietaryRestriction}
+                    onChange={(e) => setDietaryRestriction(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="flex flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Convênio</Label>
+                  <Input value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} />
+                </div>
+              </div>
+              {/* Timeline de registros recentes faz parte do wireframe R5, mas não tem
+                  fonte de dados no backend (não é um histórico, é só o estado atual). */}
+              <p className="mt-3 text-xs text-muted-foreground">
+                Histórico de registros de saúde ainda não é suportado pelo backend —
+                estes campos guardam só o estado atual.
+              </p>
             </div>
           </div>
 
