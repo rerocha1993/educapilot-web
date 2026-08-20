@@ -3,8 +3,9 @@
 Relação do que foi feito de diferente em relação ao wireframe/plano original, bugs
 reais encontrados e corrigidos no backend, e decisões tomadas sem parar pra
 perguntar (conforme pedido). Cobre o rebuild completo do frontend (Flutter →
-Next.js/React), os módulos **Rotina** (R1–R13), **Financeiro** ($1–$5) e
-**Formulários Dinâmicos** (F1–F5) por inteiro, e toda a área de
+Next.js/React) e **todo o escopo original**: os módulos **Rotina**
+(R1–R13), **Financeiro** ($1–$5), **Formulários Dinâmicos** (F1–F5) e
+**Eventos & Vendas** (E1–E5) por inteiro, e toda a área de
 **Administração** (A1, A3–A5, A7–A10, exceto A6).
 
 ---
@@ -62,6 +63,12 @@ testando cada tela contra o backend real, e corrigidos na hora.
 | 29 | `TenantModulesController.UpdateModules` (POST, usado pelo admin master pra trocar módulos de uma escola) lia o tenant-alvo do claim `TenantId` do *próprio* token do chamador — mas um token Master nunca carrega esse claim | Único consumidor pretendido (admin master) **sempre** recebia `UnauthorizedAccessException` — não existia forma nenhuma de trocar os módulos de uma escola pela API | Rota trocada pra receber o tenant-alvo explicitamente (`POST api/tenants/modules/{tenantId}`) |
 | 30 | `IModuleMenuRepository`/`IModuleMenuService` nunca registrados no DI (mesmo padrão de sempre) | `ModuleController` inteiro (A4) sempre dava erro de ativação de serviço, mascarado como 401 | Registrado no `Program.cs` |
 | 31 | `ModuleDto` nunca expunha `IsActive` em nenhum dos 5 pontos onde é montado (`ModuleService` × 4, `TenantModuleService` × 1) — mesmo `ModuleService.DeleteAsync` fazendo soft-delete via `IsActive=false` | A4 sempre mostrava "Inativo" pra todo módulo; A3 (que só lista módulos ativos pra oferecer contratação) sempre ficava vazia mesmo com o catálogo populado | Campo adicionado ao DTO e mapeado nos 5 pontos |
+| 32 | `IAsaasPaymentService`/`ITenantAsaasConfigEventRepository` nunca registrados no DI (mesmo padrão recorrente) + faltava o `using` do namespace no `Program.cs` | `PaymentController` (checkout Pix, E7) sempre dava erro de ativação de serviço, mascarado como 401 | Registrado + `using` adicionado |
+| 33 | `OrderEventHub.EntrarNoGrupo` (SignalR) — bug de segurança real: deixava qualquer cliente conectado entrar no grupo de **qualquer** tenant só informando o GUID, sem checar contra o tenant real da conexão autenticada | Um cliente malicioso podia se inscrever nos broadcasts de pedidos (nome do comprador, valor total) de qualquer escola só adivinhando/enumerando TenantIds | Validado contra o `TenantId` real da conexão antes de deixar entrar no grupo |
+| 34 | `OrderProduct_event.DataCriacao` (DateTime não-anulável, sem default) nunca era preenchida no Create | Todo item de pedido gravava `DateTime.MinValue` — mesmo padrão de bug de datetime já visto várias vezes | Preenchida com a mesma data do pedido |
+| 35 | `OrderEventRepository.GetAllPendingByTenantAsync` filtrava `Status == "Pendente"`, mas o Create real sempre grava `"Em Producao"` | Consulta sempre vazia (método ainda não chamado por nenhum controller, achado durante investigação — não estava quebrando nada em produção) | Filtro corrigido pra bater com o valor real gravado |
+| 36 | `AppDbContext.SaveChangesAsync` (continuação do bug estrutural do item 27) sobrescrevia incondicionalmente o `TenantId` de toda entidade nova com o tenant **ambiente** da requisição, mesmo quando o próprio código já tinha definido um `TenantId` explícito por motivo legítimo | Um admin Master **nunca** conseguia criar um vínculo `TenantModule` novo pra uma escola (só reativar um que já existisse) — achado ao vivo contratando o módulo Events pela primeira vez pra um tenant real: "TenantId não encontrado no contexto." mesmo o service já setando o TenantId certo | Só carimba o TenantId ambiente quando a entidade ainda está em `Guid.Empty` — passa a respeitar um TenantId já definido deliberadamente pelo serviço |
+| 37 | `Order_event.StatusPayment` (enum não-anulável, com default só pro C#) — a coluna real no banco é nullable e **15 dos 18 pedidos reais** do tenant de teste tinham `NULL` (criados antes desse campo existir/ser preenchido) | Assim que `StatusPayment` passou a ser exposto no DTO (item acima), todo `GET` de pedidos quebrava relendo esses 15 registros: "Data is Null" | Trocado pra `PaymentStatus?` — `null` vira um estado "não informado" explícito na tela, sem presumir Aguardando nem Pago pra dado histórico incerto |
 
 Todos confirmados ao vivo contra o LocalDB real, com dado de teste sempre
 removido depois da verificação. 13/13 testes automatizados passando o tempo
@@ -93,7 +100,12 @@ dado existente):
   vez, sem jeito de montar um gráfico de série temporal).
 - **Formulários**: `GET /api/Forms` (listar formulários do tenant).
 - **Administração**: `ITenantService.GetAllAsync/GetByIdAsync` + `GET api/Admin/tenants`
-  e `GET api/Admin/tenants/{id}` (listar/ver escolas).
+  e `GET api/Admin/tenants/{id}` (listar/ver escolas); catálogo de módulos ganhou a
+  entrada `events` (não existia até esta sessão).
+- **Eventos & Vendas**: `SalesGroup_event.Meta`/`Responsavel`, `Product_event.Estoque`
+  (colunas novas via migration); `Ativo` de Produto/Subproduto e
+  `StatusPayment`/`AsaasPaymentId` de Pedido passaram a ser expostos nos DTOs (já
+  existiam nas entidades, nunca eram devolvidos pela API).
 
 ---
 
@@ -121,6 +133,12 @@ Em vez de inventar dado, cada tela avisa explicitamente o que falta:
 | Catálogo de módulos (A4) | Versão, Depende |
 | Importação em massa (A8) | Preview linha a linha, avisos, detecção de duplicado, "baixar erros" — o backend só devolve uma mensagem única de sucesso/erro no fim, sem relatório nenhum |
 | Ficha do aluno (A10) | CPF, matrícula, turno, "autorizado a sair só"; aba Responsáveis inteira (sem entidade de responsável no backend); aba Frequência inteira (sem endpoint de histórico de presença por aluno); aba Documentos inteira (sem entidade de documento nem upload genérico) |
+| Dashboard do evento (E1) | Não existe entidade "Evento" no backend (nome, prazo, badge de status) — o painel soma tudo que já foi vendido no tenant, sem recorte por campanha; "pré-pedidos sem confirmação" (todo pedido criado já é definitivo, não há rascunho) |
+| Grupos de venda (E2) | — (Meta/Responsável foram adicionados via migration) |
+| Produtos (E3) | — (Estoque/Ativo foram adicionados/expostos) |
+| Pedidos (E4) | Status "Expirado" (só existem Aguardando/Pago/Cancelado no backend); "—" no lugar do status de pagamento em pedidos históricos sem esse dado gravado |
+| Novo pedido / balcão (E5) | Pagamento Pix cria o pedido normalmente, mas QR/copia-e-cola e confirmação automática via webhook não estão conectados a nenhum pedido no backend (dois caminhos desconectados — gerar QR e criar pedido nunca se falam) |
+| Pré-pedido do responsável / checkout Pix (E6/E7) | Não construídas como páginas públicas — `OrderEventController` exige autenticação de tenant; abrir criação de pedido para acesso anônimo é uma decisão de segurança que não tomei sem confirmar |
 | Despesas ($1/$2) | Importar Excel (existe endpoint, mas layout de coluna fixo sem doc de formato) e anexo de comprovante (não existe upload de arquivo genérico em nenhum lugar do backend) |
 | Receitas ($3) | Mesmas duas limitações de Despesas acima |
 | Construtor de formulários (F1) | "Visível ao responsável" (não existe campo no backend); drag-and-drop real (reordena por setas, mesma simplificação do Checklist); "Fonte de dados" salva dentro de `FormField.Config` (JSON livre) em vez de via `FormFieldReferenceBindingService`, que existe mas não tem controller nenhum expondo ele |
@@ -163,6 +181,12 @@ desenhado e construído do zero no backend.
 - **Importação em massa**: envio direto de arquivo com resultado em uma
   mensagem só, sem o assistente de 3 passos com preview/validação do
   wireframe — o backend não devolve nada além disso.
+- **"Vendas por grupo" e KPIs do Dashboard de eventos**: calculados inteiramente no
+  cliente (somando pedidos × itens × preço de produto por grupo) — não existe
+  endpoint de agregação pronta no backend.
+- **E6/E7 (pré-pedido/checkout Pix do responsável)**: não construídas como fluxo
+  público — reframed como parte do balcão (E5), que já cobre criar pedido com
+  pagamento Dinheiro ou Pix (Pix sem confirmação automática, ver seção 4).
 
 ---
 
@@ -199,15 +223,31 @@ Quando/Então + ativar/desativar, config-only) · Respostas (lista + detalhe
 contagem). Motor de execução de automações, criação de tabela de
 referência e anexo fora de escopo (ver seção 4).
 
+**Eventos & Vendas — E1 a E5 (F1)**:
+Dashboard (KPIs + vendas por grupo + pendências, calculados no cliente) ·
+Grupos de venda (CRUD com meta/responsável) · Produtos (CRUD com
+estoque/ativo + subprodutos/variações) · Pedidos (lista com filtro por
+status de pagamento + finalizar) · Novo pedido/balcão (busca + carrinho +
+Dinheiro/Pix). Módulo "events" criado no catálogo (não existia) e
+contratado para o tenant de teste. E6/E7 (pré-pedido e checkout público do
+responsável) não construídas como páginas públicas — ver seção 4. Foi o
+módulo com mais bugs de backend da sessão (8 commits, incluindo um bug de
+segurança real no hub SignalR e dois bugs estruturais no
+`AppDbContext.SaveChangesAsync`).
+
 ## 7. Não iniciado
 
-- Eventos & Vendas (E1-E7) — módulo "events" nem existe no catálogo real do
-  backend ainda. Combinado explicitamente com o cliente pra ficar por
-  último.
+- A2 (criar escola) — código pronto e buildando limpo, mas a submissão não
+  foi testada ao vivo por mim (formulário de senha inicial do admin, ver
+  seção 2).
 - A6 (permissões) — sem suporte no backend (sem conceito de Role/Permission).
+- E6/E7 (pré-pedido e checkout Pix públicos, sem autenticação) — decisão de
+  segurança não tomada unilateralmente, ver seção 4.
 
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `e1559af`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `7404236`). Ambos
-com push em dia na `main` de cada repositório no momento desta entrega.*
+*Backend: `EducaPilot - core` (commits `88db476` → `fff0efa`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `878e0dd`). Ambos
+com push em dia na `main` de cada repositório no momento desta entrega.
+Com isso, todos os módulos do escopo original (Rotina, Financeiro,
+Formulários Dinâmicos, Administração e Eventos & Vendas) estão entregues.*
