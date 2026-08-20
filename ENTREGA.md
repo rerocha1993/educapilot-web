@@ -3,7 +3,8 @@
 Relação do que foi feito de diferente em relação ao wireframe/plano original, bugs
 reais encontrados e corrigidos no backend, e decisões tomadas sem parar pra
 perguntar (conforme pedido). Cobre o rebuild completo do frontend (Flutter →
-Next.js/React) e o módulo **Rotina** por inteiro (R1–R13).
+Next.js/React) e os módulos **Rotina** (R1–R13) e **Financeiro** ($1–$5) por
+inteiro.
 
 ---
 
@@ -45,6 +46,9 @@ testando cada tela contra o backend real, e corrigidos na hora.
 | 14 | `MeetingController` — `IStudentQueryService` nunca registrado no DI | Todo endpoint de Reunião (GET/POST/PUT) dava 401 | Registrado |
 | 15 | `AbsenceController.Update` — `AttendanceId == null` numa coluna `int` não anulável | Checagem nunca era verdadeira (o compilador já avisava, nunca corrigido) | Trocado pra `<= 0` |
 | 16 | Tabela `__EFMigrationsHistory` só tinha 1 linha — 6 migrations antigas nunca registradas apesar do schema já existir | `dotnet ef database update` tentava recriar tabelas existentes | Histórico sincronizado (sem re-rodar SQL) |
+| 17 | Módulo Financeiro inteiro (`IExpenseRepository/Service`, `IRevenueEntryRepository/Service`, `IFinancialProjectionRepository/Service`) nunca registrado no DI | Todo endpoint de Despesa/Receita/Projeção dava "401 token inválido" (mesmo padrão do item 5 e 14) | Registrado no `Program.cs` |
+| 18 | `ExpenseService.PatchExpenseAsync` usava reflection (`GetType().GetProperty(kvp.Key)`) num dicionário vindo direto do cliente | Pior que o item 8: qualquer nome de propriedade do C# (inclusive `TenantId`) podia ser sobrescrito via PATCH | Whitelist explícita de campos editáveis |
+| 19 | `CreateRevenueEntryDto.EntryDate` era `DateTime` não anulável, enquanto a entidade real é `DateTime?` (540 das 648 linhas reais de produção têm esse campo nulo) | Todo `POST`/`PUT` de Receita quebrava com "token inválido" — o binding deixava `DateTime.MinValue` (0001-01-01), que estoura o range da coluna `datetime` do SQL Server | Campo trocado pra `DateTime?` |
 
 Todos confirmados ao vivo contra o LocalDB real, com dado de teste sempre
 removido depois da verificação. 13/13 testes automatizados passando o tempo
@@ -71,6 +75,9 @@ dado existente):
 - **Notificações**: `Notification.IsRead`; `GET /api/Notifications` (minhas
   notificações), `PUT {id}/read`, `PUT read-all` — antes só existia enviar,
   nenhum jeito de listar ou marcar como lida.
+- **Financeiro**: `Expense.CentroCusto`; `GET /api/FinancialProjection/series`
+  (agregação de N meses — antes só existia `monthly-summary` pra um mês por
+  vez, sem jeito de montar um gráfico de série temporal).
 
 ---
 
@@ -92,6 +99,8 @@ Em vez de inventar dado, cada tela avisa explicitamente o que falta:
 | Observação semanal (R10) | Checklist de encaminhamentos |
 | Saúde do aluno (R5) | Timeline de registros — os campos guardam só o estado atual |
 | Relatórios (R13) | Geração customizada — backend só lista os tipos disponíveis (limitação documentada no próprio wireframe) |
+| Despesas ($1/$2) | Importar Excel (existe endpoint, mas layout de coluna fixo sem doc de formato) e anexo de comprovante (não existe upload de arquivo genérico em nenhum lugar do backend) |
+| Receitas ($3) | Mesmas duas limitações de Despesas acima |
 
 ## 4.1. Wireframe vs. backend: conceito diferente (não é campo faltando, é nome errado)
 
@@ -117,6 +126,10 @@ desenhado e construído do zero no backend.
 - **"Severity" em Ocorrências**: aproximada pela categoria mais comum do
   aluno no período, com aviso na tela de que não é um conceito real do
   backend.
+- **"Atrasado" em Despesas e "projeção" no Fluxo de caixa**: nenhum dos dois
+  é uma flag do backend — calculados no cliente (data de vencimento passada
+  + não paga = atrasado; mês ≥ mês atual = projeção, visualmente com
+  opacidade reduzida no gráfico).
 
 ---
 
@@ -134,18 +147,24 @@ Chamada · Faltas · Checklist (config + preenchimento) · Materiais · Ocorrên
 (R11 reinterpretado, ver 4.1) · Central de notificações · Central de
 relatórios.
 
+**Financeiro — módulo completo ($1 a $5)**:
+Fluxo de caixa (KPIs + gráfico entradas x saídas por mês, com projeção de
+meses futuros) · Despesas (resumo a pagar/atrasado/pago + marcar pago) ·
+Receitas (mesmo padrão + marcar recebido). Import de Excel e comprovante
+fora de escopo (ver seção 4).
+
 ## 7. Não iniciado
 
 - Eventos & Vendas (E1-E7) — módulo "events" nem existe no catálogo real do
-  backend ainda.
+  backend ainda. Combinado explicitamente com o cliente pra ficar por
+  último.
 - Formulários Dinâmicos (F1-F5).
-- Financeiro ($1-$5).
 - Telas de Administração restantes: A1-A4 (painel Master/tenants), A6
   (permissões — sem suporte no backend), A8 (importação em massa), A10
   (ficha do aluno).
 
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `00d1781`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `ef1969e`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `9868b41`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `f4cca59`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.*
