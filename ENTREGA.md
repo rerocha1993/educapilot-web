@@ -332,18 +332,44 @@ de receita. Construído:
    caminho sem Asaas foi exercitado ao vivo. Best-effort: falha na
    integração nunca impede o lançamento financeiro básico de existir.
 
-Ainda não iniciado do roadmap original de Financeiro: orçamento/reporting/
-reconciliação (item 4, o mais aberto dos quatro — precisa de mais definição
-de escopo com o cliente antes de começar).
+**Financeiro — item 4 do roadmap: orçamento/reporting/reconciliação**
+(commits `e2f5c27`/`0925512`, último item do roadmap proposto ao cliente):
+1. **Orçamento** (`Budget`, novo): planejado por Tipo (Receita/Despesa) +
+   Categoria + Ano (opcionalmente um mês específico). Tela `/finance/orcamento`
+   compara planejado x realizado por categoria — "realizado" é sempre
+   dinheiro que já entrou/saiu de fato (recebido/pago), não o previsto.
+2. **Relatório de inadimplência** (novo): mensalidades vencidas e não pagas,
+   com nome do aluno e nome/e-mail/telefone do responsável pra cobrança —
+   sem isso não tinha como saber QUEM cobrar. Tela `/finance/inadimplencia`.
+3. **Correção real encontrada construindo o relatório acima**: nenhuma
+   linha de receita ou despesa virava "Vencido" sozinha em todo o sistema
+   (só manual, via import de planilha) — `FinancialProjectionService.
+   TotalReceitasVencidas` sempre ficava incompleto mesmo com mensalidade
+   genuinamente atrasada. Corrigido com um job diário novo que marca como
+   vencido tudo que passou do vencimento sem pagamento.
+
+**Não verificado ao vivo desta vez** — a sessão autenticada do navegador
+expirou no meio do trabalho (localStorage vazio) e não digito senha pra
+recriar uma, nem a minha nem uma fornecida. Confirmado: build limpo dos
+dois lados, 13/13 testes automatizados, migration aplicada, as 4 rotas
+novas aparecem no swagger, e a tela redireciona certinho pro login sem
+crash quando deslogada. O CRUD com dado real (criar orçamento, ver
+inadimplência de verdade) ainda não foi exercitado ao vivo — pendente
+assim que houver uma sessão logada disponível.
+
+Com isso, os 4 itens do roadmap de expansão do Financeiro proposto ao
+cliente estão implementados (mensalidade recorrente, responsável, cobrança
+Asaas opcional, orçamento/inadimplência/status vencido).
 
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `581206b`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `df6fdfb`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `e2f5c27`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `0925512`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.
 Com isso, todos os módulos do escopo original (Rotina, Financeiro,
 Formulários Dinâmicos, Administração e Eventos & Vendas) estão entregues,
 Formulários ganhou um construtor completo além do escopo original, e
-Financeiro ganhou mensalidade recorrente automática (item 1 de 4 do
-roadmap de expansão) — orçamento/reporting/reconciliação (item 4) segue
-como próximo passo.*
+Financeiro ganhou os 4 itens do roadmap de expansão (mensalidade
+recorrente, responsável financeiro, cobrança Asaas opcional, orçamento/
+inadimplência/status vencido) — os dois últimos commits ainda sem
+verificação ao vivo, pendente de uma sessão autenticada no navegador.*
