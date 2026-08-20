@@ -359,6 +359,250 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Guardians": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["GuardianDto"];
+                    "text/json": components["schemas"]["GuardianDto"];
+                    "application/*+json": components["schemas"]["GuardianDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Guardians/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["GuardianDto"];
+                    "text/json": components["schemas"]["GuardianDto"];
+                    "application/*+json": components["schemas"]["GuardianDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Guardians/por-aluno/{studentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studentId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Guardians/vinculos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["StudentGuardianDto"];
+                    "text/json": components["schemas"]["StudentGuardianDto"];
+                    "application/*+json": components["schemas"]["StudentGuardianDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Guardians/vinculos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/RevenueEntries": {
         parameters: {
             query?: never;
@@ -537,6 +781,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/TuitionPlans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TuitionPlanDto"];
+                    "text/json": components["schemas"]["TuitionPlanDto"];
+                    "application/*+json": components["schemas"]["TuitionPlanDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/TuitionPlans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TuitionPlanDto"];
+                    "text/json": components["schemas"]["TuitionPlanDto"];
+                    "application/*+json": components["schemas"]["TuitionPlanDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/TuitionPlans/gerar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    mes?: number;
+                    ano?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -595,7 +1010,7 @@ export interface components {
             amount?: number;
             currency?: string | null;
             /** Format: date-time */
-            entryDate?: string;
+            entryDate?: string | null;
             /** Format: int32 */
             competencyMonth?: number;
             /** Format: int32 */
@@ -606,6 +1021,16 @@ export interface components {
             attachmentUrl?: string | null;
             createdBy?: string | null;
             notes?: string | null;
+        };
+        GuardianDto: {
+            /** Format: uuid */
+            id?: string | null;
+            fullName?: string | null;
+            cpf?: string | null;
+            email?: string | null;
+            phone?: string | null;
+            temCadastroAsaas?: boolean;
+            vinculos?: components["schemas"]["StudentGuardianDto"][] | null;
         };
         /**
          * Format: int32
@@ -621,12 +1046,43 @@ export interface components {
          * Format: int32
          * @enum {integer}
          */
-        RevenueOrigin: 1 | 2 | 3 | 4 | 5 | 99;
+        RevenueOrigin: 1 | 2 | 3 | 4 | 5 | 6 | 99;
         /**
          * Format: int32
          * @enum {integer}
          */
         RevenueStatus: 1 | 2 | 3 | 4;
+        StudentGuardianDto: {
+            /** Format: uuid */
+            id?: string | null;
+            /** Format: uuid */
+            guardianId?: string;
+            /** Format: int32 */
+            studentId?: number;
+            studentName?: string | null;
+            parentesco?: string | null;
+            responsavelFinanceiro?: boolean;
+        };
+        TuitionPlanDto: {
+            /** Format: uuid */
+            id?: string | null;
+            /** Format: int32 */
+            studentId?: number;
+            studentName?: string | null;
+            /** Format: uuid */
+            guardianId?: string;
+            guardianName?: string | null;
+            /** Format: double */
+            valorMensal?: number;
+            /** Format: int32 */
+            diaVencimento?: number;
+            /** Format: date-time */
+            dataInicio?: string;
+            /** Format: date-time */
+            dataFim?: string | null;
+            ativo?: boolean;
+            gerarCobrancaAsaas?: boolean;
+        };
     };
     responses: never;
     parameters: never;

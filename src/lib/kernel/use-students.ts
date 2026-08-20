@@ -19,6 +19,22 @@ export interface StudentDto {
   healthInsurance: string | null;
 }
 
+// Novo (2026-08) — picker de aluno pro módulo Financeiro (Responsáveis/Mensalidades),
+// que não navega por turma como o resto do Kernel. GET /api/Student pagina (page/
+// pageSize) e devolve { items: [...] } — pageSize alto o bastante pra trazer a
+// escola inteira numa página só (visto ~100 alunos no tenant de teste).
+export function useAllStudents() {
+  return useQuery({
+    queryKey: ["students", "all"],
+    queryFn: async () => {
+      const result = await coreApi.GET("/api/Student", { params: { query: { page: 1, pageSize: 1000 } } });
+      const data = unwrapApiResponse(result, "Não foi possível carregar os alunos.");
+      const wrapped = data as unknown as { items?: StudentDto[] } | StudentDto[];
+      return Array.isArray(wrapped) ? wrapped : (wrapped?.items ?? []);
+    },
+  });
+}
+
 export function useStudentsByClass(classId: number | null) {
   return useQuery({
     queryKey: ["students", "by-class", classId],
