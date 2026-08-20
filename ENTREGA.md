@@ -3,8 +3,9 @@
 Relação do que foi feito de diferente em relação ao wireframe/plano original, bugs
 reais encontrados e corrigidos no backend, e decisões tomadas sem parar pra
 perguntar (conforme pedido). Cobre o rebuild completo do frontend (Flutter →
-Next.js/React) e os módulos **Rotina** (R1–R13), **Financeiro** ($1–$5) e
-**Formulários Dinâmicos** (F1–F5) por inteiro.
+Next.js/React), os módulos **Rotina** (R1–R13), **Financeiro** ($1–$5) e
+**Formulários Dinâmicos** (F1–F5) por inteiro, e toda a área de
+**Administração** (A1, A3–A5, A7–A10, exceto A6).
 
 ---
 
@@ -57,6 +58,10 @@ testando cada tela contra o backend real, e corrigidos na hora.
 | 25 | 13 propriedades não anuláveis entre DTOs e entidades do Flow (`FormDto.Campos/Descricao/Status`, `FormFieldDto.Config/Opcoes`, `FormAutomationDto.Config`, `FormResponseDto.Itens/NomeReferencia/Observacoes/Status`, `FormResponseItemDto.Valor`, e as mesmas 7 do lado da entidade) | Mesmo padrão do item 7, mas em cadeia — cada POST/PUT de Formulário/Campo/Automação/Resposta quebrava um 400 de cada vez até todas serem corrigidas; as 7 do lado da entidade causavam algo pior: "Data is Null" ao *reler* um registro salvo com valor NULL num campo genuinamente opcional (mismatch entre o modelo do EF e o schema real) | Todas trocadas pra `Tipo?`, conferidas 1:1 contra `IS_NULLABLE` real do banco |
 | 26 | `FormResponse.DataPreenchimento` sempre existiu e era preenchida certinho, mas nunca era exposta no DTO; `Status` era sempre hardcoded `"Ativo"` no Create, ignorando o que o cliente mandasse | Coluna "Enviado" do wireframe F3 não tinha campo pra vir; status Pendente/Revisar/Concluída do F3/F4 não existia de verdade | DTO/serviço corrigidos pra expor/respeitar os dois |
 | 27 | `AppDbContext.SaveChangesAsync` (bug estrutural, não específico do Flow) — o filtro que auto-preenche `TenantId` usava `entry.Property("TenantId") != null`, mas `EntityEntry.Property(string)` **lança exceção** (não retorna null) pra qualquer entidade sem essa propriedade | Toda vez que uma entidade nova sem `TenantId` próprio (ex.: `FormField`, escopado indiretamente via `Form.TenantId`) era salva, a aplicação inteira quebrava com "The property 'X.TenantId' could not be found", mascarado como 401 | Trocado pra `entry.Metadata.FindProperty("TenantId")` (retorna null em vez de lançar) — zero mudança de comportamento pra entidades que já tinham TenantId |
+| 28 | `ITenantService` só tinha `CreateTenantAdminAsync` — `ITenantRepository.GetAllAsync/GetByIdAsync` existiam mas nunca eram expostos | Painel master (A1) não tinha como listar as escolas existentes | Adicionado `GetAllAsync/GetByIdAsync` + `GET api/Admin/tenants` e `GET api/Admin/tenants/{id}` |
+| 29 | `TenantModulesController.UpdateModules` (POST, usado pelo admin master pra trocar módulos de uma escola) lia o tenant-alvo do claim `TenantId` do *próprio* token do chamador — mas um token Master nunca carrega esse claim | Único consumidor pretendido (admin master) **sempre** recebia `UnauthorizedAccessException` — não existia forma nenhuma de trocar os módulos de uma escola pela API | Rota trocada pra receber o tenant-alvo explicitamente (`POST api/tenants/modules/{tenantId}`) |
+| 30 | `IModuleMenuRepository`/`IModuleMenuService` nunca registrados no DI (mesmo padrão de sempre) | `ModuleController` inteiro (A4) sempre dava erro de ativação de serviço, mascarado como 401 | Registrado no `Program.cs` |
+| 31 | `ModuleDto` nunca expunha `IsActive` em nenhum dos 5 pontos onde é montado (`ModuleService` × 4, `TenantModuleService` × 1) — mesmo `ModuleService.DeleteAsync` fazendo soft-delete via `IsActive=false` | A4 sempre mostrava "Inativo" pra todo módulo; A3 (que só lista módulos ativos pra oferecer contratação) sempre ficava vazia mesmo com o catálogo populado | Campo adicionado ao DTO e mapeado nos 5 pontos |
 
 Todos confirmados ao vivo contra o LocalDB real, com dado de teste sempre
 removido depois da verificação. 13/13 testes automatizados passando o tempo
@@ -87,6 +92,8 @@ dado existente):
   (agregação de N meses — antes só existia `monthly-summary` pra um mês por
   vez, sem jeito de montar um gráfico de série temporal).
 - **Formulários**: `GET /api/Forms` (listar formulários do tenant).
+- **Administração**: `ITenantService.GetAllAsync/GetByIdAsync` + `GET api/Admin/tenants`
+  e `GET api/Admin/tenants/{id}` (listar/ver escolas).
 
 ---
 
@@ -108,6 +115,12 @@ Em vez de inventar dado, cada tela avisa explicitamente o que falta:
 | Observação semanal (R10) | Checklist de encaminhamentos |
 | Saúde do aluno (R5) | Timeline de registros — os campos guardam só o estado atual |
 | Relatórios (R13) | Geração customizada — backend só lista os tipos disponíveis (limitação documentada no próprio wireframe) |
+| Escolas (A1) | Subdomínio, plano, contagem de alunos |
+| Criar escola (A2) | Seleção de módulos na criação (step 2 do wireframe — módulos são configurados depois, em A3); verificação de disponibilidade de subdomínio; endereço (backend exige, mas a tela não coleta — mandado vazio) |
+| Módulos por escola (A3) | Estado "Roadmap" (só liga/desliga entre os módulos ativos do catálogo) |
+| Catálogo de módulos (A4) | Versão, Depende |
+| Importação em massa (A8) | Preview linha a linha, avisos, detecção de duplicado, "baixar erros" — o backend só devolve uma mensagem única de sucesso/erro no fim, sem relatório nenhum |
+| Ficha do aluno (A10) | CPF, matrícula, turno, "autorizado a sair só"; aba Responsáveis inteira (sem entidade de responsável no backend); aba Frequência inteira (sem endpoint de histórico de presença por aluno); aba Documentos inteira (sem entidade de documento nem upload genérico) |
 | Despesas ($1/$2) | Importar Excel (existe endpoint, mas layout de coluna fixo sem doc de formato) e anexo de comprovante (não existe upload de arquivo genérico em nenhum lugar do backend) |
 | Receitas ($3) | Mesmas duas limitações de Despesas acima |
 | Construtor de formulários (F1) | "Visível ao responsável" (não existe campo no backend); drag-and-drop real (reordena por setas, mesma simplificação do Checklist); "Fonte de dados" salva dentro de `FormField.Config` (JSON livre) em vez de via `FormFieldReferenceBindingService`, que existe mas não tem controller nenhum expondo ele |
@@ -143,6 +156,13 @@ desenhado e construído do zero no backend.
   é uma flag do backend — calculados no cliente (data de vencimento passada
   + não paga = atrasado; mês ≥ mês atual = projeção, visualmente com
   opacidade reduzida no gráfico).
+- **"Fonte de dados" de um campo de formulário**: salva dentro de
+  `FormField.Config` (JSON livre já existente) em vez de via
+  `FormFieldReferenceBindingService`, que existe no backend mas não tem
+  controller nenhum expondo ele.
+- **Importação em massa**: envio direto de arquivo com resultado em uma
+  mensagem só, sem o assistente de 3 passos com preview/validação do
+  wireframe — o backend não devolve nada além disso.
 
 ---
 
@@ -150,9 +170,15 @@ desenhado e construído do zero no backend.
 
 **Login/Autenticação** — L1 (o resto do fluxo L2-L4 ainda não construído).
 
-**Administração** — índice (A1-A4/A6/A8/A10 pendentes), Turmas (A7), Alunos
-(A9, com seção de Saúde do R5 embutida), Usuários (A5, sem matriz de
-permissões).
+**Administração** — índice, Turmas (A7), Alunos (A9, com seção de Saúde do
+R5 embutida), Usuários (A5, sem matriz de permissões), Ficha do aluno (A10,
+Dados/Ocorrências/Saúde reais — Responsáveis/Frequência/Documentos sem
+suporte no backend), Importação em massa (A8, versão mínima sem
+preview/validação). **Painel Master** (login e telas separadas, `/master`):
+Escolas (A1), Módulos por escola (A3), Catálogo de módulos (A4) — todas
+verificadas ao vivo com conta Master real. Criar escola (A2) tem o código
+pronto mas não foi submetido ao vivo por mim (formulário de senha inicial,
+ver seção 2). A6 (permissões) segue sem suporte no backend, não construída.
 
 **Rotina — módulo completo (R1 a R13)**:
 Chamada · Faltas · Checklist (config + preenchimento) · Materiais · Ocorrências
@@ -178,12 +204,10 @@ referência e anexo fora de escopo (ver seção 4).
 - Eventos & Vendas (E1-E7) — módulo "events" nem existe no catálogo real do
   backend ainda. Combinado explicitamente com o cliente pra ficar por
   último.
-- Telas de Administração restantes: A1-A4 (painel Master/tenants), A6
-  (permissões — sem suporte no backend), A8 (importação em massa), A10
-  (ficha do aluno).
+- A6 (permissões) — sem suporte no backend (sem conceito de Role/Permission).
 
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `54c21df`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `4675458`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `e1559af`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `7404236`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.*
