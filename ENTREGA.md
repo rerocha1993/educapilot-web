@@ -69,6 +69,13 @@ testando cada tela contra o backend real, e corrigidos na hora.
 | 35 | `OrderEventRepository.GetAllPendingByTenantAsync` filtrava `Status == "Pendente"`, mas o Create real sempre grava `"Em Producao"` | Consulta sempre vazia (método ainda não chamado por nenhum controller, achado durante investigação — não estava quebrando nada em produção) | Filtro corrigido pra bater com o valor real gravado |
 | 36 | `AppDbContext.SaveChangesAsync` (continuação do bug estrutural do item 27) sobrescrevia incondicionalmente o `TenantId` de toda entidade nova com o tenant **ambiente** da requisição, mesmo quando o próprio código já tinha definido um `TenantId` explícito por motivo legítimo | Um admin Master **nunca** conseguia criar um vínculo `TenantModule` novo pra uma escola (só reativar um que já existisse) — achado ao vivo contratando o módulo Events pela primeira vez pra um tenant real: "TenantId não encontrado no contexto." mesmo o service já setando o TenantId certo | Só carimba o TenantId ambiente quando a entidade ainda está em `Guid.Empty` — passa a respeitar um TenantId já definido deliberadamente pelo serviço |
 | 37 | `Order_event.StatusPayment` (enum não-anulável, com default só pro C#) — a coluna real no banco é nullable e **15 dos 18 pedidos reais** do tenant de teste tinham `NULL` (criados antes desse campo existir/ser preenchido) | Assim que `StatusPayment` passou a ser exposto no DTO (item acima), todo `GET` de pedidos quebrava relendo esses 15 registros: "Data is Null" | Trocado pra `PaymentStatus?` — `null` vira um estado "não informado" explícito na tela, sem presumir Aguardando nem Pago pra dado histórico incerto |
+| 38 | `RazorTemplateRenderer` — `Directory.GetCurrentDirectory()` (varia conforme como o processo é iniciado, sob `dotnet run` costuma ser o diretório-fonte, não o de saída do build) | Pasta `Templates` nunca era encontrada, `InvitesController` inteiro quebrava (500 cru nalgumas rotas, "401 token inválido" mascarado noutras) | Trocado pra `AppContext.BaseDirectory` + `CopyToOutputDirectory` no `.csproj` |
+| 39 | `JwtValidationMiddleware` só tinha `catch (Exception)` genérico envolvendo toda a pipeline | Qualquer `KeyNotFoundException` ("não encontrado", cenário normal) virava "401 token inválido" em vez de 404 — padrão sistêmico repetido em quase todo controller do Flow/Finance/Events | `catch (KeyNotFoundException)` → 404 real, antes do catch genérico |
+| 40 | `RevenueEntriesController.Create/Update` sem validar `DueDate` (coluna `NOT NULL` de verdade, diferente da `EntryDate` do item 19) | Mesmo bug de "tipo-valor ausente vira default silencioso", mas dessa vez o campo é mesmo obrigatório — `POST`/`PUT` sem `dueDate` quebrava o `SaveChangesAsync` (range do SQL Server), mascarado como 401 | Validação explícita (`BadRequest` se `default`) |
+| 41 | `RevenueEntryRepository.GetByMonthAsync` sem filtrar `DeletedAt == null` | Receita "excluída" (soft-delete) continuava aparecendo na listagem mensal e nos totais projetados | Filtro adicionado |
+| 42 | `PaymentController.CreatePixPayment` — `Guid.Parse(HttpContext.Items["TenantId"])` pra chamador anônimo (sem token) | `NullReferenceException` não tratada pra todo checkout Pix público | Trocado pra usar `request.TenantId` (campo do DTO já existia, nunca era lido) com validação |
+| 43 | `AttendanceRepository.GetByClassIdAsync`/`WeeklySeminarService.GetSeminarsAsync` — projeção manual (`new Attendance {...}`) esquecia de copiar `TenantId` | Toda resposta da API tinha `TenantId = Guid.Empty` nesses dois endpoints | `TenantId` incluído nas duas projeções |
+| 44 | `FormRepository.DeleteAsync` — `FindAsync` (sem `Include`) + `Remove` só apagava a linha do `Form`; tabelas filhas (Campos, Respostas, Itens, Automations, vínculos de referência) não têm cascade delete no banco | `DELETE /api/Forms/{id}` sempre quebrava com `DbUpdateException` (violação de FK) assim que o formulário tinha qualquer campo/resposta — mascarado como "401 token inválido"; achado limpando dado de teste manualmente | Reescrito pra apagar a árvore inteira explicitamente, filhos antes dos pais |
 
 Todos confirmados ao vivo contra o LocalDB real, com dado de teste sempre
 removido depois da verificação. 13/13 testes automatizados passando o tempo
@@ -216,12 +223,18 @@ meses futuros) · Despesas (resumo a pagar/atrasado/pago + marcar pago) ·
 Receitas (mesmo padrão + marcar recebido). Import de Excel e comprovante
 fora de escopo (ver seção 4).
 
-**Formulários Dinâmicos — módulo completo (F1 a F5)**:
-Construtor (campos + reordenar + publicar/rascunho) · Automações (regras
-Quando/Então + ativar/desativar, config-only) · Respostas (lista + detalhe
-+ marcar como revisada) · Dados de referência (as 3 tabelas reais com
-contagem). Motor de execução de automações, criação de tabela de
-referência e anexo fora de escopo (ver seção 4).
+**Formulários Dinâmicos — módulo completo (F1 a F5) + construtor tipo
+JotForm/Google Forms (ver seção 8)**:
+Construtor (11 tipos de campo reais: texto curto/longo, número com faixa,
+data, sim/não, múltipla escolha, checkbox, dropdown, avaliação, anexo,
+dado de referência — mais lógica condicional por campo) · **Tela de
+preenchimento** (nova — não existia nenhuma) com validação de verdade no
+servidor (obrigatoriedade, faixa numérica, opção válida, tamanho de
+texto) · Upload de anexo (novo, infraestrutura de arquivo do zero) ·
+Exportação de respostas em Excel · Automações (regras Quando/Então +
+ativar/desativar, config-only) · Respostas (lista + detalhe + marcar como
+revisada + exportar) · Dados de referência (as 3 tabelas reais com
+contagem). Motor de execução de automações fora de escopo (ver seção 4).
 
 **Eventos & Vendas — E1 a E5 (F1)**:
 Dashboard (KPIs + vendas por grupo + pendências, calculados no cliente) ·
@@ -244,10 +257,65 @@ segurança real no hub SignalR e dois bugs estruturais no
 - E6/E7 (pré-pedido e checkout Pix públicos, sem autenticação) — decisão de
   segurança não tomada unilateralmente, ver seção 4.
 
+## 8. Auditoria front↔back, teste de endpoints e Formulários completo
+
+Pedido explícito do cliente: cruzar frontend com backend pra achar código
+morto/obsoleto, testar todos os endpoints de verdade, e completar o
+construtor de Formulários pra ele funcionar como um JotForm/Google Forms
+de verdade — feito nessa ordem, Formulários primeiro (confirmado pelo
+cliente: "primeiro faz tudo do Formulario e depois ataca o financeiro").
+
+**Auditoria de código morto** — cruzamento de toda rota de controller
+contra toda chamada de frontend (inclusive as `fetch` cru dos endpoints
+`IgnoreApi`):
+- **Removido** (zero referência em código, zero dado real no banco):
+  entidade/tabela `PreOrder_event` (nunca teve controller nem uso, tabela
+  vazia) e a coluna `Order_event.StatuPayment` (erro de digitação
+  duplicando `StatusPayment`, mesmos 2 valores em ambas, nenhuma linha de
+  código no repo inteiro referenciando ela).
+- **Flagueado, não removido**: fluxo de auto-cadastro/aceite de convite
+  (endpoint reservado, não usado pelo web hoje mas com valor de produto
+  óbvio — self-service, não decidi excluir sozinho); `WeeklyObservationController`
+  (parece morto — 0 linhas na tabela, superseded por `Occurrence.IsWeeklyReport`
+  — mas não removi sem confirmação); 7 colunas órfãs de `Order_event` com
+  dado histórico real em `DataCriacao` (mantidas, só documentadas).
+
+**Teste ao vivo de endpoints** (múltiplos agentes em paralelo, um por
+módulo) — achou os bugs #38 a #44 da seção 2 acima, todos corrigidos no
+commit `7c9dc36` de `EducaPilot - core`.
+
+**Formulários completo** (commits `3070577`/`9f679c4`) — ver detalhe nas
+seções 2 (bug #44) e 6 acima. Resumo do que passou a existir:
+1. Tipos de campo reais usando a coluna `Opcoes` (existia, nunca era
+   escrita por nenhuma tela) — múltipla escolha, checkbox, dropdown,
+   número com faixa, avaliação por escala.
+2. Tela de preenchimento — não existia nenhuma, nem staff nem pública.
+   Construída só pra staff autenticado; abrir um link público/anônimo
+   (mais parecido com Google Forms de verdade) fica em aberto — decisão
+   de segurança (spam, rate limit, CAPTCHA) que não tomei sozinho.
+3. Lógica condicional (`Config.visibleIf`) — reavaliada no servidor, não
+   só no cliente, pra um campo condicional escondido não virar bloqueio
+   de obrigatoriedade impossível de satisfazer.
+4. Upload de anexo — zero infraestrutura de arquivo existia no repo
+   inteiro antes disso; construído do zero (`FormUploadService`,
+   `wwwroot/uploads/forms/{tenantId}/`).
+5. Exportação de respostas em Excel — reaproveitando o EPPlus que já era
+   dependência do projeto (usado no import de planilha do Financeiro).
+
+Gap conhecido, deixado de fora por escopo/tempo: a tela de Respostas
+mostra o Id cru de um campo tipo "referência" (ex.: matrícula do aluno)
+em vez do nome — resolver exigiria buscar as 3 tabelas de referência só
+pra montar um mapa de rótulo.
+
+**Financeiro** — análise de gap feita e apresentada ao cliente (guardião/
+responsável, mensalidade recorrente, cobrança real via Asaas, orçamento/
+reconciliação), build ainda não iniciado — próximo item da fila.
+
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `fff0efa`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `878e0dd`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `3070577`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `9f679c4`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.
 Com isso, todos os módulos do escopo original (Rotina, Financeiro,
-Formulários Dinâmicos, Administração e Eventos & Vendas) estão entregues.*
+Formulários Dinâmicos, Administração e Eventos & Vendas) estão entregues,
+e Formulários ganhou um construtor completo além do escopo original.*
