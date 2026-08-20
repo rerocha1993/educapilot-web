@@ -10,6 +10,8 @@ const ITEMS = [
   { href: "/finance/receitas", label: "Receitas" },
   { href: "/finance/responsaveis", label: "Responsáveis" },
   { href: "/finance/mensalidades", label: "Mensalidades" },
+  { href: "/finance/inadimplencia", label: "Inadimplência" },
+  { href: "/finance/orcamento", label: "Orçamento" },
 ];
 
 export function FinanceNav() {

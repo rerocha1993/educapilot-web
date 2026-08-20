@@ -97,3 +97,29 @@ export function useGerarMensalidades() {
     },
   });
 }
+
+// Novo (2026-08) — relatório de inadimplência (item 4 do roadmap de Financeiro).
+export interface InadimplenciaDto {
+  revenueEntryId: string;
+  tuitionPlanId: string;
+  studentId: number;
+  studentName: string;
+  guardianId: string;
+  guardianName: string;
+  guardianEmail: string | null;
+  guardianPhone: string | null;
+  valorEsperado: number;
+  dueDate: string;
+  diasAtraso: number;
+}
+
+export function useInadimplencia() {
+  return useQuery({
+    queryKey: ["inadimplencia"],
+    queryFn: async () => {
+      const result = await financeApi.GET("/api/TuitionPlans/inadimplencia");
+      const data = unwrapApiResponse(result, "Não foi possível carregar a inadimplência.");
+      return (data ?? []) as unknown as InadimplenciaDto[];
+    },
+  });
+}
