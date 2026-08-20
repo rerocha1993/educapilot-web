@@ -1,5 +1,6 @@
 import createClient, { type Middleware } from "openapi-fetch";
 import { getToken } from "../auth/session";
+import { getMasterToken } from "../auth/master-session";
 import type { paths as CorePaths } from "./generated/core";
 import type { paths as TasksPaths } from "./generated/tasks";
 import type { paths as FlowPaths } from "./generated/flow";
@@ -34,3 +35,18 @@ export const financeApi = createClient<FinancePaths>({ baseUrl });
 for (const client of [coreApi, tasksApi, flowApi, eventsApi, financeApi]) {
   client.use(authMiddleware);
 }
+
+// Cliente separado pro painel Master (A1-A4/A8) — mesmos paths do Core (Admin/
+// Module/tenants-modules vivem no doc "Core"), mas injeta o token master
+// (assinado com chave diferente, ver master-session.ts) em vez do token de tenant.
+const masterAuthMiddleware: Middleware = {
+  async onRequest({ request }) {
+    const token = getMasterToken();
+    if (token) {
+      request.headers.set("Authorization", `Bearer ${token}`);
+    }
+    return request;
+  },
+};
+export const masterApi = createClient<CorePaths>({ baseUrl });
+masterApi.use(masterAuthMiddleware);
