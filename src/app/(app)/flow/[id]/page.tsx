@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,9 +29,12 @@ import {
 import { useForm, useUpdateForm, type FormFieldDto } from "@/lib/flow/use-forms";
 import {
   FIELD_TYPES,
+  CHOICE_FIELD_TYPES,
   fieldTypeLabel,
   encodeFieldConfig,
   decodeFieldConfig,
+  encodeOpcoes,
+  decodeOpcoes,
   useCreateFormField,
   useUpdateFormField,
   useDeleteFormField,
@@ -43,8 +46,52 @@ import {
   useToggleAutomation,
 } from "@/lib/flow/use-form-automations";
 
-const EMPTY_FIELD_FORM = { label: "", tipo: "texto_curto", obrigatorio: false, tabelaReferencia: "" };
+const VISIBLE_IF_OPERATORS = [
+  { value: "filled", label: "estiver preenchido" },
+  { value: "not_filled", label: "não estiver preenchido" },
+  { value: "equals", label: "for igual a" },
+  { value: "not_equals", label: "for diferente de" },
+] as const;
+
+const EMPTY_FIELD_FORM = {
+  label: "",
+  tipo: "texto_curto",
+  obrigatorio: false,
+  tabelaReferencia: "",
+  opcoes: [] as string[],
+  min: "",
+  max: "",
+  minLength: "",
+  maxLength: "",
+  maxEstrelas: "5",
+  condFieldId: "",
+  condOperator: "filled" as (typeof VISIBLE_IF_OPERATORS)[number]["value"],
+  condValue: "",
+};
 const EMPTY_RULE_FORM = { nome: "", evento: "", acao: "" };
+
+function fieldSummary(field: FormFieldDto): string {
+  const config = decodeFieldConfig(field.config);
+  const parts: string[] = [fieldTypeLabel(field.tipo)];
+
+  if (config.tabelaReferencia) {
+    parts.push(`ref. ${REFERENCE_TABLES.find((t) => t.value === config.tabelaReferencia)?.label ?? config.tabelaReferencia}`);
+  }
+  if ((CHOICE_FIELD_TYPES as readonly string[]).includes(field.tipo)) {
+    const opcoes = decodeOpcoes(field.opcoes);
+    if (opcoes.length > 0) parts.push(opcoes.join(", "));
+  }
+  if (field.tipo === "numero" && (config.min !== undefined || config.max !== undefined)) {
+    parts.push(`entre ${config.min ?? "—"} e ${config.max ?? "—"}`);
+  }
+  if (field.tipo === "avaliacao") {
+    parts.push(`1 a ${config.maxEstrelas ?? 5}`);
+  }
+  if (config.visibleIf) {
+    parts.push("condicional");
+  }
+  return parts.join(" · ");
+}
 
 export default function FormBuilderPage() {
   const params = useParams<{ id: string }>();
@@ -65,6 +112,7 @@ export default function FormBuilderPage() {
   const [ruleForm, setRuleForm] = useState(EMPTY_RULE_FORM);
 
   const campos = [...(form?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
+  const isChoiceType = (CHOICE_FIELD_TYPES as readonly string[]).includes(fieldForm.tipo);
 
   async function handlePublicar() {
     if (!form) return;
@@ -79,12 +127,39 @@ export default function FormBuilderPage() {
   async function handleAddField() {
     if (!fieldForm.label.trim()) return;
     try {
+      const config = encodeFieldConfig({
+        tabelaReferencia: fieldForm.tabelaReferencia || undefined,
+        min: fieldForm.tipo === "numero" && fieldForm.min !== "" ? Number(fieldForm.min) : undefined,
+        max: fieldForm.tipo === "numero" && fieldForm.max !== "" ? Number(fieldForm.max) : undefined,
+        minLength:
+          (fieldForm.tipo === "texto_curto" || fieldForm.tipo === "texto_longo") && fieldForm.minLength !== ""
+            ? Number(fieldForm.minLength)
+            : undefined,
+        maxLength:
+          (fieldForm.tipo === "texto_curto" || fieldForm.tipo === "texto_longo") && fieldForm.maxLength !== ""
+            ? Number(fieldForm.maxLength)
+            : undefined,
+        maxEstrelas: fieldForm.tipo === "avaliacao" ? Number(fieldForm.maxEstrelas || 5) : undefined,
+        visibleIf: fieldForm.condFieldId
+          ? {
+              fieldId: fieldForm.condFieldId,
+              operator: fieldForm.condOperator,
+              value:
+                fieldForm.condOperator === "equals" || fieldForm.condOperator === "not_equals"
+                  ? fieldForm.condValue
+                  : undefined,
+            }
+          : undefined,
+      });
+      const opcoes = isChoiceType ? encodeOpcoes(fieldForm.opcoes) : null;
+
       await createField.mutateAsync({
         label: fieldForm.label.trim(),
         tipo: fieldForm.tipo,
         ordem: campos.length,
         obrigatorio: fieldForm.obrigatorio,
-        config: encodeFieldConfig(fieldForm.tabelaReferencia || undefined),
+        config,
+        opcoes,
       });
       toast.success("Campo adicionado.");
       setFieldDialogOpen(false);
@@ -130,6 +205,16 @@ export default function FormBuilderPage() {
     }
   }
 
+  function updateOpcao(index: number, value: string) {
+    setFieldForm((f) => ({ ...f, opcoes: f.opcoes.map((o, i) => (i === index ? value : o)) }));
+  }
+  function addOpcao() {
+    setFieldForm((f) => ({ ...f, opcoes: [...f.opcoes, ""] }));
+  }
+  function removeOpcao(index: number) {
+    setFieldForm((f) => ({ ...f, opcoes: f.opcoes.filter((_, i) => i !== index) }));
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
@@ -160,6 +245,9 @@ export default function FormBuilderPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link href={`/flow/${formId}/preencher`} className={buttonVariants({ variant: "outline" })}>
+            Preencher
+          </Link>
           <Link href={`/flow/${formId}/respostas`} className={buttonVariants({ variant: "outline" })}>
             Respostas
           </Link>
@@ -182,57 +270,49 @@ export default function FormBuilderPage() {
                 Nenhum campo ainda.
               </div>
             )}
-            {campos.map((field, i) => {
-              const { tabelaReferencia } = decodeFieldConfig(field.config);
-              return (
-                <div
-                  key={field.id}
-                  className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{field.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {fieldTypeLabel(field.tipo)}
-                      {tabelaReferencia
-                        ? ` (ref. ${REFERENCE_TABLES.find((t) => t.value === tabelaReferencia)?.label ?? tabelaReferencia})`
-                        : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={field.obrigatorio ? "default" : "secondary"}>
-                      {field.obrigatorio ? "Obrigatório" : "Opcional"}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      disabled={i === 0}
-                      onClick={() => handleMove(field, "up")}
-                    >
-                      <ArrowUp className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      disabled={i === campos.length - 1}
-                      onClick={() => handleMove(field, "down")}
-                    >
-                      <ArrowDown className="size-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteField(field.id)}>
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </div>
+            {campos.map((field, i) => (
+              <div
+                key={field.id}
+                className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5"
+              >
+                <div>
+                  <p className="text-sm font-medium">{field.label}</p>
+                  <p className="text-xs text-muted-foreground">{fieldSummary(field)}</p>
                 </div>
-              );
-            })}
+                <div className="flex items-center gap-2">
+                  <Badge variant={field.obrigatorio ? "default" : "secondary"}>
+                    {field.obrigatorio ? "Obrigatório" : "Opcional"}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={i === 0}
+                    onClick={() => handleMove(field, "up")}
+                  >
+                    <ArrowUp className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={i === campos.length - 1}
+                    onClick={() => handleMove(field, "down")}
+                  >
+                    <ArrowDown className="size-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteField(field.id)}>
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
             <Button variant="outline" className="mt-2" onClick={() => setFieldDialogOpen(true)}>
               + Adicionar campo
             </Button>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
             Reordenação por setas (sem arrastar — mesmo padrão simplificado usado no
-            Checklist). &quot;Visível ao responsável&quot; não existe no backend, não está
-            nesta tela.
+            Checklist). Um campo já criado não pode ser editado por aqui — remova e
+            crie de novo se precisar mudar o tipo ou as opções.
           </p>
         </TabsContent>
 
@@ -277,7 +357,7 @@ export default function FormBuilderPage() {
       </Tabs>
 
       <Dialog open={fieldDialogOpen} onOpenChange={setFieldDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Novo campo</DialogTitle>
           </DialogHeader>
@@ -307,7 +387,8 @@ export default function FormBuilderPage() {
                 </SelectContent>
               </Select>
             </div>
-            {(fieldForm.tipo === "selecao" || fieldForm.tipo === "referencia") && (
+
+            {fieldForm.tipo === "referencia" && (
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Fonte de dados</Label>
                 <Select
@@ -329,6 +410,85 @@ export default function FormBuilderPage() {
                 </Select>
               </div>
             )}
+
+            {isChoiceType && (
+              <div className="flex flex-col gap-[5px]">
+                <Label className="text-xs text-muted-foreground">Opções</Label>
+                <div className="flex flex-col gap-2">
+                  {fieldForm.opcoes.map((opcao, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={opcao}
+                        onChange={(e) => updateOpcao(i, e.target.value)}
+                        placeholder={`Opção ${i + 1}`}
+                      />
+                      <Button variant="ghost" size="icon-sm" onClick={() => removeOpcao(i)}>
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="self-start" onClick={addOpcao}>
+                    <Plus className="size-3.5" /> Adicionar opção
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {fieldForm.tipo === "numero" && (
+              <div className="flex gap-3">
+                <div className="flex flex-1 flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Mínimo (opcional)</Label>
+                  <Input
+                    type="number"
+                    value={fieldForm.min}
+                    onChange={(e) => setFieldForm((f) => ({ ...f, min: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-1 flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Máximo (opcional)</Label>
+                  <Input
+                    type="number"
+                    value={fieldForm.max}
+                    onChange={(e) => setFieldForm((f) => ({ ...f, max: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {(fieldForm.tipo === "texto_curto" || fieldForm.tipo === "texto_longo") && (
+              <div className="flex gap-3">
+                <div className="flex flex-1 flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Mín. caracteres (opcional)</Label>
+                  <Input
+                    type="number"
+                    value={fieldForm.minLength}
+                    onChange={(e) => setFieldForm((f) => ({ ...f, minLength: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-1 flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Máx. caracteres (opcional)</Label>
+                  <Input
+                    type="number"
+                    value={fieldForm.maxLength}
+                    onChange={(e) => setFieldForm((f) => ({ ...f, maxLength: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {fieldForm.tipo === "avaliacao" && (
+              <div className="flex flex-col gap-[5px]">
+                <Label className="text-xs text-muted-foreground">Escala até (padrão 5)</Label>
+                <Input
+                  type="number"
+                  min={2}
+                  max={10}
+                  value={fieldForm.maxEstrelas}
+                  onChange={(e) => setFieldForm((f) => ({ ...f, maxEstrelas: e.target.value }))}
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <Label className="text-xs text-muted-foreground">Obrigatório</Label>
               <Switch
@@ -336,6 +496,66 @@ export default function FormBuilderPage() {
                 onCheckedChange={(v) => setFieldForm((f) => ({ ...f, obrigatorio: v }))}
               />
             </div>
+
+            {campos.length > 0 && (
+              <div className="flex flex-col gap-[5px] rounded-md border border-dashed border-border p-2.5">
+                <Label className="text-xs text-muted-foreground">
+                  Só mostrar este campo se... (opcional)
+                </Label>
+                <Select
+                  value={fieldForm.condFieldId || "__none__"}
+                  onValueChange={(v) =>
+                    setFieldForm((f) => ({ ...f, condFieldId: v === "__none__" ? "" : String(v) }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {() =>
+                        fieldForm.condFieldId
+                          ? campos.find((c) => c.id === fieldForm.condFieldId)?.label
+                          : "Sem condição"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem condição</SelectItem>
+                    {campos.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldForm.condFieldId && (
+                  <>
+                    <Select
+                      value={fieldForm.condOperator}
+                      onValueChange={(v) => v && setFieldForm((f) => ({ ...f, condOperator: v as typeof f.condOperator }))}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue>
+                          {() => VISIBLE_IF_OPERATORS.find((o) => o.value === fieldForm.condOperator)?.label}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISIBLE_IF_OPERATORS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {(fieldForm.condOperator === "equals" || fieldForm.condOperator === "not_equals") && (
+                      <Input
+                        value={fieldForm.condValue}
+                        onChange={(e) => setFieldForm((f) => ({ ...f, condValue: e.target.value }))}
+                        placeholder="Valor de comparação"
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFieldDialogOpen(false)}>

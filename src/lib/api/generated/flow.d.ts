@@ -490,6 +490,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/FormResponses/{formId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    formId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["FormSubmissionDto"];
+                    "text/json": components["schemas"]["FormSubmissionDto"];
+                    "application/*+json": components["schemas"]["FormSubmissionDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/FormResponses/{formId}/{id}": {
         parameters: {
             query?: never;
@@ -919,6 +960,20 @@ export interface components {
             id?: string | null;
             /** Format: uuid */
             responseId?: string;
+            /** Format: uuid */
+            fieldId?: string;
+            valor?: string | null;
+        };
+        FormSubmissionDto: {
+            /** Format: uuid */
+            formId?: string;
+            /** Format: uuid */
+            referenciaId?: string | null;
+            nomeReferencia?: string | null;
+            observacoes?: string | null;
+            itens?: components["schemas"]["FormSubmissionItemDto"][] | null;
+        };
+        FormSubmissionItemDto: {
             /** Format: uuid */
             fieldId?: string;
             valor?: string | null;

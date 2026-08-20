@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { getToken } from "@/lib/auth/session";
+
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
 
 export interface FormResponseItemDto {
   id: string;
@@ -62,5 +65,31 @@ export function useMarkResponseReviewed(formId: string) {
       unwrapApiResponse(result, "Não foi possível marcar como revisada.");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["form-responses", formId] }),
+  });
+}
+
+// Novo (2026-08): exportação (item 5 do gap analysis). GET /api/FormResponses/{id}/export
+// é [ApiExplorerSettings(IgnoreApi = true)] (download binário) — fetch cru, sem tipo
+// gerado, mesmo padrão do resto do arquivo de upload/import.
+export function useExportResponses(formId: string) {
+  return useMutation({
+    mutationFn: async () => {
+      const token = getToken();
+      const res = await fetch(`${baseUrl}/api/FormResponses/${formId}/export`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        throw new Error("Não foi possível exportar as respostas.");
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "respostas.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
   });
 }

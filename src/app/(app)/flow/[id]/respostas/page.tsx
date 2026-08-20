@@ -12,9 +12,24 @@ import { useForm } from "@/lib/flow/use-forms";
 import {
   useFormResponses,
   useMarkResponseReviewed,
+  useExportResponses,
   RESPONSE_STATUS_BADGE,
   type FormResponseDto,
 } from "@/lib/flow/use-form-responses";
+import { decodeOpcoes } from "@/lib/flow/use-form-fields";
+
+function renderValor(tipo: string | undefined, valor: string | null) {
+  if (!valor) return "—";
+  if (tipo === "checkbox") return decodeOpcoes(valor).join(", ") || "—";
+  if (tipo === "anexo")
+    return (
+      <a href={valor} target="_blank" rel="noreferrer" className="text-primary underline">
+        Ver arquivo
+      </a>
+    );
+  if (tipo === "avaliacao") return `${valor} ★`;
+  return valor;
+}
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -27,6 +42,7 @@ export default function FormResponsesPage() {
   const { data: form } = useForm(formId);
   const { data: responses, isLoading, isError } = useFormResponses(formId);
   const markReviewed = useMarkResponseReviewed(formId);
+  const exportResponses = useExportResponses(formId);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = responses?.find((r) => r.id === selectedId) ?? responses?.[0] ?? null;
@@ -40,13 +56,28 @@ export default function FormResponsesPage() {
     }
   }
 
+  async function handleExport() {
+    try {
+      await exportResponses.mutateAsync();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao exportar.");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
-          ← {form?.nome ?? "Formulário"}
-        </Link>
-        <h1 className="font-heading text-xl font-bold">Respostas</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
+            ← {form?.nome ?? "Formulário"}
+          </Link>
+          <h1 className="font-heading text-xl font-bold">Respostas</h1>
+        </div>
+        {responses && responses.length > 0 && (
+          <Button variant="outline" onClick={handleExport} disabled={exportResponses.isPending}>
+            {exportResponses.isPending ? "Exportando..." : "Exportar Excel"}
+          </Button>
+        )}
       </div>
 
       {isError && (
@@ -96,7 +127,7 @@ export default function FormResponsesPage() {
                   return (
                     <div key={item.id} className="text-sm">
                       <span className="text-muted-foreground">{field?.label ?? "Campo"}: </span>
-                      <span className="font-medium">{item.valor ?? "—"}</span>
+                      <span className="font-medium">{renderValor(field?.tipo, item.valor)}</span>
                     </div>
                   );
                 })}
