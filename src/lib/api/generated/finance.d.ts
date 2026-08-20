@@ -322,6 +322,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/FinancialProjection/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    startMonth?: number;
+                    startYear?: number;
+                    months?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/RevenueEntries": {
         parameters: {
             query?: never;
@@ -528,6 +565,7 @@ export interface components {
             bancoContaId?: string | null;
             fornecedorNome?: string | null;
             fornecedorDocumento?: string | null;
+            centroCusto?: string | null;
             recorrente?: boolean;
             frequenciaRecorrencia?: string | null;
             /** Format: int32 */
