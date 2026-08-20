@@ -307,15 +307,43 @@ mostra o Id cru de um campo tipo "referência" (ex.: matrícula do aluno)
 em vez do nome — resolver exigiria buscar as 3 tabelas de referência só
 pra montar um mapa de rótulo.
 
-**Financeiro** — análise de gap feita e apresentada ao cliente (guardião/
-responsável, mensalidade recorrente, cobrança real via Asaas, orçamento/
-reconciliação), build ainda não iniciado — próximo item da fila.
+**Financeiro — item 1 do roadmap: mensalidade recorrente** (commits
+`581206b`/`df6fdfb`): `RevenueCategory.Mensalidade` já existia no enum desde
+antes desta sessão, mas nunca tinha lançamento gerado automaticamente — a
+escola precisava criar manualmente, aluno por aluno, mês por mês, uma linha
+de receita. Construído:
+1. **Responsável financeiro** (`Guardian`) + **vínculo aluno↔responsável**
+   (`StudentGuardian`, N:N — um aluno pode ter mais de um responsável, um
+   responsável pode ter mais de um aluno). Tela `/finance/responsaveis`.
+2. **Plano de mensalidade** (`TuitionPlan`) por aluno (valor, dia de
+   vencimento, vigência, responsável que paga). Tela `/finance/mensalidades`.
+3. **Geração automática**: um job diário do Hangfire (idempotente — nunca
+   gera a mesma competência duas vezes pro mesmo plano) cria um
+   `RevenueEntry` categoria Mensalidade pra cada plano ativo, reaproveitando
+   toda a infraestrutura de Receitas que já existia (aparece em Receitas,
+   entra no fluxo de caixa, "marcar como recebido" funciona sem nenhuma
+   mudança — testado ao vivo o ciclo completo).
+4. **Cobrança real via Asaas** (opt-in por plano) — código completo
+   (`TuitionAsaasService`), sempre no Asaas do PRÓPRIO tenant (mesma config
+   já usada pelo módulo Events), nunca no Asaas global da plataforma
+   (verificado com cuidado antes de escrever qualquer linha, pra não fazer
+   dinheiro de mensalidade cair na conta errada). **Não testado contra o
+   Asaas real** — nenhum tenant de teste tem credencial configurada; só o
+   caminho sem Asaas foi exercitado ao vivo. Best-effort: falha na
+   integração nunca impede o lançamento financeiro básico de existir.
+
+Ainda não iniciado do roadmap original de Financeiro: orçamento/reporting/
+reconciliação (item 4, o mais aberto dos quatro — precisa de mais definição
+de escopo com o cliente antes de começar).
 
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `3070577`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `9f679c4`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `581206b`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `df6fdfb`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.
 Com isso, todos os módulos do escopo original (Rotina, Financeiro,
 Formulários Dinâmicos, Administração e Eventos & Vendas) estão entregues,
-e Formulários ganhou um construtor completo além do escopo original.*
+Formulários ganhou um construtor completo além do escopo original, e
+Financeiro ganhou mensalidade recorrente automática (item 1 de 4 do
+roadmap de expansão) — orçamento/reporting/reconciliação (item 4) segue
+como próximo passo.*
