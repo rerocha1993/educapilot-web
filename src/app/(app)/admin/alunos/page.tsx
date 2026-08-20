@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, Trash2, Pencil, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -215,6 +216,13 @@ export default function AlunosPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Link
+                        href={`/admin/alunos/${s.id}`}
+                        title="Ficha do aluno"
+                        className={buttonVariants({ variant: "ghost", size: "icon", className: "size-7" })}
+                      >
+                        <IdCard className="size-3.5" />
+                      </Link>
                       <Button variant="ghost" size="icon" className="size-7" onClick={() => setEditing(s)}>
                         <Pencil className="size-3.5" />
                       </Button>
