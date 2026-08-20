@@ -572,6 +572,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["FormDto"];
+                    "text/json": components["schemas"]["FormDto"];
+                    "application/*+json": components["schemas"]["FormDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Forms/{id}": {
         parameters: {
             query?: never;
@@ -651,7 +707,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Forms": {
+    "/api/ReferenceData/{tabela}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    label?: string;
+                    id?: string;
+                    filtro?: string;
+                };
+                header?: never;
+                path: {
+                    tabela: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ReferenceData/meta/tabelas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ReferenceData/meta/colunas/{tabela}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tabela: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ReferenceData/consultar": {
         parameters: {
             query?: never;
             header?: never;
@@ -669,9 +832,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["FormDto"];
-                    "text/json": components["schemas"]["FormDto"];
-                    "application/*+json": components["schemas"]["FormDto"];
+                    "application/json": components["schemas"]["ReferenceDataQueryDto"];
+                    "text/json": components["schemas"]["ReferenceDataQueryDto"];
+                    "application/*+json": components["schemas"]["ReferenceDataQueryDto"];
                 };
             };
             responses: {
@@ -747,6 +910,8 @@ export interface components {
             nomeReferencia?: string | null;
             observacoes?: string | null;
             status?: string | null;
+            /** Format: date-time */
+            dataPreenchimento?: string;
             itens?: components["schemas"]["FormResponseItemDto"][] | null;
         };
         FormResponseItemDto: {
@@ -757,6 +922,14 @@ export interface components {
             /** Format: uuid */
             fieldId?: string;
             valor?: string | null;
+        };
+        ReferenceDataQueryDto: {
+            tabela?: string | null;
+            colunaLabel?: string | null;
+            colunaId?: string | null;
+            filtros?: {
+                [key: string]: string;
+            } | null;
         };
     };
     responses: never;
