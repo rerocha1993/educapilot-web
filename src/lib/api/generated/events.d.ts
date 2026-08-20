@@ -902,14 +902,21 @@ export interface components {
             preco?: number;
             /** Format: uuid */
             salesGroupId?: string;
+            ativo?: boolean;
+            /** Format: int32 */
+            estoque?: number | null;
         };
         CreateSalesGroupEventDto: {
             nome?: string | null;
+            /** Format: double */
+            meta?: number | null;
+            responsavel?: string | null;
         };
         CreateSubProductEventDto: {
             nome?: string | null;
             /** Format: uuid */
             productId?: string;
+            ativo?: boolean;
         };
     };
     responses: never;
