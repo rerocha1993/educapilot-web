@@ -3,8 +3,8 @@
 Relação do que foi feito de diferente em relação ao wireframe/plano original, bugs
 reais encontrados e corrigidos no backend, e decisões tomadas sem parar pra
 perguntar (conforme pedido). Cobre o rebuild completo do frontend (Flutter →
-Next.js/React) e os módulos **Rotina** (R1–R13) e **Financeiro** ($1–$5) por
-inteiro.
+Next.js/React) e os módulos **Rotina** (R1–R13), **Financeiro** ($1–$5) e
+**Formulários Dinâmicos** (F1–F5) por inteiro.
 
 ---
 
@@ -49,6 +49,14 @@ testando cada tela contra o backend real, e corrigidos na hora.
 | 17 | Módulo Financeiro inteiro (`IExpenseRepository/Service`, `IRevenueEntryRepository/Service`, `IFinancialProjectionRepository/Service`) nunca registrado no DI | Todo endpoint de Despesa/Receita/Projeção dava "401 token inválido" (mesmo padrão do item 5 e 14) | Registrado no `Program.cs` |
 | 18 | `ExpenseService.PatchExpenseAsync` usava reflection (`GetType().GetProperty(kvp.Key)`) num dicionário vindo direto do cliente | Pior que o item 8: qualquer nome de propriedade do C# (inclusive `TenantId`) podia ser sobrescrito via PATCH | Whitelist explícita de campos editáveis |
 | 19 | `CreateRevenueEntryDto.EntryDate` era `DateTime` não anulável, enquanto a entidade real é `DateTime?` (540 das 648 linhas reais de produção têm esse campo nulo) | Todo `POST`/`PUT` de Receita quebrava com "token inválido" — o binding deixava `DateTime.MinValue` (0001-01-01), que estoura o range da coluna `datetime` do SQL Server | Campo trocado pra `DateTime?` |
+| 20 | Módulo Formulários inteiro (`IReferenceDataRepository/Service`, `IFormFieldReferenceBindingRepository/Service`, `IReferenceDataQueryService`) nunca registrado no DI | Todo endpoint de "Dado de referência" (base do F1 e do F5) dava "401 token inválido" (mesmo padrão do item 5/14/17) | Registrado no `Program.cs` |
+| 21 | Não existia `GET /api/Forms` — `IFormRepository.GetByTenantAsync` já existia mas nunca era exposto no service/controller | Impossível listar os formulários de um tenant (F1/F3/F4 não tinham como funcionar) | Adicionado `IFormService.GetAllAsync()` + `GET api/Forms` |
+| 22 | `ReferenceDataRepository.GetRefDataAsync` quebrado em 3 camadas independentes: tabelas "permitidas" que o switch nunca implementava, um `case "Usuarios"` (maiúsculo) que nunca batia com a chave `"usuarios"` (minúsculo) num switch case-sensitive, e `EF.Property<string>(entidade, "id")` tentando ler `Student.Id`/`Class.Id` (int) e `User.Id` (Guid) como string (EF Core rejeita isso) | Mesmo com o DI corrigido, consultar qualquer tabela de referência (inclusive as "implementadas") sempre quebrava | Reescrito com projeção direta por tabela, sem propriedade dinâmica, pras 3 entidades reais (alunos/turmas/usuários) |
+| 23 | Os dois endpoints `meta/tabelas`/`meta/colunas` (usados pra descobrir o que é consultável) retornavam nomes completamente diferentes (em inglês, com erro de digitação) dos que `GetRefDataAsync` de fato aceita | Descobrir a tabela via `meta/tabelas` e depois usá-la sempre resultava em "Tabela não permitida" | Alinhados às 3 tabelas reais |
+| 24 | `ReferenceDataController` sem `[ApiExplorerSettings(GroupName = "Flow")]` (único controller do módulo faltando esse atributo) | Controller inteiro sumia do Swagger "Flow", quebrando a geração de tipos TypeScript mesmo com os endpoints funcionando | Atributo adicionado |
+| 25 | 13 propriedades não anuláveis entre DTOs e entidades do Flow (`FormDto.Campos/Descricao/Status`, `FormFieldDto.Config/Opcoes`, `FormAutomationDto.Config`, `FormResponseDto.Itens/NomeReferencia/Observacoes/Status`, `FormResponseItemDto.Valor`, e as mesmas 7 do lado da entidade) | Mesmo padrão do item 7, mas em cadeia — cada POST/PUT de Formulário/Campo/Automação/Resposta quebrava um 400 de cada vez até todas serem corrigidas; as 7 do lado da entidade causavam algo pior: "Data is Null" ao *reler* um registro salvo com valor NULL num campo genuinamente opcional (mismatch entre o modelo do EF e o schema real) | Todas trocadas pra `Tipo?`, conferidas 1:1 contra `IS_NULLABLE` real do banco |
+| 26 | `FormResponse.DataPreenchimento` sempre existiu e era preenchida certinho, mas nunca era exposta no DTO; `Status` era sempre hardcoded `"Ativo"` no Create, ignorando o que o cliente mandasse | Coluna "Enviado" do wireframe F3 não tinha campo pra vir; status Pendente/Revisar/Concluída do F3/F4 não existia de verdade | DTO/serviço corrigidos pra expor/respeitar os dois |
+| 27 | `AppDbContext.SaveChangesAsync` (bug estrutural, não específico do Flow) — o filtro que auto-preenche `TenantId` usava `entry.Property("TenantId") != null`, mas `EntityEntry.Property(string)` **lança exceção** (não retorna null) pra qualquer entidade sem essa propriedade | Toda vez que uma entidade nova sem `TenantId` próprio (ex.: `FormField`, escopado indiretamente via `Form.TenantId`) era salva, a aplicação inteira quebrava com "The property 'X.TenantId' could not be found", mascarado como 401 | Trocado pra `entry.Metadata.FindProperty("TenantId")` (retorna null em vez de lançar) — zero mudança de comportamento pra entidades que já tinham TenantId |
 
 Todos confirmados ao vivo contra o LocalDB real, com dado de teste sempre
 removido depois da verificação. 13/13 testes automatizados passando o tempo
@@ -78,6 +86,7 @@ dado existente):
 - **Financeiro**: `Expense.CentroCusto`; `GET /api/FinancialProjection/series`
   (agregação de N meses — antes só existia `monthly-summary` pra um mês por
   vez, sem jeito de montar um gráfico de série temporal).
+- **Formulários**: `GET /api/Forms` (listar formulários do tenant).
 
 ---
 
@@ -101,6 +110,10 @@ Em vez de inventar dado, cada tela avisa explicitamente o que falta:
 | Relatórios (R13) | Geração customizada — backend só lista os tipos disponíveis (limitação documentada no próprio wireframe) |
 | Despesas ($1/$2) | Importar Excel (existe endpoint, mas layout de coluna fixo sem doc de formato) e anexo de comprovante (não existe upload de arquivo genérico em nenhum lugar do backend) |
 | Receitas ($3) | Mesmas duas limitações de Despesas acima |
+| Construtor de formulários (F1) | "Visível ao responsável" (não existe campo no backend); drag-and-drop real (reordena por setas, mesma simplificação do Checklist); "Fonte de dados" salva dentro de `FormField.Config` (JSON livre) em vez de via `FormFieldReferenceBindingService`, que existe mas não tem controller nenhum expondo ele |
+| Automações (F2) | Regras são só configuração — não existe motor no backend que leia `FormAutomation` e execute alguma ação quando uma resposta é enviada |
+| Respostas (F3/F4) | Linha "Automação disparada: X" do wireframe não tem dado nenhum por trás (nada nunca dispara); lista é por formulário (não existe endpoint de listar respostas de todos os formulários de uma vez) |
+| Dados de referência (F5) | "+ Nova tabela" (não existe endpoint de criar tabela de referência); "usada em N formulários" (não existe essa contagem no backend); só 3 das 5 tabelas que o backend um dia chegou a listar como "permitidas" têm implementação de verdade (alunos/turmas/usuários) |
 
 ## 4.1. Wireframe vs. backend: conceito diferente (não é campo faltando, é nome errado)
 
@@ -153,18 +166,24 @@ meses futuros) · Despesas (resumo a pagar/atrasado/pago + marcar pago) ·
 Receitas (mesmo padrão + marcar recebido). Import de Excel e comprovante
 fora de escopo (ver seção 4).
 
+**Formulários Dinâmicos — módulo completo (F1 a F5)**:
+Construtor (campos + reordenar + publicar/rascunho) · Automações (regras
+Quando/Então + ativar/desativar, config-only) · Respostas (lista + detalhe
++ marcar como revisada) · Dados de referência (as 3 tabelas reais com
+contagem). Motor de execução de automações, criação de tabela de
+referência e anexo fora de escopo (ver seção 4).
+
 ## 7. Não iniciado
 
 - Eventos & Vendas (E1-E7) — módulo "events" nem existe no catálogo real do
   backend ainda. Combinado explicitamente com o cliente pra ficar por
   último.
-- Formulários Dinâmicos (F1-F5).
 - Telas de Administração restantes: A1-A4 (painel Master/tenants), A6
   (permissões — sem suporte no backend), A8 (importação em massa), A10
   (ficha do aluno).
 
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `9868b41`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `f4cca59`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `54c21df`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `4675458`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.*
