@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowUp, ArrowDown, ArrowLeft, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,7 @@ const TIPO_LABELS: Record<ChecklistItemTipo, string> = {
 };
 
 export default function ChecklistConfigPage() {
+  const router = useRouter();
   const { data: templates, isLoading } = useChecklistTemplates();
   const { data: classes } = useClasses();
   const saveTemplate = useSaveChecklistTemplate();
@@ -149,11 +152,23 @@ export default function ChecklistConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div>
-        <h1 className="font-heading text-xl font-bold">Configurar checklists</h1>
-        <p className="text-sm text-muted-foreground">
-          Itens, turmas atendidas e ordem de cada checklist da sala.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-xl font-bold">Configurar checklists</h1>
+          <p className="text-sm text-muted-foreground">
+            Itens, turmas atendidas e ordem de cada checklist da sala.
+          </p>
+        </div>
+        {/* Novo (2026-08, feedback do cliente) — antes não tinha como voltar pro
+            preenchimento sem sair pelo menu; cada edição aqui já salva na hora
+            (mutations individuais), então "voltar" é só navegação mesmo. */}
+        <Link
+          href="/checklist"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          Voltar para o preenchimento
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
@@ -296,6 +311,15 @@ export default function ChecklistConfigPage() {
                   Novo item
                 </Button>
               </div>
+            </div>
+
+            {/* Novo (2026-08, feedback do cliente) — "não tem a opção de quando
+                acabar clicar em salvar e voltar para a parte anterior, tem que sair
+                e voltar pra tela". Tudo aqui já foi salvo a cada ação (turma, item,
+                ordem, ativo/inativo são mutations imediatas) — este botão não tem o
+                que persistir de novo, só leva de volta pro preenchimento. */}
+            <div className="flex justify-end border-t border-border pt-4">
+              <Button onClick={() => router.push("/checklist")}>Salvar e voltar</Button>
             </div>
           </div>
         )}
