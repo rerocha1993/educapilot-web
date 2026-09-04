@@ -22,6 +22,9 @@ export interface FormDto {
   status: string; // livre no backend — usamos "Rascunho"/"Ativo"/"Arquivado" por convenção
   criadoPor: string | null;
   campos: FormFieldDto[] | null;
+  // Novo (2026-08) — link público de preenchimento (gerado automaticamente pelo
+  // backend, inclusive pra formulários criados antes desse recurso existir).
+  publicToken: string | null;
 }
 
 export function useForms() {

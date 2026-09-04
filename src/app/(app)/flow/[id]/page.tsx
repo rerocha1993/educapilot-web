@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Link2, Plus, Trash2, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -113,6 +113,19 @@ export default function FormBuilderPage() {
 
   const campos = [...(form?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
   const isChoiceType = (CHOICE_FIELD_TYPES as readonly string[]).includes(fieldForm.tipo);
+
+  async function handleCopiarLinkPublico() {
+    if (!form?.publicToken) return;
+    const url = `${window.location.origin}/f/${form.publicToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link público copiado.");
+    } catch {
+      // Clipboard API pode falhar em contexto não-seguro (http sem localhost) —
+      // mostra o link no próprio toast pra pelo menos dar pra copiar à mão.
+      toast.message("Copie o link:", { description: url });
+    }
+  }
 
   async function handlePublicar() {
     if (!form) return;
@@ -245,6 +258,9 @@ export default function FormBuilderPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleCopiarLinkPublico} disabled={!form.publicToken}>
+            <Link2 className="size-4" /> Copiar link público
+          </Button>
           <Link href={`/flow/${formId}/preencher`} className={buttonVariants({ variant: "outline" })}>
             Preencher
           </Link>
@@ -256,6 +272,12 @@ export default function FormBuilderPage() {
           </Button>
         </div>
       </div>
+      {form.status !== "Ativo" && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          O link público existe mas só aceita respostas quando o formulário está
+          publicado (&quot;Ativo&quot;).
+        </p>
+      )}
 
       <Tabs defaultValue="campos">
         <TabsList>
