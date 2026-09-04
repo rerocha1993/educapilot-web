@@ -1993,6 +1993,105 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Reports/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReportType"];
+                    "text/json": components["schemas"]["ReportType"];
+                    "application/*+json": components["schemas"]["ReportType"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Reports/types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReportType"];
+                    "text/json": components["schemas"]["ReportType"];
+                    "application/*+json": components["schemas"]["ReportType"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/WeeklyObservation/class/{classId}/week/{weekOfMonth}": {
         parameters: {
             query?: never;
@@ -2747,6 +2846,15 @@ export interface components {
             student?: components["schemas"]["Student"];
             teacher?: components["schemas"]["User"];
             class?: components["schemas"]["Class"];
+            /** Format: uuid */
+            tenantId?: string;
+        };
+        ReportType: {
+            id?: string | null;
+            name?: string | null;
+            requiresClass?: boolean;
+            requiresDateRange?: boolean;
+            dataSource?: string | null;
             /** Format: uuid */
             tenantId?: string;
         };

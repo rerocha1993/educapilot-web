@@ -42,6 +42,7 @@ export function useMeetings(classId: number | null) {
 export interface MeetingOccurrenceDto {
   id: number;
   description: string | null;
+  solution: string | null;
   createdAt: string;
 }
 

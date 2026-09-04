@@ -219,6 +219,16 @@ export default function ReunioesPage() {
                   <span className="font-mono text-xs text-muted-foreground">{formatDate(o.createdAt)}</span>
                 </div>
                 {o.description && <p className="mt-0.5 text-xs text-muted-foreground">{o.description}</p>}
+                {/* Correção (2026-09, feedback do cliente) — "na reunião em ocorrência
+                    aparece a ocorrência mas não aparece a solução": StudentQueryService
+                    montava o OccurrenceDto sem preencher Solution (o campo já existia no
+                    DTO, só faltava mapear). */}
+                {o.solution && (
+                  <p className="mt-1 text-xs">
+                    <span className="font-medium text-foreground">Solução:</span>{" "}
+                    <span className="text-muted-foreground">{o.solution}</span>
+                  </p>
+                )}
               </div>
             ))}
           </div>
