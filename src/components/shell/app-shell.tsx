@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,11 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
 import { clearSession } from "@/lib/auth/session";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { NAV_ITEMS } from "@/lib/kernel/nav-items";
 import { cn } from "@/lib/utils";
+
+// Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
+// espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
+// Estado persistido em localStorage (por navegador, não sincroniza entre
+// dispositivos) pra manter a escolha entre navegações/reloads.
+const COLLAPSE_STORAGE_KEY = "educapilot_sidebar_collapsed";
 
 export function AppShell({
   session,
@@ -27,6 +35,28 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const { data: activeModules, isLoading: modulesLoading } = useActiveModules();
+
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem(COLLAPSE_STORAGE_KEY) === "1");
+    } catch {
+      // localStorage indisponível (aba privada, etc.) — mantém expandido.
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(COLLAPSE_STORAGE_KEY, next ? "1" : "0");
+      } catch {
+        // idem — só não persiste, não quebra o toggle.
+      }
+      return next;
+    });
+  }
 
   const activeSlug = new Set((activeModules ?? []).map((m) => m.slug));
 
@@ -50,13 +80,32 @@ export function AppShell({
 
   return (
     <div className="flex min-h-full">
-      <aside className="flex w-56 shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar px-3 py-5">
-        <Link href="/" className="flex items-center gap-2 px-2">
-          <Image src="/logo.png" alt="EducaPilot" width={28} height={22} className="h-6 w-auto" />
-          <span className="font-heading text-sm font-bold text-sidebar-foreground">
-            EducaPilot
-          </span>
-        </Link>
+      <aside
+        className={cn(
+          "flex shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar py-5 transition-[width] duration-150",
+          collapsed ? "w-14 px-2" : "w-56 px-3"
+        )}
+      >
+        <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between px-2")}>
+          <Link href="/" className="flex items-center gap-2 overflow-hidden">
+            <Image src="/logo.png" alt="EducaPilot" width={28} height={22} className="h-6 w-auto shrink-0" />
+            {!collapsed && (
+              <span className="whitespace-nowrap font-heading text-sm font-bold text-sidebar-foreground">
+                EducaPilot
+              </span>
+            )}
+          </Link>
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expandir menu" : "Recolher menu"}
+            className="shrink-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </Button>
+        </div>
 
         <nav className="flex flex-col gap-1">
           {visibleItems.map((item) => {
@@ -66,15 +115,17 @@ export function AppShell({
               <Link
                 key={item.href}
                 href={item.href}
+                title={collapsed ? item.label : undefined}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  collapsed && "justify-center px-0",
                   active
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <Icon className="size-4" />
-                {item.label}
+                <Icon className="size-4 shrink-0" />
+                {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
               </Link>
             );
           })}
