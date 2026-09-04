@@ -91,6 +91,13 @@ export function useSaveAttendance() {
       if (rows.length === 0) return;
       const { classId, attendanceDate } = rows[0];
       queryClient.invalidateQueries({ queryKey: ["attendance", classId, attendanceDate] });
+      // Correção (2026-09, feedback do cliente) — "na tela de faltas pendente da
+      // turma, não aparece os que estão com falta pendente de justificativa": marcar
+      // "Falta" cria um Absence no backend (ver comentário acima), mas só a query da
+      // própria chamada era invalidada — o painel "Faltas pendentes da turma" (que lê
+      // useAbsences(), chave "absences") ficava com cache velho até um reload manual
+      // da página, mesmo com o dado já salvo no banco.
+      queryClient.invalidateQueries({ queryKey: ["absences"] });
     },
   });
 }
