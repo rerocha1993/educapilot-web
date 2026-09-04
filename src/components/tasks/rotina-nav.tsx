@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 // secundária existe só pra alcançar as outras.
 const ITEMS = [
   { href: "/", label: "Chamada" },
-  { href: "/faltas", label: "Faltas" },
   { href: "/checklist", label: "Checklist" },
   { href: "/ocorrencias", label: "Ocorrências" },
   { href: "/materiais", label: "Materiais" },

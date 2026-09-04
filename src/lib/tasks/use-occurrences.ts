@@ -76,3 +76,31 @@ export function useOccurrencesReport(startDate: Date, endDate: Date, classId: nu
     },
   });
 }
+
+// Novo (2026-09, feedback do cliente) — "tem uma ocorrência pra Caterina, mas cade a
+// ocorrência? precisa aparecer": o relatório só mostrava contagem agregada, sem
+// jeito de ver o que de fato foi registrado. Reaproveita GET /api/Occurrence/
+// student/{studentId} (já existia, nunca era usado no frontend) pra listar as
+// ocorrências reais de um aluno quando clica no nome dele no relatório.
+export interface OccurrenceDetailDto {
+  id: number;
+  categoria: OccurrenceCategoria;
+  observation: string | null;
+  solution: string | null;
+  parentsNotified: boolean;
+  createdAt: string;
+}
+
+export function useOccurrencesByStudent(studentId: number | null) {
+  return useQuery({
+    queryKey: ["occurrences-by-student", studentId],
+    queryFn: async () => {
+      const result = await tasksApi.GET("/api/Occurrence/student/{studentId}", {
+        params: { path: { studentId: studentId! } },
+      });
+      const data = unwrapApiResponse(result, "Não foi possível carregar as ocorrências do aluno.");
+      return (data ?? []) as unknown as OccurrenceDetailDto[];
+    },
+    enabled: studentId !== null,
+  });
+}

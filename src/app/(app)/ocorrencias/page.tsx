@@ -29,6 +29,7 @@ import { useStudentsByClass } from "@/lib/kernel/use-students";
 import {
   useCreateOccurrences,
   useOccurrencesReport,
+  useOccurrencesByStudent,
   OCCURRENCE_CATEGORIES,
   type OccurrenceCategoria,
 } from "@/lib/tasks/use-occurrences";
@@ -111,6 +112,18 @@ export default function OcorrenciasPage() {
       toast.error(err instanceof Error ? err.message : "Erro ao enviar observação semanal.");
     }
   }
+
+  // Novo (2026-09, feedback do cliente) — "tem uma ocorrência pra Caterina, mas
+  // cade a ocorrência? precisa aparecer": clicar num aluno do relatório abre o
+  // detalhe real (categoria/descrição/solução/data) das ocorrências dele no
+  // período — antes só dava pra ver a contagem agregada.
+  const [selectedStudent, setSelectedStudent] = useState<{ id: number; name: string } | null>(null);
+  const { data: studentOccurrences, isLoading: studentOccurrencesLoading } =
+    useOccurrencesByStudent(selectedStudent?.id ?? null);
+  const studentOccurrencesInRange = (studentOccurrences ?? []).filter((o) => {
+    const created = new Date(o.createdAt);
+    return created >= startDate && created < new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
+  });
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -261,9 +274,13 @@ export default function OcorrenciasPage() {
             <p className="py-8 text-center text-sm text-muted-foreground">Sem registros no período.</p>
           )}
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             {data?.topStudents.map((s) => (
-              <div key={s.studentId} className="flex items-center justify-between gap-2 text-sm">
+              <button
+                key={s.studentId}
+                onClick={() => setSelectedStudent({ id: s.studentId, name: s.studentName })}
+                className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent"
+              >
                 <div className="flex items-center gap-2 truncate">
                   <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[s.topCategoria])} />
                   <span className="truncate">{s.studentName}</span>
@@ -271,7 +288,7 @@ export default function OcorrenciasPage() {
                 <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                   {s.count}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -352,6 +369,52 @@ export default function OcorrenciasPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={selectedStudent !== null} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ocorrências de {selectedStudent?.name}</DialogTitle>
+          </DialogHeader>
+
+          {studentOccurrencesLoading && <Skeleton className="h-24 w-full" />}
+
+          {!studentOccurrencesLoading && studentOccurrencesInRange.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Nenhuma ocorrência no período selecionado.
+            </p>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {studentOccurrencesInRange
+              .slice()
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .map((o) => (
+                <div key={o.id} className="rounded-lg border border-border p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-sm font-medium">
+                      <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[o.categoria])} />
+                      {o.categoria}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {new Date(o.createdAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                  <p className="text-sm">{o.observation}</p>
+                  {o.solution && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Solução:</span> {o.solution}
+                    </p>
+                  )}
+                  {o.parentsNotified && (
+                    <span className="mt-2 inline-block rounded-full bg-success-soft px-2 py-0.5 text-xs text-success-soft-foreground">
+                      Responsável notificado
+                    </span>
+                  )}
+                </div>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) reset(); }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">

@@ -33,9 +33,10 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
 // Reestruturado (2026-09, feedback do cliente): "essa aba chamada pode dividir tela
 // com a faltas [...] pensar no mobile tbm". Duas mudanças:
 // 1) Layout virou split (grid) com um painel de "Faltas pendentes da turma" ao lado
-//    — resolve falta sem sair da tela de chamada. /faltas continua existindo à parte
-//    como uma ferramenta de auditoria mais ampla (todas as turmas, filtro
-//    justificada/não justificada), que é um uso diferente disso aqui.
+//    — resolve falta sem sair da tela de chamada. A rota /faltas e a aba própria
+//    foram removidas (2026-09, feedback do cliente): "a aba faltas ainda esta na
+//    tela, precisa tirar pq vc colcoou ele nas chamadas" — o painel aqui já cobre o
+//    caso de uso, não faz sentido manter as duas telas.
 // 2) A barra fixa de salvar tinha "left-56" fixo (largura da sidebar desktop) — quebrava
 //    completamente no mobile (não tem sidebar lá). Virou responsivo.
 
@@ -278,8 +279,9 @@ export default function ChamadaPage() {
 
         {/* Novo (2026-09, feedback do cliente) — "essa aba chamada pode dividir tela
             com a faltas": painel de faltas pendentes da turma selecionada, com
-            justificativa inline, sem precisar sair da chamada. /faltas continua
-            existindo à parte (auditoria de todas as turmas). */}
+            justificativa inline, sem precisar sair da chamada. A rota /faltas e a
+            aba própria foram removidas — este painel passou a ser o único lugar
+            pra justificar falta. */}
         <div className="rounded-lg border border-border bg-card p-4">
           <h2 className="mb-1 font-heading text-sm font-semibold">Faltas pendentes da turma</h2>
           <p className="mb-3 text-xs text-muted-foreground">Justifique sem sair da chamada.</p>
