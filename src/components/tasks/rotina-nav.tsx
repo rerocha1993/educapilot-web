@@ -15,7 +15,6 @@ const ITEMS = [
   { href: "/ocorrencias", label: "Ocorrências" },
   { href: "/materiais", label: "Materiais" },
   { href: "/reunioes", label: "Reuniões" },
-  { href: "/observacao-semanal", label: "Observação semanal" },
   { href: "/planejamento-semanal", label: "Planejamento semanal" },
   { href: "/relatorios", label: "Relatórios" },
 ];

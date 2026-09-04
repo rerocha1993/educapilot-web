@@ -32,12 +32,31 @@ import {
   OCCURRENCE_CATEGORIES,
   type OccurrenceCategoria,
 } from "@/lib/tasks/use-occurrences";
+import {
+  useWeeklyObservations,
+  useSendWeeklyObservation,
+} from "@/lib/tasks/use-weekly-observations";
 
 // Reestruturado (2026-08, feedback do cliente): antes eram 2 telas (registro e
 // relatório) sem navegação entre si — quem estava no relatório não tinha como voltar
 // pro registro. Agora a tela abre direto no relatório (o que a diretoria mais
 // consulta no dia a dia) e "Registrar ocorrência" é um botão que abre um popup; ao
 // salvar, o popup fecha e o relatório já atualiza sozinho (mesma query invalidada).
+//
+// Observação semanal (2026-09, feedback do cliente) — "a tela de observação [...]
+// tem que ser colocada junta do ocorrência pq pertencia a mesma coisa, é sobre a
+// turma": no backend, observação semanal SEMPRE foi um Occurrence com
+// IsWeeklyReport=true (mesma tabela, ver OccurrenceService.AddWeeklyReportAsync) —
+// nunca deveria ter sido uma tela separada. Virou uma seção aqui embaixo, visível
+// quando uma turma específica está selecionada no filtro (observação semanal é
+// por turma, não tem sentido em "todas as turmas" de uma vez).
+
+function currentWeekOfMonth() {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  const offset = firstDay.getDay() === 0 ? 7 : firstDay.getDay();
+  return Math.ceil((today.getDate() + offset - 1) / 7);
+}
 
 const CATEGORIA_DOT: Record<OccurrenceCategoria, string> = {
   Comportamento: "bg-warning",
@@ -76,6 +95,22 @@ export default function OcorrenciasPage() {
   const endDate = useMemo(() => new Date(end + "T00:00:00"), [end]);
 
   const { data, isLoading, isError } = useOccurrencesReport(startDate, endDate, reportClassId);
+
+  const [week, setWeek] = useState(currentWeekOfMonth());
+  const [weeklyText, setWeeklyText] = useState("");
+  const { data: weeklyHistory, isLoading: weeklyLoading } = useWeeklyObservations(reportClassId);
+  const sendWeekly = useSendWeeklyObservation();
+
+  async function handleSendWeekly() {
+    if (reportClassId === null || !weeklyText.trim()) return;
+    try {
+      await sendWeekly.mutateAsync({ classId: reportClassId, weekOfMonth: week, weeklyObservation: weeklyText.trim() });
+      toast.success("Observação semanal enviada à coordenação.");
+      setWeeklyText("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao enviar observação semanal.");
+    }
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -240,6 +275,82 @@ export default function OcorrenciasPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 print:hidden">
+        <h2 className="mb-1 font-heading text-sm font-semibold">Observação semanal da turma</h2>
+        <p className="mb-3 text-xs text-muted-foreground">Resumo da semana enviado à coordenação.</p>
+
+        {reportClassId === null ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Selecione uma turma no filtro acima para ver ou enviar a observação semanal.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-3">
+              <div>
+                <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                  Semana do mês
+                </span>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => setWeek(w)}
+                      className={cn(
+                        "size-9 rounded-full border text-sm font-medium transition-colors",
+                        week === w
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-transparent text-foreground hover:bg-accent"
+                      )}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Textarea
+                value={weeklyText}
+                onChange={(e) => setWeeklyText(e.target.value)}
+                rows={4}
+                placeholder="Como foi a semana da turma..."
+              />
+
+              <div className="flex justify-end">
+                <Button onClick={handleSendWeekly} disabled={sendWeekly.isPending || !weeklyText.trim()}>
+                  {sendWeekly.isPending ? "Enviando..." : "Enviar à coordenação"}
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Histórico do mês
+              </span>
+
+              {weeklyLoading && <Skeleton className="h-20 w-full" />}
+
+              {!weeklyLoading && (weeklyHistory?.length ?? 0) === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhuma observação enviada este mês.</p>
+              )}
+
+              <div className="flex max-h-56 flex-col gap-2 overflow-y-auto">
+                {weeklyHistory?.map((h) => (
+                  <div key={h.id} className="rounded-lg border border-border bg-background p-3">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="font-mono text-xs text-muted-foreground">Semana {h.weekOfMonth}</span>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {new Date(h.createdAt).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    <p className="text-sm">{h.weeklyObservation}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) reset(); }}>
