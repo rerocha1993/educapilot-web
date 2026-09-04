@@ -361,15 +361,49 @@ Com isso, os 4 itens do roadmap de expansão do Financeiro proposto ao
 cliente estão implementados (mensalidade recorrente, responsável, cobrança
 Asaas opcional, orçamento/inadimplência/status vencido).
 
+## 9. Link público de preenchimento de formulário
+
+Pedido explícito do cliente depois da entrega de Formulários: responsáveis
+externos (sem login no EducaPilot) precisam abrir um link e preencher o
+formulário. Isso era uma decisão de segurança que eu tinha deliberadamente
+deixado em aberto na entrega original (item 2 do construtor de Formulários)
+— construída agora que o cliente confirmou querer (commits `9e44e09`/`fc374d2`).
+
+- Botão **"Copiar link público"** na tela do formulário (`/flow/[id]`) — todo
+  formulário (novo ou já existente) tem um link `/f/{token}` único e
+  permanente. Só aceita resposta enquanto o formulário está publicado
+  ("Ativo") — em rascunho/arquivado o link mostra uma mensagem, não erro.
+- Tela `/f/[token]` (nova) — página pública de verdade, sem sidebar, sem
+  exigir sessão nenhuma. Mesmos tipos de campo da tela de preenchimento pra
+  staff, com 2 diferenças deliberadas: campo "dado de referência" vira
+  texto livre (a busca de alunos/turmas/usuários continua exigindo login —
+  abrir isso pra qualquer visitante do link deixaria enumerar o cadastro
+  inteiro da escola sem senha nenhuma); sem redirecionamento pós-envio
+  (mostra confirmação na própria página).
+- **Rate limiting** novo (30 requisições/10min por IP) nos 3 endpoints
+  públicos — única defesa contra spam, já que CAPTCHA exigiria a escola
+  configurar uma chave de provedor terceiro (decisão que não tomei
+  sozinho, fica registrada como possível melhoria futura).
+- Problema técnico central resolvido: uma requisição sem login não tem
+  tenant "ambiente" nenhum pro backend resolver sozinho — todo o fluxo
+  (achar o formulário, gravar a resposta, gravar o upload) resolve o
+  tenant a partir do PRÓPRIO token, nunca de sessão.
+
+Testado ao vivo, de ponta a ponta, sem nenhuma sessão logada — o próprio
+ponto do recurso: formulário de teste com 4 tipos de campo (texto,
+caixa de seleção, referência-como-texto, anexo) preenchido e enviado com
+sucesso por um "visitante" sem conta, arquivo confirmado salvo e servido,
+rate limit confirmado disparando depois de ~30 requisições rápidas
+seguidas. Dado de teste limpo depois.
+
 ---
 
-*Backend: `EducaPilot - core` (commits `88db476` → `e2f5c27`, ver histórico
-do git). Frontend: `educapilot-web` (commits `9591007` → `0925512`). Ambos
+*Backend: `EducaPilot - core` (commits `88db476` → `9e44e09`, ver histórico
+do git). Frontend: `educapilot-web` (commits `9591007` → `fc374d2`). Ambos
 com push em dia na `main` de cada repositório no momento desta entrega.
 Com isso, todos os módulos do escopo original (Rotina, Financeiro,
 Formulários Dinâmicos, Administração e Eventos & Vendas) estão entregues,
-Formulários ganhou um construtor completo além do escopo original, e
-Financeiro ganhou os 4 itens do roadmap de expansão (mensalidade
-recorrente, responsável financeiro, cobrança Asaas opcional, orçamento/
-inadimplência/status vencido) — os dois últimos commits ainda sem
-verificação ao vivo, pendente de uma sessão autenticada no navegador.*
+Formulários ganhou um construtor completo além do escopo original (incluindo
+link público de preenchimento), e Financeiro ganhou os 4 itens do roadmap
+de expansão (mensalidade recorrente, responsável financeiro, cobrança
+Asaas opcional, orçamento/inadimplência/status vencido).*
