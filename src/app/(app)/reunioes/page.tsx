@@ -22,6 +22,8 @@ import {
   useSaveMeeting,
   type MeetingDto,
 } from "@/lib/tasks/use-meetings";
+import { useWeeklyPlans } from "@/lib/tasks/use-weekly-plans";
+import { UNJUSTIFIED_REASON } from "@/lib/tasks/use-absences";
 
 // Reescrito (2026-09, feedback do cliente) — "a tela de reuniões, essa tela é para
 // ser por turma, nela ao selecionar a turma a diretora clica na semana, quando ela
@@ -91,6 +93,11 @@ export default function ReunioesPage() {
   const { data: report, isLoading: reportLoading } = useMeetingReport(classId, week.start, week.end);
   const saveMeeting = useSaveMeeting();
 
+  // Novo (2026-09, feedback do cliente) — "na reunião pode trazer o planejamento das
+  // professoras pra saber o que foi trabalhado": mesmo endpoint já usado em
+  // /planejamento-semanal, filtrado pela semana selecionada aqui.
+  const { data: weeklyPlans, isLoading: plansLoading } = useWeeklyPlans(classId, week.start, week.end);
+
   const [discussion, setDiscussion] = useState("");
   const [summary, setSummary] = useState("");
 
@@ -100,13 +107,25 @@ export default function ReunioesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMeeting?.id, weekIndex, classId]);
 
-  const absences = (report?.students ?? []).flatMap((s) =>
-    s.absences.map((a) => ({ ...a, studentName: s.fullName }))
-  );
+  // "somente de quem faltou mesmo" — cada item de s.absences já é uma falta real
+  // (o backend só inclui quem tem Absence vinculada, ver StudentQueryService), não
+  // filtra mais nada aqui.
+  const absences = (report?.students ?? [])
+    .filter((s) => s.absences.length > 0)
+    .flatMap((s) => s.absences.map((a) => ({ ...a, studentName: s.fullName })));
   const occurrences = (report?.students ?? []).flatMap((s) =>
     s.occurrences.map((o) => ({ ...o, studentName: s.fullName }))
   );
   const weeklyReports = report?.weeklyReports ?? [];
+
+  // Novo (2026-09, feedback do cliente) — "se possivel fazer um top faltas,
+  // colocando ali resumidamente quantas faltas por aluno na semana, para bater o
+  // olho [...] preciso de indicadores". Mesmo padrão do "Alunos com mais registros"
+  // já usado no relatório de Ocorrências.
+  const topAbsences = (report?.students ?? [])
+    .filter((s) => s.absences.length > 0)
+    .map((s) => ({ studentName: s.fullName, count: s.absences.length }))
+    .sort((a, b) => b.count - a.count);
 
   async function handleSave(status: "Aberto" | "Finalizado") {
     if (classId === null) return;
@@ -185,23 +204,50 @@ export default function ReunioesPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Novo (2026-09, feedback do cliente) — "nos cards pode colocar scroll proprio
+          pq ficou mto grande, dai deixa como aparecesse umas 6 ocorrencias e o resto
+          scroll": cada painel agora tem sua própria altura máxima com scroll interno,
+          em vez de esticar a página inteira quando tem muito conteúdo na semana. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-lg border border-border bg-card p-4">
           <h2 className="mb-3 font-heading text-sm font-semibold">Relatório de faltas</h2>
           {reportLoading && <Skeleton className="h-24 w-full" />}
           {!reportLoading && absences.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma falta na semana.</p>
           )}
-          <div className="flex flex-col gap-2">
-            {absences.map((a) => (
-              <div key={a.id} className="rounded-md border border-border p-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{a.studentName}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{formatDate(a.createdAt)}</span>
+
+          {/* Novo (2026-09, feedback do cliente) — "fazer um top faltas, colocando
+              ali resumidamente quantas faltas por aluno na semana, para bater o
+              olho [...] preciso de indicadores". */}
+          {topAbsences.length > 0 && (
+            <div className="mb-3 flex flex-col gap-1 border-b border-border pb-3">
+              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Top faltas
+              </span>
+              {topAbsences.map((t) => (
+                <div key={t.studentName} className="flex items-center justify-between text-sm">
+                  <span className="truncate">{t.studentName}</span>
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{t.count}</span>
                 </div>
-                {a.reason && <p className="mt-0.5 text-xs text-muted-foreground">{a.reason}</p>}
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+
+          <div className="flex max-h-[440px] flex-col gap-2 overflow-y-auto pr-1">
+            {absences.map((a) => {
+              const isPending = !a.reason || a.reason === UNJUSTIFIED_REASON;
+              return (
+                <div key={a.id} className="rounded-md border border-border p-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{a.studentName}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{formatDate(a.createdAt)}</span>
+                  </div>
+                  <p className={cn("mt-0.5 text-xs", isPending ? "text-warning" : "text-muted-foreground")}>
+                    {isPending ? "Pendente de justificativa" : a.reason}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -211,7 +257,7 @@ export default function ReunioesPage() {
           {!reportLoading && occurrences.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma ocorrência na semana.</p>
           )}
-          <div className="flex flex-col gap-2">
+          <div className="flex max-h-[440px] flex-col gap-2 overflow-y-auto pr-1">
             {occurrences.map((o) => (
               <div key={o.id} className="rounded-md border border-border p-2 text-sm">
                 <div className="flex items-center justify-between">
@@ -240,7 +286,7 @@ export default function ReunioesPage() {
           {!reportLoading && weeklyReports.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma observação enviada.</p>
           )}
-          <div className="flex flex-col gap-2">
+          <div className="flex max-h-[440px] flex-col gap-2 overflow-y-auto pr-1">
             {weeklyReports.map((w) => (
               <div key={w.id} className="rounded-md border border-border p-2 text-sm">
                 <div className="mb-0.5 flex items-center justify-between">
@@ -248,6 +294,33 @@ export default function ReunioesPage() {
                   <span className="font-mono text-xs text-muted-foreground">{formatDate(w.createdAt)}</span>
                 </div>
                 <p>{w.weeklyObservation}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Novo (2026-09, feedback do cliente) — "na reunião pode trazer o
+            planejamento das professoras pra saber o que foi trabalhado". */}
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-sm font-semibold">Planejamento da semana</h2>
+          {plansLoading && <Skeleton className="h-24 w-full" />}
+          {!plansLoading && (weeklyPlans?.length ?? 0) === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">Nenhum planejamento registrado.</p>
+          )}
+          <div className="flex max-h-[440px] flex-col gap-2 overflow-y-auto pr-1">
+            {weeklyPlans?.map((p) => (
+              <div key={p.id} className="rounded-md border border-border p-2 text-sm">
+                <p className="mb-1 text-xs font-medium text-muted-foreground">{p.weeklyPlanTemplate?.name}</p>
+                <div className="flex flex-col gap-1">
+                  {p.fieldValues
+                    .filter((v) => v.value?.trim())
+                    .map((v) => (
+                      <p key={v.weeklyPlanFieldId} className="text-xs">
+                        <span className="font-medium text-foreground">{v.weeklyPlanField?.label ?? "Campo"}:</span>{" "}
+                        <span className="text-muted-foreground">{v.value}</span>
+                      </p>
+                    ))}
+                </div>
               </div>
             ))}
           </div>
