@@ -1852,6 +1852,7 @@ export interface paths {
                 query?: {
                     startDate?: string;
                     endDate?: string;
+                    classId?: number;
                 };
                 header?: never;
                 path?: never;

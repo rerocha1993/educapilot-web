@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { BarChart3 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -19,167 +27,355 @@ import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
 import { useStudentsByClass } from "@/lib/kernel/use-students";
 import {
-  useCreateOccurrence,
+  useCreateOccurrences,
+  useOccurrencesReport,
   OCCURRENCE_CATEGORIES,
   type OccurrenceCategoria,
 } from "@/lib/tasks/use-occurrences";
 
+// Reestruturado (2026-08, feedback do cliente): antes eram 2 telas (registro e
+// relatório) sem navegação entre si — quem estava no relatório não tinha como voltar
+// pro registro. Agora a tela abre direto no relatório (o que a diretoria mais
+// consulta no dia a dia) e "Registrar ocorrência" é um botão que abre um popup; ao
+// salvar, o popup fecha e o relatório já atualiza sozinho (mesma query invalidada).
+
+const CATEGORIA_DOT: Record<OccurrenceCategoria, string> = {
+  Comportamento: "bg-warning",
+  Saúde: "bg-destructive",
+  Pedagógica: "bg-primary",
+  Atraso: "bg-muted-foreground",
+};
+
+function toIso(d: Date) {
+  const copy = new Date(d);
+  copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
+  return copy.toISOString().slice(0, 10);
+}
+
+function defaultRange() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 6);
+  return { start: toIso(start), end: toIso(end) };
+}
+
+const EMPTY_FORM = {
+  classId: null as number | null,
+  studentIds: [] as number[],
+  categoria: "Comportamento" as OccurrenceCategoria,
+  observation: "",
+  solution: "",
+  notify: false,
+};
+
 export default function OcorrenciasPage() {
   const { data: classes } = useClasses();
-  const [classId, setClassId] = useState<number | null>(null);
-  const [studentId, setStudentId] = useState<number | null>(null);
-  const [categoria, setCategoria] = useState<OccurrenceCategoria>("Comportamento");
-  const [observation, setObservation] = useState("");
-  const [notify, setNotify] = useState(false);
+  const [{ start, end }, setRange] = useState(defaultRange());
+  const [reportClassId, setReportClassId] = useState<number | null>(null);
+  const startDate = useMemo(() => new Date(start + "T00:00:00"), [start]);
+  const endDate = useMemo(() => new Date(end + "T00:00:00"), [end]);
 
-  const { data: students } = useStudentsByClass(classId);
-  const createOccurrence = useCreateOccurrence();
+  const { data, isLoading, isError } = useOccurrencesReport(startDate, endDate, reportClassId);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const { data: students } = useStudentsByClass(form.classId);
+  const createOccurrences = useCreateOccurrences();
 
   useEffect(() => {
-    setStudentId(null);
-  }, [classId]);
+    setForm((f) => ({ ...f, studentIds: [] }));
+  }, [form.classId]);
 
   function reset() {
-    setObservation("");
-    setCategoria("Comportamento");
-    setNotify(false);
-    setStudentId(null);
+    setForm(EMPTY_FORM);
+  }
+
+  function toggleStudent(id: number) {
+    setForm((f) => ({
+      ...f,
+      studentIds: f.studentIds.includes(id)
+        ? f.studentIds.filter((s) => s !== id)
+        : [...f.studentIds, id],
+    }));
   }
 
   async function handleSubmit() {
-    if (classId === null || studentId === null || !observation.trim()) return;
+    if (form.classId === null || form.studentIds.length === 0 || !form.observation.trim()) return;
     try {
-      await createOccurrence.mutateAsync({
-        childId: studentId,
-        classId,
-        categoria,
-        observation: observation.trim(),
-        parentsNotified: notify,
+      await createOccurrences.mutateAsync({
+        childIds: form.studentIds,
+        classId: form.classId,
+        categoria: form.categoria,
+        observation: form.observation.trim(),
+        solution: form.solution.trim() || undefined,
+        parentsNotified: form.notify,
       });
-      toast.success("Ocorrência registrada.");
+      toast.success(
+        form.studentIds.length > 1 ? "Ocorrência registrada para os alunos selecionados." : "Ocorrência registrada."
+      );
+      setDialogOpen(false);
       reset();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao registrar ocorrência.");
     }
   }
 
-  const selectedClass = classes?.find((c) => c.id === classId);
-  const selectedStudent = students?.find((s) => s.id === studentId);
+  const maxCount = Math.max(1, ...(data?.byClass.map((c) => c.count) ?? [1]));
+  const totalCount = data?.byClass.reduce((sum, c) => sum + c.count, 0) ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
-      <RotinaNav />
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Registrar ocorrência</h1>
-          <p className="text-sm text-muted-foreground">Comportamento, saúde, pedagógica ou atraso.</p>
-        </div>
-        <Link
-          href="/ocorrencias/relatorio"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <BarChart3 className="size-3.5" />
-          Relatório semanal
-        </Link>
+      <div className="print:hidden">
+        <RotinaNav />
       </div>
 
-      <div className="flex max-w-xl flex-col gap-4 rounded-lg border border-border bg-card p-5">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Turma
-            </span>
-            <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione">{() => selectedClass?.className ?? "Selecione"}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {classes?.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.className}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Aluno
-            </span>
-            <Select
-              value={studentId?.toString() ?? ""}
-              onValueChange={(v) => v && setStudentId(Number(v))}
-              disabled={classId === null}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione">
-                  {() => selectedStudent?.fullName ?? "Selecione"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {students?.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>
-                    {s.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-xl font-bold">
+            Relatório de ocorrências · {new Date(start + "T00:00:00").toLocaleDateString("pt-BR")} a{" "}
+            {new Date(end + "T00:00:00").toLocaleDateString("pt-BR")}
+          </h1>
+          <p className="text-sm text-muted-foreground">{totalCount} ocorrências no período.</p>
         </div>
 
-        <div>
-          <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-            Categoria
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {OCCURRENCE_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCategoria(c)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-                  categoria === c
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-transparent text-foreground hover:bg-accent"
-                )}
-              >
-                {c}
-              </button>
+        <div className="flex flex-wrap items-end gap-2 print:hidden">
+          <Input
+            type="date"
+            value={start}
+            onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
+            className="h-9 w-40"
+          />
+          <Input
+            type="date"
+            value={end}
+            onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
+            className="h-9 w-40"
+          />
+          {/* Novo (2026-08, feedback do cliente): filtro de turma no relatório —
+              "Todas as turmas" quando null, mesmo comportamento do backend. */}
+          <Select
+            value={reportClassId?.toString() ?? "__all__"}
+            onValueChange={(v) => setReportClassId(v === "__all__" ? null : Number(v))}
+          >
+            <SelectTrigger className="h-9 w-44">
+              <SelectValue>
+                {() => (reportClassId ? classes?.find((c) => c.id === reportClassId)?.className : "Todas as turmas")}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todas as turmas</SelectItem>
+              {classes?.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.className}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="size-4" />
+            Exportar PDF
+          </Button>
+          <Button onClick={() => setDialogOpen(true)}>+ Registrar ocorrência</Button>
+        </div>
+      </div>
+
+      {isError && (
+        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+          Não foi possível carregar o relatório.
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-sm font-semibold">Ocorrências por turma</h2>
+
+          {isLoading && <Skeleton className="h-32 w-full" />}
+
+          {!isLoading && data?.byClass.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nenhuma ocorrência registrada no período.
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2.5">
+            {data?.byClass.map((c) => (
+              <div key={c.classId} className="flex items-center gap-3">
+                <span className="w-28 shrink-0 truncate text-sm">{c.className}</span>
+                <div className="h-5 flex-1 overflow-hidden rounded bg-accent">
+                  <div
+                    className="h-full rounded bg-primary"
+                    style={{ width: `${(c.count / maxCount) * 100}%` }}
+                  />
+                </div>
+                <span className="w-6 shrink-0 text-right font-mono text-xs tabular-nums">{c.count}</span>
+              </div>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-col gap-[5px]">
-          <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-            Descrição
-          </span>
-          <Textarea
-            value={observation}
-            onChange={(e) => setObservation(e.target.value)}
-            rows={4}
-            placeholder="O que aconteceu..."
-          />
-        </div>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-sm font-semibold">Alunos com mais registros</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            A cor do ponto é a categoria mais comum do aluno no período — o backend não tem um
+            conceito de gravidade separado.
+          </p>
 
-        <label className="flex items-center gap-2 text-sm">
-          <Checkbox checked={notify} onCheckedChange={(v) => setNotify(v === true)} />
-          Notificar responsável
-        </label>
+          {isLoading && <Skeleton className="h-32 w-full" />}
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={reset}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={createOccurrence.isPending || classId === null || studentId === null || !observation.trim()}
-          >
-            {createOccurrence.isPending ? "Registrando..." : "Registrar"}
-          </Button>
+          {!isLoading && data?.topStudents.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">Sem registros no período.</p>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {data?.topStudents.map((s) => (
+              <div key={s.studentId} className="flex items-center justify-between gap-2 text-sm">
+                <div className="flex items-center gap-2 truncate">
+                  <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[s.topCategoria])} />
+                  <span className="truncate">{s.studentName}</span>
+                </div>
+                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                  {s.count}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) reset(); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Registrar ocorrência</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Turma
+              </span>
+              <Select
+                value={form.classId?.toString() ?? ""}
+                onValueChange={(v) => v && setForm((f) => ({ ...f, classId: Number(v) }))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione">
+                    {() => classes?.find((c) => c.id === form.classId)?.className ?? "Selecione"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {classes?.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.className}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Novo (2026-08, feedback do cliente) — "adicionar outro aluno envolvido":
+                antes só dava pra escolher 1 aluno por ocorrência; agora é uma lista de
+                checkboxes, registra a mesma ocorrência pra cada aluno marcado. */}
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Alunos envolvidos
+              </span>
+              {form.classId === null && (
+                <p className="text-sm text-muted-foreground">Selecione a turma primeiro.</p>
+              )}
+              {form.classId !== null && (
+                <div className="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-md border border-border p-2.5">
+                  {students?.map((s) => (
+                    <label key={s.id} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={form.studentIds.includes(s.id)}
+                        onCheckedChange={() => toggleStudent(s.id)}
+                      />
+                      {s.fullName}
+                    </label>
+                  ))}
+                  {students?.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhum aluno nesta turma.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Categoria
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {OCCURRENCE_CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setForm((f) => ({ ...f, categoria: c }))}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                      form.categoria === c
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-transparent text-foreground hover:bg-accent"
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Descrição
+              </span>
+              <Textarea
+                value={form.observation}
+                onChange={(e) => setForm((f) => ({ ...f, observation: e.target.value }))}
+                rows={4}
+                placeholder="O que aconteceu..."
+              />
+            </div>
+
+            {/* Novo (2026-08, feedback do cliente) — campo pra professora registrar o
+                que ela fez na situação. Occurrence.Solution já existia na entidade,
+                nunca era exposto em nenhuma tela. */}
+            <div className="flex flex-col gap-[5px]">
+              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Solução (opcional)
+              </span>
+              <Textarea
+                value={form.solution}
+                onChange={(e) => setForm((f) => ({ ...f, solution: e.target.value }))}
+                rows={3}
+                placeholder="O que foi feito pra resolver a situação..."
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={form.notify}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, notify: v === true }))}
+              />
+              Notificar responsável
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                createOccurrences.isPending ||
+                form.classId === null ||
+                form.studentIds.length === 0 ||
+                !form.observation.trim()
+              }
+            >
+              {createOccurrences.isPending ? "Registrando..." : "Registrar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
