@@ -2072,6 +2072,403 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/WeeklyPlan/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WeeklyPlanTemplate"];
+                    "text/json": components["schemas"]["WeeklyPlanTemplate"];
+                    "application/*+json": components["schemas"]["WeeklyPlanTemplate"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/WeeklyPlan/templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WeeklyPlanTemplate"];
+                    "text/json": components["schemas"]["WeeklyPlanTemplate"];
+                    "application/*+json": components["schemas"]["WeeklyPlanTemplate"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/WeeklyPlan/templates/{templateId}/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WeeklyPlanField"];
+                    "text/json": components["schemas"]["WeeklyPlanField"];
+                    "application/*+json": components["schemas"]["WeeklyPlanField"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/WeeklyPlan/fields/{fieldId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    fieldId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WeeklyPlanField"];
+                    "text/json": components["schemas"]["WeeklyPlanField"];
+                    "application/*+json": components["schemas"]["WeeklyPlanField"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    fieldId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/WeeklyPlan/templates/{templateId}/fields/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": number[];
+                    "text/json": number[];
+                    "application/*+json": number[];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/WeeklyPlan/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    classId?: number;
+                    startDate?: string;
+                    endDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WeeklyPlan"];
+                    "text/json": components["schemas"]["WeeklyPlan"];
+                    "application/*+json": components["schemas"]["WeeklyPlan"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/WeeklyPlan/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WeeklyPlan"];
+                    "text/json": components["schemas"]["WeeklyPlan"];
+                    "application/*+json": components["schemas"]["WeeklyPlan"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/WeeklySeminars": {
         parameters: {
             query?: never;
@@ -2448,6 +2845,62 @@ export interface components {
             class?: components["schemas"]["Class"];
             /** Format: date-time */
             date?: string;
+            /** Format: uuid */
+            tenantId?: string;
+        };
+        WeeklyPlan: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            weeklyPlanTemplateId?: number;
+            /** Format: int32 */
+            classId?: number;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: date-time */
+            endDate?: string;
+            previousWeekTasksExecutionStatus?: components["schemas"]["TaskExecutionStatus"];
+            /** Format: date-time */
+            createdAt?: string;
+            weeklyPlanTemplate?: components["schemas"]["WeeklyPlanTemplate"];
+            class?: components["schemas"]["Class"];
+            fieldValues?: components["schemas"]["WeeklyPlanFieldValue"][] | null;
+            /** Format: uuid */
+            tenantId?: string;
+        };
+        WeeklyPlanField: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            weeklyPlanTemplateId?: number;
+            label?: string | null;
+            /** Format: int32 */
+            order?: number;
+            ativo?: boolean;
+            weeklyPlanTemplate?: components["schemas"]["WeeklyPlanTemplate"];
+            /** Format: uuid */
+            tenantId?: string;
+        };
+        WeeklyPlanFieldValue: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            weeklyPlanId?: number;
+            /** Format: int32 */
+            weeklyPlanFieldId?: number;
+            value?: string | null;
+            weeklyPlan?: components["schemas"]["WeeklyPlan"];
+            weeklyPlanField?: components["schemas"]["WeeklyPlanField"];
+            /** Format: uuid */
+            tenantId?: string;
+        };
+        WeeklyPlanTemplate: {
+            /** Format: int32 */
+            id?: number;
+            name?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            fields?: components["schemas"]["WeeklyPlanField"][] | null;
             /** Format: uuid */
             tenantId?: string;
         };
