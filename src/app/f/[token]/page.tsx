@@ -23,6 +23,7 @@ import {
   usePublicForm,
   useSubmitPublicForm,
   useUploadPublicFormFile,
+  PublicFormLoadError,
   type PublicFormFieldDto,
 } from "@/lib/flow/use-public-form";
 
@@ -242,8 +243,9 @@ export default function PublicFormFillPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
 
-  const { data: form, isLoading, isError } = usePublicForm(token);
+  const { data: form, isLoading, isError, error, refetch, isFetching } = usePublicForm(token);
   const submitForm = useSubmitPublicForm(token);
+  const loadErrorKind = error instanceof PublicFormLoadError ? error.kind : "unavailable";
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [nomeReferencia, setNomeReferencia] = useState("");
@@ -281,8 +283,18 @@ export default function PublicFormFillPage() {
         )}
 
         {!isLoading && (isError || !form) && (
-          <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-6 text-center text-sm text-destructive-soft-foreground">
-            Este link não é válido ou o formulário foi removido.
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive-border bg-destructive-soft px-4 py-6 text-center text-sm text-destructive-soft-foreground">
+            <p>
+              {loadErrorKind === "not-found"
+                ? "Este link não é válido ou o formulário foi removido."
+                : (error instanceof Error ? error.message : null) ??
+                  "Não foi possível carregar o formulário agora. Tente novamente em instantes."}
+            </p>
+            {loadErrorKind === "unavailable" && (
+              <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+                {isFetching ? "Tentando..." : "Tentar novamente"}
+              </Button>
+            )}
           </div>
         )}
 

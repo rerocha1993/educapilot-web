@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { flowApi } from "@/lib/api/client";
-import { unwrapApiResponse } from "@/lib/api/unwrap";
 
 // Novo (2026-08) — link público de preenchimento, pedido explícito do cliente:
 // responsáveis externos (sem login) precisam abrir um link e preencher o formulário.
@@ -27,17 +26,50 @@ export interface PublicFormDto {
   campos: PublicFormFieldDto[];
 }
 
+// Correção (2026-08): achado ao vivo testando o link com um usuário real — a tela
+// mostrava a MESMA mensagem ("link não é válido") tanto pra um token genuinamente
+// inexistente quanto pra qualquer falha temporária (backend fora do ar, rede
+// instável, rate limit). Pra um responsável de verdade tentando matricular o filho,
+// "link inválido" é muito mais alarmante (e mais errado) do que "tente de novo em
+// instantes". `kind` deixa a página distinguir os dois casos.
+export class PublicFormLoadError extends Error {
+  kind: "not-found" | "unavailable";
+  constructor(kind: "not-found" | "unavailable", message: string) {
+    super(message);
+    this.kind = kind;
+  }
+}
+
 export function usePublicForm(token: string | undefined) {
   return useQuery({
     queryKey: ["public-form", token],
     enabled: !!token,
-    retry: false,
+    retry: 1,
     queryFn: async () => {
-      const result = await flowApi.GET("/api/PublicForms/{token}", {
-        params: { path: { token: token! } },
-      });
-      const data = unwrapApiResponse(result, "Formulário não encontrado.");
-      return data as unknown as PublicFormDto;
+      let result;
+      try {
+        result = await flowApi.GET("/api/PublicForms/{token}", {
+          params: { path: { token: token! } },
+        });
+      } catch {
+        // fetch() lança (não retorna response nenhuma) quando a rede falha ou o
+        // servidor está simplesmente fora do ar — sem isso, esse caso caía direto
+        // no error boundary do React Query sem nenhuma mensagem amigável.
+        throw new PublicFormLoadError(
+          "unavailable",
+          "Não foi possível conectar ao servidor. Tente novamente em instantes."
+        );
+      }
+      if (result.response.status === 404) {
+        throw new PublicFormLoadError("not-found", "Este link não é válido ou o formulário foi removido.");
+      }
+      if (!result.response.ok || result.error) {
+        throw new PublicFormLoadError(
+          "unavailable",
+          "Não foi possível carregar o formulário agora. Tente novamente em instantes."
+        );
+      }
+      return result.data as unknown as PublicFormDto;
     },
   });
 }
