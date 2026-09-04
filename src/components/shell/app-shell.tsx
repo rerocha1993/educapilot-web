@@ -81,7 +81,7 @@ export function AppShell({
         </nav>
       </aside>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-6">
           <div className="flex items-baseline gap-2 text-sm">
             <span className="font-heading font-semibold">{session.name}</span>
@@ -104,7 +104,13 @@ export function AppShell({
           </DropdownMenu>
         </header>
 
-        <main className="flex-1 overflow-auto bg-background p-6">{children}</main>
+        {/* min-w-0 (2026-09): sem isso, um item flex não encolhe abaixo da largura
+            intrínseca do conteúdo (ex: uma tabela com min-width) — o "overflow-auto"
+            fica inútil e a página inteira estoura de largura em telas estreitas,
+            mesmo o conteúdo interno tendo seu próprio scroll horizontal. Achado
+            testando a Chamada no mobile; a sidebar em si (w-56 fixo, sem colapsar)
+            ainda não é responsiva — isso é um problema maior, à parte. */}
+        <main className="min-w-0 flex-1 overflow-auto bg-background p-6">{children}</main>
       </div>
     </div>
   );
