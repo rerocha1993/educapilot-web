@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env*.example
+# .env.production só tem a URL pública da API (NEXT_PUBLIC_*, que acaba embutida
+# no bundle do cliente de qualquer jeito — não é segredo). Versionado de propósito:
+# sem ele, um clone novo compila apontando para o localhost do .env.local e o
+# deploy quebra silenciosamente.
+!.env.production
 
 # vercel
 .vercel
