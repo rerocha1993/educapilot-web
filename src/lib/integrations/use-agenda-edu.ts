@@ -89,3 +89,55 @@ export function useImportAgendaEdu() {
     },
   });
 }
+
+export interface PreCadastro {
+  id: string;
+  nome: string;
+  dataNascimento?: string | null;
+  /** Turma que o Agenda Edu indicou, quando indicou. É só uma pista — quem decide é a pessoa. */
+  turmaSugerida?: string | null;
+  motivo: string;
+  quantidadeResponsaveis: number;
+  criadoEm: string;
+}
+
+export function usePreCadastros() {
+  return useQuery({
+    queryKey: ["agenda-edu", "pre-cadastros"],
+    queryFn: async () => {
+      const result = await coreApi.GET("/api/AgendaEdu/pre-cadastros", {});
+      const data = unwrapApiResponse(result, "Não foi possível carregar os pré-cadastros.");
+      return data as unknown as PreCadastro[];
+    },
+  });
+}
+
+export function useCompletarPreCadastro() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; classId: number; dataNascimento: string }) => {
+      const result = await coreApi.POST("/api/AgendaEdu/pre-cadastros/{id}/completar", {
+        params: { path: { id: input.id } },
+        body: { classId: input.classId, dataNascimento: input.dataNascimento },
+      });
+      unwrapApiResponse(result, "Não foi possível cadastrar o aluno.");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agenda-edu"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
+}
+
+export function useDescartarPreCadastro() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await coreApi.POST("/api/AgendaEdu/pre-cadastros/{id}/descartar", {
+        params: { path: { id } },
+      });
+      unwrapApiResponse(result, "Não foi possível descartar o pré-cadastro.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["agenda-edu"] }),
+  });
+}

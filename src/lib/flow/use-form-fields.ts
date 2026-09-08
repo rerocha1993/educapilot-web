@@ -22,6 +22,10 @@ export const FIELD_TYPES = [
   { value: "avaliacao", label: "Avaliação (escala)" },
   { value: "anexo", label: "Anexo" },
   { value: "referencia", label: "Dado de referência" },
+  // Novo (2026-09): exibe um contrato para o respondente ler e aceitar. Ao enviar o
+  // formulário, o backend gera o PDF e manda para assinatura eletrônica — ver o módulo
+  // Contracts no backend.
+  { value: "contrato", label: "Contrato para assinatura" },
 ] as const;
 
 // Tipos cuja UI de edição precisa de um editor de opções estáticas (Opcoes).
@@ -38,6 +42,13 @@ export interface VisibleIfConfig {
 }
 
 export interface FieldConfig {
+  // Campos do tipo "contrato". contratoTexto aceita marcadores {{nome do campo}}, que são
+  // substituídos pelas respostas dos outros campos do mesmo formulário na hora de gerar o PDF.
+  contratoTexto?: string;
+  titulo?: string;
+  signatarioNomeFieldId?: string;
+  signatarioEmailFieldId?: string;
+  signatarioCpfFieldId?: string;
   tabelaReferencia?: string;
   min?: number;
   max?: number;
