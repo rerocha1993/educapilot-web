@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,6 +25,15 @@ export default function LoginPage() {
   const router = useRouter();
   const login = useLogin();
   const [showPassword, setShowPassword] = useState(false);
+
+  // Aviso de sessão expirada. Lido de window.location em vez de useSearchParams porque este
+  // último exige envolver a página num Suspense — restruturação grande demais para uma faixa
+  // de aviso. O parâmetro é posto pelo cliente HTTP ao receber 401 (ver src/lib/api/client.ts).
+  const [sessaoExpirada, setSessaoExpirada] = useState(false);
+
+  useEffect(() => {
+    setSessaoExpirada(new URLSearchParams(window.location.search).has("expirada"));
+  }, []);
 
   const {
     register,
@@ -63,6 +72,12 @@ export default function LoginPage() {
             Use o e-mail e senha cadastrados pela sua escola.
           </span>
         </div>
+
+        {sessaoExpirada && !login.error && (
+          <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-sm">
+            Sua sessão expirou por inatividade. Entre novamente para continuar.
+          </div>
+        )}
 
         {login.error && (
           <div className="rounded-md border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">

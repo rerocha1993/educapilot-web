@@ -26,9 +26,21 @@ import {
  * O card some quando não há nada pendente — uma lista vazia permanente na tela vira ruído.
  */
 export function PreCadastrosCard() {
-  const { data: pendentes, isLoading } = usePreCadastros();
+  const { data: pendentes, isLoading, isError, error } = usePreCadastros();
 
   if (isLoading) return <Skeleton className="h-32 w-full rounded-lg" />;
+
+  // Erro precisa aparecer. Antes, uma falha na consulta caía no mesmo caminho da lista vazia
+  // e o card simplesmente sumia — o que parecia "não há pendências" quando na verdade a
+  // requisição tinha falhado.
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+        {error instanceof Error ? error.message : "Não foi possível carregar os pré-cadastros."}
+      </div>
+    );
+  }
+
   if (!pendentes || pendentes.length === 0) return null;
 
   return (

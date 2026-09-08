@@ -20,7 +20,7 @@ import {
  * por isso ficam nesta tela e não numa configuração global da plataforma.
  */
 export function AgendaEduCard() {
-  const { data: settings, isLoading } = useAgendaEduSettings();
+  const { data: settings, isLoading, isError, error } = useAgendaEduSettings();
   const saveSettings = useSaveAgendaEduSettings();
   const testConnection = useTestAgendaEduConnection();
   const importar = useImportAgendaEdu();
@@ -76,6 +76,16 @@ export function AgendaEduCard() {
 
   if (isLoading) {
     return <Skeleton className="h-56 w-full rounded-lg" />;
+  }
+
+  // Sem isto, uma falha ao carregar a configuração deixava o card com os campos em branco e
+  // os botões desabilitados — indistinguível de "ainda não configurado".
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+        {error instanceof Error ? error.message : "Não foi possível carregar a configuração do Agenda Edu."}
+      </div>
+    );
   }
 
   return (
