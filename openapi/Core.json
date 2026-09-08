@@ -6,6 +6,16 @@
   },
   "paths": {
     "/api/Admin/tenants": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Admin"
@@ -29,6 +39,94 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Admin/tenants/{id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/AgendaEdu/configuracao": {
+      "get": {
+        "tags": [
+          "AgendaEdu"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AgendaEdu"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgendaEduSettingsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgendaEduSettingsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgendaEduSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/AgendaEdu/testar-conexao": {
+      "post": {
+        "tags": [
+          "AgendaEdu"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/AgendaEdu/importar": {
+      "post": {
+        "tags": [
+          "AgendaEdu"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -898,10 +996,23 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/tenants/modules/{tenantId}": {
       "post": {
         "tags": [
           "TenantModules"
+        ],
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "requestBody": {
           "content": {
@@ -1118,6 +1229,36 @@
   },
   "components": {
     "schemas": {
+      "AgendaEduSettingsDto": {
+        "type": "object",
+        "properties": {
+          "baseUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "nullable": true
+          },
+          "secretKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "schoolToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "configurado": {
+            "type": "boolean"
+          },
+          "ultimaImportacaoEm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Class": {
         "type": "object",
         "properties": {
@@ -1150,6 +1291,10 @@
           "tenantId": {
             "type": "string",
             "format": "uuid"
+          },
+          "agendaEduId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1454,6 +1599,26 @@
           "tenantId": {
             "type": "string",
             "format": "uuid"
+          },
+          "agendaEduId": {
+            "type": "string",
+            "nullable": true
+          },
+          "allergies": {
+            "type": "string",
+            "nullable": true
+          },
+          "continuousMedication": {
+            "type": "string",
+            "nullable": true
+          },
+          "dietaryRestriction": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthInsurance": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

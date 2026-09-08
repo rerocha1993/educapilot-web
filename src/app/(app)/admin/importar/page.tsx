@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBulkImport, type ImportTipo } from "@/lib/kernel/use-bulk-import";
+import { AgendaEduCard } from "@/components/integrations/agenda-edu-card";
 
 const TIPOS: { value: ImportTipo; label: string; formato: string; accept: string }[] = [
   {
@@ -60,7 +61,10 @@ export default function ImportarPage() {
         </p>
       </div>
 
+      <AgendaEduCard />
+
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+        <h2 className="font-heading text-base font-bold">Importar de arquivo</h2>
         <div className="flex flex-col gap-[5px]">
           <label className="text-xs text-muted-foreground">O que importar</label>
           <Select value={tipo} onValueChange={(v) => v && setTipo(v as ImportTipo)}>
