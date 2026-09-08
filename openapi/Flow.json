@@ -5,6 +5,160 @@
     "version": "v1"
   },
   "paths": {
+    "/api/Contracts": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Contracts/aguardando-aprovacao": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Contracts/{id}": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Contracts/{id}/aprovar": {
+      "post": {
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AprovarContratoDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AprovarContratoDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AprovarContratoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Contracts/{id}/reprovar": {
+      "post": {
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprovarContratoDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprovarContratoDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprovarContratoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Contracts/{id}/reenviar": {
+      "post": {
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/forms/{formId}/automations": {
       "get": {
         "tags": [
@@ -590,6 +744,48 @@
         }
       }
     },
+    "/api/FormResponses/{formId}/submit": {
+      "post": {
+        "tags": [
+          "FormResponses"
+        ],
+        "parameters": [
+          {
+            "name": "formId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormSubmissionDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormSubmissionDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/FormResponses/{formId}/{id}": {
       "get": {
         "tags": [
@@ -701,6 +897,47 @@
         }
       }
     },
+    "/api/Forms": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Forms"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Forms/{id}": {
       "get": {
         "tags": [
@@ -785,26 +1022,168 @@
         }
       }
     },
-    "/api/Forms": {
+    "/api/PublicForms/{token}": {
+      "get": {
+        "tags": [
+          "PublicForms"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/PublicForms/{token}/submit": {
       "post": {
         "tags": [
-          "Forms"
+          "PublicForms"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FormDto"
+                "$ref": "#/components/schemas/FormSubmissionDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/FormDto"
+                "$ref": "#/components/schemas/FormSubmissionDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/FormDto"
+                "$ref": "#/components/schemas/FormSubmissionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ReferenceData/{tabela}": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "tabela",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "label",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "nome"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "id"
+            }
+          },
+          {
+            "name": "filtro",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ReferenceData/meta/tabelas": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ReferenceData/meta/colunas/{tabela}": {
+      "get": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "parameters": [
+          {
+            "name": "tabela",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ReferenceData/consultar": {
+      "post": {
+        "tags": [
+          "ReferenceData"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceDataQueryDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceDataQueryDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceDataQueryDto"
               }
             }
           }
@@ -819,6 +1198,25 @@
   },
   "components": {
     "schemas": {
+      "AprovarContratoDto": {
+        "type": "object",
+        "properties": {
+          "valores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "nullable": true
+            },
+            "nullable": true
+          },
+          "analisadoPorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "FormAutomationDto": {
         "type": "object",
         "properties": {
@@ -891,6 +1289,10 @@
             "items": {
               "$ref": "#/components/schemas/FormFieldDto"
             },
+            "nullable": true
+          },
+          "publicToken": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -975,6 +1377,10 @@
             "type": "string",
             "nullable": true
           },
+          "dataPreenchimento": {
+            "type": "string",
+            "format": "date-time"
+          },
           "itens": {
             "type": "array",
             "items": {
@@ -1003,6 +1409,90 @@
           },
           "valor": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FormSubmissionDto": {
+        "type": "object",
+        "properties": {
+          "formId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referenciaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "nomeReferencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "observacoes": {
+            "type": "string",
+            "nullable": true
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormSubmissionItemDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FormSubmissionItemDto": {
+        "type": "object",
+        "properties": {
+          "fieldId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "valor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReferenceDataQueryDto": {
+        "type": "object",
+        "properties": {
+          "tabela": {
+            "type": "string",
+            "nullable": true
+          },
+          "colunaLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "colunaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "filtros": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReprovarContratoDto": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "analisadoPorUserId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },

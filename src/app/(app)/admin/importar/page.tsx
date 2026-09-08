@@ -13,6 +13,7 @@ import {
 import { useBulkImport, type ImportTipo } from "@/lib/kernel/use-bulk-import";
 import { AgendaEduCard } from "@/components/integrations/agenda-edu-card";
 import { PreCadastrosCard } from "@/components/integrations/pre-cadastros-card";
+import { TuitionImportCard } from "@/components/finance/tuition-import-card";
 
 const TIPOS: { value: ImportTipo; label: string; formato: string; accept: string }[] = [
   {
@@ -65,6 +66,8 @@ export default function ImportarPage() {
       <AgendaEduCard />
 
       <PreCadastrosCard />
+
+      <TuitionImportCard />
 
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
         <h2 className="font-heading text-base font-bold">Importar de arquivo</h2>

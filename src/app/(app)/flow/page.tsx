@@ -53,6 +53,9 @@ export default function FormulariosPage() {
           <p className="text-sm text-muted-foreground">Construtor de formulários dinâmicos.</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/flow/contratos" className={buttonVariants({ variant: "outline" })}>
+            Contratos
+          </Link>
           <Link href="/flow/referencias" className={buttonVariants({ variant: "outline" })}>
             Dados de referência
           </Link>
