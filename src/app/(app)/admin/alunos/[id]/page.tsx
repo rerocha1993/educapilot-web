@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClasses } from "@/lib/kernel/use-classes";
 import { useStudent, useStudentOccurrences } from "@/lib/kernel/use-student-ficha";
+import { useGuardiansByStudent } from "@/lib/finance/use-guardians";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
@@ -23,13 +25,10 @@ function calcularIdade(birthDate: string) {
   return idade;
 }
 
+// Responsáveis saiu daqui em 2026-09: a justificativa ("não existe entidade de responsável no
+// backend") deixou de valer quando o módulo Financeiro entrou com Guardian/StudentGuardian, e a
+// importação do Agenda Edu passou a trazer esses dados. A aba continuava avisando que não dava.
 const NOT_AVAILABLE_TABS = [
-  {
-    value: "responsaveis",
-    label: "Responsáveis",
-    reason:
-      "Não existe entidade de responsável/guardião no backend — Student não tem nenhuma relação com um cadastro de responsável.",
-  },
   {
     value: "frequencia",
     label: "Frequência",
@@ -51,6 +50,7 @@ export default function FichaAlunoPage() {
   const { data: student, isLoading, isError } = useStudent(studentId);
   const { data: classes } = useClasses();
   const { data: occurrences, isLoading: loadingOccurrences } = useStudentOccurrences(studentId);
+  const { data: guardians, isLoading: loadingGuardians } = useGuardiansByStudent(studentId);
 
   const className = classes?.find((c) => c.id === student?.classId)?.className;
 
@@ -101,7 +101,9 @@ export default function FichaAlunoPage() {
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="ocorrencias">Ocorrências</TabsTrigger>
           <TabsTrigger value="saude">Saúde</TabsTrigger>
-          {NOT_AVAILABLE_TABS.map((t) => (
+          <TabsTrigger value="responsaveis">Responsáveis</TabsTrigger>
+
+        {NOT_AVAILABLE_TABS.map((t) => (
             <TabsTrigger key={t.value} value={t.value}>
               {t.label}
             </TabsTrigger>
@@ -180,6 +182,66 @@ export default function FichaAlunoPage() {
             Editável na lista de Alunos. Mostra só o estado atual — não existe timeline
             de registros de saúde no backend.
           </p>
+        </TabsContent>
+
+        <TabsContent value="responsaveis" className="mt-4">
+          {loadingGuardians && <Skeleton className="h-24 w-full" />}
+
+          {!loadingGuardians && (guardians ?? []).length === 0 && (
+            <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+              Nenhum responsável vinculado a este aluno.
+              <span className="mt-1 block text-xs">
+                Os responsáveis vêm da importação do Agenda Edu ou do cadastro em Administração →
+                Responsáveis.
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {(guardians ?? []).map((g) => {
+              // O vínculo com ESTE aluno, entre os vínculos do responsável: um mesmo responsável
+              // costuma ter mais de um filho na escola, e o parentesco/quem paga é por vínculo.
+              const vinculo = (g.vinculos ?? []).find((v) => v.studentId === studentId);
+
+              return (
+                <Link
+                  key={g.id}
+                  href={`/admin/responsaveis?responsavel=${g.id}`}
+                  className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-heading text-sm font-semibold">{g.fullName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {vinculo?.parentesco || "Parentesco não informado"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {vinculo?.responsavelFinanceiro && (
+                        <Badge variant="secondary">Responsável financeiro</Badge>
+                      )}
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                    </div>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                    {[
+                      ["CPF", g.cpf],
+                      ["E-mail", g.email],
+                      ["Telefone", g.phone],
+                    ].map(([rotulo, valor]) => (
+                      <div key={rotulo}>
+                        <dt className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                          {rotulo}
+                        </dt>
+                        <dd className="break-words">{valor || "—"}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </Link>
+              );
+            })}
+          </div>
         </TabsContent>
 
         {NOT_AVAILABLE_TABS.map((t) => (

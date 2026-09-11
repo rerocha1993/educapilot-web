@@ -21,6 +21,9 @@ import {
 import { cn } from "@/lib/utils";
 import { useForm, type FormFieldDto } from "@/lib/flow/use-forms";
 import { decodeFieldConfig, decodeOpcoes, encodeOpcoes } from "@/lib/flow/use-form-fields";
+import { ContractField } from "@/components/flow/contract-field";
+import { CepInput } from "@/components/flow/cep-input";
+import { valorDaParte, type EnderecoCep } from "@/lib/flow/cep";
 import { useReferenceOptions } from "@/lib/flow/use-reference-data";
 import { useSubmitForm, useUploadFormFile } from "@/lib/flow/use-form-fill";
 
@@ -53,10 +56,16 @@ function FieldInput({
   field,
   value,
   onChange,
+  valoresPorRotulo,
+  onEndereco,
 }: {
   field: FormFieldDto;
   value: string;
   onChange: (v: string) => void;
+  /** Recebe o endereco achado pelo CEP, para preencher os campos marcados. */
+  onEndereco?: (endereco: EnderecoCep) => void;
+  /** Rotulo -> resposta, para o contrato resolver os marcadores {{campo}}. */
+  valoresPorRotulo?: Record<string, string>;
 }) {
   const config = decodeFieldConfig(field.config);
   const uploadFile = useUploadFormFile(field.formId);
@@ -209,12 +218,44 @@ function FieldInput({
       );
     }
 
+    // Mesmo renderizador da tela publica: o tipo existia no construtor e no backend, mas
+    // nenhuma tela de preenchimento sabia desenha-lo. Ver contract-field.tsx.
+    case "cep":
+      return (
+        <CepInput
+          value={value}
+          onChange={onChange}
+          onEndereco={(endereco) => onEndereco?.(endereco)}
+        />
+      );
+
+    case "contrato":
+      return (
+        <ContractField
+          titulo={config.titulo}
+          texto={config.contratoTexto ?? ""}
+          valoresPorRotulo={valoresPorRotulo ?? {}}
+          aceito={value.toLowerCase() === "aceito"}
+          onAceitar={(aceito) => onChange(aceito ? "aceito" : "")}
+        />
+      );
+
     case "anexo":
       return (
         <div className="flex flex-col gap-1.5">
+          {/* Botao de verdade em vez do <input type=file> cru, que so mostrava o texto do
+              navegador e nao parecia clicavel. */}
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/50">
+            <Paperclip className="size-4" />
+            {uploadFile.isPending
+              ? "Enviando..."
+              : value
+                ? "Trocar arquivo"
+                : "Escolher arquivo"}
           <input
             type="file"
-            className="text-sm"
+            className="sr-only"
+            disabled={uploadFile.isPending}
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
@@ -228,12 +269,12 @@ function FieldInput({
               }
             }}
           />
+          </label>
           {value && (
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <Paperclip className="size-3" /> {uploadedName ?? "Arquivo enviado"}
             </p>
           )}
-          {uploadFile.isPending && <p className="text-xs text-muted-foreground">Enviando...</p>}
         </div>
       );
 
@@ -265,6 +306,29 @@ export default function FormFillPage() {
     .filter((c) => c.ativo)
     .sort((a, b) => a.ordem - b.ordem);
   const camposVisiveis = campos.filter((c) => isVisible(c, answers));
+
+  // Rotulo -> resposta, para o contrato resolver os marcadores {{campo}} igual ao backend faz
+  // ao gerar o PDF: quem le na tela ve o texto que sera assinado.
+  // Mesma logica da tela publica: espalha o endereco do CEP nos campos marcados.
+  function aplicarEndereco(endereco: EnderecoCep) {
+    setAnswers((atuais) => {
+      const proximos = { ...atuais };
+
+      for (const campo of campos) {
+        const parte = decodeFieldConfig(campo.config).preenchidoPeloCep;
+        if (!parte) continue;
+
+        const valor = valorDaParte(parte, endereco);
+        if (valor) proximos[campo.id] = valor;
+      }
+
+      return proximos;
+    });
+  }
+
+  const valoresPorRotulo = Object.fromEntries(
+    campos.map((c) => [c.label, answers[c.id] ?? ""])
+  );
 
   async function handleSubmit() {
     try {
@@ -341,6 +405,8 @@ export default function FormFillPage() {
               field={field}
               value={answers[field.id] ?? ""}
               onChange={(v) => setAnswers((a) => ({ ...a, [field.id]: v }))}
+              valoresPorRotulo={valoresPorRotulo}
+              onEndereco={aplicarEndereco}
             />
           </div>
         ))}

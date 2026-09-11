@@ -93,3 +93,23 @@ export function useExportResponses(formId: string) {
     },
   });
 }
+
+/**
+ * Exclui uma resposta.
+ *
+ * O backend recusa resposta com contrato assinado — apagá-la levaria o contrato junto, e contrato
+ * assinado é a prova que sustenta a matrícula. A tela só mostra o botão; a regra de verdade está
+ * no servidor.
+ */
+export function useDeleteFormResponse(formId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await flowApi.DELETE("/api/FormResponses/{formId}/{id}", {
+        params: { path: { formId, id } },
+      });
+      unwrapApiResponse(result, "Não foi possível excluir a resposta.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["form-responses", formId] }),
+  });
+}

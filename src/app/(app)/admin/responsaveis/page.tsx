@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FinanceNav } from "@/components/finance/finance-nav";
 import {
   useGuardians,
   useSaveGuardian,
@@ -40,6 +41,7 @@ import {
   type GuardianDto,
 } from "@/lib/finance/use-guardians";
 import { useAllStudents } from "@/lib/kernel/use-students";
+import { EnderecosDoResponsavel } from "@/components/registry/enderecos-do-responsavel";
 
 const EMPTY_FORM = { fullName: "", cpf: "", email: "", phone: "" };
 const EMPTY_VINCULO_FORM = { studentId: "", parentesco: "", responsavelFinanceiro: true };
@@ -55,7 +57,23 @@ export default function ResponsaveisPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  const [detailId, setDetailId] = useState<string | null>(null);
+  // ?responsavel=<id> abre o cadastro já no responsável certo.
+  //
+  // É o que permite chegar aqui a partir da ficha do aluno: o link leva direto à pessoa, em vez
+  // de largar quem clicou numa lista de 133 nomes para procurar de novo.
+  const searchParams = useSearchParams();
+  const idDaUrl = searchParams.get("responsavel");
+
+  const [detailIdManual, setDetailIdManual] = useState<string | null>(null);
+  const [fechouDaUrl, setFechouDaUrl] = useState(false);
+
+  // O id da URL vale até a pessoa fechar o diálogo; daí em diante manda o clique na lista.
+  const detailId = detailIdManual ?? (fechouDaUrl ? null : idDaUrl);
+
+  function setDetailId(id: string | null) {
+    setDetailIdManual(id);
+    if (id === null) setFechouDaUrl(true);
+  }
   const [vinculoForm, setVinculoForm] = useState(EMPTY_VINCULO_FORM);
 
   const list = guardians ?? [];
@@ -115,14 +133,12 @@ export default function ResponsaveisPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <FinanceNav />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Responsáveis</h1>
           <p className="text-sm text-muted-foreground">
             Quem paga a mensalidade de cada aluno — base do módulo de mensalidade
-            recorrente.
+            recorrente e assinam o contrato.
           </p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>+ Novo responsável</Button>
@@ -253,6 +269,8 @@ export default function ResponsaveisPage() {
                 {detail.cpf ?? "CPF não cadastrado"} · {detail.email ?? "—"} · {detail.phone ?? "—"}
               </div>
 
+              <EnderecosDoResponsavel guardianId={detail.id} />
+
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium">Alunos vinculados</p>
                 {(!detail.vinculos || detail.vinculos.length === 0) && (
@@ -264,7 +282,14 @@ export default function ResponsaveisPage() {
                     className="flex items-center justify-between rounded-md border border-border px-3 py-2"
                   >
                     <div className="text-sm">
-                      <span className="font-medium">{v.studentName ?? v.studentId}</span>
+                      {/* Leva para a ficha do aluno: o vínculo precisa andar nos dois sentidos, ou
+                          quem está conferindo uma família tem de voltar ao menu a cada troca. */}
+                      <Link
+                        href={`/admin/alunos/${v.studentId}`}
+                        className="font-medium hover:underline"
+                      >
+                        {v.studentName ?? v.studentId}
+                      </Link>
                       {v.parentesco && <span className="text-muted-foreground"> · {v.parentesco}</span>}
                       {v.responsavelFinanceiro && (
                         <Badge className="ml-2" variant="secondary">

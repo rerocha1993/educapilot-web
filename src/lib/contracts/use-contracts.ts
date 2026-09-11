@@ -28,6 +28,8 @@ export interface Contract {
   enviadoEm?: string | null;
   concluidoEm?: string | null;
   ultimoErroEnvio?: string | null;
+  /** Quando a via assinada saiu para a família. Nulo = ainda não saiu. */
+  copiaEnviadaEm: string | null;
   temArquivoAssinado: boolean;
   temArquivoAuditoria: boolean;
   signatarios: ContractSigner[];
@@ -79,5 +81,25 @@ export function useRejectContract() {
       unwrapApiResponse(result, "Não foi possível reprovar o contrato.");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contracts"] }),
+  });
+}
+
+/**
+ * Exclui um contrato que falhou antes de ir para assinatura.
+ *
+ * O backend recusa qualquer outro estado: contrato assinado é a prova que sustenta a matrícula, e
+ * apagá-lo não teria desfazer. Aqui a interface só oferece o botão onde ele é permitido, e a
+ * checagem de verdade continua no servidor.
+ */
+export function useDeleteContract() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await flowApi.DELETE("/api/Contracts/{id}", { params: { path: { id } } });
+      unwrapApiResponse(result, "Não foi possível excluir o contrato.");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
   });
 }

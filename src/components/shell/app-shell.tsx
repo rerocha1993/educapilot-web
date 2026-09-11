@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { KeyRound, LogOut, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +16,10 @@ import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
 import { clearSession } from "@/lib/auth/session";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
-import { NAV_ITEMS } from "@/lib/kernel/nav-items";
+import { ADMIN_HREF, NAV_ITEMS, slugDeAcesso } from "@/lib/kernel/nav-items";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { cn } from "@/lib/utils";
+import { AlterarSenhaDialog } from "@/components/shell/alterar-senha-dialog";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
 // espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
@@ -34,7 +36,22 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [alterandoSenha, setAlterandoSenha] = useState(false);
   const { data: activeModules, isLoading: modulesLoading } = useActiveModules();
+  const { data: meuAcesso } = useMeuAcesso();
+
+  // Quem nao tem nenhum acesso gravado ve tudo o que a escola contratou.
+  //
+  // E o caso de todos os usuarios criados antes das permissoes existirem: sem esta regra, a
+  // primeira publicacao esvaziaria o menu de quem ja trabalha no sistema. Permissao vazia passa a
+  // restringir a partir do momento em que alguem a define.
+  const semAcessoDefinido = (meuAcesso?.modulos.length ?? 0) === 0;
+
+  function podeVer(href: string) {
+    if (semAcessoDefinido) return true;
+    const slug = slugDeAcesso(href);
+    return !slug || (meuAcesso?.modulos ?? []).some((m) => m.moduloSlug === slug);
+  }
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -62,8 +79,12 @@ export function AppShell({
 
   // Enquanto carrega, mostra só o que não depende de módulo — evita um flash de
   // itens que o tenant não tem, e falha fechado (não aberto) se a busca der erro.
+  // Duas perguntas diferentes, ambas obrigatorias: a escola contratou o modulo E esta pessoa tem
+  // permissao nele. Passar so numa delas nao basta.
   const visibleItems = NAV_ITEMS.filter(
-    (item) => item.moduleSlug === null || (!modulesLoading && activeSlug.has(item.moduleSlug))
+    (item) =>
+      (item.moduleSlug === null || (!modulesLoading && activeSlug.has(item.moduleSlug))) &&
+      podeVer(item.href)
   );
 
   function handleLogout() {
@@ -138,6 +159,24 @@ export function AppShell({
             <span className="font-heading font-semibold">{session.name}</span>
           </div>
 
+          <div className="flex items-center gap-2">
+            {/* Administração mora aqui, e não na sidebar: a sidebar lista o que se usa todo dia,
+                e configurar a escola é coisa de vez em quando — ao lado de sair, que é o outro
+                lugar onde já se procura ajuste de conta. */}
+            {podeVer(ADMIN_HREF) && (
+            <Link
+              href={ADMIN_HREF}
+              title="Administração"
+              aria-label="Administração"
+              className={cn(
+                "flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                pathname.startsWith(ADMIN_HREF) && "bg-accent text-foreground"
+              )}
+            >
+              <Settings className="size-4" />
+            </Link>
+            )}
+
           <DropdownMenu>
             <DropdownMenuTrigger className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
               {initials || "?"}
@@ -147,12 +186,18 @@ export function AppShell({
                 {session.role}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setAlterandoSenha(true)}>
+                <KeyRound className="size-4" />
+                Alterar senha
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 <LogOut className="size-4" />
                 Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AlterarSenhaDialog open={alterandoSenha} onOpenChange={setAlterandoSenha} />
+          </div>
         </header>
 
         {/* min-w-0 (2026-09): sem isso, um item flex não encolhe abaixo da largura

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Pencil, Trash2, UserPlus } from "lucide-react";
+import { Search, Pencil, Trash2, UserPlus, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,9 @@ import {
 import { toast } from "sonner";
 import { useUsers, useSaveUser, useDeleteUser, useSendInvite, type UserDto } from "@/lib/kernel/use-users";
 import { cn } from "@/lib/utils";
+import { AcessoDialog } from "@/components/access/acesso-dialog";
+import { SeletorDeAcesso } from "@/components/access/seletor-de-acesso";
+import { type AcessoDoUsuario } from "@/lib/access/use-acessos";
 
 const ROLE_LABELS: Record<string, string> = {
   Admin: "Administrador",
@@ -48,6 +51,7 @@ export default function UsuariosPage() {
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [turmasDe, setTurmasDe] = useState<UserDto | null>(null);
 
   const users = data?.items ?? [];
   const roles = Array.from(new Set(users.map((u) => u.userType))).sort();
@@ -77,6 +81,16 @@ export default function UsuariosPage() {
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteNome, setInviteNome] = useState("");
+  const [linkConvite, setLinkConvite] = useState<string | null>(null);
+
+  // Professor sem módulo é o padrão seguro: quem convida marca o que a pessoa precisa, em vez
+  // de tirar o que ela não deveria ter.
+  const [inviteAcesso, setInviteAcesso] = useState<AcessoDoUsuario>({
+    userType: "Teacher",
+    modulos: [],
+    classIds: [],
+  });
 
   async function handleSave() {
     if (!editing || !fullName.trim() || !email.trim()) return;
@@ -101,7 +115,19 @@ export default function UsuariosPage() {
   async function handleInvite() {
     if (!inviteEmail.trim()) return;
     try {
-      await sendInvite.mutateAsync(inviteEmail.trim());
+      const resultado = await sendInvite.mutateAsync({
+        email: inviteEmail.trim(),
+        nome: inviteNome.trim() || undefined,
+        acesso: inviteAcesso,
+      });
+
+      if (resultado && !resultado.enviado) {
+        // O convite vale mesmo sem o e-mail. Mostrar o link deixa a escola repassar por WhatsApp
+        // em vez de ficar convidando de novo e acumulando convites para a mesma pessoa.
+        setLinkConvite(resultado.link ?? null);
+        toast.warning(resultado.message);
+        return;
+      }
       toast.success("Convite enviado.");
       setInviteEmail("");
       setInviteOpen(false);
@@ -208,6 +234,15 @@ export default function UsuariosPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      title="Acesso e turmas"
+                      onClick={() => setTurmasDe(u)}
+                    >
+                      <GraduationCap className="size-3.5" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="size-7" onClick={() => setEditing(u)}>
                       <Pencil className="size-3.5" />
                     </Button>
@@ -227,13 +262,20 @@ export default function UsuariosPage() {
         </Table>
       </div>
 
-      {/* Turmas por usuário e lista de convites pendentes fazem parte do wireframe A5,
-          mas o backend não tem endpoint pra nenhum dos dois hoje (GetAllUsers não inclui
-          UserClasses, e InviteToken não tem GetAll/GetByTenant) — ver design/handoff. */}
+      {/* Turmas por usuário: resolvido em 2026-09 (ícone de turmas na linha). A lista de
+          convites pendentes continua sem endpoint no backend (InviteToken não tem
+          GetAll/GetByTenant) — ver design/handoff. */}
       <p className="text-xs text-muted-foreground">
-        Turmas por usuário e lista de convites pendentes ainda não são suportados pelo
-        backend — próxima etapa.
+        A lista de convites pendentes ainda não é suportada pelo backend — próxima etapa.
       </p>
+
+      {/* key: remonta ao trocar de usuário, zerando a seleção do anterior. */}
+      <AcessoDialog
+        key={turmasDe?.id ?? "nenhum"}
+        userId={turmasDe?.id ?? null}
+        userName={turmasDe?.fullName}
+        onClose={() => setTurmasDe(null)}
+      />
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent>
@@ -292,16 +334,23 @@ export default function UsuariosPage() {
       </Dialog>
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Convidar usuário</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              Envia um e-mail de convite. A pessoa define o próprio papel, turmas e senha
-              ao aceitar.
+              O acesso é definido aqui e vai descrito no e-mail. A pessoa só escolhe a senha ao
+              aceitar.
             </p>
+
+            <div className="flex flex-col gap-[5px]">
+              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Nome (opcional)
+              </Label>
+              <Input value={inviteNome} onChange={(e) => setInviteNome(e.target.value)} />
+            </div>
             <div className="flex flex-col gap-[5px]">
               <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
                 E-mail
@@ -313,6 +362,15 @@ export default function UsuariosPage() {
                 autoFocus
               />
             </div>
+
+            {linkConvite && (
+              <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+                O e-mail não saiu, mas o convite está válido. Envie este link para a pessoa:
+                <code className="mt-1 block break-all">{linkConvite}</code>
+              </div>
+            )}
+
+            <SeletorDeAcesso valor={inviteAcesso} onChange={setInviteAcesso} />
           </div>
 
           <DialogFooter>

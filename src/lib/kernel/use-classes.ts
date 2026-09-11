@@ -1,12 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { coreApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { getSession } from "@/lib/auth/session";
 
+/**
+ * Turmas que o usuário logado pode ver.
+ *
+ * Professor recebe só as turmas dele; coordenação e administração recebem todas.
+ *
+ * Antes disto, toda tela usava GET /api/Class, que devolve as turmas da escola inteira para
+ * qualquer usuário autenticado — uma professora abria a Chamada e via a lista completa, com as
+ * turmas das colegas. Escopar aqui, e não em cada tela, faz todos os seletores de turma do
+ * sistema passarem a mostrar a lista certa de uma vez (era o pedido: a professora atende mais de
+ * uma turma e precisa escolher entre AS DELA).
+ *
+ * O backend continua sendo a autoridade: os endpoints de dado por turma têm suas próprias
+ * verificações. Isto aqui é o que a interface OFERECE, não o que ela autoriza.
+ */
 export function useClasses() {
+  const ehProfessor = getSession()?.role === "Teacher";
+
   return useQuery({
-    queryKey: ["classes"],
+    queryKey: ["classes", ehProfessor ? "minhas" : "todas"],
     queryFn: async () => {
-      const result = await coreApi.GET("/api/Class");
+      const result = ehProfessor
+        ? await coreApi.GET("/api/User/classes")
+        : await coreApi.GET("/api/Class");
       return unwrapApiResponse(result, "Não foi possível carregar as turmas.") ?? [];
     },
   });

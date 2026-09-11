@@ -14,6 +14,8 @@ export interface TuitionPlanDto {
   dataFim: string | null;
   ativo: boolean;
   gerarCobrancaAsaas: boolean;
+  /** Reajuste combinado com esta família (%). Nulo = vale o percentual da escola. */
+  percentualReajuste: number | null;
 }
 
 export function useTuitionPlans() {
@@ -37,6 +39,7 @@ export interface SaveTuitionPlanInput {
   dataFim?: string | null;
   ativo?: boolean;
   gerarCobrancaAsaas: boolean;
+  percentualReajuste?: number | null;
 }
 
 export function useSaveTuitionPlan() {
@@ -52,6 +55,7 @@ export function useSaveTuitionPlan() {
         dataFim: input.dataFim ?? null,
         ativo: input.ativo ?? true,
         gerarCobrancaAsaas: input.gerarCobrancaAsaas,
+        percentualReajuste: input.percentualReajuste ?? null,
       };
       if (input.id) {
         const result = await financeApi.PUT("/api/TuitionPlans/{id}", { params: { path: { id: input.id } }, body });

@@ -25,6 +25,8 @@ export interface FormDto {
   // Novo (2026-08) — link público de preenchimento (gerado automaticamente pelo
   // backend, inclusive pra formulários criados antes desse recurso existir).
   publicToken: string | null;
+  // Novo (2026-09) — regras do formulário inteiro, em JSON. Ver lib/flow/form-config.ts.
+  config: string | null;
 }
 
 export function useForms() {
@@ -75,6 +77,7 @@ export function useUpdateForm() {
           nome: form.nome,
           descricao: form.descricao,
           status: form.status,
+          config: form.config,
         },
       });
       unwrapApiResponse(result, "Não foi possível salvar o formulário.");
@@ -83,5 +86,27 @@ export function useUpdateForm() {
       queryClient.invalidateQueries({ queryKey: ["forms"] });
       queryClient.invalidateQueries({ queryKey: ["forms", form.id] });
     },
+  });
+}
+
+/**
+ * Duplica um formulário inteiro.
+ *
+ * Existe porque formulários de matrícula e de rematrícula são quase o mesmo documento: remontar
+ * 42 campos e um contrato de 36 mil caracteres à mão para mudar meia dúzia de coisas é convite a
+ * erro justamente nas partes que deveriam continuar idênticas.
+ */
+export function useDuplicateForm() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; nome?: string }) => {
+      const result = await flowApi.POST("/api/Forms/{id}/duplicar", {
+        params: { path: { id: input.id } },
+        body: { nome: input.nome ?? null },
+      });
+      const data = unwrapApiResponse(result, "Não foi possível duplicar o formulário.");
+      return data as unknown as FormDto;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forms"] }),
   });
 }

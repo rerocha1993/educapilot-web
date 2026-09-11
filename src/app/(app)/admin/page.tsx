@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, GraduationCap, UserRound, UploadCloud } from "lucide-react";
+import { Users, GraduationCap, UserRound, UploadCloud, ArrowRightLeft, Contact, Mail } from "lucide-react";
 
 // Índice de Administração — sem isso, o item "Administração" da sidebar levava
 // pra uma rota sem page.tsx (404). Lista as áreas já construídas; conforme o
@@ -18,10 +18,28 @@ const SECTIONS = [
     icon: UserRound,
   },
   {
+    href: "/admin/responsaveis",
+    label: "Responsáveis",
+    description: "Pais e responsáveis, com o vínculo de cada um com os alunos.",
+    icon: Contact,
+  },
+  {
     href: "/admin/usuarios",
     label: "Usuários",
     description: "Professores, coordenação e convites.",
     icon: Users,
+  },
+  {
+    href: "/admin/progressao",
+    label: "Progressão de turma",
+    description: "Para onde cada turma passa na virada do ano, e promover os alunos.",
+    icon: ArrowRightLeft,
+  },
+  {
+    href: "/admin/email",
+    label: "E-mail da escola",
+    description: "Conta que envia o contrato assinado e as demais mensagens automáticas.",
+    icon: Mail,
   },
   {
     href: "/admin/importar",

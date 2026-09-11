@@ -96,3 +96,24 @@ export function useRemoveVinculo() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["guardians"] }),
   });
 }
+
+/**
+ * Responsáveis vinculados a um aluno.
+ *
+ * A ficha do aluno dizia que "não existe entidade de responsável no backend" — isso deixou de ser
+ * verdade quando o módulo Financeiro entrou (Guardian + StudentGuardian), e a importação do
+ * Agenda Edu traz esses dados desde então. O aviso na tela é que tinha ficado para trás.
+ */
+export function useGuardiansByStudent(studentId: number | undefined) {
+  return useQuery({
+    queryKey: ["guardians", "por-aluno", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const result = await financeApi.GET("/api/Guardians/por-aluno/{studentId}", {
+        params: { path: { studentId: studentId! } },
+      });
+      const data = unwrapApiResponse(result, "Não foi possível carregar os responsáveis do aluno.");
+      return (data ?? []) as unknown as GuardianDto[];
+    },
+  });
+}

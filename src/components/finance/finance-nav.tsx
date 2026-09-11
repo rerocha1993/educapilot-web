@@ -8,7 +8,6 @@ const ITEMS = [
   { href: "/finance", label: "Fluxo de caixa" },
   { href: "/finance/despesas", label: "Despesas" },
   { href: "/finance/receitas", label: "Receitas" },
-  { href: "/finance/responsaveis", label: "Responsáveis" },
   { href: "/finance/mensalidades", label: "Mensalidades" },
   { href: "/finance/inadimplencia", label: "Inadimplência" },
   { href: "/finance/orcamento", label: "Orçamento" },

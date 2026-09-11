@@ -15,7 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useForms, useCreateForm } from "@/lib/flow/use-forms";
+import { Copy } from "lucide-react";
+import { useForms, useCreateForm, useDuplicateForm } from "@/lib/flow/use-forms";
 
 const STATUS_BADGE: Record<string, string> = {
   Rascunho: "bg-accent text-accent-foreground",
@@ -26,7 +27,10 @@ const STATUS_BADGE: Record<string, string> = {
 export default function FormulariosPage() {
   const { data: forms, isLoading, isError } = useForms();
   const createForm = useCreateForm();
+  const duplicateForm = useDuplicateForm();
 
+  const [duplicando, setDuplicando] = useState<{ id: string; nome: string } | null>(null);
+  const [nomeCopia, setNomeCopia] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -45,6 +49,20 @@ export default function FormulariosPage() {
     }
   }
 
+  async function handleDuplicar() {
+    if (!duplicando) return;
+    try {
+      const copia = await duplicateForm.mutateAsync({
+        id: duplicando.id,
+        nome: nomeCopia.trim() || undefined,
+      });
+      toast.success(`"${copia.nome}" criado como rascunho.`);
+      setDuplicando(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao duplicar o formulário.");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -53,6 +71,9 @@ export default function FormulariosPage() {
           <p className="text-sm text-muted-foreground">Construtor de formulários dinâmicos.</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/flow/respostas" className={buttonVariants({ variant: "outline" })}>
+            Caixa de envios
+          </Link>
           <Link href="/flow/contratos" className={buttonVariants({ variant: "outline" })}>
             Contratos
           </Link>
@@ -99,10 +120,52 @@ export default function FormulariosPage() {
                 {form.campos?.length ?? 0} campo{form.campos?.length === 1 ? "" : "s"}
               </span>
               <Badge className={STATUS_BADGE[form.status] ?? ""}>{form.status}</Badge>
+              {/* O card inteiro é um link: sem preventDefault, duplicar navegaria para o
+                  formulário de origem no mesmo clique. */}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Duplicar"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDuplicando({ id: form.id!, nome: form.nome });
+                  setNomeCopia(`${form.nome} (cópia)`);
+                }}
+              >
+                <Copy className="size-4" />
+              </Button>
             </div>
           </Link>
         ))}
       </div>
+
+      <Dialog open={!!duplicando} onOpenChange={(open) => !open && setDuplicando(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar formulário</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Copia todos os campos de <strong>{duplicando?.nome}</strong>, inclusive o contrato e as
+              configurações. A cópia nasce como rascunho, com link próprio, e as respostas ficam com
+              o formulário original.
+            </p>
+            <div className="flex flex-col gap-[5px]">
+              <Label className="text-xs text-muted-foreground">Nome da cópia</Label>
+              <Input value={nomeCopia} onChange={(e) => setNomeCopia(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDuplicando(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleDuplicar} disabled={duplicateForm.isPending}>
+              {duplicateForm.isPending ? "Duplicando..." : "Duplicar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

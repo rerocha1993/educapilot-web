@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { Settings, Trash2, TriangleAlert } from "lucide-react";
+
+import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +14,7 @@ import {
   useContracts,
   useContractsAwaitingApproval,
   useRejectContract,
+  useDeleteContract,
   type Contract,
 } from "@/lib/contracts/use-contracts";
 
@@ -27,12 +31,21 @@ export default function ContratosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-xl font-bold">Contratos</h1>
-        <p className="text-sm text-muted-foreground">
-          Contratos assinados pelas famílias aguardando conferência. Aprovar envia a via assinada
-          por e-mail; o contrato em si já foi assinado e não muda.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-xl font-bold">Contratos</h1>
+          <p className="text-sm text-muted-foreground">
+            Contratos assinados pelas famílias aguardando conferência. Aprovar envia a via assinada
+            por e-mail; o contrato em si já foi assinado e não muda.
+          </p>
+        </div>
+        <Link
+          href="/flow/contratos/configuracao"
+          className="inline-flex shrink-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/50"
+        >
+          <Settings className="size-4" />
+          Configuração
+        </Link>
       </div>
 
       {isLoading && <Skeleton className="h-40 w-full rounded-lg" />}
@@ -49,9 +62,13 @@ export default function ContratosPage() {
         </div>
       )}
 
-      {(fila ?? []).map((c) => (
-        <CartaoAprovacao key={c.id} contrato={c} />
-      ))}
+      {/* Dois por linha a partir de telas medias: a fila de aprovacao chega em rajada na janela
+          de matricula, e um por linha obrigava a rolar a pagina inteira para ver quantos faltam. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {(fila ?? []).map((c) => (
+          <CartaoAprovacao key={c.id} contrato={c} />
+        ))}
+      </div>
 
       {(todos?.length ?? 0) > 0 && <Historico contratos={todos!} />}
     </div>
@@ -175,6 +192,30 @@ function CartaoAprovacao({ contrato }: { contrato: Contract }) {
 }
 
 function Historico({ contratos }: { contratos: Contract[] }) {
+  const excluir = useDeleteContract();
+
+  // Contrato aberto para ver o motivo da falha. Um por vez: a lista fica legível, e o motivo
+  // é sempre longo demais para caber numa coluna.
+  const [detalhando, setDetalhando] = useState<string | null>(null);
+
+  // Só contrato que não chegou ao provedor. O backend recusa o resto de qualquer forma; aqui a
+  // regra existe para não oferecer um botão que vai falhar.
+  // Qualquer contrato que ninguém assinou. O caso real: uma mãe preencheu duas vezes, assinou um
+  // e o outro ficou aberto — duplicidade a limpar, e que não é falha de envio.
+  const podeExcluir = (c: Contract) =>
+    !c.signatarios.some((s) => !!s.assinadoEm) &&
+    !c.statusDescricao?.toLowerCase().includes("assinado");
+
+  async function handleExcluir(c: Contract) {
+    try {
+      await excluir.mutateAsync(c.id);
+      toast.success("Contrato excluído.");
+      setDetalhando(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir.");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
       <h2 className="font-heading text-base font-bold">Todos os contratos</h2>
@@ -194,7 +235,8 @@ function Historico({ contratos }: { contratos: Contract[] }) {
             {contratos.map((c) => {
               const resp = c.signatarios.find((s) => s.papel === 0);
               return (
-                <tr key={c.id} className="border-t border-border">
+                <Fragment key={c.id}>
+                <tr className="border-t border-border">
                   <td className="py-2">
                     {c.titulo}
                     {c.sandbox && (
@@ -204,14 +246,69 @@ function Historico({ contratos }: { contratos: Contract[] }) {
                     )}
                   </td>
                   <td className="py-2">{resp?.nome}</td>
-                  <td className="py-2">{c.statusDescricao}</td>
-                  <td className="py-2">{new Date(c.criadoEm).toLocaleDateString("pt-BR")}</td>
-                  <td className="py-2 text-right">
-                    {c.temArquivoAssinado && (
-                      <BotaoDownload contratoId={c.id} tipo="assinado" rotulo="Baixar" />
+                  <td className="py-2">
+                    {c.statusDescricao}
+                    {/* Só quando a via realmente saiu: assinado não quer dizer entregue, e a
+                        secretaria precisa saber a diferença antes de responder à família. */}
+                    {c.copiaEnviadaEm && (
+                      <span className="ml-2 rounded bg-success-soft px-1 text-xs text-success-soft-foreground">
+                        via enviada
+                      </span>
                     )}
                   </td>
+                  <td className="py-2">{new Date(c.criadoEm).toLocaleDateString("pt-BR")}</td>
+                  <td className="py-2 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {c.temArquivoAssinado && (
+                        <>
+                          <BotaoDownload contratoId={c.id} tipo="assinado" rotulo="Baixar" />
+                          <BotaoDownload
+                            contratoId={c.id}
+                            tipo="original"
+                            rotulo="Original"
+                            discreto
+                            titulo="PDF do Autentique, sem a assinatura da escola. É a prova, com a trilha de auditoria."
+                          />
+                        </>
+                      )}
+
+                      {/* Falhou: mostra o motivo e deixa excluir. Antes a linha só dizia
+                          "Falha no envio" e não havia o que clicar — nem para entender, nem
+                          para limpar. */}
+                      {podeExcluir(c) && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDetalhando(detalhando === c.id ? null : c.id)}
+                          >
+                            <TriangleAlert className="size-4 text-warning-soft-foreground" />
+                            Motivo
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={excluir.isPending}
+                            onClick={() => handleExcluir(c)}
+                          >
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
+
+                {detalhando === c.id && (
+                  <tr className="border-t border-border bg-muted/30">
+                    <td colSpan={5} className="px-2 py-3">
+                      <p className="font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+                        {c.ultimoErroEnvio ?? "Sem detalhe registrado."}
+                      </p>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>
@@ -227,14 +324,31 @@ function Historico({ contratos }: { contratos: Contract[] }) {
  * Passa por fetch autenticado em vez de link direto porque são documentos com nome, CPF e
  * assinatura — o endpoint exige token, e um `<a href>` não mandaria o cabeçalho.
  */
+/** Nome do arquivo salvo, por tipo. */
+const NOME_DO_ARQUIVO: Record<"assinado" | "original" | "auditoria", string> = {
+  assinado: "contrato.pdf",
+  original: "contrato-original-autentique.pdf",
+  auditoria: "contrato-auditoria.pdf",
+};
+
+/**
+ * Baixa um arquivo do contrato.
+ *
+ * "assinado" é o contrato com a assinatura da escola, quando já aprovado — o mesmo que a família
+ * recebeu. "original" é o PDF do Autentique sem alteração: a prova, com a trilha de auditoria.
+ */
 function BotaoDownload({
   contratoId,
   tipo,
   rotulo,
+  discreto = false,
+  titulo,
 }: {
   contratoId: string;
-  tipo: "assinado" | "auditoria";
+  tipo: "assinado" | "original" | "auditoria";
   rotulo: string;
+  discreto?: boolean;
+  titulo?: string;
 }) {
   const [baixando, setBaixando] = useState(false);
 
@@ -244,10 +358,14 @@ function BotaoDownload({
       const { getToken } = await import("@/lib/auth/session");
       const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
       const token = getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      const res = await fetch(`${base}/api/Contracts/${contratoId}/arquivo/${tipo}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      let res = await fetch(`${base}/api/Contracts/${contratoId}/arquivo/${tipo}`, { headers });
+
+      // Backend anterior não conhece "original": nele, "assinado" é exatamente o PDF do Autentique.
+      if (res.status === 404 && tipo === "original") {
+        res = await fetch(`${base}/api/Contracts/${contratoId}/arquivo/assinado`, { headers });
+      }
 
       if (!res.ok) throw new Error("Arquivo não disponível.");
 
@@ -255,7 +373,7 @@ function BotaoDownload({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `contrato-${tipo}.pdf`;
+      a.download = NOME_DO_ARQUIVO[tipo];
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -266,7 +384,14 @@ function BotaoDownload({
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={baixar} disabled={baixando}>
+    <Button
+      variant={discreto ? "ghost" : "outline"}
+      size="sm"
+      onClick={baixar}
+      disabled={baixando}
+      title={titulo}
+      className={discreto ? "text-muted-foreground" : undefined}
+    >
       {baixando ? "Baixando..." : rotulo}
     </Button>
   );

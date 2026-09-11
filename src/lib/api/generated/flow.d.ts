@@ -99,7 +99,26 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -216,6 +235,62 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Contracts/configuracao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ContractSettingsDto"];
+                    "text/json": components["schemas"]["ContractSettingsDto"];
+                    "application/*+json": components["schemas"]["ContractSettingsDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -501,6 +576,47 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/forms/{formId}/fields/ordem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    formId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReordenarCamposDto"];
+                    "text/json": components["schemas"]["ReordenarCamposDto"];
+                    "application/*+json": components["schemas"]["ReordenarCamposDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -966,6 +1082,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Forms/{id}/duplicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DuplicarFormRequest"];
+                    "text/json": components["schemas"]["DuplicarFormRequest"];
+                    "application/*+json": components["schemas"]["DuplicarFormRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/PublicForms/{token}": {
         parameters: {
             query?: never;
@@ -1036,6 +1193,118 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/PublicForms/{token}/turmas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/PublicForms/{token}/rematricula/buscar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BuscaAlunoRequest"];
+                    "text/json": components["schemas"]["BuscaAlunoRequest"];
+                    "application/*+json": components["schemas"]["BuscaAlunoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/PublicForms/{token}/assinatura/{responseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                    responseId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1199,6 +1468,26 @@ export interface components {
             /** Format: uuid */
             analisadoPorUserId?: string | null;
         };
+        BuscaAlunoRequest: {
+            nome?: string | null;
+            /** Format: date-time */
+            dataNascimento?: string;
+            /** Format: int32 */
+            classId?: number;
+        };
+        ContractSettingsDto: {
+            exigirContraAssinatura?: boolean;
+            nomeSignatarioEscola?: string | null;
+            emailSignatarioEscola?: string | null;
+            /** Format: int32 */
+            prazoAssinaturaDias?: number | null;
+            /** Format: double */
+            percentualReajuste?: number;
+            temAssinaturaEscola?: boolean;
+        };
+        DuplicarFormRequest: {
+            nome?: string | null;
+        };
         FormAutomationDto: {
             /** Format: uuid */
             id?: string | null;
@@ -1224,6 +1513,7 @@ export interface components {
             criadoPor?: string | null;
             campos?: components["schemas"]["FormFieldDto"][] | null;
             publicToken?: string | null;
+            config?: string | null;
         };
         FormFieldDto: {
             /** Format: uuid */
@@ -1251,6 +1541,10 @@ export interface components {
             /** Format: uuid */
             referenciaId?: string | null;
             nomeReferencia?: string | null;
+            /** Format: int32 */
+            alunoId?: number | null;
+            /** Format: uuid */
+            responsavelId?: string | null;
             observacoes?: string | null;
             status?: string | null;
             /** Format: date-time */
@@ -1272,6 +1566,10 @@ export interface components {
             /** Format: uuid */
             referenciaId?: string | null;
             nomeReferencia?: string | null;
+            /** Format: int32 */
+            alunoId?: number | null;
+            /** Format: uuid */
+            responsavelId?: string | null;
             observacoes?: string | null;
             itens?: components["schemas"]["FormSubmissionItemDto"][] | null;
         };
@@ -1287,6 +1585,9 @@ export interface components {
             filtros?: {
                 [key: string]: string;
             } | null;
+        };
+        ReordenarCamposDto: {
+            ids?: string[] | null;
         };
         ReprovarContratoDto: {
             motivo?: string | null;

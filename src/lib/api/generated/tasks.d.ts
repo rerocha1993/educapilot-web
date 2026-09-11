@@ -2804,6 +2804,7 @@ export interface components {
             userClasses?: components["schemas"]["UserClass"][] | null;
             /** Format: uuid */
             tenantId?: string;
+            agendaEduId?: string | null;
         };
         Meeting: {
             /** Format: int32 */
@@ -2877,6 +2878,7 @@ export interface components {
             class?: components["schemas"]["Class"];
             /** Format: uuid */
             tenantId?: string;
+            agendaEduId?: string | null;
             allergies?: string | null;
             continuousMedication?: string | null;
             dietaryRestriction?: string | null;

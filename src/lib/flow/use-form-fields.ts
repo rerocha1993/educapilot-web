@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { flowApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
-import type { FormFieldDto } from "./use-forms";
+import type { FormDto, FormFieldDto } from "./use-forms";
+import type { CepParte } from "./cep";
 
 // Ampliado (2026-08, item 1 do gap analysis de Formulários): a coluna Opcoes existia
 // no schema desde sempre mas nunca era usada — "selecao" era o único tipo que se
@@ -26,6 +27,9 @@ export const FIELD_TYPES = [
   // formulário, o backend gera o PDF e manda para assinatura eletrônica — ver o módulo
   // Contracts no backend.
   { value: "contrato", label: "Contrato para assinatura" },
+  // Novo (2026-09): ao digitar o CEP, busca o endereço e preenche os campos marcados com
+  // Config.preenchidoPeloCep. Ver lib/flow/cep.ts.
+  { value: "cep", label: "CEP (busca o endereço)" },
 ] as const;
 
 // Tipos cuja UI de edição precisa de um editor de opções estáticas (Opcoes).
@@ -56,7 +60,101 @@ export interface FieldConfig {
   maxLength?: number;
   maxEstrelas?: number;
   visibleIf?: VisibleIfConfig;
+
+  // Rematrícula (2026-09) — preenchimento automático a partir do cadastro.
+  //
+  // A chave fica no campo, e não numa lista fixa de nomes de campo, porque cada escola batiza
+  // os campos como quiser ("Nome do aluno", "Aluno(a)", "Nome da criança"). Casar por rótulo
+  // quebraria no dia em que alguém renomeasse um campo.
+  autoPreenchimento?: AutoFillKey;
+
+  /** Campo somente leitura para quem responde (valor da mensalidade, turma, desconto). */
+  travado?: boolean;
+
+  /**
+   * Texto que o campo já traz preenchido.
+   *
+   * Existe por causa de um detalhe do contrato: marcador vazio NÃO vira string em branco — o
+   * renderizador barra o envio, porque "desconto concedido: " sem nada é o tipo de buraco que
+   * passa despercebido e vira discussão depois. Um campo que na rematrícula não se aplica
+   * precisa dizer isso com todas as letras ("Não se aplica"), e não ficar vazio.
+   */
+  valorPadrao?: string;
+
+  /**
+   * Parte do endereço que este campo recebe quando o CEP é preenchido.
+   *
+   * Fica no campo que RECEBE, e não numa lista de destinos no campo do CEP, pelo mesmo motivo de
+   * autoPreenchimento: cada escola divide o endereço de um jeito — uma tem "Endereço completo",
+   * outra tem rua, bairro, cidade e UF separados. Marcar no destino atende as duas sem inventar
+   * um encaixe fixo.
+   */
+  preenchidoPeloCep?: CepParte;
+
+  /**
+   * Onde esta resposta é gravada no cadastro, quando a gestão aprova.
+   *
+   * O caminho de volta do preenchimento automático: aquele traz o cadastro para o formulário,
+   * este leva a correção da família de volta para o cadastro. Ver lib/registry/campos-do-cadastro.
+   */
+  gravarEm?: string;
 }
+
+// Chaves de preenchimento automático. Espelham DadosRematriculaDto no backend — quem adicionar
+// um campo lá precisa adicionar aqui e em AUTO_FILL_OPTIONS abaixo.
+export const AUTO_FILL_KEYS = [
+  "nome_aluno",
+  "data_nascimento_aluno",
+  "turma_atual",
+  "turma_proximo_ano",
+  "nome_responsavel",
+  "cpf_responsavel",
+  "email_responsavel",
+  "telefone_responsavel",
+  "valor_atual",
+  "percentual_reajuste",
+  "valor_proximo_ano",
+  "valor_anuidade",
+  "dia_vencimento",
+  "cep",
+  "logradouro",
+  "numero_endereco",
+  "complemento",
+  "bairro",
+  "cidade",
+  "uf",
+  "endereco_completo",
+  "cidade_uf",
+] as const;
+
+export type AutoFillKey = (typeof AUTO_FILL_KEYS)[number];
+
+export type { CepParte };
+
+export const AUTO_FILL_OPTIONS: { value: AutoFillKey; label: string }[] = [
+  { value: "nome_aluno", label: "Nome do aluno" },
+  { value: "data_nascimento_aluno", label: "Data de nascimento do aluno" },
+  { value: "turma_atual", label: "Turma atual" },
+  { value: "turma_proximo_ano", label: "Turma do próximo ano" },
+  { value: "nome_responsavel", label: "Nome do responsável" },
+  { value: "cpf_responsavel", label: "CPF do responsável" },
+  { value: "email_responsavel", label: "E-mail do responsável" },
+  { value: "telefone_responsavel", label: "Telefone do responsável" },
+  { value: "valor_atual", label: "Mensalidade atual" },
+  { value: "percentual_reajuste", label: "Percentual de reajuste" },
+  { value: "valor_proximo_ano", label: "Mensalidade do próximo ano" },
+  { value: "valor_anuidade", label: "Anuidade do próximo ano (12x)" },
+  { value: "dia_vencimento", label: "Dia de vencimento" },
+  { value: "cep", label: "CEP" },
+  { value: "logradouro", label: "Rua / logradouro" },
+  { value: "numero_endereco", label: "Número do endereço" },
+  { value: "complemento", label: "Complemento" },
+  { value: "bairro", label: "Bairro" },
+  { value: "cidade", label: "Cidade" },
+  { value: "uf", label: "Estado (UF)" },
+  { value: "endereco_completo", label: "Endereço completo (rua e bairro)" },
+  { value: "cidade_uf", label: "Cidade e estado" },
+];
 
 // "Fonte de dados" (F1) não tem endpoint próprio de vínculo — o mecanismo dedicado
 // (FormFieldReferenceBindingService) existe no backend mas nenhum controller o expõe.
@@ -146,6 +244,45 @@ export function useUpdateFormField(formId: string) {
       unwrapApiResponse(result, "Não foi possível salvar o campo.");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forms", formId] }),
+  });
+}
+
+/**
+ * Grava a sequência inteira dos campos de uma vez. Usado pelo arrastar e pelas setas.
+ *
+ * A lista muda na tela antes de o servidor responder: esperar a resposta a cada arrasto faria o
+ * campo voltar para o lugar antigo por um instante. Se o servidor recusar, a lista volta ao que era.
+ */
+export function useReordenarCampos(formId: string) {
+  const queryClient = useQueryClient();
+  const chave = ["forms", formId];
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const result = await flowApi.PUT("/api/forms/{formId}/fields/ordem", {
+        params: { path: { formId } },
+        body: { ids },
+      });
+      unwrapApiResponse(result, "Não foi possível reordenar os campos.");
+    },
+    onMutate: async (ids: string[]) => {
+      await queryClient.cancelQueries({ queryKey: chave });
+      const anterior = queryClient.getQueryData<FormDto>(chave);
+
+      if (anterior?.campos) {
+        const porId = new Map(anterior.campos.map((c) => [c.id, c]));
+        const pedidos = ids.map((id) => porId.get(id)).filter((c): c is FormFieldDto => !!c);
+        const restantes = anterior.campos.filter((c) => !ids.includes(c.id));
+        const campos = [...pedidos, ...restantes].map((c, i) => ({ ...c, ordem: i + 1 }));
+        queryClient.setQueryData<FormDto>(chave, { ...anterior, campos });
+      }
+
+      return { anterior };
+    },
+    onError: (_erro, _ids, contexto) => {
+      if (contexto?.anterior) queryClient.setQueryData(chave, contexto.anterior);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: chave }),
   });
 }
 

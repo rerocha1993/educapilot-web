@@ -1283,6 +1283,8 @@ export interface components {
             dataFim?: string | null;
             ativo?: boolean;
             gerarCobrancaAsaas?: boolean;
+            /** Format: double */
+            percentualReajuste?: number | null;
         };
     };
     responses: never;

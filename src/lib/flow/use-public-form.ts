@@ -23,6 +23,8 @@ export interface PublicFormDto {
   nome: string;
   descricao: string | null;
   status: string;
+  /** Regras do formulário inteiro, em JSON. Ver lib/flow/form-config.ts. */
+  config: string | null;
   campos: PublicFormFieldDto[];
 }
 

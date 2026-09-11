@@ -1,10 +1,8 @@
 import {
   CalendarCheck,
-  Settings,
   ShoppingBag,
   FileStack,
   Wallet,
-  SlidersHorizontal,
 } from "lucide-react";
 
 // Áreas do menu — ver design_handoff_educapilot/README.md, "Estrutura de navegação".
@@ -15,13 +13,36 @@ import {
 // tasks/flow/finance existem hoje) — fica oculto/bloqueado até o backend ganhar esse
 // módulo. Usado tanto pra montar o menu (AppShell) quanto pra proteger a rota
 // (ModuleGate) — as duas coisas precisam concordar, por isso é um arquivo só.
+// Administração saiu da sidebar (2026-09): ela lista serviços do dia a dia, e configuração de
+// escola não é um serviço — fica na engrenagem ao lado do avatar, junto de sair. A rota /admin
+// continua existindo e acessível; só deixou de ocupar uma linha do menu principal.
+//
+// ADMIN_HREF fica aqui, e não solto no shell, porque findNavItemForPath continua sendo a fonte
+// de verdade sobre navegação — dois lugares definindo rota é como um deles envelhece.
+export const ADMIN_HREF = "/admin";
+
+/**
+ * Slug de acesso de uma rota.
+ *
+ * Casa com RecursoDoModulo no backend. Coincide com o moduleSlug para os módulos vendidos, mas
+ * existe separado porque Administração tem permissão sem ser um módulo comercializado — e porque
+ * as duas coisas respondem perguntas diferentes: uma é "a escola comprou?", a outra é "esta
+ * pessoa pode?".
+ */
+export function slugDeAcesso(href: string): string | null {
+  if (href === "/") return "tasks";
+  if (href.startsWith("/admin")) return "admin";
+  if (href.startsWith("/flow")) return "flow";
+  if (href.startsWith("/finance")) return "finance";
+  if (href.startsWith("/events")) return "events";
+  return null;
+}
+
 export const NAV_ITEMS = [
   { href: "/", label: "Rotina", icon: CalendarCheck, moduleSlug: "tasks" },
-  { href: "/admin", label: "Administração", icon: Settings, moduleSlug: null },
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
   { href: "/flow", label: "Formulários", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
-  { href: "/settings", label: "Configurações", icon: SlidersHorizontal, moduleSlug: null },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */

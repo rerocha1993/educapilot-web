@@ -25,6 +25,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useStudentsByClass,
@@ -63,6 +70,12 @@ export default function AlunosPage() {
   const [dietaryRestriction, setDietaryRestriction] = useState("");
   const [healthInsurance, setHealthInsurance] = useState("");
 
+  // Turma do aluno, separada do filtro da lista: até aqui salvar usava a turma FILTRADA, então
+  // não havia como mover um aluno de turma — abrir o cadastro e salvar o devolvia para a mesma.
+  // Faz falta na virada do ano, quando um ou outro aluno vai para uma turma diferente da que a
+  // progressão define para o grupo.
+  const [classId, setClassId] = useState<number | null>(null);
+
   useEffect(() => {
     if (editing === "new") {
       setFullName("");
@@ -71,6 +84,7 @@ export default function AlunosPage() {
       setContinuousMedication("");
       setDietaryRestriction("");
       setHealthInsurance("");
+      setClassId(selectedClassId);
     } else if (editing) {
       setFullName(editing.fullName);
       setBirthDate(editing.birthDate.slice(0, 10));
@@ -78,21 +92,22 @@ export default function AlunosPage() {
       setContinuousMedication(editing.continuousMedication ?? "");
       setDietaryRestriction(editing.dietaryRestriction ?? "");
       setHealthInsurance(editing.healthInsurance ?? "");
+      setClassId(editing.classId);
     }
-  }, [editing]);
+  }, [editing, selectedClassId]);
 
   const filteredStudents = (students ?? []).filter((s) =>
     s.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
   async function handleSave() {
-    if (!fullName.trim() || !birthDate || selectedClassId === null) return;
+    if (!fullName.trim() || !birthDate || classId === null) return;
     try {
       await saveStudent.mutateAsync({
         ...(editing !== "new" && editing ? { id: editing.id } : {}),
         fullName: fullName.trim(),
         birthDate,
-        classId: selectedClassId,
+        classId,
         allergies: allergies.trim() || null,
         continuousMedication: continuousMedication.trim() || null,
         dietaryRestriction: dietaryRestriction.trim() || null,
@@ -268,6 +283,31 @@ export default function AlunosPage() {
                 Data de nascimento
               </Label>
               <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+            </div>
+
+            <div className="flex flex-col gap-[5px]">
+              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                Turma
+              </Label>
+              <Select
+                value={classId === null ? undefined : String(classId)}
+                onValueChange={(v) => v && setClassId(Number(v))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {() =>
+                      (classes ?? []).find((c) => c.id === classId)?.className ?? "Selecione"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {(classes ?? []).map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.className}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="border-t border-border pt-3">

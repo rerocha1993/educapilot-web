@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#
   Publica o frontend Next.js no Azure App Service (educapilot-web).
 
@@ -57,10 +57,29 @@ try {
     $zip.Dispose()
 
     Write-Host "==> Publicando no Azure..." -ForegroundColor Cyan
-    az webapp deployment source config-zip `
-        --resource-group rg-educapilot-prod `
-        --name educapilot-web `
-        --src $zipPath | Out-Null
+    # 'az webapp deploy' e nao 'deployment source config-zip': o comando antigo esta deprecado e
+    # imprime o aviso no stderr. No PowerShell 5.1 stderr de executavel nativo vira ErrorRecord,
+    # e com $ErrorActionPreference = Stop isso abortava o script NO MEIO do deploy — o pacote ja
+    # tinha subido, mas o script saia com erro, dando a entender que nada foi publicado.
+    # --only-show-errors + ErrorActionPreference relaxado em volta do az:
+    #
+    # No PowerShell 5.1, cada linha que um executavel nativo escreve no stderr vira um ErrorRecord.
+    # O az imprime avisos informativos ali ("does not run build automation", "comando deprecado"), e
+    # com $ErrorActionPreference = Stop isso abortava o script ANTES do deploy sair, sem nenhum erro
+    # de verdade ter acontecido.
+    $anterior = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        az webapp deploy `
+            --resource-group rg-educapilot-prod `
+            --name educapilot-web `
+            --src-path $zipPath `
+            --type zip `
+            --only-show-errors `
+            -o none
+    } finally {
+        $ErrorActionPreference = $anterior
+    }
     if ($LASTEXITCODE -ne 0) { throw "Deploy falhou." }
 
     Write-Host ""

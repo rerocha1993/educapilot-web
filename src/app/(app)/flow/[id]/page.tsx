@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Link2, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Link2, Plus, Trash2, X, Pencil } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,13 +34,24 @@ import {
   fieldTypeLabel,
   encodeFieldConfig,
   decodeFieldConfig,
+  AUTO_FILL_OPTIONS,
+  type CepParte,
+  type AutoFillKey,
   encodeOpcoes,
   decodeOpcoes,
   useCreateFormField,
   useUpdateFormField,
+  useReordenarCampos,
   useDeleteFormField,
 } from "@/lib/flow/use-form-fields";
 import { REFERENCE_TABLES } from "@/lib/flow/use-reference-data";
+import { ListaOrdenavel } from "@/components/flow/lista-ordenavel";
+import { CEP_PARTE_OPTIONS } from "@/lib/flow/cep";
+import { CAMPO_CADASTRO_OPTIONS, rotuloDoDestino } from "@/lib/registry/campos-do-cadastro";
+import { ContractRulesPanel } from "@/components/flow/contract-rules-panel";
+import { IdentificationRulePanel } from "@/components/flow/identification-rule-panel";
+import { CepRulePanel } from "@/components/flow/cep-rule-panel";
+import { RegistryRulePanel } from "@/components/flow/registry-rule-panel";
 import {
   useFormAutomations,
   useCreateAutomation,
@@ -67,6 +79,16 @@ const EMPTY_FIELD_FORM = {
   condFieldId: "",
   condOperator: "filled" as (typeof VISIBLE_IF_OPERATORS)[number]["value"],
   condValue: "",
+  autoPreenchimento: "",
+  travado: false,
+  valorPadrao: "",
+  preenchidoPeloCep: "",
+  gravarEm: "",
+  contratoTexto: "",
+  tituloContrato: "",
+  signatarioNomeFieldId: "",
+  signatarioEmailFieldId: "",
+  signatarioCpfFieldId: "",
 };
 const EMPTY_RULE_FORM = { nome: "", evento: "", acao: "" };
 
@@ -90,6 +112,19 @@ function fieldSummary(field: FormFieldDto): string {
   if (config.visibleIf) {
     parts.push("condicional");
   }
+  if (field.tipo === "contrato") {
+    parts.push(config.contratoTexto ? "texto cadastrado" : "SEM TEXTO — a família não verá nada");
+  }
+  if (config.gravarEm) {
+    parts.push(`grava em ${rotuloDoDestino(config.gravarEm)}`);
+  }
+  if (config.preenchidoPeloCep) {
+    parts.push(`vem do CEP: ${CEP_PARTE_OPTIONS.find((o) => o.value === config.preenchidoPeloCep)?.label}`);
+  }
+  if (config.autoPreenchimento) {
+    const opcao = AUTO_FILL_OPTIONS.find((o) => o.value === config.autoPreenchimento);
+    parts.push(config.travado ? `auto: ${opcao?.label} (travado)` : `auto: ${opcao?.label}`);
+  }
   return parts.join(" · ");
 }
 
@@ -101,6 +136,7 @@ export default function FormBuilderPage() {
   const updateForm = useUpdateForm();
   const createField = useCreateFormField(formId);
   const updateField = useUpdateFormField(formId);
+  const reordenar = useReordenarCampos(formId);
   const deleteField = useDeleteFormField(formId);
   const { data: automations } = useFormAutomations(formId);
   const createAutomation = useCreateAutomation(formId);
@@ -108,11 +144,44 @@ export default function FormBuilderPage() {
 
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
   const [fieldForm, setFieldForm] = useState(EMPTY_FIELD_FORM);
+
+  // null = criando um campo novo; um id = editando aquele campo.
+  //
+  // Até aqui só dava para adicionar e apagar. Num formulário com contrato isso significava que
+  // não havia onde colar o texto de um campo já existente — apagar e recriar é a única saída, e
+  // ela leva junto a ordem do campo e qualquer referência de assinatura apontando para ele.
+  const [editandoCampoId, setEditandoCampoId] = useState<string | null>(null);
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [ruleForm, setRuleForm] = useState(EMPTY_RULE_FORM);
 
   const campos = [...(form?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
   const isChoiceType = (CHOICE_FIELD_TYPES as readonly string[]).includes(fieldForm.tipo);
+
+  // Marcadores do contrato que não casam com nenhum campo.
+  //
+  // Vale a conferência aqui porque o erro é silencioso: o texto parece certo na tela, e só na hora
+  // de gerar o PDF o backend recusa por marcador não resolvido — depois que a família preencheu
+  // tudo. A comparação ignora acento, caixa e pontuação, igual ao renderizador do backend.
+  const marcadoresOrfaos = (() => {
+    if (fieldForm.tipo !== "contrato" || !fieldForm.contratoTexto) return [];
+
+    const normalizar = (v: string) =>
+      v
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+
+    const conhecidos = new Set(campos.map((c) => normalizar(c.label)));
+    conhecidos.add("data atual");
+
+    const encontrados = [...fieldForm.contratoTexto.matchAll(/\{\{\s*([^}]+?)\s*\}\}/g)].map(
+      (m) => m[1]
+    );
+
+    return [...new Set(encontrados.filter((m) => !conhecidos.has(normalizar(m))))];
+  })();
 
   async function handleCopiarLinkPublico() {
     if (!form?.publicToken) return;
@@ -137,6 +206,45 @@ export default function FormBuilderPage() {
     }
   }
 
+  function abrirEdicao(field: FormFieldDto) {
+    const config = decodeFieldConfig(field.config);
+
+    setFieldForm({
+      label: field.label,
+      tipo: field.tipo,
+      obrigatorio: field.obrigatorio,
+      tabelaReferencia: config.tabelaReferencia ?? "",
+      opcoes: decodeOpcoes(field.opcoes),
+      min: config.min === undefined ? "" : String(config.min),
+      max: config.max === undefined ? "" : String(config.max),
+      minLength: config.minLength === undefined ? "" : String(config.minLength),
+      maxLength: config.maxLength === undefined ? "" : String(config.maxLength),
+      maxEstrelas: String(config.maxEstrelas ?? 5),
+      condFieldId: config.visibleIf?.fieldId ?? "",
+      condOperator: config.visibleIf?.operator ?? "filled",
+      condValue: config.visibleIf?.value ?? "",
+      autoPreenchimento: config.autoPreenchimento ?? "",
+      travado: !!config.travado,
+      valorPadrao: config.valorPadrao ?? "",
+      preenchidoPeloCep: config.preenchidoPeloCep ?? "",
+      gravarEm: config.gravarEm ?? "",
+      contratoTexto: config.contratoTexto ?? "",
+      tituloContrato: config.titulo ?? "",
+      signatarioNomeFieldId: config.signatarioNomeFieldId ?? "",
+      signatarioEmailFieldId: config.signatarioEmailFieldId ?? "",
+      signatarioCpfFieldId: config.signatarioCpfFieldId ?? "",
+    });
+
+    setEditandoCampoId(field.id);
+    setFieldDialogOpen(true);
+  }
+
+  function fecharDialogoCampo() {
+    setFieldDialogOpen(false);
+    setEditandoCampoId(null);
+    setFieldForm(EMPTY_FIELD_FORM);
+  }
+
   async function handleAddField() {
     if (!fieldForm.label.trim()) return;
     try {
@@ -153,6 +261,21 @@ export default function FormBuilderPage() {
             ? Number(fieldForm.maxLength)
             : undefined,
         maxEstrelas: fieldForm.tipo === "avaliacao" ? Number(fieldForm.maxEstrelas || 5) : undefined,
+        contratoTexto: fieldForm.tipo === "contrato" ? fieldForm.contratoTexto || undefined : undefined,
+        titulo: fieldForm.tipo === "contrato" ? fieldForm.tituloContrato || undefined : undefined,
+        signatarioNomeFieldId:
+          fieldForm.tipo === "contrato" ? fieldForm.signatarioNomeFieldId || undefined : undefined,
+        signatarioEmailFieldId:
+          fieldForm.tipo === "contrato" ? fieldForm.signatarioEmailFieldId || undefined : undefined,
+        signatarioCpfFieldId:
+          fieldForm.tipo === "contrato" ? fieldForm.signatarioCpfFieldId || undefined : undefined,
+        autoPreenchimento: (fieldForm.autoPreenchimento || undefined) as AutoFillKey | undefined,
+
+        // travado sozinho nao significa nada: so faz sentido sobre um campo que a escola preenche.
+        travado: fieldForm.travado ? true : undefined,
+        valorPadrao: fieldForm.valorPadrao || undefined,
+        preenchidoPeloCep: (fieldForm.preenchidoPeloCep || undefined) as CepParte | undefined,
+        gravarEm: fieldForm.gravarEm || undefined,
         visibleIf: fieldForm.condFieldId
           ? {
               fieldId: fieldForm.condFieldId,
@@ -166,35 +289,58 @@ export default function FormBuilderPage() {
       });
       const opcoes = isChoiceType ? encodeOpcoes(fieldForm.opcoes) : null;
 
-      await createField.mutateAsync({
-        label: fieldForm.label.trim(),
-        tipo: fieldForm.tipo,
-        ordem: campos.length,
-        obrigatorio: fieldForm.obrigatorio,
-        config,
-        opcoes,
-      });
-      toast.success("Campo adicionado.");
-      setFieldDialogOpen(false);
-      setFieldForm(EMPTY_FIELD_FORM);
+      const original = campos.find((c) => c.id === editandoCampoId);
+
+      if (original) {
+        // Ordem e ativo preservados: quem edita veio mexer no conteúdo do campo, e reposicioná-lo
+        // no fim da lista por causa disso embaralharia o formulário.
+        await updateField.mutateAsync({
+          ...original,
+          label: fieldForm.label.trim(),
+          tipo: fieldForm.tipo,
+          obrigatorio: fieldForm.obrigatorio,
+          config,
+          opcoes,
+        });
+        toast.success("Campo atualizado.");
+      } else {
+        await createField.mutateAsync({
+          label: fieldForm.label.trim(),
+          tipo: fieldForm.tipo,
+          // Depois do maior número de ordem, e não na quantidade de campos: o importador numera a
+          // partir de 1, e a quantidade coincidia com a ordem do último campo — os dois ficavam
+          // no mesmo número e as setas deixavam de mover qualquer um deles.
+          ordem: campos.reduce((maior, c) => Math.max(maior, c.ordem), 0) + 1,
+          obrigatorio: fieldForm.obrigatorio,
+          config,
+          opcoes,
+        });
+        toast.success("Campo adicionado.");
+      }
+
+      fecharDialogoCampo();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao adicionar campo.");
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar o campo.");
     }
   }
 
-  async function handleMove(field: FormFieldDto, direction: "up" | "down") {
-    const index = campos.findIndex((c) => c.id === field.id);
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= campos.length) return;
-    const other = campos[swapIndex];
+  // Arrastar e setas gravam a sequência inteira. Antes as setas trocavam a ordem de dois campos
+  // em duas gravações; com os dois no mesmo número, a troca não mudava nada e o campo não se mexia.
+  async function handleReordenar(ids: string[]) {
     try {
-      await Promise.all([
-        updateField.mutateAsync({ ...field, ordem: other.ordem }),
-        updateField.mutateAsync({ ...other, ordem: field.ordem }),
-      ]);
+      await reordenar.mutateAsync(ids);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao reordenar.");
     }
+  }
+
+  function handleMove(field: FormFieldDto, direction: "up" | "down") {
+    const index = campos.findIndex((c) => c.id === field.id);
+    const alvo = direction === "up" ? index - 1 : index + 1;
+    if (index < 0 || alvo < 0 || alvo >= campos.length) return;
+    const ids = campos.map((c) => c.id);
+    [ids[index], ids[alvo]] = [ids[alvo], ids[index]];
+    handleReordenar(ids);
   }
 
   async function handleDeleteField(id: string) {
@@ -292,9 +438,12 @@ export default function FormBuilderPage() {
                 Nenhum campo ainda.
               </div>
             )}
-            {campos.map((field, i) => (
+            <ListaOrdenavel
+              itens={campos}
+              desabilitado={reordenar.isPending}
+              onReordenar={handleReordenar}
+              renderItem={(field, i) => (
               <div
-                key={field.id}
                 className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5"
               >
                 <div>
@@ -321,12 +470,16 @@ export default function FormBuilderPage() {
                   >
                     <ArrowDown className="size-4" />
                   </Button>
+                  <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => abrirEdicao(field)}>
+                    <Pencil className="size-4" />
+                  </Button>
                   <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteField(field.id)}>
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
               </div>
-            ))}
+              )}
+            />
             <Button variant="outline" className="mt-2" onClick={() => setFieldDialogOpen(true)}>
               + Adicionar campo
             </Button>
@@ -339,7 +492,16 @@ export default function FormBuilderPage() {
         </TabsContent>
 
         <TabsContent value="automacoes" className="mt-4">
-          <div className="flex items-center justify-between">
+          {/* O contrato vem primeiro: é a regra que realmente executa hoje, e a mais cara de
+              errar. As regras abaixo dela ainda são só intenção. */}
+          <div className="flex flex-col gap-3">
+            {form && <IdentificationRulePanel form={form} />}
+            <CepRulePanel campos={campos} />
+            <RegistryRulePanel campos={campos} />
+            <ContractRulesPanel formId={formId} campos={campos} />
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
             <h2 className="font-heading text-sm font-semibold">Automações</h2>
             <Button size="sm" onClick={() => setRuleDialogOpen(true)}>
               + Nova regra
@@ -378,10 +540,19 @@ export default function FormBuilderPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={fieldDialogOpen} onOpenChange={setFieldDialogOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <Dialog open={fieldDialogOpen} onOpenChange={(open) => (open ? setFieldDialogOpen(true) : fecharDialogoCampo())}>
+        <DialogContent
+          className={
+            // Um contrato tem dezenas de páginas: no diálogo estreito padrão sobra uma janelinha de
+            // poucas linhas, impossível de revisar. Largo só quando o campo é de contrato — os
+            // outros tipos cabem folgados no tamanho normal.
+            fieldForm.tipo === "contrato"
+              ? "sm:max-w-3xl max-h-[88vh] overflow-y-auto"
+              : "max-h-[85vh] overflow-y-auto"
+          }
+        >
           <DialogHeader>
-            <DialogTitle>Novo campo</DialogTitle>
+            <DialogTitle>{editandoCampoId ? "Editar campo" : "Novo campo"}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-[5px]">
@@ -519,6 +690,207 @@ export default function FormBuilderPage() {
               />
             </div>
 
+            {/* Contrato (2026-09): sem estes campos não havia onde colar o texto, e o campo de
+                contrato era criado vazio — a família abria o link e não via contrato nenhum. */}
+            {fieldForm.tipo === "contrato" && (
+              <div className="flex flex-col gap-3 rounded-md border border-dashed border-border p-2.5">
+                <div className="flex flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Título do contrato</Label>
+                  <Input
+                    value={fieldForm.tituloContrato}
+                    placeholder="Contrato de Prestação de Serviços Educacionais 2027"
+                    onChange={(e) => setFieldForm((f) => ({ ...f, tituloContrato: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-[5px]">
+                  <Label className="text-xs text-muted-foreground">Texto do contrato</Label>
+                  <Textarea
+                    rows={24}
+                    // field-sizing-fixed: o padrão do projeto cresce com o conteúdo, e 36 mil
+                    // caracteres virariam uma caixa de vários metros. Altura fixa, texto rola dentro.
+                    className="field-sizing-fixed h-[55vh] resize-y font-mono text-xs leading-relaxed"
+                    value={fieldForm.contratoTexto}
+                    placeholder={"Cole aqui o texto completo do contrato.\n\nUse {{Nome do aluno}} para inserir a resposta de um campo do formulário."}
+                    onChange={(e) => setFieldForm((f) => ({ ...f, contratoTexto: e.target.value }))}
+                  />
+                  {marcadoresOrfaos.length > 0 && (
+                    <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+                      <p className="font-medium">
+                        {marcadoresOrfaos.length} marcador(es) não correspondem a nenhum campo deste
+                        formulário:
+                      </p>
+                      <p className="mt-1 font-mono">{marcadoresOrfaos.join(", ")}</p>
+                      <p className="mt-1">
+                        O contrato não será enviado enquanto sobrar algum. Corrija o nome ou crie o
+                        campo correspondente.
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Escreva <code>{"{{Nome do campo}}"}</code> onde o dado do formulário deve entrar. O
+                    nome precisa ser o rótulo do campo. <code>{"{{data_atual}}"}</code> vira a data da
+                    assinatura.
+                  </p>
+                </div>
+
+                {/* Quem assina. Sem isso o contrato é gerado mas não há para quem enviar. */}
+                {([
+                  ["signatarioNomeFieldId", "Campo com o NOME de quem assina"],
+                  ["signatarioEmailFieldId", "Campo com o E-MAIL de quem assina"],
+                  ["signatarioCpfFieldId", "Campo com o CPF de quem assina"],
+                ] as const).map(([chave, rotulo]) => (
+                  <div key={chave} className="flex flex-col gap-[5px]">
+                    <Label className="text-xs text-muted-foreground">{rotulo}</Label>
+                    <Select
+                      value={fieldForm[chave] || "__none__"}
+                      onValueChange={(v) =>
+                        setFieldForm((f) => ({ ...f, [chave]: v === "__none__" ? "" : String(v) }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue>
+                          {() =>
+                            campos.find((c) => c.id === fieldForm[chave])?.label ?? "Não definido"
+                          }
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Não definido</SelectItem>
+                        {campos.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Preenchimento automático (2026-09): usado na rematrícula, em que a família se
+                identifica e o formulário já vem com o que a escola sabe. */}
+            <div className="flex flex-col gap-[5px] rounded-md border border-dashed border-border p-2.5">
+              <Label className="text-xs text-muted-foreground">Preencher pelo CEP (opcional)</Label>
+              <Select
+                value={fieldForm.preenchidoPeloCep || "__none__"}
+                onValueChange={(v) =>
+                  setFieldForm((f) => ({
+                    ...f,
+                    preenchidoPeloCep: v === "__none__" ? "" : String(v),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {() =>
+                      CEP_PARTE_OPTIONS.find((o) => o.value === fieldForm.preenchidoPeloCep)?.label ??
+                      "Não preencher"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Não preencher</SelectItem>
+                  {CEP_PARTE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Precisa existir um campo do tipo &quot;CEP&quot; no formulário. Ao digitar o CEP, este
+                campo recebe a parte escolhida.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-[5px] rounded-md border border-dashed border-border p-2.5">
+              <Label className="text-xs text-muted-foreground">Gravar no cadastro (opcional)</Label>
+              <Select
+                value={fieldForm.gravarEm || "__none__"}
+                onValueChange={(v) =>
+                  setFieldForm((f) => ({ ...f, gravarEm: v === "__none__" ? "" : String(v) }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {() => rotuloDoDestino(fieldForm.gravarEm) ?? "Não gravar"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Não gravar</SelectItem>
+                  {CAMPO_CADASTRO_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.grupo} · {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                A resposta entra no cadastro quando a gestão <strong>aprova</strong> o contrato — não
+                no envio. Resposta em branco não apaga o que já existe.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-[5px] rounded-md border border-dashed border-border p-2.5">
+              <Label className="text-xs text-muted-foreground">
+                Preencher automaticamente com... (opcional)
+              </Label>
+              <Select
+                value={fieldForm.autoPreenchimento || "__none__"}
+                onValueChange={(v) =>
+                  setFieldForm((f) => ({
+                    ...f,
+                    autoPreenchimento: v === "__none__" ? "" : String(v),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {() =>
+                      AUTO_FILL_OPTIONS.find((o) => o.value === fieldForm.autoPreenchimento)?.label ??
+                      "Não preencher"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Não preencher</SelectItem>
+                  {AUTO_FILL_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+            </div>
+
+            <div className="flex flex-col gap-[5px] rounded-md border border-dashed border-border p-2.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Não deixar a família alterar</Label>
+                <Switch
+                  checked={fieldForm.travado}
+                  onCheckedChange={(v) => setFieldForm((f) => ({ ...f, travado: v }))}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Para o que a escola define: valor da mensalidade, turma do próximo ano, desconto.
+                O campo aparece somente leitura.
+              </p>
+
+              <Label className="mt-2 text-xs text-muted-foreground">Valor fixo (opcional)</Label>
+              <Input
+                placeholder="Ex.: Não se aplica"
+                value={fieldForm.valorPadrao}
+                onChange={(e) => setFieldForm((f) => ({ ...f, valorPadrao: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Preenche o campo desde o início. Necessário quando o contrato cita o campo mas ele
+                não se aplica neste formulário: um marcador vazio impede o envio do contrato.
+              </p>
+            </div>
+
             {campos.length > 0 && (
               <div className="flex flex-col gap-[5px] rounded-md border border-dashed border-border p-2.5">
                 <Label className="text-xs text-muted-foreground">
@@ -580,10 +952,13 @@ export default function FormBuilderPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFieldDialogOpen(false)}>
+            <Button variant="outline" onClick={fecharDialogoCampo}>
               Cancelar
             </Button>
-            <Button onClick={handleAddField} disabled={createField.isPending || !fieldForm.label.trim()}>
+            <Button
+              onClick={handleAddField}
+              disabled={createField.isPending || updateField.isPending || !fieldForm.label.trim()}
+            >
               {createField.isPending ? "Salvando..." : "Adicionar"}
             </Button>
           </DialogFooter>

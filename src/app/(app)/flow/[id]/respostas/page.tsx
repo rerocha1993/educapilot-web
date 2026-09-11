@@ -17,16 +17,13 @@ import {
   type FormResponseDto,
 } from "@/lib/flow/use-form-responses";
 import { decodeOpcoes } from "@/lib/flow/use-form-fields";
+import { AttachmentLink } from "@/components/flow/attachment-link";
 
 function renderValor(tipo: string | undefined, valor: string | null) {
   if (!valor) return "—";
   if (tipo === "checkbox") return decodeOpcoes(valor).join(", ") || "—";
-  if (tipo === "anexo")
-    return (
-      <a href={valor} target="_blank" rel="noreferrer" className="text-primary underline">
-        Ver arquivo
-      </a>
-    );
+  if (tipo === "anexo") return <AttachmentLink url={valor} />;
+  if (tipo === "contrato") return valor.toLowerCase() === "aceito" ? "Aceito" : "Não aceito";
   if (tipo === "avaliacao") return `${valor} ★`;
   return valor;
 }
