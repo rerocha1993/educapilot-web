@@ -21,6 +21,15 @@ export function unwrapApiResponse<T>(
     if (bodyMessage) {
       throw new Error(bodyMessage);
     }
+
+    // Recusa da validação automática do ASP.NET (ProblemDetails): não traz "message", traz
+    // "errors" com a lista por campo. Sem isto, a tela dizia só "não foi possível" e escondia o
+    // motivo — foi assim que "The Role field is required" passou despercebido no aceite de convite.
+    const validacao = (error as { errors?: Record<string, string[]> } | undefined)?.errors;
+    const primeiroErro = validacao && Object.values(validacao).flat().find((m) => !!m);
+    if (primeiroErro) {
+      throw new Error(primeiroErro);
+    }
     if (response.status === 401) {
       throw new Error("Sessão expirada. Faça login novamente.");
     }
