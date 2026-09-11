@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Copy } from "lucide-react";
 import { useForms, useCreateForm, useDuplicateForm } from "@/lib/flow/use-forms";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { podeVerRota } from "@/lib/access/pode-ver";
 
 const STATUS_BADGE: Record<string, string> = {
   Rascunho: "bg-accent text-accent-foreground",
@@ -26,6 +28,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function FormulariosPage() {
   const { data: forms, isLoading, isError } = useForms();
+  const { data: meuAcesso } = useMeuAcesso();
   const createForm = useCreateForm();
   const duplicateForm = useDuplicateForm();
 
@@ -71,15 +74,22 @@ export default function FormulariosPage() {
           <p className="text-sm text-muted-foreground">Construtor de formulários dinâmicos.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/flow/respostas" className={buttonVariants({ variant: "outline" })}>
-            Caixa de envios
-          </Link>
-          <Link href="/flow/contratos" className={buttonVariants({ variant: "outline" })}>
-            Contratos
-          </Link>
-          <Link href="/flow/referencias" className={buttonVariants({ variant: "outline" })}>
-            Dados de referência
-          </Link>
+          {/* Cada botão é uma área da permissão: quem não tem "Caixa de envios" não vê o botão. */}
+          {podeVerRota(meuAcesso, "/flow/respostas") && (
+            <Link href="/flow/respostas" className={buttonVariants({ variant: "outline" })}>
+              Caixa de envios
+            </Link>
+          )}
+          {podeVerRota(meuAcesso, "/flow/contratos") && (
+            <Link href="/flow/contratos" className={buttonVariants({ variant: "outline" })}>
+              Contratos
+            </Link>
+          )}
+          {podeVerRota(meuAcesso, "/flow/referencias") && (
+            <Link href="/flow/referencias" className={buttonVariants({ variant: "outline" })}>
+              Dados de referência
+            </Link>
+          )}
           <Button onClick={() => setDialogOpen(true)}>+ Novo formulário</Button>
         </div>
       </div>

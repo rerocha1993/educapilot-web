@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { podeVerRota } from "@/lib/access/pode-ver";
 
 const ITEMS = [
   { href: "/finance", label: "Fluxo de caixa" },
@@ -15,10 +17,14 @@ const ITEMS = [
 
 export function FinanceNav() {
   const pathname = usePathname();
+  const { data: meuAcesso } = useMeuAcesso();
+
+  // Cada aba é uma área da permissão: quem não tem "Inadimplência" não vê a aba dela.
+  const itens = ITEMS.filter((item) => podeVerRota(meuAcesso, item.href));
 
   return (
     <div className="flex gap-1 border-b border-border">
-      {ITEMS.map((item) => {
+      {itens.map((item) => {
         const active =
           pathname === item.href || (item.href !== "/finance" && pathname.startsWith(`${item.href}/`));
         return (

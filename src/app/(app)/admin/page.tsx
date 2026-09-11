@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Users, GraduationCap, UserRound, UploadCloud, ArrowRightLeft, Contact, Mail } from "lucide-react";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { podeVerRota } from "@/lib/access/pode-ver";
 
 // Índice de Administração — sem isso, o item "Administração" da sidebar levava
 // pra uma rota sem page.tsx (404). Lista as áreas já construídas; conforme o
@@ -50,6 +54,12 @@ const SECTIONS = [
 ];
 
 export default function AdminPage() {
+  const { data: meuAcesso } = useMeuAcesso();
+
+  // Cada cartão é uma área da permissão: quem não tem "Usuários e convites" não vê o
+  // cartão, e a rota também fica bloqueada (ver ModuleGate).
+  const secoes = SECTIONS.filter((s) => podeVerRota(meuAcesso, s.href));
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -58,7 +68,7 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {SECTIONS.map((section) => {
+        {secoes.map((section) => {
           const Icon = section.icon;
           return (
             <Link

@@ -4,40 +4,64 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { findNavItemForPath } from "@/lib/kernel/nav-items";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { podeVerRota } from "@/lib/access/pode-ver";
 
 /**
- * Bloqueia o CONTEÚDO da rota, não só o item de menu — esconder o link na sidebar
- * não impede alguém de digitar a URL direto ou usar um favorito antigo. Módulos são
- * vendidos separados por tenant; acesso pela URL tem que respeitar isso igual o menu.
+ * Bloqueia o CONTEÚDO da rota, não só o item de menu — esconder o link na sidebar não impede
+ * alguém de digitar a URL direto ou usar um favorito antigo.
+ *
+ * São duas perguntas diferentes, e as duas precisam de resposta:
+ *
+ * 1. A escola contratou o módulo? Módulos são vendidos separados por tenant.
+ * 2. Esta pessoa tem permissão nesta área? A permissão é gravada por área ("Caixa de envios",
+ *    "Usuários e convites"), e antes só o módulo era conferido: desmarcar uma área não tinha
+ *    efeito nenhum, nem no menu nem na URL.
  */
 export function ModuleGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: activeModules, isLoading } = useActiveModules();
+  const { data: meuAcesso, isLoading: acessoCarregando } = useMeuAcesso();
   const navItem = findNavItemForPath(pathname);
 
-  if (!navItem || navItem.moduleSlug === null) {
-    return <>{children}</>;
-  }
-
-  if (isLoading) {
+  // Espera as duas respostas antes de decidir: falha fechado, sem piscar conteúdo que a pessoa
+  // talvez não possa ver.
+  if (isLoading || acessoCarregando) {
     return null;
   }
 
-  const hasModule = (activeModules ?? []).some((m) => m.slug === navItem.moduleSlug);
-  if (!hasModule) {
-    return (
-      <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
-        <p className="font-heading text-lg font-semibold">Módulo não contratado</p>
-        <p className="max-w-sm text-sm text-muted-foreground">
+  if (navItem && navItem.moduleSlug !== null) {
+    const temModulo = (activeModules ?? []).some((m) => m.slug === navItem.moduleSlug);
+    if (!temModulo) {
+      return (
+        <Aviso titulo="Módulo não contratado">
           A sua escola ainda não tem o módulo &quot;{navItem.label}&quot; ativo. Fale com o
           administrador para contratar.
-        </p>
-        <Link href="/" className="text-sm text-primary hover:underline">
-          Voltar pra Rotina
-        </Link>
-      </div>
+        </Aviso>
+      );
+    }
+  }
+
+  if (!podeVerRota(meuAcesso, pathname)) {
+    return (
+      <Aviso titulo="Sem acesso a esta área">
+        O seu acesso não inclui esta parte do sistema. Se você precisa dela, peça à direção da
+        escola para liberar.
+      </Aviso>
     );
   }
 
   return <>{children}</>;
+}
+
+function Aviso({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
+      <p className="font-heading text-lg font-semibold">{titulo}</p>
+      <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
+      <Link href="/" className="text-sm text-primary hover:underline">
+        Voltar pra Rotina
+      </Link>
+    </div>
+  );
 }
