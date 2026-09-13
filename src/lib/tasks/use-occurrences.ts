@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { dataLocalIso } from "@/lib/format/date";
 
 // Chips de categoria única do wireframe R8 — não existiam no backend antes desta
 // sessão (campo Occurrence.Categoria, string solta, sem enum).
@@ -56,8 +57,9 @@ export interface OccurrenceReportDto {
   }[];
 }
 
+// Componentes locais: toISOString (UTC) pulava para o dia seguinte depois das 21h.
 function toDateParam(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return dataLocalIso(date);
 }
 
 // Novo (2026-08, feedback do cliente) — filtro de turma no relatório (backend já

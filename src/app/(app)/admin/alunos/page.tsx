@@ -40,10 +40,7 @@ import {
   type StudentDto,
 } from "@/lib/kernel/use-students";
 import { cn } from "@/lib/utils";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
+import { formatarSoData } from "@/lib/format/date";
 
 export default function AlunosPage() {
   const { data: classes, isLoading: classesLoading } = useClasses();
@@ -227,7 +224,7 @@ export default function AlunosPage() {
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-sm tabular-nums">
-                    {formatDate(s.birthDate)}
+                    {formatarSoData(s.birthDate)}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">

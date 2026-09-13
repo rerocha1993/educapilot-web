@@ -38,17 +38,10 @@ import {
   revenueStatusLabel,
   revenueCategoryLabel,
 } from "@/lib/finance/use-revenues";
+import { competenciaDeIso, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
 function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-function todayIso() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
 }
 
 const STATUS_BADGE: Record<number, string> = {
@@ -63,7 +56,7 @@ const EMPTY_FORM = {
   category: 1,
   costCenter: "",
   expectedAmount: "",
-  dueDate: todayIso(),
+  dueDate: hojeIsoBrasilia(),
 };
 
 export default function ReceitasPage() {
@@ -90,8 +83,9 @@ export default function ReceitasPage() {
         costCenter: form.costCenter.trim() || undefined,
         expectedAmount: amount,
         dueDate: form.dueDate,
-        competencyMonth: new Date(form.dueDate).getMonth() + 1,
-        competencyYear: new Date(form.dueDate).getFullYear(),
+        // Pela string: new Date("yyyy-MM-dd") é UTC e cai no mês anterior no dia 1º.
+        competencyMonth: competenciaDeIso(form.dueDate).mes,
+        competencyYear: competenciaDeIso(form.dueDate).ano,
       });
       toast.success("Receita criada.");
       setDialogOpen(false);
@@ -164,7 +158,7 @@ export default function ReceitasPage() {
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.description}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{revenueCategoryLabel(r.category)}</TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatDate(r.dueDate)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(r.dueDate)}</TableCell>
                 <TableCell className="text-right font-mono text-sm tabular-nums">
                   {formatCurrency(r.expectedAmount)}
                 </TableCell>

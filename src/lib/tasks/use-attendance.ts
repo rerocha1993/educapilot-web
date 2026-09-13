@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { dataLocalIso } from "@/lib/format/date";
 
 // P = presente, F = falta, A = atraso — ver SharedKernel.../Attendance.cs. Só "F"
 // aciona a criação automática de um registro de Absence no backend (com motivo
@@ -16,8 +17,9 @@ export interface AttendanceDto {
   status: AttendanceStatus;
 }
 
+// Componentes locais: toISOString (UTC) pulava para o dia seguinte depois das 21h.
 function toDateParam(date: Date) {
-  return date.toISOString().slice(0, 10); // YYYY-MM-DD
+  return dataLocalIso(date); // YYYY-MM-DD
 }
 
 export function useAttendanceByClass(classId: number | null, date: Date) {

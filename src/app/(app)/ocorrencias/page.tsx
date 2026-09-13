@@ -37,6 +37,7 @@ import {
   useWeeklyObservations,
   useSendWeeklyObservation,
 } from "@/lib/tasks/use-weekly-observations";
+import { dataLocalIso, formatarData } from "@/lib/format/date";
 
 // Reestruturado (2026-08, feedback do cliente): antes eram 2 telas (registro e
 // relatório) sem navegação entre si — quem estava no relatório não tinha como voltar
@@ -66,17 +67,11 @@ const CATEGORIA_DOT: Record<OccurrenceCategoria, string> = {
   Atraso: "bg-muted-foreground",
 };
 
-function toIso(d: Date) {
-  const copy = new Date(d);
-  copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
-  return copy.toISOString().slice(0, 10);
-}
-
 function defaultRange() {
   const end = new Date();
   const start = new Date();
   start.setDate(start.getDate() - 6);
-  return { start: toIso(start), end: toIso(end) };
+  return { start: dataLocalIso(start), end: dataLocalIso(end) };
 }
 
 const EMPTY_FORM = {
@@ -358,7 +353,7 @@ export default function OcorrenciasPage() {
                     <div className="mb-1 flex items-center justify-between">
                       <span className="font-mono text-xs text-muted-foreground">Semana {h.weekOfMonth}</span>
                       <span className="font-mono text-xs text-muted-foreground">
-                        {new Date(h.createdAt).toLocaleDateString("pt-BR")}
+                        {formatarData(h.createdAt)}
                       </span>
                     </div>
                     <p className="text-sm">{h.weeklyObservation}</p>
@@ -396,7 +391,7 @@ export default function OcorrenciasPage() {
                       {o.categoria}
                     </span>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {new Date(o.createdAt).toLocaleDateString("pt-BR")}
+                      {formatarData(o.createdAt)}
                     </span>
                   </div>
                   <p className="text-sm">{o.observation}</p>

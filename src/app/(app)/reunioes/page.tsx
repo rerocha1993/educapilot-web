@@ -24,6 +24,7 @@ import {
 } from "@/lib/tasks/use-meetings";
 import { useWeeklyPlans } from "@/lib/tasks/use-weekly-plans";
 import { UNJUSTIFIED_REASON } from "@/lib/tasks/use-absences";
+import { dataLocalIso, formatarData } from "@/lib/format/date";
 
 // Reescrito (2026-09, feedback do cliente) — "a tela de reuniões, essa tela é para
 // ser por turma, nela ao selecionar a turma a diretora clica na semana, quando ela
@@ -43,12 +44,6 @@ function mondayOf(d: Date) {
   return date;
 }
 
-function toIso(d: Date) {
-  const copy = new Date(d);
-  copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
-  return copy.toISOString().slice(0, 10);
-}
-
 function recentWeeks(count: number) {
   const thisMonday = mondayOf(new Date());
   return Array.from({ length: count }, (_, i) => {
@@ -62,10 +57,6 @@ function recentWeeks(count: number) {
 
 function formatShort(d: Date) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
 }
 
 const STATUS_BADGE: Record<string, string> = {
@@ -133,7 +124,7 @@ export default function ReunioesPage() {
       await saveMeeting.mutateAsync({
         id: currentMeeting?.id,
         classId,
-        createdAt: toIso(week.start),
+        createdAt: dataLocalIso(week.start),
         status,
         discussion,
         summary: summary || null,
@@ -240,7 +231,7 @@ export default function ReunioesPage() {
                 <div key={a.id} className="rounded-md border border-border p-2 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{a.studentName}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{formatDate(a.createdAt)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{formatarData(a.createdAt)}</span>
                   </div>
                   <p className={cn("mt-0.5 text-xs", isPending ? "text-warning" : "text-muted-foreground")}>
                     {isPending ? "Pendente de justificativa" : a.reason}
@@ -262,7 +253,7 @@ export default function ReunioesPage() {
               <div key={o.id} className="rounded-md border border-border p-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{o.studentName}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{formatDate(o.createdAt)}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{formatarData(o.createdAt)}</span>
                 </div>
                 {o.description && <p className="mt-0.5 text-xs text-muted-foreground">{o.description}</p>}
                 {/* Correção (2026-09, feedback do cliente) — "na reunião em ocorrência
@@ -291,7 +282,7 @@ export default function ReunioesPage() {
               <div key={w.id} className="rounded-md border border-border p-2 text-sm">
                 <div className="mb-0.5 flex items-center justify-between">
                   <span className="font-mono text-xs text-muted-foreground">Semana {w.weekOfMonth}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{formatDate(w.createdAt)}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
                 </div>
                 <p>{w.weeklyObservation}</p>
               </div>

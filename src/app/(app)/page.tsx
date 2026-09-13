@@ -23,6 +23,7 @@ import {
 } from "@/lib/tasks/use-attendance";
 import { useAbsences, useJustifyAbsence, UNJUSTIFIED_REASON } from "@/lib/tasks/use-absences";
 import { cn } from "@/lib/utils";
+import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
 const STATUS_LABELS: Record<AttendanceStatus, string> = {
   P: "Presente",
@@ -40,16 +41,10 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
 // 2) A barra fixa de salvar tinha "left-56" fixo (largura da sidebar desktop) — quebrava
 //    completamente no mobile (não tem sidebar lá). Virou responsivo.
 
-function todayIso() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); // corrige pro fuso local
-  return d.toISOString().slice(0, 10);
-}
-
 export default function ChamadaPage() {
   const { data: classes, isLoading: classesLoading } = useClasses();
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
-  const [dateStr, setDateStr] = useState(todayIso());
+  const [dateStr, setDateStr] = useState(hojeIsoBrasilia());
 
   useEffect(() => {
     if (selectedClassId === null && classes && classes.length > 0) {
@@ -301,7 +296,7 @@ export default function ChamadaPage() {
                       {a.attendance?.student?.fullName ?? `Aluno #${a.attendance?.studentId}`}
                     </span>
                     <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                      {new Date(a.attendanceDate).toLocaleDateString("pt-BR")}
+                      {formatarSoData(a.attendanceDate)}
                     </span>
                   </div>
 

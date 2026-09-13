@@ -2,6 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileText } from "lucide-react";
+import { formatarData } from "@/lib/format/date";
 
 // Campo do tipo "contrato" (2026-09).
 //
@@ -41,7 +42,8 @@ export function preencherMarcadores(
     if (valor && valor.trim() !== "") indice.set(normalizar(rotulo), valor);
   }
 
-  const hoje = new Date().toLocaleDateString("pt-BR", {
+  // Dia no fuso da escola, não no do navegador de quem preenche.
+  const hoje = formatarData(new Date(), {
     day: "2-digit",
     month: "long",
     year: "numeric",

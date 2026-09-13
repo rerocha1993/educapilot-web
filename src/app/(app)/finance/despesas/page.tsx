@@ -37,20 +37,15 @@ import {
   EXPENSE_CATEGORIES,
   type ExpenseDto,
 } from "@/lib/finance/use-expenses";
+import { competenciaDeIso, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
 function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-function todayIso() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
-}
+// Vencimento é só-data: comparar strings "yyyy-MM-dd" evita que new Date() (UTC)
+// marque como atrasada uma conta que vence hoje.
 function isOverdue(e: ExpenseDto) {
-  return e.statusPagamento === "Pendente" && new Date(e.dataVencimento) < new Date(new Date().toDateString());
+  return e.statusPagamento === "Pendente" && e.dataVencimento.slice(0, 10) < hojeIsoBrasilia();
 }
 
 const EMPTY_FORM = {
@@ -59,7 +54,7 @@ const EMPTY_FORM = {
   categoria: 2,
   subcategoria: "",
   valor: "",
-  dataVencimento: todayIso(),
+  dataVencimento: hojeIsoBrasilia(),
   centroCusto: "",
 };
 
@@ -92,8 +87,9 @@ export default function DespesasPage() {
         valor,
         dataVencimento: form.dataVencimento,
         centroCusto: form.centroCusto.trim() || undefined,
-        competenciaMes: new Date(form.dataVencimento).getMonth() + 1,
-        competenciaAno: new Date(form.dataVencimento).getFullYear(),
+        // Pela string: new Date("yyyy-MM-dd") é UTC e cai no mês anterior no dia 1º.
+        competenciaMes: competenciaDeIso(form.dataVencimento).mes,
+        competenciaAno: competenciaDeIso(form.dataVencimento).ano,
       });
       toast.success("Despesa criada.");
       setDialogOpen(false);
@@ -105,7 +101,7 @@ export default function DespesasPage() {
 
   async function handleMarkPaid(id: string) {
     try {
-      await markPaid.mutateAsync({ id, dataPagamento: todayIso() });
+      await markPaid.mutateAsync({ id, dataPagamento: hojeIsoBrasilia() });
       toast.success("Pagamento confirmado.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao confirmar pagamento.");
@@ -190,7 +186,7 @@ export default function DespesasPage() {
                   {EXPENSE_CATEGORIES.find((c) => c.value === e.categoria)?.label ?? e.categoria}
                   {e.subcategoria ? ` · ${e.subcategoria}` : ""}
                 </TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatDate(e.dataVencimento)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(e.dataVencimento)}</TableCell>
                 <TableCell className="text-right font-mono text-sm tabular-nums">{formatCurrency(e.valor)}</TableCell>
                 <TableCell>
                   {e.statusPagamento === "Pago" ? (

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { dataLocalIso } from "@/lib/format/date";
 
 export interface WeeklyObservationDto {
   id: number;
@@ -10,8 +11,9 @@ export interface WeeklyObservationDto {
   createdAt: string;
 }
 
+// Componentes locais: toISOString (UTC) pulava para o dia seguinte depois das 21h.
 function toDateParam(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return dataLocalIso(date);
 }
 
 function monthRange(date: Date) {

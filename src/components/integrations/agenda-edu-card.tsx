@@ -12,6 +12,7 @@ import {
   useTestAgendaEduConnection,
   type AgendaEduImportResult,
 } from "@/lib/integrations/use-agenda-edu";
+import { formatarDataHora } from "@/lib/format/date";
 
 /**
  * Configuração e importação do Agenda Edu.
@@ -145,7 +146,7 @@ export function AgendaEduCard() {
 
       {settings?.ultimaImportacaoEm && (
         <p className="text-xs text-muted-foreground">
-          Última importação: {new Date(settings.ultimaImportacaoEm).toLocaleString("pt-BR")}
+          Última importação: {formatarDataHora(settings.ultimaImportacaoEm)}
         </p>
       )}
 

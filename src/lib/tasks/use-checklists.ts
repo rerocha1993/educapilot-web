@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { dataLocalIso } from "@/lib/format/date";
 
 // SimNao = checkbox comum, Contagem = resposta numérica (CountValue em
 // ChecklistResponseItem). String solta, mesmo padrão de Attendance.Status.
@@ -42,8 +43,9 @@ export interface ChecklistFillDto {
 
 const BASE = "/api/ClassroomChecklist";
 
+// Componentes locais: toISOString (UTC) pulava para o dia seguinte depois das 21h.
 function toDateParam(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return dataLocalIso(date);
 }
 
 // ---- Templates (R3) ----

@@ -18,6 +18,7 @@ import {
 } from "@/lib/flow/use-form-responses";
 import { decodeOpcoes } from "@/lib/flow/use-form-fields";
 import { AttachmentLink } from "@/components/flow/attachment-link";
+import { formatarDataHora } from "@/lib/format/date";
 
 function renderValor(tipo: string | undefined, valor: string | null) {
   if (!valor) return "—";
@@ -28,8 +29,9 @@ function renderValor(tipo: string | undefined, valor: string | null) {
   return valor;
 }
 
+// Mantém o layout curto (sem ano), mas agora no horário de Brasília.
 function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return formatarDataHora(iso, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 export default function FormResponsesPage() {

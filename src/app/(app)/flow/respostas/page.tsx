@@ -18,6 +18,7 @@ import { AttachmentLink } from "@/components/flow/attachment-link";
 import { ResumoAprovadas, SEM_TURMA } from "@/components/flow/resumo-aprovadas";
 import { Button } from "@/components/ui/button";
 import { useForms } from "@/lib/flow/use-forms";
+import { formatarData, formatarDataHora } from "@/lib/format/date";
 import {
   useFormResponses,
   useDeleteFormResponse,
@@ -219,7 +220,7 @@ export default function CaixaDeEnviosPage() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Enviado em {new Date(detalhe.dataPreenchimento).toLocaleString("pt-BR")}
+          Enviado em {formatarDataHora(detalhe.dataPreenchimento)}
         </p>
 
         {/* Todos os campos do formulário, na ordem em que a família preencheu — inclusive os que
@@ -322,7 +323,7 @@ export default function CaixaDeEnviosPage() {
               </Badge>
             </div>
             <span className="shrink-0 text-sm text-muted-foreground">
-              {new Date(resposta.dataPreenchimento).toLocaleDateString("pt-BR", {
+              {formatarData(resposta.dataPreenchimento, {
                 day: "2-digit",
                 month: "short",
               })}

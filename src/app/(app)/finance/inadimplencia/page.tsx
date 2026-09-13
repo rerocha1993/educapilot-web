@@ -22,15 +22,10 @@ import {
   useSincronizarCobrancasAgendaEdu,
 } from "@/lib/integrations/use-agenda-edu-cobrancas";
 import { cn } from "@/lib/utils";
+import { formatarDataHora, formatarSoData } from "@/lib/format/date";
 
 function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
 function atrasoBadge(dias: number) {
@@ -153,7 +148,7 @@ function InadimplenciaAgendaEdu() {
           <h2 className="font-heading text-base font-bold">Agenda Edu (EduPay)</h2>
           <p className="text-xs text-muted-foreground">
             {data.ultimaSincronizacaoEm
-              ? `Lido em ${formatDateTime(data.ultimaSincronizacaoEm)}. Atualiza sozinho a cada 15 minutos.`
+              ? `Lido em ${formatarDataHora(data.ultimaSincronizacaoEm)}. Atualiza sozinho a cada 15 minutos.`
               : "Ainda não lido. A primeira leitura acontece em até 15 minutos, ou agora pelo botão."}
           </p>
           {data.resumo && <p className="text-xs text-muted-foreground">{data.resumo}</p>}
@@ -230,7 +225,7 @@ function InadimplenciaAgendaEdu() {
                     </p>
                   )}
                 </TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatDate(c.venceEm)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(c.venceEm)}</TableCell>
                 <TableCell>
                   <Badge className={atrasoBadge(c.diasAtraso)}>{c.diasAtraso} dia(s)</Badge>
                 </TableCell>
@@ -343,7 +338,7 @@ export default function InadimplenciaPage() {
                     <TableCell className="text-right font-mono text-sm tabular-nums">
                       {formatCurrency(d.valorEsperado)}
                     </TableCell>
-                    <TableCell className="font-mono text-sm tabular-nums">{formatDate(d.dueDate)}</TableCell>
+                    <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(d.dueDate)}</TableCell>
                     <TableCell>
                       <Badge className={atrasoBadge(d.diasAtraso)}>{d.diasAtraso} dia(s)</Badge>
                     </TableCell>
