@@ -44,6 +44,14 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/events\/pedidos/, modulo: "events", area: "pedidos" },
   { padrao: /^\/events/, modulo: "events", area: null },
 
+  // Portaria. A entrada do módulo é aberta a qualquer área dele: quem só tem Relatórios é
+  // levado para lá pela própria página, em vez de esbarrar em "Sem acesso" ao clicar no menu.
+  { padrao: /^\/portaria\/mapa/, modulo: "reception", area: "mapa" },
+  { padrao: /^\/portaria\/visitantes/, modulo: "reception", area: "visitantes" },
+  { padrao: /^\/portaria\/relatorios/, modulo: "reception", area: "relatorios" },
+  { padrao: /^\/portaria\/configuracao/, modulo: "reception", area: "configuracao" },
+  { padrao: /^\/portaria/, modulo: "reception", area: null },
+
   // Rotina
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },

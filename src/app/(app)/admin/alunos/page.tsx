@@ -41,6 +41,31 @@ import {
 } from "@/lib/kernel/use-students";
 import { cn } from "@/lib/utils";
 import { formatarSoData } from "@/lib/format/date";
+import { useActiveModules } from "@/lib/kernel/use-active-modules";
+import {
+  PeriodoEditavel,
+  descreverPeriodo,
+  periodoCompleto,
+  valorDoPeriodo,
+  type ValorDoPeriodo,
+} from "@/components/reception/periodo-do-aluno-campos";
+import {
+  useConfiguracaoPortaria,
+  useDefinirPeriodo,
+  usePeriodoDoAluno,
+  usePeriodos,
+} from "@/lib/reception/use-portaria";
+
+function PeriodoNaLista({ periodo }: { periodo?: Parameters<typeof descreverPeriodo>[0] }) {
+  const descricao = periodo ? descreverPeriodo(periodo) : null;
+  if (!descricao) return <span className="text-xs text-muted-foreground">Sem período</span>;
+  return (
+    <>
+      <span>{descricao.rotulo}</span>
+      {descricao.horarios && <span className="block text-xs text-muted-foreground">{descricao.horarios}</span>}
+    </>
+  );
+}
 
 export default function AlunosPage() {
   const { data: classes, isLoading: classesLoading } = useClasses();
@@ -73,6 +98,25 @@ export default function AlunosPage() {
   // progressão define para o grupo.
   const [classId, setClassId] = useState<number | null>(null);
 
+  // Período da Portaria no cadastro do aluno, só para escola com o módulo. `periodoAlterado` nulo é
+  // "não mexeu": nesse caso salvar o aluno não toca no período que já existe.
+  const { data: modulosAtivos } = useActiveModules();
+  const temPortaria = (modulosAtivos ?? []).some((m) => m.slug === "reception");
+  const editandoId = editing && editing !== "new" ? editing.id : null;
+  const { data: periodoAtual, isLoading: carregandoPeriodo } = usePeriodoDoAluno(editandoId, temPortaria);
+  const { data: configPortaria } = useConfiguracaoPortaria(temPortaria);
+  const definirPeriodo = useDefinirPeriodo();
+  const [periodoAlterado, setPeriodoAlterado] = useState<ValorDoPeriodo | null>(null);
+
+  // O período mora só aqui, no cadastro do aluno: a coluna na lista mostra de relance quem está sem.
+  const { data: periodosDaTurma } = usePeriodos(selectedClassId, temPortaria && selectedClassId !== null);
+  const periodoPorAluno = new Map((periodosDaTurma ?? []).map((p) => [p.studentId, p]));
+
+  function abrirCadastro(aluno: StudentDto | "new") {
+    setPeriodoAlterado(null);
+    setEditing(aluno);
+  }
+
   useEffect(() => {
     if (editing === "new") {
       setFullName("");
@@ -99,8 +143,12 @@ export default function AlunosPage() {
 
   async function handleSave() {
     if (!fullName.trim() || !birthDate || classId === null) return;
+    if (periodoAlterado && !periodoCompleto(periodoAlterado)) {
+      toast.error("Escolha a orientação e informe o horário do período.");
+      return;
+    }
     try {
-      await saveStudent.mutateAsync({
+      const id = await saveStudent.mutateAsync({
         ...(editing !== "new" && editing ? { id: editing.id } : {}),
         fullName: fullName.trim(),
         birthDate,
@@ -110,6 +158,16 @@ export default function AlunosPage() {
         dietaryRestriction: dietaryRestriction.trim() || null,
         healthInsurance: healthInsurance.trim() || null,
       });
+      if (temPortaria && periodoAlterado && id) {
+        await definirPeriodo.mutateAsync({
+          studentId: id,
+          periodo: {
+            tipo: periodoAlterado.tipo,
+            orientacao: periodoAlterado.orientacao,
+            horarioReferencia: periodoAlterado.horarioReferencia || null,
+          },
+        });
+      }
       toast.success(editing === "new" ? "Aluno cadastrado." : "Aluno atualizado.");
       setEditing(null);
     } catch (err) {
@@ -169,7 +227,7 @@ export default function AlunosPage() {
               className="h-9 pl-8"
             />
           </div>
-          <Button onClick={() => setEditing("new")} disabled={selectedClassId === null}>
+          <Button onClick={() => abrirCadastro("new")} disabled={selectedClassId === null}>
             <Plus className="size-4" />
             Novo aluno
           </Button>
@@ -187,6 +245,7 @@ export default function AlunosPage() {
               <TableRow>
                 <TableHead>Aluno</TableHead>
                 <TableHead>Data de nascimento</TableHead>
+                {temPortaria && <TableHead>Período</TableHead>}
                 <TableHead className="w-20 text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -194,7 +253,7 @@ export default function AlunosPage() {
               {studentsLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={3}>
+                    <TableCell colSpan={temPortaria ? 4 : 3}>
                       <Skeleton className="h-5 w-full" />
                     </TableCell>
                   </TableRow>
@@ -202,7 +261,7 @@ export default function AlunosPage() {
 
               {!studentsLoading && filteredStudents.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={temPortaria ? 4 : 3} className="py-10 text-center text-sm text-muted-foreground">
                     {selectedClassId === null
                       ? "Selecione uma turma."
                       : "Nenhum aluno encontrado nesta turma."}
@@ -226,6 +285,11 @@ export default function AlunosPage() {
                   <TableCell className="font-mono text-sm tabular-nums">
                     {formatarSoData(s.birthDate)}
                   </TableCell>
+                  {temPortaria && (
+                    <TableCell className="text-sm">
+                      <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
+                    </TableCell>
+                  )}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Link
@@ -235,7 +299,7 @@ export default function AlunosPage() {
                       >
                         <IdCard className="size-3.5" />
                       </Link>
-                      <Button variant="ghost" size="icon" className="size-7" onClick={() => setEditing(s)}>
+                      <Button variant="ghost" size="icon" className="size-7" onClick={() => abrirCadastro(s)}>
                         <Pencil className="size-3.5" />
                       </Button>
                       <Button
@@ -263,7 +327,7 @@ export default function AlunosPage() {
       </div>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing === "new" ? "Novo aluno" : "Editar aluno"}</DialogTitle>
           </DialogHeader>
@@ -306,6 +370,24 @@ export default function AlunosPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {temPortaria && (
+              <div className="border-t border-border pt-3">
+                <p className="mb-3 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                  Período
+                </p>
+                {carregandoPeriodo ? (
+                  <Skeleton className="h-16 w-full" />
+                ) : (
+                  <PeriodoEditavel
+                    key={editandoId ?? "novo"}
+                    inicial={valorDoPeriodo(editandoId ? periodoAtual : null)}
+                    config={configPortaria}
+                    onChange={setPeriodoAlterado}
+                  />
+                )}
+              </div>
+            )}
 
             <div className="border-t border-border pt-3">
               <p className="mb-3 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">

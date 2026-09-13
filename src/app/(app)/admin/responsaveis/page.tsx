@@ -42,6 +42,7 @@ import {
 } from "@/lib/finance/use-guardians";
 import { useAllStudents } from "@/lib/kernel/use-students";
 import { EnderecosDoResponsavel } from "@/components/registry/enderecos-do-responsavel";
+import { AcessoDoResponsavel } from "@/components/reception/acesso-do-responsavel";
 
 const EMPTY_FORM = { fullName: "", cpf: "", email: "", phone: "" };
 const EMPTY_VINCULO_FORM = { studentId: "", parentesco: "", responsavelFinanceiro: true };
@@ -270,6 +271,8 @@ export default function ResponsaveisPage() {
               </div>
 
               <EnderecosDoResponsavel guardianId={detail.id} />
+
+              <AcessoDoResponsavel key={detail.id} guardianId={detail.id} />
 
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium">Alunos vinculados</p>

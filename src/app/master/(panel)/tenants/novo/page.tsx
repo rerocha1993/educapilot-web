@@ -17,6 +17,13 @@ const EMPTY_FORM = {
   telefone: "",
   monthlyFee: "",
   responsibleCpf: "",
+  cep: "",
+  endereco: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  cidade: "",
+  estado: "",
   nomeAdministrador: "",
   emailAdministrador: "",
   senhaAdministrador: "",
@@ -107,6 +114,51 @@ export default function NovoTenantPage() {
               onChange={(e) => setForm((f) => ({ ...f, responsibleCpf: e.target.value }))}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">CEP</Label>
+            <Input
+              inputMode="numeric"
+              value={form.cep}
+              onChange={(e) => setForm((f) => ({ ...f, cep: e.target.value }))}
+            />
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Estado (UF)</Label>
+            <Input
+              maxLength={2}
+              value={form.estado}
+              onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value.toUpperCase() }))}
+            />
+          </div>
+          <div className="col-span-2 flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Endereço (rua)</Label>
+            <Input value={form.endereco} onChange={(e) => setForm((f) => ({ ...f, endereco: e.target.value }))} />
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Número</Label>
+            <Input value={form.numero} onChange={(e) => setForm((f) => ({ ...f, numero: e.target.value }))} />
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Complemento</Label>
+            <Input
+              value={form.complemento}
+              onChange={(e) => setForm((f) => ({ ...f, complemento: e.target.value }))}
+            />
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Bairro</Label>
+            <Input value={form.bairro} onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))} />
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Cidade</Label>
+            <Input value={form.cidade} onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
+          </div>
+          <p className="col-span-2 text-xs text-muted-foreground">
+            O endereço vira a localização da escola no mapa da Portaria.
+          </p>
         </div>
       </div>
 
