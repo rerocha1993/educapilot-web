@@ -64,16 +64,20 @@ export function useSaveStudent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: SaveStudentInput) => {
+    // Devolve o id do aluno: quem cadastra um aluno novo precisa dele para gravar o que vem junto
+    // (ex.: o período da Portaria), e o POST responde com o aluno criado.
+    mutationFn: async (input: SaveStudentInput): Promise<number | undefined> => {
       if (input.id) {
         const result = await coreApi.PUT("/api/Student/{id}", {
           params: { path: { id: input.id } },
           body: input,
         });
         unwrapApiResponse(result, "Não foi possível salvar o aluno.");
+        return input.id;
       } else {
         const result = await coreApi.POST("/api/Student", { body: input });
-        unwrapApiResponse(result, "Não foi possível cadastrar o aluno.");
+        const criado = unwrapApiResponse(result, "Não foi possível cadastrar o aluno.") as unknown as { id?: number } | undefined;
+        return criado?.id;
       }
     },
     onSuccess: (_data, variables) => {

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLogin } from "@/lib/auth/use-login";
+import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um e-mail válido."),
@@ -26,33 +27,37 @@ export default function LoginPage() {
   const login = useLogin();
   const [showPassword, setShowPassword] = useState(false);
 
-  // Aviso de sessão expirada. Lido de window.location em vez de useSearchParams porque este
-  // último exige envolver a página num Suspense — restruturação grande demais para uma faixa
-  // de aviso. O parâmetro é posto pelo cliente HTTP ao receber 401 (ver src/lib/api/client.ts).
-  const [sessaoExpirada, setSessaoExpirada] = useState(false);
+  // Avisos vindos da URL. Lidos de window.location em vez de useSearchParams porque este último
+  // exige envolver a página num Suspense — restruturação grande demais para uma faixa de aviso.
+  // ?expirada é posto pelo cliente HTTP ao receber 401 (ver src/lib/api/client.ts).
+  const params = useQueryStringLocal();
+  const sessaoExpirada = params.has("expirada");
   // Chegou aqui vindo da tela de convite, com o cadastro concluído (ver /convite).
-  const [conviteAceito, setConviteAceito] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setSessaoExpirada(params.has("expirada"));
-    setConviteAceito(params.get("convite") === "aceito");
-  }, []);
+  const conviteAceito = params.get("convite") === "aceito";
+  // Responsável que acabou de criar a senha pelo link de acesso (ver /responsavel/definir-senha).
+  const senhaDefinida = params.get("senha") === "definida";
+  const emailDaUrl = params.get("email");
 
   const {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { rememberMe: true },
   });
 
+  useEffect(() => {
+    if (emailDaUrl) setValue("email", emailDaUrl);
+  }, [emailDaUrl, setValue]);
+
   async function onSubmit(values: LoginFormValues) {
     try {
-      await login.mutateAsync(values);
-      router.push("/");
+      const resultado = await login.mutateAsync(values);
+      // Responsável não usa o sistema da equipe: tem o site dele, feito para o celular.
+      router.push(resultado.role === "Responsavel" ? "/responsavel" : "/");
     } catch {
       // erro exibido via login.error abaixo, como faixa acima do formulário (ver L1)
     }
@@ -80,6 +85,12 @@ export default function LoginPage() {
         {conviteAceito && !login.error && (
           <div className="rounded-md border border-border bg-accent px-3 py-2 text-sm">
             Cadastro concluído. Entre com seu e-mail e a senha que você acabou de criar.
+          </div>
+        )}
+
+        {senhaDefinida && !login.error && (
+          <div className="rounded-md border border-border bg-accent px-3 py-2 text-sm">
+            Senha criada. Entre com seu e-mail.
           </div>
         )}
 

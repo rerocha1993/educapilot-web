@@ -49,6 +49,13 @@ export interface CreateTenantInput {
   nomeAdministrador: string;
   emailAdministrador: string;
   senhaAdministrador: string;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
 }
 
 // Gera uma chave aleatória local pra assinar os tokens JWT desse tenant (Tenant.
@@ -70,16 +77,15 @@ export function useCreateTenant() {
           ...input,
           jwtSecret: generateJwtSecret(),
           // CreateTenantRequest.Endereco/Numero/Bairro/Cidade/Estado/Cep/Complemento são
-          // string não-anulável no backend (só dispara 400 se vier null/ausente, não se
-          // vier "") — o wireframe A2 não coleta endereço, então mandamos vazio em vez
-          // de adicionar campos que não estão na tela.
-          endereco: "",
-          numero: "",
-          bairro: "",
-          cidade: "",
-          estado: "",
-          cep: "",
-          complemento: "",
+          // string não-anulável no backend (dá 400 se vier null/ausente, não se vier "").
+          // Campo em branco vai como "". O endereço vira a localização da escola no mapa.
+          endereco: input.endereco ?? "",
+          numero: input.numero ?? "",
+          bairro: input.bairro ?? "",
+          cidade: input.cidade ?? "",
+          estado: input.estado ?? "",
+          cep: input.cep ?? "",
+          complemento: input.complemento ?? "",
         },
       });
       const data = unwrapApiResponse(result, "Não foi possível criar a escola.");

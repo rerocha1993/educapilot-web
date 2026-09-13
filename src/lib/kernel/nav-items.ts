@@ -1,5 +1,6 @@
 import {
   CalendarCheck,
+  DoorOpen,
   ShoppingBag,
   FileStack,
   Wallet,
@@ -35,11 +36,13 @@ export function slugDeAcesso(href: string): string | null {
   if (href.startsWith("/flow")) return "flow";
   if (href.startsWith("/finance")) return "finance";
   if (href.startsWith("/events")) return "events";
+  if (href.startsWith("/portaria")) return "reception";
   return null;
 }
 
 export const NAV_ITEMS = [
   { href: "/", label: "Rotina", icon: CalendarCheck, moduleSlug: "tasks" },
+  { href: "/portaria", label: "Portaria", icon: DoorOpen, moduleSlug: "reception" },
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
   { href: "/flow", label: "Formulários", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
