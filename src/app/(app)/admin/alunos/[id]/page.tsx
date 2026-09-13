@@ -9,18 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClasses } from "@/lib/kernel/use-classes";
 import { useStudent, useStudentOccurrences } from "@/lib/kernel/use-student-ficha";
 import { useGuardiansByStudent } from "@/lib/finance/use-guardians";
+import { formatarData, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-
+// Nascimento é só-data: compara pelos componentes da string com o "hoje" de Brasília,
+// sem Date, para o aniversário não virar um dia antes/depois por causa do fuso.
 function calcularIdade(birthDate: string) {
-  const nascimento = new Date(birthDate);
-  const hoje = new Date();
-  let idade = hoje.getFullYear() - nascimento.getFullYear();
-  const aindaNaoFezAniversario =
-    hoje.getMonth() < nascimento.getMonth() ||
-    (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
+  const [anoNasc, mesNasc, diaNasc] = birthDate.slice(0, 10).split("-").map(Number);
+  const [anoHoje, mesHoje, diaHoje] = hojeIsoBrasilia().split("-").map(Number);
+  let idade = anoHoje - anoNasc;
+  const aindaNaoFezAniversario = mesHoje < mesNasc || (mesHoje === mesNasc && diaHoje < diaNasc);
   if (aindaNaoFezAniversario) idade--;
   return idade;
 }
@@ -114,7 +111,7 @@ export default function FichaAlunoPage() {
           <div className="grid grid-cols-3 gap-4 rounded-lg border border-border bg-card p-4">
             <div>
               <p className="text-xs text-muted-foreground">Nascimento</p>
-              <p className="text-sm font-medium">{formatDate(student.birthDate)}</p>
+              <p className="text-sm font-medium">{formatarSoData(student.birthDate)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Turma</p>
@@ -122,7 +119,7 @@ export default function FichaAlunoPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Cadastrado em</p>
-              <p className="text-sm font-medium">{formatDate(student.createdAt)}</p>
+              <p className="text-sm font-medium">{formatarData(student.createdAt)}</p>
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
@@ -144,7 +141,7 @@ export default function FichaAlunoPage() {
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary">{o.categoria ?? "—"}</Badge>
                   <span className="font-mono text-xs text-muted-foreground">
-                    {formatDate(o.createdAt)}
+                    {formatarData(o.createdAt)}
                   </span>
                 </div>
                 <p className="mt-1 text-sm">{o.observation}</p>

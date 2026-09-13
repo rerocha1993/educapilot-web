@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { dataLocalIso } from "@/lib/format/date";
 
 // Reescrito (2026-09, feedback do cliente) — "planejamento semanal, isso eu quero
 // que criemos o modelo, não pode ser fixo". Antes os campos do planejamento
@@ -133,8 +134,9 @@ export interface WeeklyPlanDto {
   fieldValues: { weeklyPlanFieldId: number; value: string; weeklyPlanField?: { label: string } }[];
 }
 
+// Componentes locais: toISOString (UTC) pulava para o dia seguinte depois das 21h.
 function toDateParam(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return dataLocalIso(date);
 }
 
 export function useWeeklyPlans(classId: number | null, startDate: Date, endDate: Date) {

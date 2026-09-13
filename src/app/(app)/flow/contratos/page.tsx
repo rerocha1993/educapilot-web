@@ -17,6 +17,7 @@ import {
   useDeleteContract,
   type Contract,
 } from "@/lib/contracts/use-contracts";
+import { formatarData, formatarDataHora } from "@/lib/format/date";
 
 /**
  * Fila de conferência da gestão e acompanhamento dos contratos.
@@ -126,7 +127,7 @@ function CartaoAprovacao({ contrato }: { contrato: Contract }) {
           </p>
           {responsavel?.assinadoEm && (
             <p className="text-xs text-muted-foreground">
-              Assinado em {new Date(responsavel.assinadoEm).toLocaleString("pt-BR")}
+              Assinado em {formatarDataHora(responsavel.assinadoEm)}
             </p>
           )}
         </div>
@@ -256,7 +257,7 @@ function Historico({ contratos }: { contratos: Contract[] }) {
                       </span>
                     )}
                   </td>
-                  <td className="py-2">{new Date(c.criadoEm).toLocaleDateString("pt-BR")}</td>
+                  <td className="py-2">{formatarData(c.criadoEm)}</td>
                   <td className="py-2 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {c.temArquivoAssinado && (

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { financeApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { hojeIsoBrasilia } from "@/lib/format/date";
 
 export const REVENUE_CATEGORIES = [
   { value: 1, label: "Mensalidade" },
@@ -104,7 +105,8 @@ export function useMarkRevenueReceived() {
           expectedAmount: entry.expectedAmount,
           receivedAmount: entry.expectedAmount,
           dueDate: entry.dueDate,
-          paymentDate: new Date().toISOString(),
+          // Coluna tipo data: o dia de hoje em Brasília, não o instante UTC (que à noite já é amanhã).
+          paymentDate: hojeIsoBrasilia(),
           currency: "BRL",
           competencyMonth: entry.competencyMonth,
           competencyYear: entry.competencyYear,

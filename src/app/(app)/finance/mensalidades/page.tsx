@@ -43,14 +43,10 @@ import {
 } from "@/lib/finance/use-tuition-plans";
 import { useGuardians } from "@/lib/finance/use-guardians";
 import { useAllStudents } from "@/lib/kernel/use-students";
+import { hojeIsoBrasilia } from "@/lib/format/date";
 
 function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-function todayIso() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
 }
 
 const EMPTY_FORM = {
@@ -58,7 +54,7 @@ const EMPTY_FORM = {
   guardianId: "",
   valorMensal: "",
   diaVencimento: "10",
-  dataInicio: todayIso(),
+  dataInicio: hojeIsoBrasilia(),
   gerarCobrancaAsaas: false,
   percentualReajuste: "",
 };

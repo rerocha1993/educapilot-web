@@ -12,6 +12,7 @@ import {
   useSaveTenantEmail,
   useTestarTenantEmail,
 } from "@/lib/kernel/use-tenant-email";
+import { formatarDataHora } from "@/lib/format/date";
 
 // Conta de e-mail da escola (2026-09).
 //
@@ -192,7 +193,7 @@ export default function EmailEscolaPage() {
               <p className="flex items-center gap-1 text-xs text-success-soft-foreground">
                 <CheckCircle2 className="size-3.5" />
                 Último teste bem-sucedido em{" "}
-                {new Date(data.testadoEm).toLocaleString("pt-BR")}
+                {formatarDataHora(data.testadoEm)}
               </p>
             )}
 

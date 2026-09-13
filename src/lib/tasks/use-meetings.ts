@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { dataLocalIso } from "@/lib/format/date";
 
 // Novo (2026-09, feedback do cliente) — "a tela de reuniões [...] é para ser por
 // turma, nela ao selecionar a turma a diretora clica na semana, quando ela clica na
@@ -71,8 +72,9 @@ export interface MeetingReportDto {
   students: MeetingStudentDto[];
 }
 
+// Componentes locais: toISOString (UTC) pulava para o dia seguinte depois das 21h.
 function toDateParam(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return dataLocalIso(date);
 }
 
 export function useMeetingReport(classId: number | null, startDate: Date, endDate: Date) {

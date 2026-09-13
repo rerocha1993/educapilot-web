@@ -21,6 +21,7 @@ import { useOccurrencesReport } from "@/lib/tasks/use-occurrences";
 import { useAbsences, UNJUSTIFIED_REASON } from "@/lib/tasks/use-absences";
 import { useWeeklyObservations } from "@/lib/tasks/use-weekly-observations";
 import { useMeetings, useMeetingReport } from "@/lib/tasks/use-meetings";
+import { dataLocalIso, formatarData, formatarSoData } from "@/lib/format/date";
 
 // Reescrito (2026-09, feedback do cliente) — "relatorios precisa cadastrar o tipo de
 // relatorio, precisamos bolar o formato". Cada tipo cadastrado em /relatorios/config
@@ -30,21 +31,11 @@ import { useMeetings, useMeetingReport } from "@/lib/tasks/use-meetings";
 // dados reais na hora — não é geração de arquivo, é a mesma ideia de "relatório na
 // tela" já usada no resto do sistema (Ocorrências, Reuniões).
 
-function toIso(d: Date) {
-  const copy = new Date(d);
-  copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
-  return copy.toISOString().slice(0, 10);
-}
-
 function defaultRange() {
   const end = new Date();
   const start = new Date();
   start.setDate(start.getDate() - 6);
-  return { start: toIso(start), end: toIso(end) };
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
+  return { start: dataLocalIso(start), end: dataLocalIso(end) };
 }
 
 export default function RelatoriosPage() {
@@ -243,7 +234,7 @@ function FaltasReportBody({ classId, start, end }: { classId: number | null; sta
               {a.reason === UNJUSTIFIED_REASON || !a.reason ? "Pendente" : "Justificada"}
             </span>
             <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              {formatDate(a.attendanceDate)}
+              {formatarSoData(a.attendanceDate)}
             </span>
           </div>
         </div>
@@ -267,7 +258,7 @@ function ObservacaoSemanalReportBody({ classId }: { classId: number | null }) {
         <div key={w.id} className="rounded-md border border-border p-2 text-sm">
           <div className="mb-0.5 flex items-center justify-between">
             <span className="font-mono text-xs text-muted-foreground">Semana {w.weekOfMonth}</span>
-            <span className="font-mono text-xs text-muted-foreground">{formatDate(w.createdAt)}</span>
+            <span className="font-mono text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
           </div>
           <p>{w.weeklyObservation}</p>
         </div>
@@ -318,7 +309,8 @@ function MeetingIndicatorRow({
 
   return (
     <div className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
-      <span>{formatDate(meetingCreatedAt)}</span>
+      {/* Meeting.createdAt é a chave da semana (segunda-feira), não um instante: só-data. */}
+      <span>{formatarSoData(meetingCreatedAt)}</span>
       <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
         <span>{(report?.students ?? []).flatMap((s) => s.absences).length} faltas</span>
         <span>{(report?.students ?? []).flatMap((s) => s.occurrences).length} ocorrências</span>

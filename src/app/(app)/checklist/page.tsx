@@ -24,21 +24,12 @@ import {
   useChecklistFill,
   useSubmitChecklistResponse,
 } from "@/lib/tasks/use-checklists";
-
-function todayIso() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
+import { formatarHora, hojeIsoBrasilia } from "@/lib/format/date";
 
 export default function ChecklistFillPage() {
   const { data: classes, isLoading: classesLoading } = useClasses();
   const [classId, setClassId] = useState<number | null>(null);
-  const [dateStr, setDateStr] = useState(todayIso());
+  const [dateStr, setDateStr] = useState(hojeIsoBrasilia());
 
   useEffect(() => {
     if (classId === null && classes && classes.length > 0) {
@@ -222,7 +213,7 @@ export default function ChecklistFillPage() {
               </span>
             </div>
             {item.checkedAt && (
-              <span className="font-mono text-xs text-muted-foreground">{formatTime(item.checkedAt)}</span>
+              <span className="font-mono text-xs text-muted-foreground">{formatarHora(item.checkedAt)}</span>
             )}
           </div>
         ))}

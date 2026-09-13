@@ -32,6 +32,7 @@ import {
   useSaveWeeklyPlan,
   type TaskExecutionStatus,
 } from "@/lib/tasks/use-weekly-plans";
+import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
 // Reestruturado (2026-09, feedback do cliente) — "planejamento semanal, isso eu
 // quero que criemos o modelo, não pode ser fixo". Antes os campos do formulário
@@ -39,16 +40,6 @@ import {
 // escolhido (WeeklyPlanTemplate → WeeklyPlanField, configurável em
 // /planejamento-semanal/config) — o formulário se monta sozinho a partir dos campos
 // ativos do modelo selecionado.
-
-function toIso(d: Date) {
-  const copy = new Date(d);
-  copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
-  return copy.toISOString().slice(0, 10);
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
 
 const STATUS_BADGE: Record<string, string> = {
   Sim: "bg-success-soft text-success-soft-foreground",
@@ -99,7 +90,7 @@ export default function PlanejamentoSemanalPage() {
   const [values, setValues] = useState<Record<number, string>>({});
 
   function openNew() {
-    setDates({ startDate: toIso(new Date()), endDate: toIso(new Date()) });
+    setDates({ startDate: hojeIsoBrasilia(), endDate: hojeIsoBrasilia() });
     setStatus("Sim");
     setValues({});
     setDialogOpen(true);
@@ -201,7 +192,7 @@ export default function PlanejamentoSemanalPage() {
           <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs text-muted-foreground">
-                {formatDate(p.startDate)} – {formatDate(p.endDate)}
+                {formatarSoData(p.startDate)} – {formatarSoData(p.endDate)}
               </span>
               <Badge className={STATUS_BADGE[p.previousWeekTasksExecutionStatus] ?? ""}>
                 {p.previousWeekTasksExecutionStatus === "Sim"
