@@ -4,7 +4,17 @@
 // Coluna JSON livre pelo mesmo motivo de lá — estas regras são poucas e mudam mais rápido do que
 // vale a pena migrar o schema a cada uma.
 
+export type TipoDeFormulario = "matricula" | "rematricula" | "outro";
+
 export interface FormConfig {
+  /**
+   * Matrícula, rematrícula ou outro. Vira a tag de cada envio na caixa de envios.
+   *
+   * Opcional: sem marcação, o sistema deduz (ver tipoDoFormulario) — os formulários que já existem
+   * ganham a tag sem ninguém precisar abrir um por um.
+   */
+  tipo?: TipoDeFormulario;
+
   /**
    * O formulário só aparece depois que a família se identifica.
    *

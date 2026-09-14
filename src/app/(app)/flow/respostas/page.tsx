@@ -26,6 +26,8 @@ import {
   type FormResponseDto,
 } from "@/lib/flow/use-form-responses";
 import { decodeOpcoes, decodeFieldConfig } from "@/lib/flow/use-form-fields";
+import { TagDoTipo } from "@/components/flow/tag-do-tipo";
+import { ROTULO_DO_TIPO, tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 
 // Caixa de envios (2026-09).
 //
@@ -96,6 +98,8 @@ export default function CaixaDeEnviosPage() {
   }
 
   const form = formularios.find((f) => f.id === selecionado);
+  // Matrícula ou rematrícula: vem do formulário, e todo envio dele leva a mesma tag.
+  const tipo = form ? tipoDoFormulario(form) : null;
   const campos = [...(form?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
 
   const rotulos = new Map(campos.map((c) => [c.id, c.label]));
@@ -203,6 +207,7 @@ export default function CaixaDeEnviosPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <TagDoTipo tipo={tipo} />
             <Badge className={RESPONSE_STATUS_BADGE[detalhe.status] ?? ""}>{detalhe.status}</Badge>
             {/* Só na ficha aberta, nunca na lista: excluir de uma lista de dezenas de famílias é
                 clique errado esperando acontecer. Resposta com contrato assinado o servidor
@@ -271,6 +276,10 @@ export default function CaixaDeEnviosPage() {
             {formularios.map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.nome}
+                {(() => {
+                  const t = tipoDoFormulario(f);
+                  return t === "matricula" || t === "rematricula" ? ` · ${ROTULO_DO_TIPO[t]}` : "";
+                })()}
               </SelectItem>
             ))}
           </SelectContent>
@@ -318,9 +327,10 @@ export default function CaixaDeEnviosPage() {
             <div className="min-w-0">
               <p className="truncate font-medium">{nome}</p>
               {email && <p className="truncate text-sm text-muted-foreground">{email}</p>}
-              <Badge className={`mt-1 ${RESPONSE_STATUS_BADGE[resposta.status] ?? ""}`}>
-                {resposta.status}
-              </Badge>
+              <div className="mt-1 flex flex-wrap gap-1">
+                <Badge className={RESPONSE_STATUS_BADGE[resposta.status] ?? ""}>{resposta.status}</Badge>
+                <TagDoTipo tipo={tipo} />
+              </div>
             </div>
             <span className="shrink-0 text-sm text-muted-foreground">
               {formatarData(resposta.dataPreenchimento, {

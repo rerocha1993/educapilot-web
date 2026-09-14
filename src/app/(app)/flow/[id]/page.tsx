@@ -46,6 +46,9 @@ import {
 } from "@/lib/flow/use-form-fields";
 import { REFERENCE_TABLES } from "@/lib/flow/use-reference-data";
 import { ListaOrdenavel } from "@/components/flow/lista-ordenavel";
+import { DadosDoFormulario } from "@/components/flow/dados-do-formulario";
+import { TagDoTipo } from "@/components/flow/tag-do-tipo";
+import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import { CEP_PARTE_OPTIONS } from "@/lib/flow/cep";
 import { CAMPO_CADASTRO_OPTIONS, rotuloDoDestino } from "@/lib/registry/campos-do-cadastro";
 import { ContractRulesPanel } from "@/components/flow/contract-rules-panel";
@@ -142,6 +145,7 @@ export default function FormBuilderPage() {
   const createAutomation = useCreateAutomation(formId);
   const toggleAutomation = useToggleAutomation(formId);
 
+  const [editandoDados, setEditandoDados] = useState(false);
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
   const [fieldForm, setFieldForm] = useState(EMPTY_FIELD_FORM);
 
@@ -401,7 +405,17 @@ export default function FormBuilderPage() {
           <div className="flex items-center gap-2">
             <h1 className="font-heading text-xl font-bold">{form.nome}</h1>
             <Badge variant={form.status === "Ativo" ? "default" : "secondary"}>{form.status}</Badge>
+            <TagDoTipo tipo={tipoDoFormulario(form)} />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Editar nome, descrição e tipo"
+              onClick={() => setEditandoDados(true)}
+            >
+              <Pencil className="size-4" />
+            </Button>
           </div>
+          {form.descricao && <p className="text-sm text-muted-foreground">{form.descricao}</p>}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleCopiarLinkPublico} disabled={!form.publicToken}>
@@ -424,6 +438,12 @@ export default function FormBuilderPage() {
           publicado (&quot;Ativo&quot;).
         </p>
       )}
+
+      <Dialog open={editandoDados} onOpenChange={setEditandoDados}>
+        <DialogContent>
+          {editandoDados && <DadosDoFormulario form={form} onFechar={() => setEditandoDados(false)} />}
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="campos">
         <TabsList>

@@ -89,6 +89,18 @@ export function useUpdateForm() {
   });
 }
 
+/** Exclui um formulário. O servidor recusa formulário com envios, e a mensagem diz o motivo. */
+export function useDeleteForm() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await flowApi.DELETE("/api/Forms/{id}", { params: { path: { id } } });
+      unwrapApiResponse(result, "Não foi possível excluir o formulário.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forms"] }),
+  });
+}
+
 /**
  * Duplica um formulário inteiro.
  *
