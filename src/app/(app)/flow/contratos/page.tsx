@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Settings, Trash2, TriangleAlert } from "lucide-react";
+import { Link2, MessageCircle, Settings, Trash2, TriangleAlert } from "lucide-react";
 
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
@@ -246,7 +246,10 @@ function Historico({ contratos }: { contratos: Contract[] }) {
                       <span className="ml-2 rounded bg-warning-soft px-1 text-xs">teste</span>
                     )}
                   </td>
-                  <td className="py-2">{resp?.nome}</td>
+                  <td className="py-2">
+                    {resp?.nome}
+                    {resp?.email && <span className="block text-xs text-muted-foreground">{resp.email}</span>}
+                  </td>
                   <td className="py-2">
                     {c.statusDescricao}
                     {/* Só quando a via realmente saiu: assinado não quer dizer entregue, e a
@@ -260,6 +263,9 @@ function Historico({ contratos }: { contratos: Contract[] }) {
                   <td className="py-2">{formatarData(c.criadoEm)}</td>
                   <td className="py-2 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {resp?.linkAssinatura && !resp.assinadoEm && (
+                        <LinkDeAssinatura link={resp.linkAssinatura} nome={resp.nome} titulo={c.titulo} />
+                      )}
                       {c.temArquivoAssinado && (
                         <>
                           <BotaoDownload contratoId={c.id} tipo="assinado" rotulo="Baixar" />
@@ -316,6 +322,43 @@ function Historico({ contratos }: { contratos: Contract[] }) {
         </table>
       </div>
     </div>
+  );
+}
+
+/**
+ * Link de assinatura do responsável, para mandar por outro caminho.
+ *
+ * O contrato vai ao Autentique com entrega por link, não por e-mail: quem abre o link assina, sem
+ * precisar entrar no e-mail cadastrado (se o CPF foi informado, o Autentique pede o CPF). É o que
+ * resolve a família que perdeu acesso ao e-mail — a escola copia o link e manda pelo WhatsApp.
+ */
+function LinkDeAssinatura({ link, nome, titulo }: { link: string; nome: string; titulo: string }) {
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link de assinatura copiado.");
+    } catch {
+      toast.message("Copie o link:", { description: link });
+    }
+  }
+
+  const mensagem = `Olá, ${nome}! Segue o link para assinar o contrato "${titulo}": ${link}`;
+
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={copiar} title="Copiar o link de assinatura">
+        <Link2 className="size-4" /> Link
+      </Button>
+      <a
+        href={`https://wa.me/?text=${encodeURIComponent(mensagem)}`}
+        target="_blank"
+        rel="noreferrer"
+        title="Enviar o link pelo WhatsApp"
+        className="inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-[0.8rem] font-medium hover:bg-muted"
+      >
+        <MessageCircle className="size-4" /> WhatsApp
+      </a>
+    </>
   );
 }
 
