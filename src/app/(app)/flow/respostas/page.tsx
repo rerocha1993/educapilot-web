@@ -113,10 +113,6 @@ export default function CaixaDeEnviosPage() {
     }
   }
 
-  // Formulário escolhido (nenhum em "Todos"). O resumo de aprovadas só faz sentido num formulário:
-  // os campos de valor e de turma são de cada formulário.
-  const form = todos ? undefined : formPorId.get(formId);
-  const campos = form ? camposDe(form.id) : [];
 
   const linhas = respostas
     .map((r) => {
@@ -144,50 +140,71 @@ export default function CaixaDeEnviosPage() {
       return nome.toLowerCase().includes(termo) || (email ?? "").toLowerCase().includes(termo);
     });
 
-  // Total do que ja foi aprovado. So as Concluidas entram: somar pendente seria contar receita
-  // que a escola ainda pode reprovar.
-  const campoValor = campos.find(
-    (c) =>
-      decodeFieldConfig(c.config).autoPreenchimento === "valor_proximo_ano" ||
-      c.label.toLowerCase().includes("mensalidade acordada")
-  );
-
-  const aprovadas = lista.filter(({ resposta }) => resposta.status === "Concluída");
-
-  const totalMensal = campoValor
-    ? aprovadas.reduce(
-        (soma, { resposta }) =>
-          soma +
-          valorEmNumero(
-            (resposta.itens ?? []).find((i) => i.fieldId === campoValor.id)?.valor ?? null
-          ),
-        0
-      )
-    : 0;
-
-  // Rematrículas aprovadas por turma do próximo ano.
-  //
-  // A turma vem do campo que o sistema preenche pela progressão (turma_proximo_ano), não de algo
-  // que a família digitou: é a turma que a escola decidiu, e por isso dá para contar vaga com ela.
+  // Os campos de valor e de turma são de cada formulário: em "Todos", cada envio usa os campos do
+  // formulário de onde veio, e o resumo soma matrícula e rematrícula juntas.
   const autoPreenchimentoDe = (c: { config: string | null }) =>
     decodeFieldConfig(c.config).autoPreenchimento as string | undefined;
 
-  const campoTurma = campos.find(
-    (c) => autoPreenchimentoDe(c) === "turma_proximo_ano" || /turma em \d{4}/i.test(c.label)
+  const campoValorDe = (id: string) =>
+    camposDe(id).find(
+      (c) =>
+        autoPreenchimentoDe(c) === "valor_proximo_ano" ||
+        c.label.toLowerCase().includes("mensalidade acordada")
+    );
+
+  // A turma vem do campo que o sistema preenche pela progressão (turma_proximo_ano), não de algo
+  // que a família digitou: é a turma que a escola decidiu, e por isso dá para contar vaga com ela.
+  const campoTurmaDe = (id: string) =>
+    camposDe(id).find(
+      (c) => autoPreenchimentoDe(c) === "turma_proximo_ano" || /turma em \d{4}/i.test(c.label)
+    );
+
+  const valorDoItem = (resposta: FormResponseDto, fieldId: string) =>
+    (resposta.itens ?? []).find((i) => i.fieldId === fieldId)?.valor ?? null;
+
+  // Total do que ja foi aprovado. So as Concluidas entram: somar pendente seria contar receita
+  // que a escola ainda pode reprovar. E so de formulario com campo de mensalidade: uma autorizacao
+  // de passeio concluida nao e matricula.
+  const aprovadas = lista.filter(
+    ({ resposta }) => resposta.status === "Concluída" && !!campoValorDe(resposta.formId)
   );
 
-  // Ordem da progressão, tirada das opções do campo da turma atual. Lista na sequência em que a
-  // escola pensa — Berçário antes de Jardim —, e não em ordem alfabética ou por quantidade.
-  const ordemDasTurmas = decodeOpcoes(
-    campos.find((c) => autoPreenchimentoDe(c) === "turma_atual")?.opcoes
+  const campoValor = aprovadas.length > 0 ? campoValorDe(aprovadas[0].resposta.formId) : undefined;
+
+  const totalMensal = aprovadas.reduce((soma, { resposta }) => {
+    const campo = campoValorDe(resposta.formId);
+    return soma + (campo ? valorEmNumero(valorDoItem(resposta, campo.id)) : 0);
+  }, 0);
+
+  const campoTurma = aprovadas.map(({ resposta }) => campoTurmaDe(resposta.formId)).find(Boolean);
+
+  // Ordem da progressão, tirada das opções do campo da turma atual (juntando as dos formulários,
+  // sem repetir). Lista na sequência em que a escola pensa — Berçário antes de Jardim —, e não em
+  // ordem alfabética ou por quantidade.
+  const ordemDasTurmas = Array.from(
+    new Set(
+      Array.from(new Set(aprovadas.map(({ resposta }) => resposta.formId))).flatMap((id) =>
+        decodeOpcoes(camposDe(id).find((c) => autoPreenchimentoDe(c) === "turma_atual")?.opcoes)
+      )
+    )
   );
+
+  const rotuloAprovadas =
+    tipoFiltro === "matricula"
+      ? "Matrículas aprovadas"
+      : tipoFiltro === "rematricula"
+        ? "Rematrículas aprovadas"
+        : !todos && aprovadas[0]?.tipo === "matricula"
+          ? "Matrículas aprovadas"
+          : !todos && aprovadas[0]?.tipo === "rematricula"
+            ? "Rematrículas aprovadas"
+            : "Matrículas e rematrículas aprovadas";
 
   const porTurma: [string, number][] = campoTurma
     ? Array.from(
         aprovadas.reduce((mapa, { resposta }) => {
-          const turma =
-            (resposta.itens ?? []).find((i) => i.fieldId === campoTurma.id)?.valor?.trim() ||
-            SEM_TURMA;
+          const campo = campoTurmaDe(resposta.formId);
+          const turma = (campo ? valorDoItem(resposta, campo.id)?.trim() : null) || SEM_TURMA;
           mapa.set(turma, (mapa.get(turma) ?? 0) + 1);
           return mapa;
         }, new Map<string, number>())
@@ -343,6 +360,7 @@ export default function CaixaDeEnviosPage() {
           porTurma={porTurma}
           rotuloValor={campoValor.label}
           rotuloTurma={campoTurma?.label ?? null}
+          rotuloAprovadas={rotuloAprovadas}
         />
       )}
 

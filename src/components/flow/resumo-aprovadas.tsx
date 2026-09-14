@@ -17,12 +17,15 @@ export function ResumoAprovadas({
   porTurma,
   rotuloValor,
   rotuloTurma,
+  rotuloAprovadas = "Rematrículas aprovadas",
 }: {
   totalMensal: number;
   aprovadas: number;
   porTurma: [string, number][];
   rotuloValor: string;
   rotuloTurma: string | null;
+  /** Muda com o filtro: com "Todos", o total junta matrículas e rematrículas. */
+  rotuloAprovadas?: string;
 }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-lg border border-border bg-card px-4 py-3">
@@ -35,7 +38,7 @@ export function ResumoAprovadas({
         <p className="font-mono text-sm tabular-nums">{moeda(totalMensal * 12)}</p>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">Rematrículas aprovadas</p>
+        <p className="text-xs text-muted-foreground">{rotuloAprovadas}</p>
         <p className="font-mono text-sm tabular-nums">{aprovadas}</p>
       </div>
 
