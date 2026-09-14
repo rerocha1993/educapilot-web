@@ -25,6 +25,8 @@ import {
   type FormDto,
 } from "@/lib/flow/use-forms";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
+import { SeletorDeTipo } from "@/components/flow/seletor-de-tipo";
+import { decodeFormConfig, encodeFormConfig, type TipoDeFormulario } from "@/lib/flow/form-config";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
@@ -46,6 +48,8 @@ export default function FormulariosPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [tipoNovo, setTipoNovo] = useState<TipoDeFormulario | "">("");
+  const [tipoCopia, setTipoCopia] = useState<TipoDeFormulario | "">("");
 
   const deleteForm = useDeleteForm();
   const updateForm = useUpdateForm();
@@ -81,13 +85,15 @@ export default function FormulariosPage() {
   }
 
   async function handleCreate() {
-    if (!nome.trim()) return;
+    if (!nome.trim() || !tipoNovo) return;
     try {
       const created = await createForm.mutateAsync({ nome: nome.trim(), descricao: descricao.trim() });
+      await updateForm.mutateAsync({ ...created, config: encodeFormConfig({ tipo: tipoNovo }) });
       toast.success("Formulário criado.");
       setDialogOpen(false);
       setNome("");
       setDescricao("");
+      setTipoNovo("");
       window.location.href = `/flow/${created.id}`;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao criar formulário.");
@@ -101,6 +107,14 @@ export default function FormulariosPage() {
         id: duplicando.id,
         nome: nomeCopia.trim() || undefined,
       });
+      // A cópia herda a configuração do original, inclusive o tipo: sem regravar, a rematrícula
+      // duplicada da matrícula continuaria marcada como matrícula.
+      if (tipoCopia) {
+        await updateForm.mutateAsync({
+          ...copia,
+          config: encodeFormConfig({ ...decodeFormConfig(copia.config), tipo: tipoCopia }),
+        });
+      }
       toast.success(`"${copia.nome}" criado como rascunho.`);
       setDuplicando(null);
     } catch (err) {
@@ -186,6 +200,7 @@ export default function FormulariosPage() {
                   e.stopPropagation();
                   setDuplicando({ id: form.id!, nome: form.nome });
                   setNomeCopia(`${form.nome} (cópia)`);
+                  setTipoCopia("");
                 }}
               >
                 <Copy className="size-4" />
@@ -263,12 +278,13 @@ export default function FormulariosPage() {
               <Label className="text-xs text-muted-foreground">Nome da cópia</Label>
               <Input value={nomeCopia} onChange={(e) => setNomeCopia(e.target.value)} />
             </div>
+            <SeletorDeTipo valor={tipoCopia} onChange={setTipoCopia} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDuplicando(null)}>
               Cancelar
             </Button>
-            <Button onClick={handleDuplicar} disabled={duplicateForm.isPending}>
+            <Button onClick={handleDuplicar} disabled={duplicateForm.isPending || !tipoCopia}>
               {duplicateForm.isPending ? "Duplicando..." : "Duplicar"}
             </Button>
           </DialogFooter>
@@ -289,12 +305,13 @@ export default function FormulariosPage() {
               <Label className="text-xs text-muted-foreground">Descrição (opcional)</Label>
               <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
             </div>
+            <SeletorDeTipo valor={tipoNovo} onChange={setTipoNovo} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreate} disabled={createForm.isPending || !nome.trim()}>
+            <Button onClick={handleCreate} disabled={createForm.isPending || !nome.trim() || !tipoNovo}>
               {createForm.isPending ? "Criando..." : "Criar"}
             </Button>
           </DialogFooter>

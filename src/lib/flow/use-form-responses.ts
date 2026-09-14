@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
 import { getToken } from "@/lib/auth/session";
@@ -31,17 +31,38 @@ export const RESPONSE_STATUS_BADGE: Record<string, string> = {
   Pendente: "bg-accent text-accent-foreground",
 };
 
+async function buscarRespostas(formId: string) {
+  const result = await flowApi.GET("/api/FormResponses/{formId}", {
+    params: { path: { formId } },
+  });
+  const data = unwrapApiResponse(result, "Não foi possível carregar as respostas.");
+  return (data ?? []) as unknown as FormResponseDto[];
+}
+
 export function useFormResponses(formId: string | undefined) {
   return useQuery({
     queryKey: ["form-responses", formId],
     enabled: !!formId,
-    queryFn: async () => {
-      const result = await flowApi.GET("/api/FormResponses/{formId}", {
-        params: { path: { formId: formId! } },
-      });
-      const data = unwrapApiResponse(result, "Não foi possível carregar as respostas.");
-      return (data ?? []) as unknown as FormResponseDto[];
-    },
+    queryFn: () => buscarRespostas(formId!),
+  });
+}
+
+/**
+ * Envios de vários formulários juntos, para a opção "Todos" da caixa de envios.
+ *
+ * Uma consulta por formulário, com a mesma chave de cache da consulta de um só: trocar entre
+ * "Todos" e um formulário não busca de novo o que já veio.
+ */
+export function useRespostasDosFormularios(formIds: string[]) {
+  return useQueries({
+    queries: formIds.map((formId) => ({
+      queryKey: ["form-responses", formId],
+      queryFn: () => buscarRespostas(formId),
+    })),
+    combine: (resultados) => ({
+      respostas: resultados.flatMap((r) => r.data ?? []),
+      isLoading: resultados.some((r) => r.isLoading),
+    }),
   });
 }
 

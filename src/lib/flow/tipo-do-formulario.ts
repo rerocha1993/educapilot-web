@@ -10,9 +10,10 @@ export const ROTULO_DO_TIPO: Record<TipoDeFormulario, string> = {
 /**
  * Se o formulário é de matrícula ou de rematrícula.
  *
- * Vale o que a escola marcou no formulário. Sem marcação, deduz: formulário com preenchimento
- * automático pelos dados do aluno (a identificação "Buscar meus dados") só existe para quem já é
- * aluno, então é rematrícula; depois disso, decide o nome. Nulo quando não é nenhum dos dois.
+ * Vale o que a escola marcou no formulário. Sem marcação, deduz pelo nome, e só depois pelo
+ * preenchimento automático ("Buscar meus dados"). O nome vem antes porque o formulário de matrícula
+ * costuma nascer duplicado do de rematrícula e herda os campos de preenchimento automático — foi
+ * assim que a "Ficha de Matrícula" apareceu como rematrícula. Nulo quando não é nenhum dos dois.
  */
 export function tipoDoFormulario(form: {
   nome: string;
@@ -22,8 +23,8 @@ export function tipoDoFormulario(form: {
   const marcado = decodeFormConfig(form.config).tipo;
   if (marcado) return marcado;
 
-  if ((form.campos ?? []).some((c) => !!decodeFieldConfig(c.config).autoPreenchimento)) return "rematricula";
   if (/rematr[ií]cula/i.test(form.nome)) return "rematricula";
   if (/matr[ií]cula/i.test(form.nome)) return "matricula";
+  if ((form.campos ?? []).some((c) => !!decodeFieldConfig(c.config).autoPreenchimento)) return "rematricula";
   return null;
 }

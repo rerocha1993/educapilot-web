@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useForms } from "@/lib/flow/use-forms";
 import { formatarData, formatarDataHora } from "@/lib/format/date";
 import {
-  useFormResponses,
+  useRespostasDosFormularios,
   useDeleteFormResponse,
   RESPONSE_STATUS_BADGE,
   type FormResponseDto,
@@ -35,6 +35,14 @@ import { ROTULO_DO_TIPO, tipoDoFormulario } from "@/lib/flow/tipo-do-formulario"
 // só rolava para o lado e ninguém conseguia ler uma matrícula inteira. Aqui a lista traz o mínimo
 // para achar a pessoa (nome, e-mail, situação, data) e a ficha abre com tudo, um campo embaixo do
 // outro — que é como se confere uma matrícula de verdade.
+
+const TODOS = "todos";
+
+const FILTRO_DE_TIPO = [
+  { valor: TODOS, rotulo: "Todos os tipos" },
+  { valor: "matricula", rotulo: "Matrícula" },
+  { valor: "rematricula", rotulo: "Rematrícula" },
+];
 
 /** Acha, entre as respostas, o valor de um campo cujo rótulo contenha um dos termos. */
 function valorPorRotulo(
@@ -74,17 +82,25 @@ function valorEmNumero(texto: string | null): number {
 
 export default function CaixaDeEnviosPage() {
   const { data: forms } = useForms();
-
-  // Formulário escolhido. Começa no primeiro com respostas, porque abrir a tela num formulário
-  // vazio parece que o sistema perdeu os dados.
-  const [formId, setFormId] = useState<string | null>(null);
   const formularios = forms ?? [];
-  const selecionado = formId ?? formularios[0]?.id ?? null;
 
-  const { data: respostas, isLoading } = useFormResponses(selecionado ?? undefined);
+  // "Todos" junta os envios de todos os formulários, cada um com a tag do formulário de onde veio:
+  // é como se acompanha matrícula e rematrícula ao mesmo tempo sem trocar de tela.
+  const [formId, setFormId] = useState<string>(TODOS);
+  const [tipoFiltro, setTipoFiltro] = useState<string>(TODOS);
+  const todos = formId === TODOS;
+
+  const { respostas, isLoading } = useRespostasDosFormularios(
+    todos ? formularios.map((f) => f.id) : [formId]
+  );
   const [busca, setBusca] = useState("");
   const [aberta, setAberta] = useState<string | null>(null);
-  const excluir = useDeleteFormResponse(selecionado ?? "");
+
+  const formPorId = new Map(formularios.map((f) => [f.id, f]));
+  const camposDe = (id: string) => [...(formPorId.get(id)?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
+
+  const detalhe = respostas.find((r) => r.id === aberta);
+  const excluir = useDeleteFormResponse(detalhe?.formId ?? "");
 
   async function handleExcluir(id: string) {
     try {
@@ -97,24 +113,31 @@ export default function CaixaDeEnviosPage() {
     }
   }
 
-  const form = formularios.find((f) => f.id === selecionado);
-  // Matrícula ou rematrícula: vem do formulário, e todo envio dele leva a mesma tag.
-  const tipo = form ? tipoDoFormulario(form) : null;
-  const campos = [...(form?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
+  // Formulário escolhido (nenhum em "Todos"). O resumo de aprovadas só faz sentido num formulário:
+  // os campos de valor e de turma são de cada formulário.
+  const form = todos ? undefined : formPorId.get(formId);
+  const campos = form ? camposDe(form.id) : [];
 
-  const rotulos = new Map(campos.map((c) => [c.id, c.label]));
-  const tipos = new Map(campos.map((c) => [c.id, c.tipo]));
+  const linhas = respostas
+    .map((r) => {
+      const origem = formPorId.get(r.formId);
+      const rotulos = new Map(camposDe(r.formId).map((c) => [c.id, c.label]));
+      return {
+        resposta: r,
+        formNome: origem?.nome ?? "",
+        tipo: origem ? tipoDoFormulario(origem) : null,
+        nome:
+          valorPorRotulo(r, rotulos, ["nome do responsável", "nome responsável"]) ??
+          r.nomeReferencia ??
+          valorPorRotulo(r, rotulos, ["nome do aluno", "nome completo"]) ??
+          "Sem nome",
+        email: valorPorRotulo(r, rotulos, ["e-mail", "email"]),
+      };
+    })
+    .sort((a, b) => b.resposta.dataPreenchimento.localeCompare(a.resposta.dataPreenchimento));
 
-  const lista = (respostas ?? [])
-    .map((r) => ({
-      resposta: r,
-      nome:
-        valorPorRotulo(r, rotulos, ["nome do responsável", "nome responsável"]) ??
-        r.nomeReferencia ??
-        valorPorRotulo(r, rotulos, ["nome do aluno", "nome completo"]) ??
-        "Sem nome",
-      email: valorPorRotulo(r, rotulos, ["e-mail", "email"]),
-    }))
+  const lista = linhas
+    .filter(({ tipo }) => tipoFiltro === TODOS || tipo === tipoFiltro)
     .filter(({ nome, email }) => {
       const termo = busca.trim().toLowerCase();
       if (!termo) return true;
@@ -182,9 +205,8 @@ export default function CaixaDeEnviosPage() {
       })
     : [];
 
-  const detalhe = (respostas ?? []).find((r) => r.id === aberta);
-
   if (detalhe) {
+    const linha = linhas.find((l) => l.resposta.id === detalhe.id);
     const valores = new Map((detalhe.itens ?? []).map((i) => [i.fieldId, i.valor]));
 
     return (
@@ -199,15 +221,13 @@ export default function CaixaDeEnviosPage() {
 
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="font-heading text-xl font-bold">
-              {lista.find((l) => l.resposta.id === detalhe.id)?.nome ?? "Resposta"}
-            </h1>
+            <h1 className="font-heading text-xl font-bold">{linha?.nome ?? "Resposta"}</h1>
             <p className="text-sm text-muted-foreground">
-              {lista.find((l) => l.resposta.id === detalhe.id)?.email}
+              {[linha?.email, linha?.formNome].filter(Boolean).join(" · ")}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <TagDoTipo tipo={tipo} />
+            <TagDoTipo tipo={linha?.tipo ?? null} />
             <Badge className={RESPONSE_STATUS_BADGE[detalhe.status] ?? ""}>{detalhe.status}</Badge>
             {/* Só na ficha aberta, nunca na lista: excluir de uma lista de dezenas de famílias é
                 clique errado esperando acontecer. Resposta com contrato assinado o servidor
@@ -232,7 +252,7 @@ export default function CaixaDeEnviosPage() {
             ficaram em branco. Esconder os vazios faria parecer que o campo não existe, quando o
             que aconteceu foi ninguém responder. */}
         <div className="flex flex-col rounded-lg border border-border bg-card">
-          {campos.map((campo) => (
+          {camposDe(detalhe.formId).map((campo) => (
             <div key={campo.id} className="border-b border-border px-4 py-3 last:border-b-0">
               <p className="text-xs text-muted-foreground">{campo.label}</p>
               <div className="mt-0.5 text-sm break-words">
@@ -252,6 +272,14 @@ export default function CaixaDeEnviosPage() {
     );
   }
 
+  const rotuloDoFormulario = (id: string) => {
+    if (id === TODOS) return "Todos os formulários";
+    const f = formPorId.get(id);
+    if (!f) return "Escolha o formulário";
+    const t = tipoDoFormulario(f);
+    return t === "matricula" || t === "rematricula" ? `${f.nome} · ${ROTULO_DO_TIPO[t]}` : f.nome;
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -268,18 +296,28 @@ export default function CaixaDeEnviosPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={selecionado ?? undefined} onValueChange={(v) => v && setFormId(String(v))}>
+        <Select value={formId} onValueChange={(v) => v && setFormId(String(v))}>
           <SelectTrigger className="w-72">
-            <SelectValue>{() => form?.nome ?? "Escolha o formulário"}</SelectValue>
+            <SelectValue>{() => rotuloDoFormulario(formId)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value={TODOS}>Todos os formulários</SelectItem>
             {formularios.map((f) => (
               <SelectItem key={f.id} value={f.id}>
-                {f.nome}
-                {(() => {
-                  const t = tipoDoFormulario(f);
-                  return t === "matricula" || t === "rematricula" ? ` · ${ROTULO_DO_TIPO[t]}` : "";
-                })()}
+                {rotuloDoFormulario(f.id)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={tipoFiltro} onValueChange={(v) => v && setTipoFiltro(String(v))}>
+          <SelectTrigger className="w-44">
+            <SelectValue>{() => FILTRO_DE_TIPO.find((t) => t.valor === tipoFiltro)?.rotulo}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {FILTRO_DE_TIPO.map((t) => (
+              <SelectItem key={t.valor} value={t.valor}>
+                {t.rotulo}
               </SelectItem>
             ))}
           </SelectContent>
@@ -317,7 +355,7 @@ export default function CaixaDeEnviosPage() {
       )}
 
       <div className="flex flex-col rounded-lg border border-border bg-card">
-        {lista.map(({ resposta, nome, email }) => (
+        {lista.map(({ resposta, nome, email, tipo, formNome }) => (
           <button
             key={resposta.id}
             type="button"
@@ -327,6 +365,7 @@ export default function CaixaDeEnviosPage() {
             <div className="min-w-0">
               <p className="truncate font-medium">{nome}</p>
               {email && <p className="truncate text-sm text-muted-foreground">{email}</p>}
+              {todos && formNome && <p className="truncate text-xs text-muted-foreground">{formNome}</p>}
               <div className="mt-1 flex flex-wrap gap-1">
                 <Badge className={RESPONSE_STATUS_BADGE[resposta.status] ?? ""}>{resposta.status}</Badge>
                 <TagDoTipo tipo={tipo} />
