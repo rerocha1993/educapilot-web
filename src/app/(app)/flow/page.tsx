@@ -141,6 +141,11 @@ export default function FormulariosPage() {
               Contratos
             </Link>
           )}
+          {podeVerRota(meuAcesso, "/flow/relatorios") && (
+            <Link href="/flow/relatorios" className={buttonVariants({ variant: "outline" })}>
+              Relatórios
+            </Link>
+          )}
           {podeVerRota(meuAcesso, "/flow/referencias") && (
             <Link href="/flow/referencias" className={buttonVariants({ variant: "outline" })}>
               Dados de referência
