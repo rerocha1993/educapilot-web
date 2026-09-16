@@ -116,6 +116,36 @@ export function useExportResponses(formId: string) {
 }
 
 /**
+ * Baixa a planilha de um ou mais formulários, um arquivo por formulário.
+ *
+ * Um por formulário, e não tudo numa aba só: cada formulário tem as próprias perguntas, e juntar
+ * matrícula e rematrícula na mesma tabela deixaria metade das colunas vazias em cada linha. O
+ * arquivo leva o nome do formulário para não virar "respostas (3).xlsx" na pasta de downloads.
+ */
+export function useBaixarExcel() {
+  return useMutation({
+    mutationFn: async (formularios: { id: string; nome: string }[]) => {
+      const token = getToken();
+      for (const form of formularios) {
+        const res = await fetch(`${baseUrl}/api/FormResponses/${form.id}/export`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!res.ok) throw new Error(`Não foi possível gerar a planilha de "${form.nome}".`);
+
+        const url = window.URL.createObjectURL(await res.blob());
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${form.nome.replace(/[\\/:*?"<>|]/g, "-").trim() || "respostas"}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    },
+  });
+}
+
+/**
  * Exclui uma resposta.
  *
  * O backend recusa resposta com contrato assinado — apagá-la levaria o contrato junto, e contrato

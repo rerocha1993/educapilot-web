@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Search, ChevronLeft, Trash2 } from "lucide-react";
+import { Search, ChevronLeft, Trash2, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ import { formatarData, formatarDataHora } from "@/lib/format/date";
 import {
   useRespostasDosFormularios,
   useDeleteFormResponse,
+  useBaixarExcel,
   RESPONSE_STATUS_BADGE,
   type FormResponseDto,
 } from "@/lib/flow/use-form-responses";
@@ -101,6 +102,30 @@ export default function CaixaDeEnviosPage() {
 
   const detalhe = respostas.find((r) => r.id === aberta);
   const excluir = useDeleteFormResponse(detalhe?.formId ?? "");
+  const baixarExcel = useBaixarExcel();
+
+  // Planilha com tudo o que foi preenchido. Em "Todos", um arquivo por formulário que tem envio na
+  // lista (respeitando o filtro de tipo); com um formulário escolhido, só ele.
+  async function handleBaixarExcel() {
+    const ids = todos
+      ? Array.from(new Set(lista.map(({ resposta }) => resposta.formId)))
+      : [formId];
+    const arquivos = ids
+      .map((id) => formPorId.get(id))
+      .filter((f): f is NonNullable<typeof f> => !!f)
+      .map((f) => ({ id: f.id, nome: f.nome }));
+
+    if (arquivos.length === 0) {
+      toast.error("Nenhum envio para baixar.");
+      return;
+    }
+    try {
+      await baixarExcel.mutateAsync(arquivos);
+      if (arquivos.length > 1) toast.success(`${arquivos.length} planilhas baixadas, uma por formulário.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível baixar a planilha.");
+    }
+  }
 
   async function handleExcluir(id: string) {
     try {
@@ -351,6 +376,11 @@ export default function CaixaDeEnviosPage() {
         </div>
 
         <span className="text-sm text-muted-foreground">{lista.length} envio(s)</span>
+
+        <Button variant="outline" onClick={handleBaixarExcel} disabled={baixarExcel.isPending || lista.length === 0}>
+          <Download className="size-4" />
+          {baixarExcel.isPending ? "Gerando..." : "Baixar Excel"}
+        </Button>
       </div>
 
       {campoValor && aprovadas.length > 0 && (
