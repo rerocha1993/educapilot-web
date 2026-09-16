@@ -2,214 +2,157 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Search } from "lucide-react";
+import { Download, FileSpreadsheet, GraduationCap, Pencil, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
+import { EditorDeRelatorio } from "@/components/flow/editor-de-relatorio";
 import { useForms } from "@/lib/flow/use-forms";
 import { useBaixarExcel } from "@/lib/flow/use-form-responses";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import {
-  useBaixarRelatorioMatriculas,
-  useRelatorioMatriculas,
-  type SituacaoDaMatricula,
+  useExcluirRelatorio,
+  useRelatoriosDeFormulario,
+  type RelatorioDeFormulario,
 } from "@/lib/flow/use-relatorios";
-import { formatarData } from "@/lib/format/date";
 
-const COR_DA_SITUACAO: Record<SituacaoDaMatricula, string> = {
-  rematriculado: "bg-success-soft text-success-soft-foreground",
-  "rematricula-pendente": "bg-warning-soft text-warning-soft-foreground",
-  "nao-rematriculado": "bg-destructive-soft text-destructive-soft-foreground",
-  "matricula-nova": "bg-primary/10 text-primary",
-  "matricula-nova-pendente": "bg-warning-soft text-warning-soft-foreground",
-  "rematricula-sem-cadastro": "bg-muted text-muted-foreground",
-};
-
-const TODAS = "todas";
-
+/**
+ * Central de relatórios de Formulários.
+ *
+ * A escola monta quantos relatórios quiser, cada um sobre um formulário, com as perguntas que viram
+ * coluna e os envios que entram. O de matrículas x rematrículas fica ao lado, como um relatório
+ * pronto, porque junta formulários e cadastro de alunos — coisa que um relatório montado não faz.
+ */
 export default function RelatoriosFormulariosPage() {
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <Link href="/flow" className="text-xs text-muted-foreground hover:underline">
-          ← Formulários
-        </Link>
-        <h1 className="font-heading text-xl font-bold">Relatórios</h1>
-        <p className="text-sm text-muted-foreground">
-          Planilhas com tudo o que as famílias preencheram, e o acompanhamento de matrículas e rematrículas.
-        </p>
-      </div>
+  const router = useRouter();
+  const { data: relatorios, isLoading } = useRelatoriosDeFormulario();
+  const excluir = useExcluirRelatorio();
 
-      <MatriculasXRematriculas />
-      <PlanilhasDosFormularios />
-    </div>
-  );
-}
+  const [editando, setEditando] = useState<RelatorioDeFormulario | "novo" | null>(null);
+  const [excluindo, setExcluindo] = useState<RelatorioDeFormulario | null>(null);
 
-function MatriculasXRematriculas() {
-  const { data, isLoading, isError, error } = useRelatorioMatriculas();
-  const baixar = useBaixarRelatorioMatriculas();
-  const [situacao, setSituacao] = useState<string>(TODAS);
-  const [busca, setBusca] = useState("");
-
-  const ano = data?.anoVigente ?? new Date().getFullYear();
-  const proximo = data?.proximoAno ?? ano + 1;
-
-  const filtros: { valor: string; rotulo: string }[] = [
-    { valor: TODAS, rotulo: "Todas as situações" },
-    { valor: "rematriculado", rotulo: `Rematriculados para ${proximo}` },
-    { valor: "rematricula-pendente", rotulo: "Rematrícula aguardando aprovação" },
-    { valor: "nao-rematriculado", rotulo: "Sem rematrícula" },
-    { valor: "matricula-nova", rotulo: `Matrículas novas para ${proximo}` },
-    { valor: "matricula-nova-pendente", rotulo: "Matrícula nova aguardando aprovação" },
-    { valor: "rematricula-sem-cadastro", rotulo: "Rematrícula sem aluno no cadastro" },
-  ];
-
-  const termo = busca.trim().toLowerCase();
-  const linhas = (data?.linhas ?? []).filter(
-    (l) =>
-      (situacao === TODAS || l.situacao === situacao) &&
-      (!termo || l.aluno.toLowerCase().includes(termo) || (l.turmaAtual ?? "").toLowerCase().includes(termo))
-  );
-
-  async function handleBaixar() {
+  async function handleExcluir() {
+    if (!excluindo) return;
     try {
-      await baixar.mutateAsync();
+      await excluir.mutateAsync(excluindo.id);
+      toast.success(`"${excluindo.nome}" excluído.`);
+      setExcluindo(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível baixar a planilha.");
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir o relatório.");
     }
   }
 
-  const resumo = data
-    ? [
-        { rotulo: `Alunos ativos em ${ano}`, valor: data.alunosAtivos, situacao: TODAS },
-        { rotulo: `Rematriculados para ${proximo}`, valor: data.rematriculados, situacao: "rematriculado" },
-        { rotulo: "Aguardando aprovação", valor: data.rematriculasPendentes, situacao: "rematricula-pendente" },
-        { rotulo: "Sem rematrícula", valor: data.naoRematriculados, situacao: "nao-rematriculado" },
-        { rotulo: `Matrículas novas para ${proximo}`, valor: data.matriculasNovas, situacao: "matricula-nova" },
-      ]
-    : [];
-
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-heading text-base font-bold">
-            Matrículas {ano} x Rematrículas {proximo}
-          </h2>
+          <Link href="/flow" className="text-xs text-muted-foreground hover:underline">
+            ← Formulários
+          </Link>
+          <h1 className="font-heading text-xl font-bold">Relatórios</h1>
           <p className="text-sm text-muted-foreground">
-            Todos os alunos ativos em {ano}, com a situação da rematrícula para {proximo}, mais as matrículas
-            novas. O envio é ligado ao aluno pelo nome e pela data de nascimento preenchidos na ficha.
+            Monte relatórios sobre qualquer formulário, escolhendo as perguntas e os envios que entram.
           </p>
         </div>
-        <Button variant="outline" onClick={handleBaixar} disabled={baixar.isPending || !data}>
-          <Download className="size-4" />
-          {baixar.isPending ? "Gerando..." : "Baixar Excel"}
+        <Button onClick={() => setEditando("novo")}>
+          <Plus className="size-4" /> Novo relatório
         </Button>
       </div>
 
-      {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
-          {error instanceof Error ? error.message : "Não foi possível gerar o relatório."}
-        </div>
-      )}
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <Link
+          href="/flow/relatorios/matriculas"
+          className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/40"
+        >
+          <div className="flex items-center gap-2">
+            <GraduationCap className="size-4 text-muted-foreground" />
+            <p className="font-medium">Matrículas x Rematrículas</p>
+            <Badge variant="secondary">Pronto</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Alunos ativos no ano e quem já está rematriculado para o próximo, mais as matrículas novas.
+          </p>
+        </Link>
 
-      {isLoading && <Skeleton className="h-24 w-full" />}
+        {isLoading && <Skeleton className="h-24 w-full rounded-lg" />}
 
-      {data && (
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {resumo.map((r) => (
-            <button
-              key={r.rotulo}
-              type="button"
-              onClick={() => setSituacao(r.situacao)}
-              className="text-left"
-              title="Filtrar a lista"
-            >
-              <p className="text-xs text-muted-foreground">{r.rotulo}</p>
-              <p className="font-mono text-lg font-semibold tabular-nums">{r.valor}</p>
-            </button>
-          ))}
-          {data.rematriculasSemCadastro > 0 && (
-            <button type="button" onClick={() => setSituacao("rematricula-sem-cadastro")} className="text-left">
-              <p className="text-xs text-destructive">Rematrícula sem aluno no cadastro</p>
-              <p className="font-mono text-lg font-semibold tabular-nums text-destructive">
-                {data.rematriculasSemCadastro}
+        {(relatorios ?? []).map((r) => (
+          <div key={r.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+            <Link href={`/flow/relatorios/${r.id}`} className="flex flex-col gap-1 hover:underline-offset-2">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" />
+                <p className="truncate font-medium">{r.nome}</p>
+              </div>
+              <p className="truncate text-sm text-muted-foreground">
+                {r.formNome ?? "Formulário excluído"}
+                {" · "}
+                {r.camposIds.length === 0 ? "todas as perguntas" : `${r.camposIds.length} coluna(s)`}
+                {r.statusFiltro ? ` · só ${r.statusFiltro}` : ""}
               </p>
-            </button>
-          )}
-        </div>
+              {r.descricao && <p className="line-clamp-2 text-xs text-muted-foreground">{r.descricao}</p>}
+            </Link>
+            <div className="mt-auto flex gap-1">
+              <Button variant="outline" size="sm" onClick={() => router.push(`/flow/relatorios/${r.id}`)}>
+                Abrir
+              </Button>
+              <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => setEditando(r)}>
+                <Pencil className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon-sm" title="Excluir" onClick={() => setExcluindo(r)}>
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!isLoading && (relatorios ?? []).length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Nenhum relatório montado ainda. Clique em <strong>Novo relatório</strong>, escolha o formulário e as
+          perguntas que viram coluna.
+        </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Select value={situacao} onValueChange={(v) => v && setSituacao(String(v))}>
-          <SelectTrigger className="w-72">
-            <SelectValue>{() => filtros.find((f) => f.valor === situacao)?.rotulo}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {filtros.map((f) => (
-              <SelectItem key={f.valor} value={f.valor}>
-                {f.rotulo}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="relative min-w-56 flex-1">
-          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Buscar aluno ou turma"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
-        </div>
-        <span className="text-sm text-muted-foreground">{linhas.length} aluno(s)</span>
-      </div>
+      <PlanilhasDosFormularios />
 
-      <div className="rounded-lg border border-border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Aluno</TableHead>
-              <TableHead>Turma em {ano}</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead>Turma em {proximo}</TableHead>
-              <TableHead>Envio</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {!isLoading && linhas.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhum aluno nesta situação.
-                </TableCell>
-              </TableRow>
-            )}
-            {linhas.map((l, i) => (
-              <TableRow key={`${l.studentId ?? "envio"}-${l.aluno}-${i}`}>
-                <TableCell className="font-medium">{l.aluno}</TableCell>
-                <TableCell className="text-sm">{l.turmaAtual ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                <TableCell>
-                  <Badge className={COR_DA_SITUACAO[l.situacao]}>{l.situacaoDescricao}</Badge>
-                </TableCell>
-                <TableCell className="text-sm">
-                  {l.turmaProximoAno ?? <span className="text-muted-foreground">—</span>}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {l.enviadoEm ? `${l.statusEnvio ?? ""} · ${formatarData(l.enviadoEm)}` : "—"}
-                  {l.formulario && <span className="block">{l.formulario}</span>}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </section>
+      <Dialog open={editando !== null} onOpenChange={(aberto) => !aberto && setEditando(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          {editando !== null && (
+            <EditorDeRelatorio
+              relatorio={editando === "novo" ? undefined : editando}
+              onFechar={() => setEditando(null)}
+              onSalvo={(salvo) => {
+                if (editando === "novo") router.push(`/flow/relatorios/${salvo.id}`);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!excluindo} onOpenChange={(aberto) => !aberto && setExcluindo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir relatório</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Excluir <strong>{excluindo?.nome}</strong> apaga só a montagem do relatório. Os envios do formulário
+            continuam todos guardados.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExcluindo(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleExcluir} disabled={excluir.isPending}>
+              {excluir.isPending ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
@@ -236,9 +179,9 @@ function PlanilhasDosFormularios() {
     <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-heading text-base font-bold">Respostas dos formulários</h2>
+          <h2 className="font-heading text-base font-bold">Respostas completas dos formulários</h2>
           <p className="text-sm text-muted-foreground">
-            Uma planilha por formulário, com uma coluna para cada pergunta e todos os envios.
+            Uma planilha por formulário, com todas as perguntas e todos os envios, sem montar relatório.
           </p>
         </div>
         <Button
