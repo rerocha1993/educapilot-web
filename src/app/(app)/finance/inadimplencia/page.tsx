@@ -83,7 +83,7 @@ function DiagnosticoAgendaEdu() {
             <div className="flex flex-col gap-0.5">
               {(data.rotas ?? []).map((r) => (
                 <div key={r.caminho} className="flex flex-wrap items-baseline gap-x-3">
-                  <span className="font-mono">{r.caminho}</span>
+                  <span className="font-mono break-all">{r.caminho}</span>
                   <span
                     className={cn(
                       "font-mono tabular-nums",
@@ -153,7 +153,13 @@ function InadimplenciaAgendaEdu() {
           </p>
           {data.resumo && <p className="text-xs text-muted-foreground">{data.resumo}</p>}
         </div>
-        <Button size="sm" variant="outline" onClick={handleAtualizar} disabled={sincronizar.isPending}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full md:w-auto"
+          onClick={handleAtualizar}
+          disabled={sincronizar.isPending}
+        >
           <RefreshCw className={cn("size-4", sincronizar.isPending && "animate-spin")} />
           {sincronizar.isPending ? "Lendo..." : "Atualizar agora"}
         </Button>
@@ -169,14 +175,69 @@ function InadimplenciaAgendaEdu() {
       {itens.length > 0 && (
         <div className="rounded-lg border border-border bg-card px-4 py-3">
           <p className="text-sm text-muted-foreground">Em aberto no Agenda Edu</p>
-          <p className="font-heading text-2xl font-bold text-destructive-soft-foreground">
+          <p className="font-heading text-2xl font-bold whitespace-nowrap text-destructive-soft-foreground">
             {formatCurrency(data.totalEmAberto)}
           </p>
           <p className="text-xs text-muted-foreground">{itens.length} cobrança(s) vencida(s)</p>
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {itens.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            {data.ultimaSincronizacaoEm && !data.erro
+              ? "Nenhuma cobrança do Agenda Edu em atraso."
+              : "Sem leitura válida do Agenda Edu ainda."}
+          </div>
+        )}
+
+        {itens.map((c) => (
+          <div key={c.cobrancaId} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className={cn("font-medium break-words", !c.alunoId && "text-muted-foreground")}>
+                  {c.alunoNome}
+                </p>
+                {c.turma && <p className="text-xs text-muted-foreground">{c.turma}</p>}
+              </div>
+              <Badge className={atrasoBadge(c.diasAtraso)}>{c.diasAtraso} dia(s)</Badge>
+            </div>
+            <p className="break-words">{c.titulo ?? "—"}</p>
+            <div className="min-w-0">
+              <p className="break-words">{c.responsavelNome ?? "—"}</p>
+              {(c.responsavelTelefone || c.responsavelEmail) && (
+                <p className="text-xs break-all text-muted-foreground">
+                  {c.responsavelTelefone ?? c.responsavelEmail}
+                </p>
+              )}
+            </div>
+            <div className="flex items-end justify-between gap-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Venceu em</p>
+                <p className="font-mono tabular-nums">{formatarSoData(c.venceEm)}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(c.valorEmAberto)}</p>
+                {c.valorPago > 0 && (
+                  <p className="text-xs whitespace-nowrap text-muted-foreground">de {formatCurrency(c.valorTotal)}</p>
+                )}
+              </div>
+            </div>
+            {c.boletoUrl && (
+              <a
+                href={c.boletoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-10 items-center gap-1 self-start text-xs text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Boleto <ExternalLink className="size-3" />
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -291,14 +352,46 @@ export default function InadimplenciaPage() {
           {!isLoading && list.length > 0 && (
             <div className="rounded-lg border border-border bg-card px-4 py-3">
               <p className="text-sm text-muted-foreground">Total em atraso</p>
-              <p className="font-heading text-2xl font-bold text-destructive-soft-foreground">
+              <p className="font-heading text-2xl font-bold whitespace-nowrap text-destructive-soft-foreground">
                 {formatCurrency(total)}
               </p>
               <p className="text-xs text-muted-foreground">{list.length} mensalidade(s) vencida(s)</p>
             </div>
           )}
 
-          <div className="rounded-lg border border-border bg-card">
+          <div className="flex flex-col gap-2 md:hidden">
+            {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+
+            {!isLoading && list.length === 0 && (
+              <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+                Nenhuma mensalidade em atraso. 🎉
+              </div>
+            )}
+
+            {list.map((d) => (
+              <div
+                key={d.revenueEntryId}
+                className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium break-words">{d.studentName}</p>
+                    <p className="text-muted-foreground break-words">{d.guardianName}</p>
+                    <p className="text-xs break-all text-muted-foreground">
+                      {d.guardianEmail ?? d.guardianPhone ?? "—"}
+                    </p>
+                  </div>
+                  <Badge className={atrasoBadge(d.diasAtraso)}>{d.diasAtraso} dia(s)</Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono tabular-nums text-muted-foreground">{formatarSoData(d.dueDate)}</span>
+                  <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(d.valorEsperado)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden rounded-lg border border-border bg-card md:block">
             <Table>
               <TableHeader>
                 <TableRow>

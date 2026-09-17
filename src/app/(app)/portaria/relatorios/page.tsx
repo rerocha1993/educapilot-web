@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +64,7 @@ function SeletorDeTurma({ classId, onChange }: { classId: number | null; onChang
   const lista = (turmas ?? []).filter((t) => t.id != null);
 
   return (
-    <div className="flex min-w-48 flex-col gap-[5px]">
+    <div className="flex min-w-0 flex-col gap-[5px] md:min-w-48">
       <Label className="text-xs text-muted-foreground">Turma</Label>
       <Select value={classId ? String(classId) : TODAS} onValueChange={(v) => onChange(v && v !== TODAS ? Number(v) : null)}>
         <SelectTrigger className="w-full">
@@ -87,7 +87,7 @@ function CampoData({ rotulo, valor, onChange }: { rotulo: string; valor: string;
   return (
     <div className="flex flex-col gap-[5px]">
       <Label className="text-xs text-muted-foreground">{rotulo}</Label>
-      <Input type="date" className="w-40" value={valor} onChange={(e) => onChange(e.target.value)} />
+      <Input type="date" className="w-full md:w-40" value={valor} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
@@ -106,10 +106,10 @@ function RelatorioDeVisitas() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
+      <div className="grid grid-cols-2 items-end gap-3 rounded-lg border border-border bg-card p-4 md:flex md:flex-wrap">
         <CampoData rotulo="De" valor={filtro.de} onChange={(de) => setFiltro((f) => ({ ...f, de }))} />
         <CampoData rotulo="Até" valor={filtro.ate} onChange={(ate) => setFiltro((f) => ({ ...f, ate }))} />
-        <div className="flex min-w-36 flex-col gap-[5px]">
+        <div className="flex min-w-0 flex-col gap-[5px] md:min-w-36">
           <Label className="text-xs text-muted-foreground">Situação</Label>
           <Select
             value={filtro.situacao || "todas"}
@@ -128,7 +128,7 @@ function RelatorioDeVisitas() {
           </Select>
         </div>
         <SeletorDeTurma classId={filtro.classId} onChange={(classId) => setFiltro((f) => ({ ...f, classId }))} />
-        <div className="flex min-w-56 flex-1 flex-col gap-[5px]">
+        <div className="col-span-2 flex min-w-0 flex-1 flex-col gap-[5px] md:min-w-56">
           <Label className="text-xs text-muted-foreground">Visitante</Label>
           <Input
             placeholder="Nome ou CPF"
@@ -136,7 +136,12 @@ function RelatorioDeVisitas() {
             onChange={(e) => setFiltro((f) => ({ ...f, busca: e.target.value }))}
           />
         </div>
-        <Button variant="outline" onClick={() => data && exportarVisitas(data, filtro)} disabled={!data || visitas.length === 0}>
+        <Button
+          variant="outline"
+          className="col-span-2"
+          onClick={() => data && exportarVisitas(data, filtro)}
+          disabled={!data || visitas.length === 0}
+        >
           <Download /> Exportar planilha
         </Button>
       </div>
@@ -158,7 +163,37 @@ function RelatorioDeVisitas() {
         />
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && <CartoesCarregando />}
+
+        {!isLoading && visitas.length === 0 && <CartaoVazio texto="Nenhuma visita no período." />}
+
+        {visitas.map((v) => (
+          <div key={v.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium break-words">{v.visitanteNome}</p>
+                <p className="text-xs text-muted-foreground">{formatarCpf(v.visitanteCpf)}</p>
+              </div>
+              {!v.saidaEm && <Badge className="shrink-0 bg-success-soft text-success-soft-foreground">Na escola</Badge>}
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+              <InfoDoCartao rotulo="Motivo">
+                <span className="text-muted-foreground">{v.motivo ?? "—"}</span>
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Visitou">
+                {v.alunoNome ?? v.turmaNome ?? <span className="text-muted-foreground">—</span>}
+                {v.alunoNome && v.turmaNome && <span className="block text-xs text-muted-foreground">{v.turmaNome}</span>}
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Entrada">{dataHoraBrasilia(v.entradaEm)}</InfoDoCartao>
+              <InfoDoCartao rotulo="Saída">{v.saidaEm ? dataHoraBrasilia(v.saidaEm) : "—"}</InfoDoCartao>
+              <InfoDoCartao rotulo="Duração">{v.saidaEm ? formatarDuracao(v.duracaoMinutos) : "—"}</InfoDoCartao>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -216,13 +251,13 @@ function RelatorioDeMultasPorAtraso() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
+      <div className="grid grid-cols-2 items-end gap-3 rounded-lg border border-border bg-card p-4 md:flex md:flex-wrap">
         <CampoData rotulo="De" valor={filtro.de} onChange={(de) => setFiltro((f) => ({ ...f, de }))} />
         <CampoData rotulo="Até" valor={filtro.ate} onChange={(ate) => setFiltro((f) => ({ ...f, ate }))} />
         <SeletorDeTurma classId={filtro.classId} onChange={(classId) => setFiltro((f) => ({ ...f, classId }))} />
         <Button
           variant="outline"
-          className="sm:ml-auto"
+          className="col-span-2 md:ml-auto"
           onClick={() => data && exportarMultas(data, filtro)}
           disabled={!data || linhas.length === 0}
         >
@@ -241,7 +276,41 @@ function RelatorioDeMultasPorAtraso() {
         <Resumo rotulo="Saídas com multa" valor={data?.ocorrencias} carregando={isLoading} />
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && <CartoesCarregando />}
+
+        {!isLoading && linhas.length === 0 && <CartaoVazio texto="Nenhuma multa por atraso no período." />}
+
+        {linhas.map((l) => (
+          <div key={`${l.data}-${l.studentId}`} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium break-words">{l.alunoNome}</p>
+                <p className="text-xs break-words text-muted-foreground">
+                  {l.turmaNome ?? "—"}
+                  {l.retiradoPor ? ` · com ${l.retiradoPor}` : ""}
+                </p>
+              </div>
+              <span className="shrink-0 font-medium tabular-nums">{formatarMoeda(l.valorMulta)}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+              <InfoDoCartao rotulo="Dia">
+                <span className="tabular-nums">{formatarDia(l.data)}</span>
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Saída prevista">
+                <span className="tabular-nums">{l.saidaPrevista ?? "—"}</span>
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Saiu">
+                <span className="tabular-nums">{l.saidaEm ? horaBrasilia(l.saidaEm) : "—"}</span>
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Atraso">{l.minutosAtraso} min</InfoDoCartao>
+              <InfoDoCartao rotulo="Horas cobradas">{descreverHoras(l.horasMulta, l.horasMultaDobrada)}</InfoDoCartao>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -308,6 +377,31 @@ function LinhasCarregando({ colunas }: { colunas: number }) {
         </TableRow>
       ))}
     </>
+  );
+}
+
+function CartoesCarregando() {
+  return (
+    <>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-24 w-full rounded-lg" />
+      ))}
+    </>
+  );
+}
+
+function CartaoVazio({ texto }: { texto: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">{texto}</div>
+  );
+}
+
+function InfoDoCartao({ rotulo, children }: { rotulo: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0 break-words">
+      <p className="text-xs text-muted-foreground">{rotulo}</p>
+      {children}
+    </div>
   );
 }
 

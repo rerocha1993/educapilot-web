@@ -58,11 +58,11 @@ export default function FluxoDeCaixaPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">Entradas (recebido)</p>
-          <p className="font-mono text-xl font-semibold tabular-nums">{formatCurrency(totals.entradas)}</p>
+          <p className="font-mono text-xl font-semibold whitespace-nowrap tabular-nums">{formatCurrency(totals.entradas)}</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">Saídas (pago)</p>
-          <p className="font-mono text-xl font-semibold tabular-nums">{formatCurrency(totals.saidas)}</p>
+          <p className="font-mono text-xl font-semibold whitespace-nowrap tabular-nums">{formatCurrency(totals.saidas)}</p>
         </div>
         <div className="rounded-lg border border-success-border bg-success-soft p-4">
           <p className="text-xs text-success-soft-foreground">Saldo projetado</p>
@@ -78,7 +78,7 @@ export default function FluxoDeCaixaPage() {
         {isLoading && <Skeleton className="h-48 w-full" />}
 
         {!isLoading && (
-          <div className="flex items-end gap-4 overflow-x-auto pb-2">
+          <div className="flex items-end justify-between gap-2 overflow-x-auto pb-2 md:justify-start md:gap-4">
             {series?.map((m) => {
               const isProjection = m.ano > now.getFullYear() || (m.ano === now.getFullYear() && m.mes > now.getMonth() + 1);
               return (
@@ -117,18 +117,20 @@ export default function FluxoDeCaixaPage() {
           {series?.map((m) => (
             <div
               key={`${m.ano}-${m.mes}-resumo`}
-              className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5 text-sm"
+              className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-4 py-2.5 text-sm md:flex md:items-center md:justify-between"
             >
               <span className="font-medium">
                 {MONTH_NAMES[m.mes - 1]}/{m.ano}
               </span>
-              <span className="font-mono tabular-nums text-success-soft-foreground">
+              <span className="text-right font-mono whitespace-nowrap tabular-nums text-success-soft-foreground md:text-left">
                 +{formatCurrency(m.totalReceitasRecebidas)}
               </span>
-              <span className="font-mono tabular-nums text-destructive-soft-foreground">
+              <span className="font-mono whitespace-nowrap tabular-nums text-destructive-soft-foreground">
                 -{formatCurrency(m.totalDespesasPagas)}
               </span>
-              <span className="font-mono font-semibold tabular-nums">{formatCurrency(m.saldo)}</span>
+              <span className="text-right font-mono font-semibold whitespace-nowrap tabular-nums md:text-left">
+                {formatCurrency(m.saldo)}
+              </span>
             </div>
           ))}
         </div>

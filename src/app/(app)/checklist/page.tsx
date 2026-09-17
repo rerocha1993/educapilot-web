@@ -114,13 +114,13 @@ export default function ChecklistFillPage() {
           </p>
         </div>
 
-        <div className="flex items-end gap-2">
-          <div className="flex flex-col gap-[5px]">
+        <div className="grid w-full grid-cols-2 items-end gap-2 md:flex md:w-auto">
+          <div className="flex min-w-0 flex-col gap-[5px]">
             <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
               Turma
             </span>
             <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Selecione">{() => selectedClass?.className ?? "Selecione"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -133,7 +133,7 @@ export default function ChecklistFillPage() {
             </Select>
           </div>
 
-          <div className="flex flex-col gap-[5px]">
+          <div className="flex min-w-0 flex-col gap-[5px]">
             <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
               Checklist
             </span>
@@ -141,7 +141,7 @@ export default function ChecklistFillPage() {
               value={templateId?.toString() ?? ""}
               onValueChange={(v) => v && setTemplateId(Number(v))}
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-full md:w-44">
                 <SelectValue placeholder="Selecione">
                   {() => templates?.find((t) => t.id === templateId)?.name ?? "Selecione"}
                 </SelectValue>
@@ -156,11 +156,11 @@ export default function ChecklistFillPage() {
             </Select>
           </div>
 
-          <div className="flex flex-col gap-[5px]">
+          <div className="col-span-2 flex min-w-0 flex-col gap-[5px]">
             <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
               Data
             </span>
-            <Input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className="h-9 w-40" />
+            <Input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className="h-10 w-full md:h-9 md:w-40" />
           </div>
         </div>
       </div>
@@ -192,14 +192,14 @@ export default function ChecklistFillPage() {
 
         {items.map((item) => (
           <div key={item.id} className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0">
-            <div className="flex items-center gap-3">
+            <label className="flex min-w-0 flex-1 items-center gap-3">
               {item.tipo === "Contagem" ? (
                 <Input
                   type="number"
                   min={0}
                   value={marks[item.id]?.countValue ?? ""}
                   onChange={(e) => setCount(item.id, Number(e.target.value))}
-                  className="h-8 w-20"
+                  className="h-10 w-20 shrink-0 md:h-8"
                 />
               ) : (
                 <Checkbox
@@ -211,15 +211,15 @@ export default function ChecklistFillPage() {
               <span className={marks[item.id]?.isChecked ? "text-[#9C9C95] line-through" : ""}>
                 {item.description}
               </span>
-            </div>
+            </label>
             {item.checkedAt && (
-              <span className="font-mono text-xs text-muted-foreground">{formatarHora(item.checkedAt)}</span>
+              <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatarHora(item.checkedAt)}</span>
             )}
           </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <Link
           href="/checklist/config"
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

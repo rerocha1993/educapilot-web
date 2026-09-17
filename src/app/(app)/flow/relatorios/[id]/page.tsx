@@ -49,7 +49,7 @@ export default function RelatorioPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href="/flow/relatorios" className="text-xs text-muted-foreground hover:underline">
+          <Link href="/flow/relatorios" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
             ← Relatórios
           </Link>
           <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function RelatorioPage() {
             {data?.statusFiltro ? ` · só envios ${data.statusFiltro}` : ""}
           </p>
           {(data?.descricao ?? definicao?.descricao) && (
-            <p className="text-sm text-muted-foreground">{data?.descricao ?? definicao?.descricao}</p>
+            <p className="text-sm break-words text-muted-foreground">{data?.descricao ?? definicao?.descricao}</p>
           )}
         </div>
         <Button variant="outline" onClick={handleBaixar} disabled={baixar.isPending || !data}>
@@ -75,15 +75,15 @@ export default function RelatorioPage() {
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
-        <div className="flex flex-col gap-[5px]">
+        <div className="flex w-[calc(50%-6px)] flex-col gap-[5px] md:w-auto">
           <Label className="text-xs text-muted-foreground">Enviados de</Label>
-          <Input type="date" className="w-40" value={de} onChange={(e) => setDe(e.target.value)} />
+          <Input type="date" className="w-full md:w-40" value={de} onChange={(e) => setDe(e.target.value)} />
         </div>
-        <div className="flex flex-col gap-[5px]">
+        <div className="flex w-[calc(50%-6px)] flex-col gap-[5px] md:w-auto">
           <Label className="text-xs text-muted-foreground">Até</Label>
-          <Input type="date" className="w-40" value={ate} onChange={(e) => setAte(e.target.value)} />
+          <Input type="date" className="w-full md:w-40" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
-        <div className="relative min-w-56 flex-1">
+        <div className="relative w-full md:w-auto md:min-w-56 md:flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Buscar em qualquer coluna" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>

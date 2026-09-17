@@ -119,7 +119,7 @@ export function ListaOrdenavel<T extends { id: string }>({
               onPointerMove={mover}
               onPointerUp={soltar}
               onPointerCancel={() => setArrasto(null)}
-              className="flex size-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex size-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40 md:size-7"
             >
               <GripVertical className="size-4" />
             </button>

@@ -124,12 +124,12 @@ export default function FormulariosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Formulários</h1>
           <p className="text-sm text-muted-foreground">Construtor de formulários dinâmicos.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Cada botão é uma área da permissão: quem não tem "Caixa de envios" não vê o botão. */}
           {podeVerRota(meuAcesso, "/flow/respostas") && (
             <Link href="/flow/respostas" className={buttonVariants({ variant: "outline" })}>
@@ -180,14 +180,14 @@ export default function FormulariosPage() {
           <Link
             key={form.id}
             href={`/flow/${form.id}`}
-            className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/50"
+            className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/50 md:flex-row md:items-center md:justify-between"
           >
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="font-medium">{form.nome}</p>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium break-words">{form.nome}</p>
                 <TagDoTipo tipo={tipoDoFormulario(form)} />
               </div>
-              {form.descricao && <p className="text-sm text-muted-foreground">{form.descricao}</p>}
+              {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground">

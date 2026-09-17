@@ -65,15 +65,15 @@ export default function FormResponsesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <Link href={`/flow/${formId}`} className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
             ← {form?.nome ?? "Formulário"}
           </Link>
           <h1 className="font-heading text-xl font-bold">Respostas</h1>
         </div>
         {responses && responses.length > 0 && (
-          <Button variant="outline" onClick={handleExport} disabled={exportResponses.isPending}>
+          <Button variant="outline" className="w-full md:w-auto" onClick={handleExport} disabled={exportResponses.isPending}>
             {exportResponses.isPending ? "Exportando..." : "Exportar Excel"}
           </Button>
         )}
@@ -101,12 +101,12 @@ export default function FormResponsesPage() {
                 key={r.id}
                 onClick={() => setSelectedId(r.id)}
                 className={cn(
-                  "flex w-full items-center justify-between border-b border-border px-4 py-3 text-left text-sm last:border-b-0 hover:bg-accent/50",
+                  "flex w-full items-center justify-between gap-3 border-b border-border px-4 py-3 text-left text-sm last:border-b-0 hover:bg-accent/50",
                   selected?.id === r.id && "bg-accent/50"
                 )}
               >
-                <div>
-                  <p className="font-medium">{r.nomeReferencia ?? "—"}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{r.nomeReferencia ?? "—"}</p>
                   <p className="text-xs text-muted-foreground">{formatDateTime(r.dataPreenchimento)}</p>
                 </div>
                 <Badge className={RESPONSE_STATUS_BADGE[r.status] ?? ""}>{r.status}</Badge>
@@ -115,8 +115,8 @@ export default function FormResponsesPage() {
           </div>
 
           {selected && (
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="font-heading text-sm font-semibold">Resposta · {selected.nomeReferencia ?? "—"}</p>
+            <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-4">
+              <p className="font-heading text-sm font-semibold break-words">Resposta · {selected.nomeReferencia ?? "—"}</p>
               <p className="text-xs text-muted-foreground">
                 {form?.nome} · {formatDateTime(selected.dataPreenchimento)}
               </p>
@@ -124,14 +124,14 @@ export default function FormResponsesPage() {
                 {selected.itens?.map((item) => {
                   const field = form?.campos?.find((c) => c.id === item.fieldId);
                   return (
-                    <div key={item.id} className="text-sm">
+                    <div key={item.id} className="text-sm break-words">
                       <span className="text-muted-foreground">{field?.label ?? "Campo"}: </span>
                       <span className="font-medium">{renderValor(field?.tipo, item.valor)}</span>
                     </div>
                   );
                 })}
                 {selected.observacoes && (
-                  <div className="text-sm">
+                  <div className="text-sm break-words">
                     <span className="text-muted-foreground">Observações: </span>
                     <span className="font-medium">{selected.observacoes}</span>
                   </div>

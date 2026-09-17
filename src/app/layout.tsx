@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { QueryProvider } from "@/lib/query-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -26,6 +26,16 @@ const fontMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "EducaPilot",
   description: "Gestão escolar multi-tenant",
+  appleWebApp: { capable: true, title: "EducaPilot", statusBarStyle: "default" },
+};
+
+// viewportFit "cover": instalado no iPhone, o app ocupa a tela toda e a barra de baixo respeita a
+// área do gesto (env(safe-area-inset-bottom)).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

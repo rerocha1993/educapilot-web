@@ -86,20 +86,22 @@ export function ContractField({
         {titulo && (
           <div className="flex items-center gap-2 border-b border-border px-3 py-2">
             <FileText className="size-4 shrink-0 text-primary" />
-            <span className="font-heading text-sm font-semibold">{titulo}</span>
+            <span className="min-w-0 font-heading text-sm font-semibold break-words">{titulo}</span>
           </div>
         )}
 
         {/* Altura fixa com rolagem própria: o contrato tem várias páginas e, solto na página,
-            empurraria o botão de enviar para longe demais para alguém chegar nele no celular. */}
-        <div className="max-h-80 overflow-y-auto px-3 py-2">
-          <pre className="text-xs leading-relaxed whitespace-pre-wrap font-sans text-foreground">
+            empurraria o botão de enviar para longe demais para alguém chegar nele no celular.
+            No celular a caixa acompanha a altura da tela e a letra sobe para 14px: com 320px fixos
+            e letra de 12px, cabiam poucas linhas e o contrato ficava ilegível. */}
+        <div className="max-h-[55vh] overflow-y-auto px-3 py-2 md:max-h-80">
+          <pre className="text-sm leading-relaxed break-words whitespace-pre-wrap font-sans text-foreground md:text-xs">
             {preenchido}
           </pre>
         </div>
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
+      <label className="flex items-start gap-3 py-1 text-sm md:gap-2 md:py-0">
         <Checkbox
           checked={aceito}
           onCheckedChange={(checked) => onAceitar(!!checked)}

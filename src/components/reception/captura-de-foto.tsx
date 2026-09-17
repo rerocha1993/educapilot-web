@@ -125,7 +125,7 @@ export function CapturaDeFoto({
           <Button type="button" variant="outline" size="sm" onClick={ligarCamera}>
             <Camera /> Abrir câmera
           </Button>
-          <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted">
+          <label className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted md:h-7">
             <ImageUp className="size-3.5" /> Enviar arquivo
             <input
               type="file"

@@ -55,7 +55,7 @@ export default function RelatoriosPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Central de relatórios</h1>
           <p className="text-sm text-muted-foreground">Escolha um tipo de relatório pra gerar na hora.</p>
@@ -100,8 +100,8 @@ export default function RelatoriosPage() {
             <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
               <FileBarChart className="size-4" />
             </div>
-            <div>
-              <p className="text-sm font-medium">{r.name}</p>
+            <div className="min-w-0">
+              <p className="break-words text-sm font-medium">{r.name}</p>
               <p className="text-xs text-muted-foreground">
                 {REPORT_DATA_SOURCE_LABELS[r.dataSource] ?? r.dataSource} ·{" "}
                 {[r.requiresClass && "por turma", r.requiresDateRange && "por período"]
@@ -117,10 +117,10 @@ export default function RelatoriosPage() {
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-heading text-sm font-semibold">{selected.name}</h2>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
               {selected.requiresClass && (
                 <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-                  <SelectTrigger className="h-9 w-44">
+                  <SelectTrigger className="h-9 w-full md:w-44">
                     <SelectValue placeholder="Turma">
                       {() => classes?.find((c) => c.id === classId)?.className ?? "Turma"}
                     </SelectValue>
@@ -140,13 +140,13 @@ export default function RelatoriosPage() {
                     type="date"
                     value={start}
                     onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
-                    className="h-9 w-40"
+                    className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
                   />
                   <Input
                     type="date"
                     value={end}
                     onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
-                    className="h-9 w-40"
+                    className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
                   />
                 </>
               )}
@@ -202,9 +202,9 @@ function OcorrenciasReportBody({ classId, start, end }: { classId: number | null
         <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma ocorrência no período.</p>
       )}
       {data?.topStudents.map((s) => (
-        <div key={s.studentId} className="flex items-center justify-between text-sm">
-          <span>{s.studentName}</span>
-          <span className="font-mono text-xs tabular-nums text-muted-foreground">{s.count}</span>
+        <div key={s.studentId} className="flex items-center justify-between gap-2 text-sm">
+          <span className="min-w-0 break-words">{s.studentName}</span>
+          <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{s.count}</span>
         </div>
       ))}
     </div>
@@ -227,9 +227,9 @@ function FaltasReportBody({ classId, start, end }: { classId: number | null; sta
         <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma falta no período.</p>
       )}
       {filtered.map((a) => (
-        <div key={a.id} className="flex items-center justify-between text-sm">
-          <span>{a.attendance?.student?.fullName ?? `Aluno #${a.attendance?.studentId}`}</span>
-          <div className="flex items-center gap-2">
+        <div key={a.id} className="flex items-center justify-between gap-2 text-sm">
+          <span className="min-w-0 break-words">{a.attendance?.student?.fullName ?? `Aluno #${a.attendance?.studentId}`}</span>
+          <div className="flex shrink-0 items-center gap-2">
             <span className="text-xs text-muted-foreground">
               {a.reason === UNJUSTIFIED_REASON || !a.reason ? "Pendente" : "Justificada"}
             </span>
@@ -260,7 +260,7 @@ function ObservacaoSemanalReportBody({ classId }: { classId: number | null }) {
             <span className="font-mono text-xs text-muted-foreground">Semana {w.weekOfMonth}</span>
             <span className="font-mono text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
           </div>
-          <p>{w.weeklyObservation}</p>
+          <p className="break-words">{w.weeklyObservation}</p>
         </div>
       ))}
     </div>
@@ -308,10 +308,10 @@ function MeetingIndicatorRow({
   const { data: report } = useMeetingReport(classId, weekStart, weekEnd);
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md border border-border p-2 text-sm">
       {/* Meeting.createdAt é a chave da semana (segunda-feira), não um instante: só-data. */}
       <span>{formatarSoData(meetingCreatedAt)}</span>
-      <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-muted-foreground">
         <span>{(report?.students ?? []).flatMap((s) => s.absences).length} faltas</span>
         <span>{(report?.students ?? []).flatMap((s) => s.occurrences).length} ocorrências</span>
         <span>{status}</span>

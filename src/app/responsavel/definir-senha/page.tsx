@@ -16,13 +16,13 @@ import { useDefinirSenhaResponsavel } from "@/lib/reception/use-responsavel";
  */
 export default function DefinirSenhaPage() {
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center bg-background p-6">
-      <div className="flex w-full max-w-[380px] flex-col gap-4 rounded-[10px] border border-border bg-card p-7 shadow-[0_1px_2px_rgba(0,0,0,.04)]">
+    <main className="flex min-h-full flex-1 items-center justify-center bg-background p-4 md:p-6">
+      <div className="flex w-full max-w-[380px] flex-col gap-4 rounded-[10px] border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,.04)] md:p-7">
         <Image src="/logo.png" alt="EducaPilot" width={156} height={123} className="mx-auto h-13 w-auto" priority />
 
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="font-heading text-base font-bold">Criar sua senha</span>
-          <span className="text-[11.5px] text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground md:text-[11.5px]">
             Com ela você entra no site da escola e avisa quando estiver a caminho.
           </span>
         </div>
@@ -76,14 +76,14 @@ function FormularioDeSenha() {
       )}
 
       <div className="flex flex-col gap-[5px]">
-        <Label htmlFor="senha" className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+        <Label htmlFor="senha" className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]">
           Senha
         </Label>
         <Input
           id="senha"
           type="password"
           autoComplete="new-password"
-          className="h-9"
+          className="h-10 md:h-9"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
         />
@@ -91,21 +91,21 @@ function FormularioDeSenha() {
       </div>
 
       <div className="flex flex-col gap-[5px]">
-        <Label htmlFor="confirmacao" className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+        <Label htmlFor="confirmacao" className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]">
           Confirmar senha
         </Label>
         <Input
           id="confirmacao"
           type="password"
           autoComplete="new-password"
-          className="h-9"
+          className="h-10 md:h-9"
           value={confirmacao}
           onChange={(e) => setConfirmacao(e.target.value)}
         />
         {tentou && !curta && diferente && <p className="text-sm text-destructive">As senhas não conferem.</p>}
       </div>
 
-      <Button type="submit" disabled={definir.isPending} className="mt-1 h-10">
+      <Button type="submit" disabled={definir.isPending} className="mt-1 h-12 text-base md:h-10 md:text-sm">
         {definir.isPending ? "Salvando..." : "Criar senha"}
       </Button>
     </form>

@@ -136,7 +136,7 @@ function FieldInput({
               type="button"
               onClick={() => onChange(opt)}
               className={cn(
-                "flex-1 rounded-md border px-3 py-2 text-sm transition-colors",
+                "flex-1 rounded-md border px-3 py-3 text-sm transition-colors md:py-2",
                 value === opt
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:bg-accent/50"
@@ -175,7 +175,7 @@ function FieldInput({
               type="button"
               onClick={() => onChange(o)}
               className={cn(
-                "rounded-md border px-3 py-2 text-left text-sm transition-colors",
+                "rounded-md border px-3 py-3 text-left text-sm break-words transition-colors md:py-2",
                 value === o
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:bg-accent/50"
@@ -194,7 +194,7 @@ function FieldInput({
       return (
         <div className="flex flex-col gap-2">
           {opcoes.map((o) => (
-            <label key={o} className="flex items-center gap-2 text-sm">
+            <label key={o} className="flex min-h-11 items-center gap-3 text-sm md:min-h-0 md:gap-2">
               <Checkbox
                 checked={selecionados.includes(o)}
                 onCheckedChange={(checked) => {
@@ -202,7 +202,7 @@ function FieldInput({
                   onChange(encodeOpcoes(next) ?? "");
                 }}
               />
-              {o}
+              <span className="min-w-0 break-words">{o}</span>
             </label>
           ))}
         </div>
@@ -212,14 +212,14 @@ function FieldInput({
     case "avaliacao": {
       const max = config.maxEstrelas ?? 5;
       return (
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => onChange(String(n))}
               className={cn(
-                "flex size-9 items-center justify-center rounded-full border text-sm font-medium transition-colors",
+                "flex size-10 items-center justify-center rounded-full border text-sm font-medium transition-colors md:size-9",
                 Number(value) >= n
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:bg-accent/50"
@@ -260,7 +260,7 @@ function FieldInput({
           {/* O <input type=file> cru so mostrava o texto do navegador ("Nenhum arquivo
               escolhido"), sem nada com cara de botao: ninguem descobria onde clicar. O input
               fica invisivel dentro do label, que vira a area clicavel. */}
-          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/50">
+          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-accent/50 md:w-fit md:justify-start md:py-2">
             <Paperclip className="size-4" />
             {uploadFile.isPending
               ? "Enviando..."
@@ -286,8 +286,8 @@ function FieldInput({
           />
           </label>
           {value && (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Paperclip className="size-3" /> {uploadedName ?? "Arquivo enviado"}
+            <p className="flex min-w-0 items-center gap-1 text-xs break-all text-muted-foreground">
+              <Paperclip className="size-3 shrink-0" /> {uploadedName ?? "Arquivo enviado"}
             </p>
           )}
         </div>
@@ -477,15 +477,15 @@ export default function PublicFormFillPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:py-10">
       <div className="w-full max-w-2xl">
         <p className="mb-4 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
           EducaPilot
         </p>
 
         {isLoading && (
-          <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-6">
-            <Skeleton className="h-8 w-64" />
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 md:p-6">
+            <Skeleton className="h-8 w-full max-w-64" />
             <Skeleton className="h-64 w-full" />
           </div>
         )}
@@ -519,8 +519,8 @@ export default function PublicFormFillPage() {
         {!isLoading && form && form.status === "Ativo" && !respostaId && (
           <div className="flex flex-col gap-4">
             <div className="text-center">
-              <h1 className="font-heading text-xl font-bold">{form.nome}</h1>
-              {form.descricao && <p className="text-sm text-muted-foreground">{form.descricao}</p>}
+              <h1 className="font-heading text-xl font-bold break-words">{form.nome}</h1>
+              {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
             </div>
 
             {usaAutoPreenchimento && (
@@ -555,7 +555,7 @@ export default function PublicFormFillPage() {
 
                 return (
                   <div key={field.id} className="flex flex-col gap-[5px]">
-                    <Label className="text-sm">
+                    <Label className="block text-sm leading-snug break-words md:flex md:leading-none">
                       {field.label}
                       {field.obrigatorio && !travado && <span className="text-destructive"> *</span>}
                     </Label>
@@ -585,7 +585,7 @@ export default function PublicFormFillPage() {
             )}
 
             {mostrarCampos && (
-              <Button onClick={handleSubmit} disabled={submitForm.isPending}>
+              <Button onClick={handleSubmit} disabled={submitForm.isPending} className="h-12 text-base md:h-8 md:text-sm">
                 {submitForm.isPending ? "Enviando..." : "Enviar resposta"}
               </Button>
             )}

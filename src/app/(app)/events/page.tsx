@@ -61,26 +61,26 @@ export default function EventsDashboardPage() {
 
       {!isLoading && (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-lg border border-success-border bg-success-soft p-4">
               <p className="text-xs text-success-soft-foreground">Vendas confirmadas</p>
-              <p className="font-mono text-xl font-semibold tabular-nums text-success-soft-foreground">
+              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl text-success-soft-foreground">
                 {formatCurrency(vendasConfirmadas)}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground">Pedidos pagos</p>
-              <p className="font-mono text-xl font-semibold tabular-nums">{pedidosPagos.length}</p>
+              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl">{pedidosPagos.length}</p>
             </div>
             <div className="rounded-lg border border-warning-border bg-warning-soft p-4">
               <p className="text-xs text-warning-soft-foreground">Aguardando Pix</p>
-              <p className="font-mono text-xl font-semibold tabular-nums text-warning-soft-foreground">
+              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl text-warning-soft-foreground">
                 {pedidosAguardando.length}
               </p>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground">Ticket médio</p>
-              <p className="font-mono text-xl font-semibold tabular-nums">{formatCurrency(ticketMedio)}</p>
+              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl">{formatCurrency(ticketMedio)}</p>
             </div>
           </div>
 
@@ -93,9 +93,9 @@ export default function EventsDashboardPage() {
                 )}
                 {groupTotals.map((g) => (
                   <div key={g.id}>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{g.nome}</span>
-                      <span className="font-mono tabular-nums text-muted-foreground">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 text-sm md:flex-nowrap md:gap-x-0">
+                      <span className="min-w-0 font-medium break-words">{g.nome}</span>
+                      <span className="font-mono whitespace-nowrap tabular-nums text-muted-foreground">
                         {formatCurrency(g.arrecadado)}
                         {g.meta ? ` de ${formatCurrency(g.meta)}` : ""}
                       </span>

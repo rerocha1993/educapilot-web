@@ -57,15 +57,17 @@ export default function LoginPage() {
     try {
       const resultado = await login.mutateAsync(values);
       // Responsável não usa o sistema da equipe: tem o site dele, feito para o celular.
-      router.push(resultado.role === "Responsavel" ? "/responsavel" : "/");
+      // No celular a equipe começa pela tela de atalhos; no computador, direto na Chamada.
+      const celular = window.matchMedia("(max-width: 767px)").matches;
+      router.push(resultado.role === "Responsavel" ? "/responsavel" : celular ? "/inicio" : "/");
     } catch {
       // erro exibido via login.error abaixo, como faixa acima do formulário (ver L1)
     }
   }
 
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center bg-background p-6">
-      <div className="flex w-full max-w-[380px] flex-col gap-4 rounded-[10px] border border-border bg-card p-7 shadow-[0_1px_2px_rgba(0,0,0,.04)]">
+    <main className="flex min-h-full flex-1 items-center justify-center bg-background p-4 md:p-6">
+      <div className="flex w-full max-w-[380px] flex-col gap-4 rounded-[10px] border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,.04)] md:p-7">
         <Image
           src="/logo.png"
           alt="EducaPilot"
@@ -77,7 +79,7 @@ export default function LoginPage() {
 
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="font-heading text-base font-bold">Entrar na sua escola</span>
-          <span className="text-[11.5px] text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground md:text-[11.5px]">
             Use o e-mail e senha cadastrados pela sua escola.
           </span>
         </div>
@@ -108,14 +110,14 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-[5px]">
-            <Label htmlFor="email" className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+            <Label htmlFor="email" className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]">
               E-mail
             </Label>
             <Input
               id="email"
               type="email"
               autoComplete="email"
-              className="h-9"
+              className="h-10 md:h-9"
               {...register("email")}
             />
             {errors.email && (
@@ -124,7 +126,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-[5px]">
-            <Label htmlFor="password" className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+            <Label htmlFor="password" className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]">
               Senha
             </Label>
             <div className="relative">
@@ -132,7 +134,7 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
-                className="h-9 pr-9"
+                className="h-10 pr-10 md:h-9 md:pr-9"
                 {...register("password")}
               />
               <button
@@ -154,18 +156,18 @@ export default function LoginPage() {
               name="rememberMe"
               control={control}
               render={({ field }) => (
-                <label className="flex items-center gap-[7px] text-[11.5px] text-foreground">
+                <label className="flex items-center gap-2.5 py-2 text-[13px] text-foreground md:gap-[7px] md:py-0 md:text-[11.5px]">
                   <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   Manter conectado
                 </label>
               )}
             />
-            <a href="/esqueci-senha" className="text-[11.5px] text-primary hover:underline">
+            <a href="/esqueci-senha" className="py-2 text-[13px] text-primary hover:underline md:py-0 md:text-[11.5px]">
               Esqueci a senha
             </a>
           </div>
 
-          <Button type="submit" disabled={login.isPending} className="mt-1 h-10">
+          <Button type="submit" disabled={login.isPending} className="mt-1 h-12 text-base md:h-10 md:text-sm">
             {login.isPending ? "Entrando..." : "Entrar"}
           </Button>
         </form>

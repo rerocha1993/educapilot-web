@@ -185,23 +185,23 @@ export default function AlunosPage() {
   }
 
   return (
-    <div className="flex gap-4">
-      {/* Coluna de turmas — ver A9 no handoff de design */}
-      <aside className="w-40 shrink-0">
+    <div className="flex flex-col gap-4 md:flex-row">
+      {/* Coluna de turmas — ver A9 no handoff de design. No celular vira uma faixa que rola de lado. */}
+      <aside className="min-w-0 md:w-40 md:shrink-0">
         <h2 className="mb-2 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
           Turmas
         </h2>
-        <div className="flex flex-col gap-0.5">
+        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-col md:gap-0.5 md:overflow-visible md:px-0 md:pb-0">
           {classesLoading &&
             Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full rounded-md" />
+              <Skeleton key={i} className="h-10 w-24 shrink-0 rounded-md md:h-8 md:w-full" />
             ))}
           {classes?.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelectedClassId(c.id ?? null)}
               className={cn(
-                "flex items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                "flex min-h-10 shrink-0 items-center justify-between gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors md:min-h-0 md:gap-0 md:px-2",
                 selectedClassId === c.id
                   ? "bg-accent font-medium text-accent-foreground"
                   : "text-foreground hover:bg-accent/50"
@@ -216,18 +216,18 @@ export default function AlunosPage() {
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="relative w-72">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:w-72">
             <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 pl-8"
+              className="pl-8 md:h-9"
             />
           </div>
-          <Button onClick={() => abrirCadastro("new")} disabled={selectedClassId === null}>
+          <Button onClick={() => abrirCadastro("new")} disabled={selectedClassId === null} className="w-full md:w-auto">
             <Plus className="size-4" />
             Novo aluno
           </Button>
@@ -239,7 +239,60 @@ export default function AlunosPage() {
           </div>
         )}
 
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-col gap-2 md:hidden">
+          {studentsLoading &&
+            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+
+          {!studentsLoading && filteredStudents.length === 0 && (
+            <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+              {selectedClassId === null ? "Selecione uma turma." : "Nenhum aluno encontrado nesta turma."}
+            </div>
+          )}
+
+          {filteredStudents.map((s) => (
+            <div key={s.id} className="flex items-start gap-2 rounded-lg border border-border bg-card p-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-1.5 font-medium">
+                  <span className="min-w-0 break-words">{s.fullName}</span>
+                  {s.allergies && (
+                    <Badge className="gap-1 bg-destructive-soft text-destructive-soft-foreground">
+                      <AlertTriangle className="size-3" />
+                      Alergia
+                    </Badge>
+                  )}
+                </div>
+                <span className="font-mono text-sm tabular-nums text-muted-foreground">{formatarSoData(s.birthDate)}</span>
+                {temPortaria && (
+                  <div className="text-sm">
+                    <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
+                  </div>
+                )}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <Link
+                  href={`/admin/alunos/${s.id}`}
+                  title="Ficha do aluno"
+                  className={buttonVariants({ variant: "ghost", size: "icon" })}
+                >
+                  <IdCard className="size-4" />
+                </Link>
+                <Button variant="ghost" size="icon" onClick={() => abrirCadastro(s)}>
+                  <Pencil className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(s)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden rounded-lg border border-border bg-card md:block">
           <Table>
             <TableHeader>
               <TableRow>

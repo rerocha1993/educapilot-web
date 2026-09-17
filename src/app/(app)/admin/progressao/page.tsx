@@ -114,7 +114,7 @@ export default function ProgressaoTurmaPage() {
         >
           <div className="flex items-center gap-3">
             <GraduationCap className="size-5 shrink-0 text-primary" />
-            <div>
+            <div className="min-w-0">
               <p className="font-heading text-sm font-semibold">{linha.turmaOrigem}</p>
               <p className="text-xs text-muted-foreground">
                 {linha.turmaDestino ? (
@@ -128,12 +128,12 @@ export default function ProgressaoTurmaPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 min-[400px]:flex-row min-[400px]:items-center">
             <Select
               value={linha.classDestinoId ? String(linha.classDestinoId) : SEM_DESTINO}
               onValueChange={(v) => v && handleSalvar(linha.classOrigemId, String(v))}
             >
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-full min-[400px]:min-w-0 min-[400px]:flex-1 sm:w-56 sm:flex-none">
                 <SelectValue>{() => linha.turmaDestino ?? "Turma final (se forma)"}</SelectValue>
               </SelectTrigger>
               <SelectContent>

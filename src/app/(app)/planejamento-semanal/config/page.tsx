@@ -97,7 +97,7 @@ export default function PlanejamentoSemanalConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Configurar planejamento semanal</h1>
           <p className="text-sm text-muted-foreground">
@@ -121,7 +121,7 @@ export default function PlanejamentoSemanalConfigPage() {
               key={t.id}
               onClick={() => setSelectedId(t.id)}
               className={cn(
-                "flex items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors",
+                "flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left text-sm transition-colors md:py-2",
                 selectedId === t.id
                   ? "bg-accent font-medium text-accent-foreground"
                   : "text-foreground hover:bg-accent/50"
@@ -137,7 +137,7 @@ export default function PlanejamentoSemanalConfigPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome do modelo"
-              className="h-8 text-sm"
+              className="h-10 text-sm md:h-8"
             />
             <Button size="sm" onClick={handleCreateTemplate} disabled={!newName.trim() || saveTemplate.isPending}>
               <Plus className="size-4" />
@@ -151,8 +151,8 @@ export default function PlanejamentoSemanalConfigPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <p className="font-heading text-base font-semibold">{selected.name}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 break-words font-heading text-base font-semibold">{selected.name}</p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -176,7 +176,7 @@ export default function PlanejamentoSemanalConfigPage() {
                   key={field.id}
                   className="flex items-center gap-2 border-b border-border py-2 last:border-0"
                 >
-                  <span className={cn("flex-1 text-sm", !field.ativo && "text-muted-foreground line-through")}>
+                  <span className={cn("min-w-0 flex-1 break-words text-sm", !field.ativo && "text-muted-foreground line-through")}>
                     {field.label}
                   </span>
 
@@ -188,7 +188,7 @@ export default function PlanejamentoSemanalConfigPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-7 text-destructive hover:text-destructive"
+                    className="size-9 text-destructive hover:text-destructive md:size-7"
                     onClick={() => handleDeleteField(field.id)}
                   >
                     <Trash2 className="size-3.5" />
@@ -201,7 +201,7 @@ export default function PlanejamentoSemanalConfigPage() {
                   value={newFieldLabel}
                   onChange={(e) => setNewFieldLabel(e.target.value)}
                   placeholder="Ex.: Objetivos gerais, Dever de casa..."
-                  className="h-8 flex-1 text-sm"
+                  className="h-10 flex-1 text-sm md:h-8"
                 />
                 <Button size="sm" onClick={handleAddField} disabled={!newFieldLabel.trim() || saveField.isPending}>
                   <Plus className="size-4" />

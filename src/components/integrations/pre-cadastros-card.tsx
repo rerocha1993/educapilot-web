@@ -35,7 +35,7 @@ export function PreCadastrosCard() {
   // requisição tinha falhado.
   if (isError) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm break-words">
         {error instanceof Error ? error.message : "Não foi possível carregar os pré-cadastros."}
       </div>
     );
@@ -103,7 +103,7 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
       <div>
-        <div className="text-sm font-medium">{pendente.nome}</div>
+        <div className="text-sm font-medium break-words">{pendente.nome}</div>
         <div className="text-xs text-muted-foreground">
           {pendente.motivo}
           {pendente.quantidadeResponsaveis > 0 && (
@@ -112,8 +112,8 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex min-w-40 flex-col gap-[5px]">
+      <div className="grid grid-cols-2 items-end gap-2 md:flex md:flex-wrap">
+        <div className="col-span-2 flex min-w-0 flex-col gap-[5px] md:min-w-40">
           <label className="text-xs text-muted-foreground">Turma</label>
           <Select value={classId} onValueChange={(v) => v && setClassId(v)}>
             <SelectTrigger className="w-full">
@@ -131,7 +131,7 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
           </Select>
         </div>
 
-        <div className="flex flex-col gap-[5px]">
+        <div className="col-span-2 flex flex-col gap-[5px]">
           <label className="text-xs text-muted-foreground">Data de nascimento</label>
           <Input
             type="date"

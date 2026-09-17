@@ -7,15 +7,15 @@ import { REFERENCE_TABLES, useReferenceOptions } from "@/lib/flow/use-reference-
 function ReferenceTableRow({ value, label }: { value: string; label: string }) {
   const { data, isLoading } = useReferenceOptions(value);
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
-      <div>
-        <p className="font-medium">{label}</p>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+      <div className="min-w-0">
+        <p className="font-medium break-words">{label}</p>
         <p className="text-xs text-muted-foreground">tabela &quot;{value}&quot;</p>
       </div>
       {isLoading ? (
         <Skeleton className="h-5 w-16" />
       ) : (
-        <span className="text-sm font-medium text-muted-foreground">{data?.length ?? 0} reg.</span>
+        <span className="shrink-0 text-sm font-medium text-muted-foreground">{data?.length ?? 0} reg.</span>
       )}
     </div>
   );
@@ -25,7 +25,7 @@ export default function ReferenceDataPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link href="/flow" className="text-xs text-muted-foreground hover:underline">
+        <Link href="/flow" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
           ← Formulários
         </Link>
         <h1 className="font-heading text-xl font-bold">Dados de referência</h1>

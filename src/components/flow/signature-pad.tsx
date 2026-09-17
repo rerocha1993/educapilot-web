@@ -96,7 +96,7 @@ export function SignaturePad({
         real.
       </p>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button onClick={confirmar} disabled={!temTraco || enviando}>
           {enviando ? "Salvando..." : "Usar esta assinatura"}
         </Button>

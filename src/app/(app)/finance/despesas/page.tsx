@@ -112,14 +112,16 @@ export default function DespesasPage() {
     <div className="flex flex-col gap-4">
       <FinanceNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Despesas</h1>
           <p className="text-sm text-muted-foreground">
             {new Date(year, month - 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>Nova despesa</Button>
+        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+          Nova despesa
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -149,7 +151,53 @@ export default function DespesasPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+
+        {!isLoading && list.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhuma despesa neste mês.
+          </div>
+        )}
+
+        {list.map((e) => (
+          <div key={e.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium break-words">{e.nome}</p>
+                <p className="text-muted-foreground break-words">
+                  {EXPENSE_CATEGORIES.find((c) => c.value === e.categoria)?.label ?? e.categoria}
+                  {e.subcategoria ? ` · ${e.subcategoria}` : ""}
+                </p>
+              </div>
+              {e.statusPagamento === "Pago" ? (
+                <Badge className="bg-success-soft text-success-soft-foreground">Pago</Badge>
+              ) : isOverdue(e) ? (
+                <Badge className="bg-destructive-soft text-destructive-soft-foreground">Atrasado</Badge>
+              ) : (
+                <Badge variant="secondary">Pendente</Badge>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono tabular-nums text-muted-foreground">{formatarSoData(e.dataVencimento)}</span>
+              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(e.valor)}</span>
+            </div>
+            {e.statusPagamento !== "Pago" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-success-border text-success-soft-foreground hover:bg-success-soft"
+                onClick={() => handleMarkPaid(e.id)}
+                disabled={markPaid.isPending}
+              >
+                Marcar pago
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -236,7 +284,7 @@ export default function DespesasPage() {
               <Label className="text-xs text-muted-foreground">Descrição</Label>
               <Input value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Valor</Label>
                 <Input

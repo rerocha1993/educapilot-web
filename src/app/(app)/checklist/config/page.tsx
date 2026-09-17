@@ -152,7 +152,7 @@ export default function ChecklistConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Configurar checklists</h1>
           <p className="text-sm text-muted-foreground">
@@ -179,7 +179,7 @@ export default function ChecklistConfigPage() {
               key={t.id}
               onClick={() => setSelectedId(t.id)}
               className={cn(
-                "flex items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors",
+                "flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left text-sm transition-colors md:py-2",
                 selectedId === t.id
                   ? "bg-accent font-medium text-accent-foreground"
                   : "text-foreground hover:bg-accent/50"
@@ -195,7 +195,7 @@ export default function ChecklistConfigPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nome do checklist"
-              className="h-8 text-sm"
+              className="h-10 text-sm md:h-8"
             />
             <Button size="sm" onClick={handleCreateTemplate} disabled={!newName.trim() || saveTemplate.isPending}>
               <Plus className="size-4" />
@@ -209,8 +209,8 @@ export default function ChecklistConfigPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <p className="font-heading text-base font-semibold">{selected.name}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 break-words font-heading text-base font-semibold">{selected.name}</p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -258,20 +258,20 @@ export default function ChecklistConfigPage() {
                     <button
                       onClick={() => moveItem(index, -1)}
                       disabled={index === 0}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 md:p-0"
                     >
                       <ArrowUp className="size-3.5" />
                     </button>
                     <button
                       onClick={() => moveItem(index, 1)}
                       disabled={index === orderedItems.length - 1}
-                      className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 md:p-0"
                     >
                       <ArrowDown className="size-3.5" />
                     </button>
                   </div>
 
-                  <span className={cn("flex-1 text-sm", !item.ativo && "text-muted-foreground line-through")}>
+                  <span className={cn("min-w-0 flex-1 break-words text-sm", !item.ativo && "text-muted-foreground line-through")}>
                     {item.description}
                   </span>
 
@@ -282,7 +282,7 @@ export default function ChecklistConfigPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-7 text-destructive hover:text-destructive"
+                    className="size-9 text-destructive hover:text-destructive md:size-7"
                     onClick={() => handleDeleteItem(item.id)}
                   >
                     <Trash2 className="size-3.5" />
@@ -290,15 +290,15 @@ export default function ChecklistConfigPage() {
                 </div>
               ))}
 
-              <div className="mt-2 flex gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-1.5 md:flex-nowrap">
                 <Input
                   value={newItemDesc}
                   onChange={(e) => setNewItemDesc(e.target.value)}
                   placeholder="Novo item"
-                  className="h-8 flex-1 text-sm"
+                  className="h-10 flex-none text-sm md:h-8 md:flex-1"
                 />
                 <Select value={newItemTipo} onValueChange={(v) => v && setNewItemTipo(v as ChecklistItemTipo)}>
-                  <SelectTrigger className="h-8 w-32">
+                  <SelectTrigger className="h-8 flex-1 md:w-32 md:flex-initial">
                     <SelectValue>{() => TIPO_LABELS[newItemTipo]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>

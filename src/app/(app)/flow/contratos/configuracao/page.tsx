@@ -47,7 +47,7 @@ export default function ConfiguracaoContratosPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
       <div>
-        <Link href="/flow/contratos" className="text-xs text-muted-foreground hover:underline">
+        <Link href="/flow/contratos" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
           ← Contratos
         </Link>
         <h1 className="font-heading text-xl font-bold">Configuração de contratos</h1>
@@ -97,8 +97,8 @@ export default function ConfiguracaoContratosPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
               <Label className="text-sm">Exigir contra-assinatura</Label>
               <p className="text-xs text-muted-foreground">
                 Alguém da escola também assina eletronicamente cada contrato. Dobra o custo por

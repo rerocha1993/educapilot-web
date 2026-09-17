@@ -54,7 +54,7 @@ export function IdentificationRulePanel({ form }: { form: FormDto }) {
 
       <div className="mt-3 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <Label className="text-sm">Só mostrar o formulário depois de encontrar o aluno</Label>
             <p className="mt-0.5 text-xs text-muted-foreground">
               A família vê apenas a busca. Os campos aparecem preenchidos quando o aluno é
@@ -70,7 +70,7 @@ export function IdentificationRulePanel({ form }: { form: FormDto }) {
 
         {exigir && (
           <div className="flex items-start justify-between gap-4 border-t border-border pt-3">
-            <div>
+            <div className="min-w-0">
               <Label className="text-sm">Deixar preencher mesmo sem encontrar</Label>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Recomendado. Nome com grafia diferente da matrícula ou data digitada errada

@@ -76,18 +76,18 @@ export default function FichaAlunoPage() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card p-4 md:flex-nowrap">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-heading text-lg font-bold text-primary">
           {student.fullName.charAt(0).toUpperCase()}
         </div>
-        <div>
-          <h1 className="font-heading text-xl font-bold">{student.fullName}</h1>
+        <div className="min-w-0 flex-1 md:flex-initial">
+          <h1 className="font-heading text-xl font-bold break-words">{student.fullName}</h1>
           <p className="text-sm text-muted-foreground">
             {className ?? "Sem turma"} · {calcularIdade(student.birthDate)} anos
           </p>
         </div>
         {student.allergies && (
-          <Badge className="ml-auto bg-destructive-soft text-destructive-soft-foreground">
+          <Badge className="bg-destructive-soft md:ml-auto text-destructive-soft-foreground">
             Alergia registrada
           </Badge>
         )}
@@ -108,7 +108,7 @@ export default function FichaAlunoPage() {
         </TabsList>
 
         <TabsContent value="dados" className="mt-4">
-          <div className="grid grid-cols-3 gap-4 rounded-lg border border-border bg-card p-4">
+          <div className="grid grid-cols-1 gap-4 rounded-lg sm:grid-cols-3 border border-border bg-card p-4">
             <div>
               <p className="text-xs text-muted-foreground">Nascimento</p>
               <p className="text-sm font-medium">{formatarSoData(student.birthDate)}</p>
@@ -138,13 +138,13 @@ export default function FichaAlunoPage() {
           <div className="flex flex-col gap-2">
             {occurrences?.map((o) => (
               <div key={o.id} className="rounded-lg border border-border bg-card px-4 py-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap md:gap-0">
                   <Badge variant="secondary">{o.categoria ?? "—"}</Badge>
                   <span className="font-mono text-xs text-muted-foreground">
                     {formatarData(o.createdAt)}
                   </span>
                 </div>
-                <p className="mt-1 text-sm">{o.observation}</p>
+                <p className="mt-1 text-sm break-words">{o.observation}</p>
                 {o.teacher?.fullName && (
                   <p className="mt-1 text-xs text-muted-foreground">
                     Registrado por {o.teacher.fullName}
@@ -157,7 +157,7 @@ export default function FichaAlunoPage() {
         </TabsContent>
 
         <TabsContent value="saude" className="mt-4">
-          <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-card p-4">
+          <div className="grid grid-cols-1 gap-4 rounded-lg sm:grid-cols-2 border border-border bg-card p-4">
             <div>
               <p className="text-xs text-muted-foreground">Alergias</p>
               <p className="text-sm font-medium">{student.allergies ?? "—"}</p>
@@ -207,13 +207,13 @@ export default function FichaAlunoPage() {
                   className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-accent/40"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-heading text-sm font-semibold">{g.fullName}</p>
+                    <div className="min-w-0">
+                      <p className="font-heading text-sm font-semibold break-words">{g.fullName}</p>
                       <p className="text-xs text-muted-foreground">
                         {vinculo?.parentesco || "Parentesco não informado"}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:justify-start">
                       {vinculo?.responsavelFinanceiro && (
                         <Badge variant="secondary">Responsável financeiro</Badge>
                       )}

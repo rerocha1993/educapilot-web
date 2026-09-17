@@ -95,11 +95,11 @@ export default function ImportarPage() {
             type="file"
             accept={tipoInfo.accept}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs"
+            className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs"
           />
         </div>
 
-        <Button onClick={handleImport} disabled={!file || bulkImport.isPending} className="self-start">
+        <Button onClick={handleImport} disabled={!file || bulkImport.isPending} className="w-full sm:w-auto sm:self-start">
           {bulkImport.isPending ? "Importando..." : `Importar ${tipoInfo.label.toLowerCase()}`}
         </Button>
 

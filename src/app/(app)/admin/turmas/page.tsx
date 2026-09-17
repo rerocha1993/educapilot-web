@@ -62,7 +62,7 @@ export default function TurmasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
         <div>
           <h1 className="font-heading text-2xl font-bold">Turmas</h1>
           <p className="text-sm text-muted-foreground">
@@ -70,15 +70,15 @@ export default function TurmasPage() {
             {classes?.length === 1 ? "" : "s"}
           </p>
         </div>
-        <Button onClick={() => setSelectedId("new")}>
+        <Button onClick={() => setSelectedId("new")} className="w-full md:w-auto">
           <Plus className="size-4" />
           Nova turma
         </Button>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 md:flex-row">
         {/* Lista à esquerda — ver A7 no handoff de design */}
-        <div className="flex flex-1 flex-col gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
@@ -110,11 +110,11 @@ export default function TurmasPage() {
                 key={c.id}
                 onClick={() => setSelectedId(c.id ?? null)}
                 className={cn(
-                  "flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/40",
+                  "flex items-center justify-between gap-3 rounded-lg border bg-card px-4 md:gap-0 py-3 text-left transition-colors hover:bg-accent/40",
                   selectedId === c.id ? "border-primary bg-accent/40" : "border-border"
                 )}
               >
-                <div className="flex flex-col gap-1">
+                <div className="flex min-w-0 flex-col gap-1">
                   <span className="font-heading text-sm font-semibold">{c.className}</span>
                   <span className="text-xs text-muted-foreground">
                     {professores.length > 0 ? professores.join(", ") : "Sem professor vinculado"}
@@ -129,9 +129,10 @@ export default function TurmasPage() {
           })}
         </div>
 
-        {/* Painel de edição à direita — fundo #FAFAF9 per A7 */}
+        {/* Painel de edição à direita — fundo #FAFAF9 per A7. No celular fica acima da lista, senão
+            abriria lá embaixo, fora da tela de quem tocou na turma. */}
         {selectedId && (
-          <div className="w-80 shrink-0 rounded-lg border border-border bg-background p-4">
+          <div className="order-first w-full rounded-lg md:order-none md:w-80 md:shrink-0 border border-border bg-background p-4">
             <form onSubmit={handleSave} className="flex flex-col gap-4">
               <h2 className="font-heading text-sm font-bold">
                 {selectedId === "new" ? "Nova turma" : "Editar turma"}
@@ -149,7 +150,7 @@ export default function TurmasPage() {
                   value={className}
                   onChange={(e) => setClassName(e.target.value)}
                   placeholder="Ex: 4º ano B"
-                  className="h-9"
+                  className="md:h-9"
                   autoFocus
                 />
               </div>
@@ -162,7 +163,7 @@ export default function TurmasPage() {
                 backend — próxima etapa.
               </p>
 
-              <div className="flex items-center justify-between gap-2 pt-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 md:flex-nowrap">
                 {selectedId !== "new" ? (
                   <Button
                     type="button"

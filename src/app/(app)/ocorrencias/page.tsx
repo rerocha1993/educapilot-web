@@ -181,18 +181,18 @@ export default function OcorrenciasPage() {
           <p className="text-sm text-muted-foreground">{totalCount} ocorrências no período.</p>
         </div>
 
-        <div className="flex flex-wrap items-end gap-2 print:hidden">
+        <div className="flex w-full flex-wrap items-end gap-2 md:w-auto print:hidden">
           <Input
             type="date"
             value={start}
             onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
-            className="h-9 w-40"
+            className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
           />
           <Input
             type="date"
             value={end}
             onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
-            className="h-9 w-40"
+            className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
           />
           {/* Novo (2026-08, feedback do cliente): filtro de turma no relatório —
               "Todas as turmas" quando null, mesmo comportamento do backend. */}
@@ -200,7 +200,7 @@ export default function OcorrenciasPage() {
             value={reportClassId?.toString() ?? "__all__"}
             onValueChange={(v) => setReportClassId(v === "__all__" ? null : Number(v))}
           >
-            <SelectTrigger className="h-9 w-44">
+            <SelectTrigger className="h-9 w-full md:w-44">
               <SelectValue>
                 {() => (reportClassId ? classes?.find((c) => c.id === reportClassId)?.className : "Todas as turmas")}
               </SelectValue>
@@ -214,11 +214,11 @@ export default function OcorrenciasPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => window.print()}>
+          <Button variant="outline" className="w-full md:w-auto" onClick={() => window.print()}>
             <Printer className="size-4" />
             Exportar PDF
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>+ Registrar ocorrência</Button>
+          <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>+ Registrar ocorrência</Button>
         </div>
       </div>
 
@@ -274,9 +274,9 @@ export default function OcorrenciasPage() {
               <button
                 key={s.studentId}
                 onClick={() => setSelectedStudent({ id: s.studentId, name: s.studentName })}
-                className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent"
+                className="flex items-center justify-between gap-2 rounded-md px-1.5 py-2.5 text-left text-sm transition-colors hover:bg-accent md:py-1"
               >
-                <div className="flex items-center gap-2 truncate">
+                <div className="flex min-w-0 items-center gap-2 truncate">
                   <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[s.topCategoria])} />
                   <span className="truncate">{s.studentName}</span>
                 </div>
@@ -310,7 +310,7 @@ export default function OcorrenciasPage() {
                       key={w}
                       onClick={() => setWeek(w)}
                       className={cn(
-                        "size-9 rounded-full border text-sm font-medium transition-colors",
+                        "size-10 rounded-full border text-sm font-medium transition-colors md:size-9",
                         week === w
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-transparent text-foreground hover:bg-accent"
@@ -356,7 +356,7 @@ export default function OcorrenciasPage() {
                         {formatarData(h.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm">{h.weeklyObservation}</p>
+                    <p className="break-words text-sm">{h.weeklyObservation}</p>
                   </div>
                 ))}
               </div>
@@ -454,7 +454,7 @@ export default function OcorrenciasPage() {
               {form.classId !== null && (
                 <div className="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-md border border-border p-2.5">
                   {students?.map((s) => (
-                    <label key={s.id} className="flex items-center gap-2 text-sm">
+                    <label key={s.id} className="flex items-center gap-2 py-1.5 text-sm md:py-0">
                       <Checkbox
                         checked={form.studentIds.includes(s.id)}
                         onCheckedChange={() => toggleStudent(s.id)}
@@ -479,7 +479,7 @@ export default function OcorrenciasPage() {
                     key={c}
                     onClick={() => setForm((f) => ({ ...f, categoria: c }))}
                     className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                      "rounded-full border px-3 py-2 text-sm font-medium transition-colors md:py-1.5",
                       form.categoria === c
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-transparent text-foreground hover:bg-accent"
@@ -518,7 +518,7 @@ export default function OcorrenciasPage() {
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 py-1.5 text-sm md:py-0">
               <Checkbox
                 checked={form.notify}
                 onCheckedChange={(v) => setForm((f) => ({ ...f, notify: v === true }))}

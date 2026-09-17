@@ -163,8 +163,8 @@ export default function ChamadaPage() {
           </p>
         </div>
 
-        <div className="flex items-end gap-2">
-          <div className="flex flex-col gap-[5px]">
+        <div className="grid w-full grid-cols-2 items-end gap-2 md:flex md:w-auto">
+          <div className="flex min-w-0 flex-col gap-[5px]">
             <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
               Turma
             </span>
@@ -172,7 +172,7 @@ export default function ChamadaPage() {
               value={selectedClassId?.toString() ?? ""}
               onValueChange={(v) => v && setSelectedClassId(Number(v))}
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-full md:w-44">
                 <SelectValue placeholder="Selecione">
                   {() => selectedClass?.className ?? "Selecione"}
                 </SelectValue>
@@ -187,7 +187,7 @@ export default function ChamadaPage() {
             </Select>
           </div>
 
-          <div className="flex flex-col gap-[5px]">
+          <div className="flex min-w-0 flex-col gap-[5px]">
             <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
               Data
             </span>
@@ -195,11 +195,11 @@ export default function ChamadaPage() {
               type="date"
               value={dateStr}
               onChange={(e) => setDateStr(e.target.value)}
-              className="h-9 w-40"
+              className="h-10 w-full md:h-9 md:w-40"
             />
           </div>
 
-          <Button variant="outline" onClick={markAllPresent} disabled={roster.length === 0}>
+          <Button variant="outline" className="col-span-2" onClick={markAllPresent} disabled={roster.length === 0}>
             Marcar todos presentes
           </Button>
         </div>
@@ -213,8 +213,10 @@ export default function ChamadaPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 rounded-lg border border-border bg-card overflow-x-auto">
-          <table className="w-full min-w-[420px] text-sm">
-            <thead>
+          {/* No celular cada aluno vira um bloco (nome em cima, presença embaixo com os
+              três botões dividindo a largura): lado a lado o nome ficava espremido. */}
+          <table className="w-full text-sm md:min-w-[420px]">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2 font-medium">Aluno</th>
                 <th className="px-4 py-2 font-medium">Presença</th>
@@ -241,16 +243,16 @@ export default function ChamadaPage() {
               {roster.map((student) => {
                 const status = marks[student.id]?.status ?? null;
                 return (
-                  <tr key={student.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-2.5 font-medium">{student.fullName}</td>
-                    <td className="px-4 py-2 h-11">
-                      <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  <tr key={student.id} className="flex flex-col gap-2 border-b border-border px-3 py-2.5 last:border-0 md:table-row md:p-0">
+                    <td className="break-words font-medium md:px-4 md:py-2.5">{student.fullName}</td>
+                    <td className="md:h-11 md:px-4 md:py-2">
+                      <div className="grid grid-cols-3 overflow-hidden rounded-md border border-border md:inline-flex">
                         {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((s) => (
                           <button
                             key={s}
                             onClick={() => setStatus(student.id, s)}
                             className={cn(
-                              "px-3 py-1.5 text-xs font-medium transition-colors",
+                              "px-3 py-2.5 text-xs font-medium transition-colors md:py-1.5",
                               status === s
                                 ? s === "P"
                                   ? "bg-success-soft text-success-soft-foreground"
@@ -292,7 +294,7 @@ export default function ChamadaPage() {
               {pendingAbsences.map((a) => (
                 <div key={a.id} className="rounded-md border border-border p-2.5">
                   <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium">
+                    <span className="min-w-0 break-words text-sm font-medium">
                       {a.attendance?.student?.fullName ?? `Aluno #${a.attendance?.studentId}`}
                     </span>
                     <span className="shrink-0 font-mono text-xs text-muted-foreground">
@@ -349,7 +351,7 @@ export default function ChamadaPage() {
         backend — próxima etapa.
       </p>
 
-      <div className="fixed inset-x-0 bottom-0 flex items-center justify-between border-t border-border bg-card px-4 py-3 shadow-[0_-1px_4px_rgba(0,0,0,.04)] lg:left-56 lg:px-6">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-border bg-card px-4 py-3 shadow-[0_-1px_4px_rgba(0,0,0,.04)] md:bottom-0 lg:left-56 lg:px-6">
         <span className="text-sm text-muted-foreground">
           {roster.length} alunos · {presentCount} presentes
         </span>

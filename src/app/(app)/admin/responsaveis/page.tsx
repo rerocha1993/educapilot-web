@@ -134,7 +134,7 @@ export default function ResponsaveisPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
         <div>
           <h1 className="font-heading text-xl font-bold">Responsáveis</h1>
           <p className="text-sm text-muted-foreground">
@@ -142,7 +142,9 @@ export default function ResponsaveisPage() {
             recorrente e assinam o contrato.
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>+ Novo responsável</Button>
+        <Button onClick={() => setDialogOpen(true)} className="w-full md:w-auto">
+          + Novo responsável
+        </Button>
       </div>
 
       {isError && (
@@ -151,7 +153,53 @@ export default function ResponsaveisPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+
+        {!isLoading && list.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhum responsável cadastrado ainda.
+          </div>
+        )}
+
+        {list.map((g) => (
+          <div
+            key={g.id}
+            className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-card p-3"
+            onClick={() => setDetailId(g.id)}
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <p className="font-medium break-words">{g.fullName}</p>
+              <p className="text-sm break-words text-muted-foreground">
+                {g.cpf ?? "—"} · {g.email ?? g.phone ?? "—"}
+              </p>
+              {g.vinculos && g.vinculos.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {g.vinculos.map((v) => (
+                    <Badge key={v.id} variant="secondary">
+                      {v.studentName ?? v.studentId}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-sm text-muted-foreground">Nenhum</span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(g);
+              }}
+            >
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -228,7 +276,7 @@ export default function ResponsaveisPage() {
               <Label className="text-xs text-muted-foreground">Nome completo</Label>
               <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">CPF</Label>
                 <Input value={form.cpf} onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))} />
@@ -266,7 +314,7 @@ export default function ResponsaveisPage() {
           </DialogHeader>
           {detail && (
             <div className="flex flex-col gap-3">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm break-words text-muted-foreground">
                 {detail.cpf ?? "CPF não cadastrado"} · {detail.email ?? "—"} · {detail.phone ?? "—"}
               </div>
 
@@ -282,9 +330,9 @@ export default function ResponsaveisPage() {
                 {detail.vinculos?.map((v) => (
                   <div
                     key={v.id}
-                    className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                    className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 md:gap-0"
                   >
-                    <div className="text-sm">
+                    <div className="min-w-0 text-sm break-words">
                       {/* Leva para a ficha do aluno: o vínculo precisa andar nos dois sentidos, ou
                           quem está conferindo uma família tem de voltar ao menu a cada troca. */}
                       <Link
@@ -300,7 +348,7 @@ export default function ResponsaveisPage() {
                         </Badge>
                       )}
                     </div>
-                    <Button variant="ghost" size="icon-sm" onClick={() => handleRemoveVinculo(v.id)}>
+                    <Button variant="ghost" size="icon-sm" className="shrink-0" onClick={() => handleRemoveVinculo(v.id)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
                   </div>

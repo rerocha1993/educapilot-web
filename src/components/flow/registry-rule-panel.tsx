@@ -38,7 +38,7 @@ export function RegistryRulePanel({ campos }: { campos: FormFieldDto[] }) {
       <ul className="mt-2 flex flex-col gap-1.5">
         {destinos.map(({ campo, destino }) => (
           <li key={campo.id} className="flex items-baseline justify-between gap-3 text-sm">
-            <span>{campo.label}</span>
+            <span className="min-w-0 break-words">{campo.label}</span>
             <span className="text-xs text-muted-foreground">{rotuloDoDestino(destino)}</span>
           </li>
         ))}

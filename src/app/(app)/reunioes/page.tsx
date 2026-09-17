@@ -149,7 +149,7 @@ export default function ReunioesPage() {
           </p>
         </div>
         <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full md:w-44">
             <SelectValue placeholder="Turma">{() => selectedClass?.className ?? "Turma"}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -171,7 +171,7 @@ export default function ReunioesPage() {
               key={i}
               onClick={() => setWeekIndex(i)}
               className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                "flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-medium transition-colors md:py-1.5",
                 weekIndex === i
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-transparent text-foreground hover:bg-accent"
@@ -186,7 +186,7 @@ export default function ReunioesPage() {
         })}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">
           Semana de {formatShort(week.start)} a {formatShort(week.end)}
         </span>
@@ -216,8 +216,8 @@ export default function ReunioesPage() {
                 Top faltas
               </span>
               {topAbsences.map((t) => (
-                <div key={t.studentName} className="flex items-center justify-between text-sm">
-                  <span className="truncate">{t.studentName}</span>
+                <div key={t.studentName} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 truncate">{t.studentName}</span>
                   <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{t.count}</span>
                 </div>
               ))}
@@ -230,8 +230,8 @@ export default function ReunioesPage() {
               return (
                 <div key={a.id} className="rounded-md border border-border p-2 text-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium">{a.studentName}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{formatarData(a.createdAt)}</span>
+                    <span className="min-w-0 break-words font-medium">{a.studentName}</span>
+                    <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatarData(a.createdAt)}</span>
                   </div>
                   <p className={cn("mt-0.5 text-xs", isPending ? "text-warning" : "text-muted-foreground")}>
                     {isPending ? "Pendente de justificativa" : a.reason}
@@ -251,9 +251,9 @@ export default function ReunioesPage() {
           <div className="flex max-h-[440px] flex-col gap-2 overflow-y-auto pr-1">
             {occurrences.map((o) => (
               <div key={o.id} className="rounded-md border border-border p-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{o.studentName}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{formatarData(o.createdAt)}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 break-words font-medium">{o.studentName}</span>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatarData(o.createdAt)}</span>
                 </div>
                 {o.description && <p className="mt-0.5 text-xs text-muted-foreground">{o.description}</p>}
                 {/* Correção (2026-09, feedback do cliente) — "na reunião em ocorrência
@@ -418,7 +418,7 @@ function MeetingHistory({ classId, meetings }: { classId: number | null; meeting
 
               {isExpanded && (
                 <div className="flex flex-col gap-3 border-t border-border p-3">
-                  <div className="flex gap-4 font-mono text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground">
                     <span>{(expandedReport?.students ?? []).flatMap((s) => s.absences).length} faltas</span>
                     <span>{(expandedReport?.students ?? []).flatMap((s) => s.occurrences).length} ocorrências</span>
                     <span>{(expandedReport?.weeklyReports ?? []).length} observações</span>

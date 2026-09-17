@@ -67,7 +67,7 @@ export default function AdminPage() {
         <p className="text-sm text-muted-foreground">Turmas, alunos e usuários da escola.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:grid-cols-3">
         {secoes.map((section) => {
           const Icon = section.icon;
           return (

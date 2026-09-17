@@ -58,7 +58,9 @@ function PortalDoResponsavel() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col gap-4 bg-background p-4">
+    // Com viewportFit "cover", instalado na tela inicial a página vai até atrás do notch e da
+    // barra de gesto: o padding respeita essas áreas (no computador env() é 0 e fica o p-4).
+    <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col gap-4 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between">
         <Image src="/logo.png" alt="EducaPilot" width={156} height={123} className="h-8 w-auto" priority />
         <Button variant="ghost" size="sm" onClick={sair}>
@@ -93,7 +95,7 @@ function PortalDoResponsavel() {
           <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
             {trajeto && (
               <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-heading text-lg font-bold">{TEXTO_SITUACAO[trajeto.situacao]}</p>
                   {rastreando && (
                     <Badge className="bg-success-soft text-success-soft-foreground">Enviando localização</Badge>
@@ -122,7 +124,7 @@ function PortalDoResponsavel() {
 
             {!trajeto && (
               <Button
-                className="h-14 text-base"
+                className="h-14 text-base md:h-14"
                 onClick={() => rastreio.comecar()}
                 disabled={rastreio.estado === "iniciando" || painel.alunos.length === 0}
               >
@@ -133,7 +135,7 @@ function PortalDoResponsavel() {
 
             {trajeto && !rastreando && trajeto.situacao !== "Chegou" && (
               <Button
-                className="h-14 text-base"
+                className="h-14 text-base md:h-14"
                 onClick={() => rastreio.comecar(trajeto)}
                 disabled={rastreio.estado === "iniciando"}
               >
@@ -142,7 +144,7 @@ function PortalDoResponsavel() {
             )}
 
             {trajeto && (
-              <Button variant="outline" className="h-11" onClick={() => rastreio.encerrar(trajeto.id)}>
+              <Button variant="outline" className="h-12 md:h-11" onClick={() => rastreio.encerrar(trajeto.id)}>
                 Encerrar
               </Button>
             )}

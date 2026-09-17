@@ -78,7 +78,7 @@ export default function SalesGroupsPage() {
     <div className="flex flex-col gap-4">
       <EventsNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-heading text-xl font-bold">Grupos de venda</h1>
         <Button onClick={() => setDialogOpen(true)}>+ Novo grupo</Button>
       </div>
@@ -104,7 +104,7 @@ export default function SalesGroupsPage() {
           return (
             <div key={g.id} className="rounded-lg border border-border bg-card p-4">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="min-w-0 break-words">
                   <p className="font-heading font-semibold">{g.nome}</p>
                   {g.meta && (
                     <p className="text-xs text-muted-foreground">meta {formatCurrency(g.meta)}</p>
@@ -131,7 +131,7 @@ export default function SalesGroupsPage() {
           );
         })}
         {!isLoading && groups?.length === 0 && (
-          <div className="col-span-2 rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+          <div className="col-span-full rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
             Nenhum grupo de venda ainda.
           </div>
         )}

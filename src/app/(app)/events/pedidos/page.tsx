@@ -51,19 +51,19 @@ export default function OrdersPage() {
     <div className="flex flex-col gap-4">
       <EventsNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Pedidos</h1>
           <p className="text-sm text-muted-foreground">
             {orders ? `${orders.length} no total` : "—"}
           </p>
         </div>
-        <Link href="/events/pedidos/novo" className={buttonVariants({})}>
+        <Link href="/events/pedidos/novo" className={buttonVariants({ className: "w-full md:w-auto" })}>
           + Novo pedido
         </Link>
       </div>
 
-      <div className="flex gap-1">
+      <div className="flex flex-wrap gap-1">
         {[
           { key: "todos" as const, label: `Todos (${orders?.length ?? 0})` },
           { key: "aguardando" as const, label: `Aguardando Pix (${aguardando.length})` },
@@ -72,7 +72,7 @@ export default function OrdersPage() {
           <button
             key={chip.key}
             onClick={() => setFiltro(chip.key)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-full border px-3 py-2 text-xs md:py-1 font-medium transition-colors ${
               filtro === chip.key
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border text-muted-foreground hover:bg-accent"
@@ -89,7 +89,44 @@ export default function OrdersPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
+        {!isLoading && list.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhum pedido.
+          </div>
+        )}
+        {list.map((o) => (
+          <div key={o.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 font-medium break-words">{o.nomeCliente}</p>
+              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(o.valorTotal)}</span>
+            </div>
+            <p className="text-muted-foreground">
+              Itens: <span className="font-mono tabular-nums">{o.produtos.length}</span> · Pgto: {o.formaPagamento}
+            </p>
+            <div className="flex flex-wrap items-center gap-1">
+              <Badge className={(o.statusPayment != null ? PAYMENT_STATUS_BADGE[o.statusPayment] : undefined) ?? ""}>
+                {(o.statusPayment != null ? PAYMENT_STATUS_LABEL[o.statusPayment] : undefined) ?? "—"}
+              </Badge>
+              <Badge variant={o.status === "Finalizado" ? "default" : "secondary"}>{o.status}</Badge>
+            </div>
+            {o.status !== "Finalizado" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => handleFinalizar(o.id)}
+                disabled={finalizarPedido.isPending}
+              >
+                Finalizar
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>

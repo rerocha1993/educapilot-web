@@ -56,7 +56,7 @@ export function AttachmentLink({ url }: { url: string }) {
       type="button"
       onClick={abrir}
       disabled={abrindo}
-      className="inline-flex items-center gap-1 text-primary underline disabled:opacity-60"
+      className="-my-2 inline-flex items-center gap-1 py-2 text-primary underline disabled:opacity-60 md:my-0 md:py-0"
     >
       <Paperclip className="size-3" />
       {abrindo ? "Abrindo..." : "Ver anexo"}

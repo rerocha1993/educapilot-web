@@ -217,7 +217,7 @@ export function RegistrarEntradaDialog({
                 <Label className="text-xs text-muted-foreground">Nome completo</Label>
                 <Input autoFocus value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-[5px]">
                   <Label className="text-xs text-muted-foreground">CPF</Label>
                   <Input
@@ -269,7 +269,7 @@ export function RegistrarEntradaDialog({
               <div className="flex items-center gap-4 rounded-md border border-border p-3">
                 <FotoVisitante visitanteId={visitante.id} nome={visitante.nome} temFoto={visitante.temFoto} tamanho="lg" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{visitante.nome}</p>
+                  <p className="font-medium break-words">{visitante.nome}</p>
                   <p className="text-xs text-muted-foreground">CPF {formatarCpf(visitante.cpf)}</p>
                   <Button variant="link" size="sm" className="h-auto px-0" onClick={() => setTrocandoFoto((t) => !t)}>
                     {visitante.temFoto ? "Trocar foto" : "Adicionar foto"}
@@ -288,7 +288,7 @@ export function RegistrarEntradaDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-[5px]">
                   <Label className="text-xs text-muted-foreground">Turma (opcional)</Label>
                   <Select

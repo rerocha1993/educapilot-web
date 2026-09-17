@@ -76,7 +76,7 @@ export default function MatriculasXRematriculasPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/flow/relatorios" className="text-xs text-muted-foreground hover:underline">
+          <Link href="/flow/relatorios" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
             ← Relatórios
           </Link>
           <h1 className="font-heading text-xl font-bold">
@@ -120,7 +120,7 @@ export default function MatriculasXRematriculasPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={situacao} onValueChange={(v) => v && setSituacao(String(v))}>
-          <SelectTrigger className="w-72">
+          <SelectTrigger className="w-full md:w-72">
             <SelectValue>{() => filtros.find((f) => f.valor === situacao)?.rotulo}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -131,14 +131,44 @@ export default function MatriculasXRematriculasPage() {
             ))}
           </SelectContent>
         </Select>
-        <div className="relative min-w-56 flex-1">
+        <div className="relative w-full md:w-auto md:min-w-56 md:flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Buscar aluno ou turma" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
         <span className="text-sm text-muted-foreground">{linhas.length} aluno(s)</span>
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
+      {/* Celular: um cartão por aluno em vez das cinco colunas. */}
+      <div className="flex flex-col rounded-lg border border-border bg-card md:hidden">
+        {!isLoading && linhas.length === 0 && (
+          <p className="py-10 text-center text-sm text-muted-foreground">Nenhum aluno nesta situação.</p>
+        )}
+        {linhas.map((l, i) => (
+          <div
+            key={`${l.studentId ?? "envio"}-${l.aluno}-${i}`}
+            className="flex flex-col gap-1.5 border-b border-border px-4 py-3 last:border-b-0"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="min-w-0 font-medium break-words">{l.aluno}</p>
+              <Badge className={COR_DA_SITUACAO[l.situacao]}>{l.situacaoDescricao}</Badge>
+            </div>
+            <p className="text-sm">
+              <span className="text-muted-foreground">Turma em {ano}: </span>
+              {l.turmaAtual ?? <span className="text-muted-foreground">—</span>}
+            </p>
+            <p className="text-sm">
+              <span className="text-muted-foreground">Turma em {proximo}: </span>
+              {l.turmaProximoAno ?? <span className="text-muted-foreground">—</span>}
+            </p>
+            <p className="text-xs break-words text-muted-foreground">
+              Envio: {l.enviadoEm ? `${l.statusEnvio ?? ""} · ${formatarData(l.enviadoEm)}` : "—"}
+              {l.formulario && <span className="block">{l.formulario}</span>}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>

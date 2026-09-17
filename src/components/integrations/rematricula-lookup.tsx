@@ -81,7 +81,7 @@ export function RematriculaLookup({
     return (
       <div className="flex items-center gap-2 rounded-lg border border-success-border bg-success-soft px-4 py-3 text-sm text-success-soft-foreground">
         <CheckCircle2 className="size-4 shrink-0" />
-        <span>
+        <span className="min-w-0 break-words">
           Dados de <strong>{encontrado}</strong> carregados. Confira tudo antes de enviar.
         </span>
       </div>
@@ -142,7 +142,11 @@ export function RematriculaLookup({
         </p>
       )}
 
-      <Button onClick={handleBuscar} disabled={!podeBuscar || buscar.isPending}>
+      <Button
+        onClick={handleBuscar}
+        disabled={!podeBuscar || buscar.isPending}
+        className="h-12 text-base md:h-8 md:text-sm"
+      >
         <Search className="size-4" />
         {buscar.isPending ? "Buscando..." : "Buscar meus dados"}
       </Button>
@@ -153,7 +157,7 @@ export function RematriculaLookup({
         <button
           type="button"
           onClick={onPreencherManualmente}
-          className="text-xs text-muted-foreground underline hover:text-foreground"
+          className="py-2 text-sm text-muted-foreground underline hover:text-foreground md:py-0 md:text-xs"
         >
           Não consigo encontrar — preencher tudo à mão
         </button>

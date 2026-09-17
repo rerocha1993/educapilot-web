@@ -56,7 +56,7 @@ export function AcessoDialog({
     <Dialog open={!!userId} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Acesso de {userName ?? "usuário"}</DialogTitle>
+          <DialogTitle className="break-words">Acesso de {userName ?? "usuário"}</DialogTitle>
         </DialogHeader>
 
         {isLoading ? (

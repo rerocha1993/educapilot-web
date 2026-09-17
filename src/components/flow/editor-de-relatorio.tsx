@@ -148,13 +148,13 @@ export function EditorDeRelatorio({
 
         {form && (
           <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-x-2">
               <Label className="text-xs text-muted-foreground">Colunas ({perguntas.length} perguntas)</Label>
               <div className="flex gap-2">
-                <Button variant="link" size="sm" className="h-auto px-0" onClick={() => setCampos(null)}>
+                <Button variant="link" size="sm" className="h-auto min-h-10 px-0 md:min-h-0" onClick={() => setCampos(null)}>
                   Marcar todas
                 </Button>
-                <Button variant="link" size="sm" className="h-auto px-0" onClick={() => setCampos(new Set())}>
+                <Button variant="link" size="sm" className="h-auto min-h-10 px-0 md:min-h-0" onClick={() => setCampos(new Set())}>
                   Limpar
                 </Button>
               </div>
@@ -164,7 +164,7 @@ export function EditorDeRelatorio({
                 <p className="px-1 py-2 text-xs text-muted-foreground">Este formulário ainda não tem perguntas.</p>
               )}
               {perguntas.map((p) => (
-                <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted">
+                <label key={p.id} className="flex min-h-10 cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted md:min-h-0">
                   <Checkbox checked={marcada(p.id)} onCheckedChange={(v) => alternar(p.id, !!v)} />
                   <span className="truncate">{p.label}</span>
                 </label>

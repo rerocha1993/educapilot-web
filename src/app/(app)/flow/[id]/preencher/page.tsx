@@ -104,7 +104,7 @@ function FieldInput({
               type="button"
               onClick={() => onChange(opt)}
               className={cn(
-                "flex-1 rounded-md border px-3 py-2 text-sm transition-colors",
+                "flex-1 rounded-md border px-3 py-3 text-sm transition-colors md:py-2",
                 value === opt
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:bg-accent/50"
@@ -143,7 +143,7 @@ function FieldInput({
               type="button"
               onClick={() => onChange(o)}
               className={cn(
-                "rounded-md border px-3 py-2 text-left text-sm transition-colors",
+                "rounded-md border px-3 py-3 text-left text-sm break-words transition-colors md:py-2",
                 value === o
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:bg-accent/50"
@@ -162,7 +162,7 @@ function FieldInput({
       return (
         <div className="flex flex-col gap-2">
           {opcoes.map((o) => (
-            <label key={o} className="flex items-center gap-2 text-sm">
+            <label key={o} className="flex min-h-11 items-center gap-3 text-sm md:min-h-0 md:gap-2">
               <Checkbox
                 checked={selecionados.includes(o)}
                 onCheckedChange={(checked) => {
@@ -170,7 +170,7 @@ function FieldInput({
                   onChange(encodeOpcoes(next) ?? "");
                 }}
               />
-              {o}
+              <span className="min-w-0 break-words">{o}</span>
             </label>
           ))}
         </div>
@@ -180,14 +180,14 @@ function FieldInput({
     case "avaliacao": {
       const max = config.maxEstrelas ?? 5;
       return (
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => onChange(String(n))}
               className={cn(
-                "flex size-9 items-center justify-center rounded-full border text-sm font-medium transition-colors",
+                "flex size-10 items-center justify-center rounded-full border text-sm font-medium transition-colors md:size-9",
                 Number(value) >= n
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card hover:bg-accent/50"
@@ -245,7 +245,7 @@ function FieldInput({
         <div className="flex flex-col gap-1.5">
           {/* Botao de verdade em vez do <input type=file> cru, que so mostrava o texto do
               navegador e nao parecia clicavel. */}
-          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/50">
+          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-accent/50 md:w-fit md:justify-start md:py-2">
             <Paperclip className="size-4" />
             {uploadFile.isPending
               ? "Enviando..."
@@ -271,8 +271,8 @@ function FieldInput({
           />
           </label>
           {value && (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Paperclip className="size-3" /> {uploadedName ?? "Arquivo enviado"}
+            <p className="flex min-w-0 items-center gap-1 text-xs break-all text-muted-foreground">
+              <Paperclip className="size-3 shrink-0" /> {uploadedName ?? "Arquivo enviado"}
             </p>
           )}
         </div>
@@ -347,7 +347,7 @@ export default function FormFillPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-8 w-full max-w-64" />
         <Skeleton className="h-96 w-full" />
       </div>
     );
@@ -381,8 +381,8 @@ export default function FormFillPage() {
         <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
           ← {form.nome}
         </Link>
-        <h1 className="font-heading text-xl font-bold">{form.nome}</h1>
-        {form.descricao && <p className="text-sm text-muted-foreground">{form.descricao}</p>}
+        <h1 className="font-heading text-xl font-bold break-words">{form.nome}</h1>
+        {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
       </div>
 
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
@@ -397,7 +397,7 @@ export default function FormFillPage() {
 
         {camposVisiveis.map((field) => (
           <div key={field.id} className="flex flex-col gap-[5px]">
-            <Label className="text-sm">
+            <Label className="block text-sm leading-snug break-words md:flex md:leading-none">
               {field.label}
               {field.obrigatorio && <span className="text-destructive"> *</span>}
             </Label>
@@ -417,7 +417,11 @@ export default function FormFillPage() {
         </div>
       </div>
 
-      <Button onClick={handleSubmit} disabled={submitForm.isPending || camposVisiveis.length === 0}>
+      <Button
+        onClick={handleSubmit}
+        disabled={submitForm.isPending || camposVisiveis.length === 0}
+        className="h-11 md:h-8"
+      >
         {submitForm.isPending ? "Enviando..." : "Enviar resposta"}
       </Button>
     </div>

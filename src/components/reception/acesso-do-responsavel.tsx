@@ -37,7 +37,7 @@ export function AcessoDoResponsavel({ guardianId }: { guardianId: string }) {
 
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border p-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
         <p className="text-sm font-medium">Acesso ao site do responsável</p>
         {acesso && <BadgeAcesso temAcesso={acesso.temAcesso} senhaDefinida={acesso.senhaDefinida} />}
       </div>

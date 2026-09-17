@@ -57,7 +57,7 @@ export function TuitionImportCard() {
           type="file"
           accept=".xls,.xlsx"
           onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
-          className="rounded-md border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs"
+          className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs"
         />
         <p className="text-xs text-muted-foreground">
           Importe primeiro turmas e alunos do Agenda Edu — a planilha só consegue vincular o valor
@@ -65,7 +65,7 @@ export function TuitionImportCard() {
         </p>
       </div>
 
-      <Button onClick={handleImportar} disabled={!arquivo || importar.isPending} className="self-start">
+      <Button onClick={handleImportar} disabled={!arquivo || importar.isPending} className="w-full sm:w-auto sm:self-start">
         {importar.isPending ? "Importando..." : "Importar mensalidades"}
       </Button>
 
@@ -77,7 +77,7 @@ export function TuitionImportCard() {
 function ResultadoImportacao({ resultado }: { resultado: TuitionImportResult }) {
   if (!resultado.sucesso) {
     return (
-      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
+      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm break-words">
         {resultado.erro ?? "A importação falhou."}
       </div>
     );
@@ -96,7 +96,7 @@ function ResultadoImportacao({ resultado }: { resultado: TuitionImportResult }) 
           <summary className="cursor-pointer">
             {resultado.ignorados.length} linha(s) não importada(s) — ver motivos
           </summary>
-          <ul className="mt-1 list-disc pl-4">
+          <ul className="mt-1 list-disc pl-4 break-words">
             {resultado.ignorados.map((m, i) => (
               <li key={i}>{m}</li>
             ))}
@@ -111,7 +111,7 @@ function ResultadoImportacao({ resultado }: { resultado: TuitionImportResult }) 
           <summary className="cursor-pointer">
             {resultado.alunosSemMensalidade.length} aluno(s) cadastrado(s) sem mensalidade na planilha
           </summary>
-          <ul className="mt-1 list-disc pl-4">
+          <ul className="mt-1 list-disc pl-4 break-words">
             {resultado.alunosSemMensalidade.map((n, i) => (
               <li key={i}>{n}</li>
             ))}

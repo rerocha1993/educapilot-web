@@ -103,16 +103,16 @@ export default function MateriaisPage() {
           <h1 className="font-heading text-xl font-bold">Materiais</h1>
           <p className="text-sm text-muted-foreground">Cadastro geral e controle de estoque da escola.</p>
         </div>
-        <Button onClick={openCreate}>+ Novo material</Button>
+        <Button className="w-full md:w-auto" onClick={openCreate}>+ Novo material</Button>
       </div>
 
-      <div className="relative w-72">
+      <div className="relative w-full md:w-72">
         <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Buscar por nome ou categoria"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 pl-8"
+          className="h-10 pl-8 md:h-9"
         />
       </div>
 
@@ -139,17 +139,17 @@ export default function MateriaisPage() {
         {filtered.map((m) => (
           <div
             key={m.id}
-            className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0"
+            className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3 last:border-0 md:flex-nowrap"
           >
             <button
               onClick={() => openEdit(m)}
-              className="flex flex-1 items-center gap-3 text-left"
+              className="flex w-full flex-none items-center gap-3 text-left md:w-auto md:flex-1"
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                 <Package className="size-4" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{m.name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-medium">{m.name}</p>
                 {m.type && <p className="text-xs text-muted-foreground">{m.type}</p>}
               </div>
             </button>
@@ -179,7 +179,7 @@ export default function MateriaisPage() {
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-destructive hover:text-destructive"
+              className="ml-auto text-destructive hover:text-destructive md:ml-0"
               onClick={() => handleDelete(m.id)}
               disabled={deleteMaterial.isPending}
             >

@@ -157,7 +157,7 @@ function Formulario({ inicial }: { inicial: ConfiguracaoPortaria }) {
 
         {localizada ? (
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <MapPin className="size-4 text-success-soft-foreground" />
+            <MapPin className="size-4 shrink-0 text-success-soft-foreground" />
             Localizada no mapa: {inicial.latitude!.toFixed(5)}, {inicial.longitude!.toFixed(5)}
             <a
               href={`https://www.openstreetmap.org/?mlat=${inicial.latitude}&mlon=${inicial.longitude}#map=18/${inicial.latitude}/${inicial.longitude}`}
@@ -219,14 +219,14 @@ function Formulario({ inicial }: { inicial: ConfiguracaoPortaria }) {
         titulo="Multa por atraso na saída"
         descricao="Passou da tolerância, cada hora iniciada de atraso é cobrada. Depois do horário da multa em dobro, a hora vale o dobro."
       >
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 md:grid-cols-3">
           {Campo({ nome: "toleranciaAtrasoMinutos", rotulo: "Tolerância (minutos)", tipo: "number" })}
           {Campo({ nome: "valorHoraMulta", rotulo: "Valor da hora (R$)", tipo: "number" })}
           {Campo({ nome: "inicioMultaDobrada", rotulo: "Multa em dobro a partir de", tipo: "time" })}
         </div>
       </Secao>
 
-      <Button className="self-start" onClick={() => enviar(false)} disabled={salvar.isPending}>
+      <Button className="w-full self-start md:w-auto" onClick={() => enviar(false)} disabled={salvar.isPending}>
         {salvar.isPending ? "Salvando..." : "Salvar configuração"}
       </Button>
     </div>

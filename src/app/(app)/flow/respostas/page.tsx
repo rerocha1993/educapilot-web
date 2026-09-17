@@ -231,19 +231,19 @@ export default function CaixaDeEnviosPage() {
         <button
           type="button"
           onClick={() => setAberta(null)}
-          className="flex w-fit items-center gap-1 text-xs text-muted-foreground hover:underline"
+          className="flex min-h-10 w-fit items-center gap-1 text-xs md:min-h-0 text-muted-foreground hover:underline"
         >
           <ChevronLeft className="size-3.5" /> Voltar para a lista
         </button>
 
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-xl font-bold">{linha?.nome ?? "Resposta"}</h1>
-            <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <h1 className="font-heading text-xl font-bold break-words">{linha?.nome ?? "Resposta"}</h1>
+            <p className="text-sm break-words text-muted-foreground">
               {[linha?.email, linha?.formNome].filter(Boolean).join(" · ")}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <TagDoTipo tipo={linha?.tipo ?? null} />
             <Badge className={RESPONSE_STATUS_BADGE[detalhe.status] ?? ""}>{detalhe.status}</Badge>
             {/* Só na ficha aberta, nunca na lista: excluir de uma lista de dezenas de famílias é
@@ -282,7 +282,7 @@ export default function CaixaDeEnviosPage() {
         {detalhe.observacoes && (
           <div className="rounded-lg border border-border bg-card px-4 py-3">
             <p className="text-xs text-muted-foreground">Observações</p>
-            <p className="mt-0.5 text-sm">{detalhe.observacoes}</p>
+            <p className="mt-0.5 text-sm break-words">{detalhe.observacoes}</p>
           </div>
         )}
       </div>
@@ -314,7 +314,7 @@ export default function CaixaDeEnviosPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={formId} onValueChange={(v) => v && setFormId(String(v))}>
-          <SelectTrigger className="w-72">
+          <SelectTrigger className="w-full md:w-72">
             <SelectValue>{() => rotuloDoFormulario(formId)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -328,7 +328,7 @@ export default function CaixaDeEnviosPage() {
         </Select>
 
         <Select value={tipoFiltro} onValueChange={(v) => v && setTipoFiltro(String(v))}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full md:w-44">
             <SelectValue>{() => FILTRO_DE_TIPO.find((t) => t.valor === tipoFiltro)?.rotulo}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -340,7 +340,7 @@ export default function CaixaDeEnviosPage() {
           </SelectContent>
         </Select>
 
-        <div className="relative min-w-56 flex-1">
+        <div className="relative w-full md:w-auto md:min-w-56 md:flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-8"

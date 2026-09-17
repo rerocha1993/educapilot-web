@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -111,19 +111,21 @@ function PainelDoDia() {
     }
   }
 
+  const acoes = { ocupado, onChegada: chegada, onSaida: setSaindo, onDesfazer: desfazerRegistro };
+
   return (
     <div className="flex flex-col gap-4">
       <PortariaNav />
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Hoje</h1>
           <p className="text-sm text-muted-foreground">
             Chegada e saída dos alunos. Quem vem com o celular cadastrado tem a chegada marcada sozinha ao chegar perto.
           </p>
         </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex min-w-44 flex-col gap-[5px]">
+        <div className="flex flex-col gap-3 sm:flex-row md:flex-wrap md:items-end">
+          <div className="flex min-w-44 flex-col gap-[5px] sm:flex-1 md:flex-none">
             <Label className="text-xs text-muted-foreground">Turma</Label>
             <Select
               value={classId ? String(classId) : TODAS}
@@ -142,7 +144,7 @@ function PainelDoDia() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex w-56 flex-col gap-[5px]">
+          <div className="flex flex-col gap-[5px] sm:flex-1 md:w-56 md:flex-none">
             <Label className="text-xs text-muted-foreground">Aluno</Label>
             <Input placeholder="Buscar pelo nome" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </div>
@@ -166,7 +168,39 @@ function PainelDoDia() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      {/* No celular do porteiro a tabela vira cartões com botões grandes; conteúdo e ações são os mesmos. */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
+
+        {!isLoading && alunos.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            {termo ? "Nenhum aluno com esse nome." : "Nenhum aluno nesta turma."}
+          </div>
+        )}
+
+        {alunos.map((a) => (
+          <div key={a.studentId} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
+            <CabecalhoDoAluno aluno={a} />
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+              <InfoDoCartao rotulo="Período">
+                <PeriodoDoAluno aluno={a} />
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Chegada">
+                <ChegadaDoAluno aluno={a} />
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Saída">
+                <SaidaDoAluno aluno={a} />
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Multa">
+                <MultaDoAluno aluno={a} />
+              </InfoDoCartao>
+            </div>
+            <AcoesDoAluno aluno={a} {...acoes} grande />
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -196,112 +230,28 @@ function PainelDoDia() {
               </TableRow>
             )}
 
-            {alunos.map((a) => {
-              const periodo = descreverPeriodo({ tipo: a.periodo, entradaPrevista: a.entradaPrevista, saidaPrevista: a.saidaPrevista });
-              const temMulta = a.horasMulta + a.horasMultaDobrada > 0;
-
-              return (
-                <TableRow key={a.studentId}>
-                  <TableCell>
-                    <p className="font-medium">{a.alunoNome}</p>
-                    <p className="text-xs text-muted-foreground">{a.turmaNome ?? "—"}</p>
-                    {a.responsavelACaminho && (
-                      <div className="mt-1">
-                        <SeloDoResponsavel responsavel={a.responsavelACaminho} />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {periodo ? (
-                      <>
-                        <p>{periodo.rotulo}</p>
-                        {periodo.horarios && <p className="text-xs text-muted-foreground">{periodo.horarios}</p>}
-                      </>
-                    ) : (
-                      <Link href="/admin/alunos" className="text-xs text-muted-foreground hover:underline">
-                        Sem período
-                      </Link>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {a.chegadaEm ? (
-                      <div className="flex items-center gap-1.5">
-                        {horaBrasilia(a.chegadaEm)}
-                        {a.chegadaOrigem === "Automatica" && (
-                          <Badge variant="secondary" className="gap-1">
-                            <Smartphone className="size-3" /> celular
-                          </Badge>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {a.saidaEm ? (
-                      <>
-                        <p>{horaBrasilia(a.saidaEm)}</p>
-                        {a.retiradoPor && <p className="text-xs text-muted-foreground">com {a.retiradoPor}</p>}
-                      </>
-                    ) : a.saidaPrevista ? (
-                      <span className="text-muted-foreground">prevista {a.saidaPrevista}</span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {temMulta ? (
-                      <>
-                        <Badge className="bg-warning-soft text-warning-soft-foreground">{formatarMoeda(a.valorMulta)}</Badge>
-                        <p className="text-xs text-muted-foreground">{a.minutosAtraso} min de atraso</p>
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      {a.situacao === "aguardando" && (
-                        <>
-                          <Button size="sm" onClick={() => chegada(a)} disabled={ocupado === a.studentId}>
-                            <LogIn /> Chegou
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => setSaindo(a)} disabled={ocupado === a.studentId}>
-                            Saída
-                          </Button>
-                        </>
-                      )}
-                      {a.situacao === "na-escola" && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Desfazer chegada"
-                            onClick={() => desfazerRegistro(a, "chegada")}
-                            disabled={ocupado === a.studentId}
-                          >
-                            <Undo2 />
-                          </Button>
-                          <Button size="sm" onClick={() => setSaindo(a)} disabled={ocupado === a.studentId}>
-                            <LogOut /> Saída
-                          </Button>
-                        </>
-                      )}
-                      {a.situacao === "saiu" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => desfazerRegistro(a, "saida")}
-                          disabled={ocupado === a.studentId}
-                        >
-                          <Undo2 /> Desfazer saída
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {alunos.map((a) => (
+              <TableRow key={a.studentId}>
+                <TableCell>
+                  <CabecalhoDoAluno aluno={a} />
+                </TableCell>
+                <TableCell className="text-sm">
+                  <PeriodoDoAluno aluno={a} />
+                </TableCell>
+                <TableCell className="text-sm">
+                  <ChegadaDoAluno aluno={a} />
+                </TableCell>
+                <TableCell className="text-sm">
+                  <SaidaDoAluno aluno={a} />
+                </TableCell>
+                <TableCell className="text-sm">
+                  <MultaDoAluno aluno={a} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <AcoesDoAluno aluno={a} {...acoes} />
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
@@ -311,6 +261,152 @@ function PainelDoDia() {
           {saindo && <RegistrarSaida key={saindo.studentId} aluno={saindo} onFechar={() => setSaindo(null)} />}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function CabecalhoDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
+  return (
+    <>
+      <p className="font-medium">{aluno.alunoNome}</p>
+      <p className="text-xs text-muted-foreground">{aluno.turmaNome ?? "—"}</p>
+      {aluno.responsavelACaminho && (
+        <div className="mt-1">
+          <SeloDoResponsavel responsavel={aluno.responsavelACaminho} />
+        </div>
+      )}
+    </>
+  );
+}
+
+function InfoDoCartao({ rotulo, children }: { rotulo: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0 break-words">
+      <p className="text-xs text-muted-foreground">{rotulo}</p>
+      {children}
+    </div>
+  );
+}
+
+function PeriodoDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
+  const periodo = descreverPeriodo({ tipo: aluno.periodo, entradaPrevista: aluno.entradaPrevista, saidaPrevista: aluno.saidaPrevista });
+  return periodo ? (
+    <>
+      <p>{periodo.rotulo}</p>
+      {periodo.horarios && <p className="text-xs text-muted-foreground">{periodo.horarios}</p>}
+    </>
+  ) : (
+    <Link href="/admin/alunos" className="text-xs text-muted-foreground hover:underline">
+      Sem período
+    </Link>
+  );
+}
+
+function ChegadaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
+  return aluno.chegadaEm ? (
+    <div className="flex items-center gap-1.5">
+      {horaBrasilia(aluno.chegadaEm)}
+      {aluno.chegadaOrigem === "Automatica" && (
+        <Badge variant="secondary" className="gap-1">
+          <Smartphone className="size-3" /> celular
+        </Badge>
+      )}
+    </div>
+  ) : (
+    <span className="text-muted-foreground">—</span>
+  );
+}
+
+function SaidaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
+  return aluno.saidaEm ? (
+    <>
+      <p>{horaBrasilia(aluno.saidaEm)}</p>
+      {aluno.retiradoPor && <p className="text-xs text-muted-foreground">com {aluno.retiradoPor}</p>}
+    </>
+  ) : aluno.saidaPrevista ? (
+    <span className="text-muted-foreground">prevista {aluno.saidaPrevista}</span>
+  ) : (
+    <span className="text-muted-foreground">—</span>
+  );
+}
+
+function MultaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
+  const temMulta = aluno.horasMulta + aluno.horasMultaDobrada > 0;
+  return temMulta ? (
+    <>
+      <Badge className="bg-warning-soft text-warning-soft-foreground">{formatarMoeda(aluno.valorMulta)}</Badge>
+      <p className="text-xs text-muted-foreground">{aluno.minutosAtraso} min de atraso</p>
+    </>
+  ) : (
+    <span className="text-muted-foreground">—</span>
+  );
+}
+
+function AcoesDoAluno({
+  aluno: a,
+  ocupado,
+  onChegada,
+  onSaida,
+  onDesfazer,
+  grande = false,
+}: {
+  aluno: PresencaDoAluno;
+  ocupado: number | null;
+  onChegada: (aluno: PresencaDoAluno) => void;
+  onSaida: (aluno: PresencaDoAluno) => void;
+  onDesfazer: (aluno: PresencaDoAluno, etapa: "chegada" | "saida") => void;
+  grande?: boolean;
+}) {
+  // No cartão do celular os botões dividem a largura toda, para acertar com o dedo na correria do portão.
+  const tamanho = grande ? "default" : "sm";
+  const esticar = grande ? "flex-1" : undefined;
+
+  return (
+    <div className={grande ? "flex gap-2" : "flex justify-end gap-1"}>
+      {a.situacao === "aguardando" && (
+        <>
+          <Button size={tamanho} className={esticar} onClick={() => onChegada(a)} disabled={ocupado === a.studentId}>
+            <LogIn /> Chegou
+          </Button>
+          <Button
+            variant="outline"
+            size={tamanho}
+            className={esticar}
+            onClick={() => onSaida(a)}
+            disabled={ocupado === a.studentId}
+          >
+            Saída
+          </Button>
+        </>
+      )}
+      {a.situacao === "na-escola" && (
+        <>
+          <Button
+            variant={grande ? "outline" : "ghost"}
+            size={grande ? "icon" : "icon-sm"}
+            title="Desfazer chegada"
+            aria-label="Desfazer chegada"
+            onClick={() => onDesfazer(a, "chegada")}
+            disabled={ocupado === a.studentId}
+          >
+            <Undo2 />
+          </Button>
+          <Button size={tamanho} className={esticar} onClick={() => onSaida(a)} disabled={ocupado === a.studentId}>
+            <LogOut /> Saída
+          </Button>
+        </>
+      )}
+      {a.situacao === "saiu" && (
+        <Button
+          variant={grande ? "outline" : "ghost"}
+          size={tamanho}
+          className={esticar}
+          onClick={() => onDesfazer(a, "saida")}
+          disabled={ocupado === a.studentId}
+        >
+          <Undo2 /> Desfazer saída
+        </Button>
+      )}
     </div>
   );
 }

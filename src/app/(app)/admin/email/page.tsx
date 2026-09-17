@@ -98,7 +98,7 @@ export default function EmailEscolaPage() {
         <>
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
             <div className="flex gap-3">
-              <div className="flex flex-1 flex-col gap-[5px]">
+              <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Servidor de envio (SMTP)</Label>
                 <Input
                   value={valores.host}
@@ -154,7 +154,7 @@ export default function EmailEscolaPage() {
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex flex-1 flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Remetente (opcional)</Label>
                 <Input
@@ -197,7 +197,7 @@ export default function EmailEscolaPage() {
               </p>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 value={destinoTeste}
                 placeholder="seu-email@exemplo.com"

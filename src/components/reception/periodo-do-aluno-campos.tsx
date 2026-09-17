@@ -193,7 +193,7 @@ export function PeriodoDoAlunoCampos({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Opcao
           selecionada={valor.tipo === "Integral"}
           onClick={() => {
@@ -260,7 +260,7 @@ export function PeriodoDoAlunoCampos({
           {horas && (
             <div className="flex flex-col gap-3 rounded-md bg-muted/50 p-3">
               <p className="text-xs font-medium">Orientação</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Opcao
                   selecionada={valor.orientacao === "Entrada"}
                   onClick={() => onChange({ ...valor, orientacao: "Entrada" })}

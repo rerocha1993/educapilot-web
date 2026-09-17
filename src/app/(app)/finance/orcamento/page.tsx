@@ -92,7 +92,7 @@ export default function OrcamentoPage() {
     <div className="flex flex-col gap-4">
       <FinanceNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Orçamento {ano}</h1>
           <p className="text-sm text-muted-foreground">
@@ -100,7 +100,9 @@ export default function OrcamentoPage() {
             efetivamente entrou/saiu (recebido/pago), não o previsto.
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>+ Novo orçamento</Button>
+        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+          + Novo orçamento
+        </Button>
       </div>
 
       {isError && (
@@ -109,7 +111,53 @@ export default function OrcamentoPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {loadingComparativo && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+
+        {!loadingComparativo && (comparativo ?? []).length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhum orçamento cadastrado pra {ano} ainda.
+          </div>
+        )}
+
+        {comparativo?.map((c) => {
+          const ruim = c.tipo === "Receita" ? c.variacao < 0 : c.variacao > 0;
+          return (
+            <div
+              key={`${c.tipo}-${c.categoria}`}
+              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <Badge variant={c.tipo === "Receita" ? "default" : "secondary"}>{c.tipo}</Badge>
+                <span className="min-w-0 font-medium break-words">{c.categoriaLabel}</span>
+              </div>
+              <div className="flex flex-wrap justify-between gap-x-4 gap-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Planejado</p>
+                  <p className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(c.planejado)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Realizado</p>
+                  <p className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(c.realizado)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Variação</p>
+                  <p
+                    className={`font-mono whitespace-nowrap tabular-nums ${
+                      ruim ? "text-destructive-soft-foreground" : "text-success-soft-foreground"
+                    }`}
+                  >
+                    {c.variacao >= 0 ? "+" : ""}
+                    {formatCurrency(c.variacao)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -179,9 +227,9 @@ export default function OrcamentoPage() {
           {budgets?.map((b) => (
             <div
               key={b.id}
-              className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm md:gap-0"
             >
-              <span>
+              <span className="min-w-0 break-words">
                 <Badge variant={b.tipo === "Receita" ? "default" : "secondary"} className="mr-2">
                   {b.tipo}
                 </Badge>
@@ -239,7 +287,7 @@ export default function OrcamentoPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Valor planejado</Label>
                 <Input

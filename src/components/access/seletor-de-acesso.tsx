@@ -104,11 +104,11 @@ export function SeletorDeAcesso({
           <p className="text-xs text-muted-foreground">
             Ela verá apenas os alunos destas turmas.
           </p>
-          <div className="mt-1 flex max-h-40 flex-col gap-1.5 overflow-y-auto">
+          <div className="mt-1 flex max-h-60 flex-col overflow-y-auto md:max-h-40 md:gap-1.5">
             {(turmas ?? []).map((t) => {
               const id = t.id as number;
               return (
-                <label key={id} className="flex items-center gap-2 text-sm">
+                <label key={id} className="flex min-h-10 items-center gap-2 text-sm md:min-h-0">
                   <Checkbox
                     checked={valor.classIds.includes(id)}
                     onCheckedChange={(marcada) =>
@@ -148,7 +148,7 @@ export function SeletorDeAcesso({
                 marcado ? "border-primary/40 bg-accent/20" : "border-border"
               )}
             >
-              <label className="flex items-center gap-2 text-sm font-medium">
+              <label className="flex min-h-10 items-center gap-2 text-sm font-medium md:min-h-0">
                 <Checkbox
                   checked={marcado}
                   onCheckedChange={(v) => alternarModulo(modulo.slug, !!v)}
@@ -159,9 +159,9 @@ export function SeletorDeAcesso({
               {/* As áreas só aparecem com o módulo marcado: mostrar checkboxes de um módulo que a
                   pessoa não tem sugere que marcá-las daria acesso, e não dá. */}
               {marcado && (
-                <div className="mt-2 flex flex-col gap-1.5 border-t border-border pt-2 pl-6">
+                <div className="mt-2 flex flex-col border-t border-border pt-2 pl-6 md:gap-1.5">
                   {modulo.areas.map((area) => (
-                    <label key={area.slug} className="flex items-center gap-2 text-sm">
+                    <label key={area.slug} className="flex min-h-10 items-center gap-2 text-sm md:min-h-0">
                       <Checkbox
                         checked={areaMarcada(modulo.slug, area.slug, todas)}
                         onCheckedChange={(v) =>

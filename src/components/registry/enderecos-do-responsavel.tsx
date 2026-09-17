@@ -131,13 +131,13 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
             <button
               type="button"
               onClick={() => abrir(e)}
-              className="flex-1 text-left text-sm hover:underline"
+              className="min-w-0 flex-1 text-left text-sm break-words hover:underline"
             >
               <span className="text-xs text-muted-foreground">{e.tipo}</span>
               <br />
               {e.resumo || "Endereço em branco"}
             </button>
-            <Button variant="ghost" size="icon-sm" onClick={() => handleRemover(e.id)}>
+            <Button variant="ghost" size="icon-sm" className="shrink-0" onClick={() => handleRemover(e.id)}>
               <Trash2 className="size-4 text-destructive" />
             </Button>
           </div>
@@ -155,14 +155,14 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
           </div>
 
           <div className="flex gap-2">
-            <div className="flex flex-[3] flex-col gap-[5px]">
+            <div className="flex min-w-0 flex-[3] flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Rua</Label>
               <Input
                 value={form.logradouro}
                 onChange={(e) => setForm((a) => (a ? { ...a, logradouro: e.target.value } : a))}
               />
             </div>
-            <div className="flex flex-1 flex-col gap-[5px]">
+            <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Número</Label>
               <Input
                 value={form.numero}
@@ -171,7 +171,7 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex flex-1 flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Complemento</Label>
               <Input
@@ -189,7 +189,7 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
           </div>
 
           <div className="flex gap-2">
-            <div className="flex flex-[3] flex-col gap-[5px]">
+            <div className="flex min-w-0 flex-[3] flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Cidade</Label>
               <Input
                 value={form.cidade}
@@ -206,7 +206,7 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={handleSalvar} disabled={salvar.isPending}>
               {salvar.isPending ? "Salvando..." : "Salvar endereço"}
             </Button>

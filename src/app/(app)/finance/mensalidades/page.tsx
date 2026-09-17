@@ -49,6 +49,35 @@ function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// defaultValue + salvar no blur: com value controlado, cada tecla dispararia uma re-renderização da
+// lista inteira e o cursor pularia. Componente próprio porque a tabela e os cards do celular usam o
+// mesmo campo.
+function ReajusteInput({
+  plano,
+  placeholder,
+  onSalvar,
+  className,
+}: {
+  plano: TuitionPlanDto;
+  placeholder: string;
+  onSalvar: (plano: TuitionPlanDto, texto: string) => void;
+  className?: string;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Input
+        type="number"
+        step="0.01"
+        className={className}
+        defaultValue={plano.percentualReajuste ?? ""}
+        placeholder={placeholder}
+        onBlur={(e) => onSalvar(plano, e.target.value)}
+      />
+      <span className="text-xs text-muted-foreground">%</span>
+    </div>
+  );
+}
+
 const EMPTY_FORM = {
   studentId: "",
   guardianId: "",
@@ -195,7 +224,7 @@ export default function MensalidadesPage() {
     <div className="flex flex-col gap-4">
       <FinanceNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Mensalidades</h1>
           <p className="text-sm text-muted-foreground">
@@ -203,18 +232,20 @@ export default function MensalidadesPage() {
             (categoria Mensalidade) todo mês.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleGerar} disabled={gerar.isPending}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="flex-1 md:flex-none" onClick={handleGerar} disabled={gerar.isPending}>
             {gerar.isPending
               ? "Gerando..."
               : `Gerar ${String(mes).padStart(2, "0")}/${ano} agora`}
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>+ Novo plano</Button>
+          <Button className="flex-1 md:flex-none" onClick={() => setDialogOpen(true)}>
+            + Novo plano
+          </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-56 flex-1">
+        <div className="relative w-full md:w-auto md:min-w-56 md:flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-8"
@@ -225,7 +256,7 @@ export default function MensalidadesPage() {
         </div>
 
         <Select value={turmaFiltro} onValueChange={(v) => v && setTurmaFiltro(String(v))}>
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-full md:w-56">
             <SelectValue>
               {() =>
                 turmaFiltro === "__todas__"
@@ -245,7 +276,7 @@ export default function MensalidadesPage() {
         </Select>
 
         <p className="ml-auto text-sm text-muted-foreground">
-          {list.length} plano(s) · <span className="font-mono tabular-nums">{formatCurrency(totalFiltrado)}</span>/mês
+          {list.length} plano(s) · <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(totalFiltrado)}</span>/mês
         </p>
       </div>
 
@@ -255,7 +286,52 @@ export default function MensalidadesPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      {/* Celular: cards no lugar da tabela de 8 colunas, com o mesmo campo de reajuste editável. */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
+
+        {!isLoading && list.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhum plano de mensalidade cadastrado ainda.
+          </div>
+        )}
+
+        {list.map((p) => (
+          <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium break-words">{p.studentName ?? p.studentId}</p>
+                <p className="text-muted-foreground break-words">
+                  {nomeDaTurma.get(turmaPorAluno.get(p.studentId) ?? -1) ?? "—"} · {p.guardianName ?? "—"}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(p.id)}>
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(p.valorMensal)}</span>
+              <span className="text-muted-foreground">Dia {p.diaVencimento}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">Reajuste 2027</span>
+              <ReajusteInput
+                plano={p}
+                placeholder={percentualEscola == null ? "—" : String(percentualEscola)}
+                onSalvar={salvarReajuste}
+                className="w-24 text-right font-mono tabular-nums"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-1">
+              <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
+              {p.gerarCobrancaAsaas && <Badge variant="secondary">Cobrança Asaas</Badge>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -299,19 +375,12 @@ export default function MensalidadesPage() {
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">Dia {p.diaVencimento}</TableCell>
                 <TableCell>
-                  {/* defaultValue + salvar no blur: com value controlado, cada tecla dispararia
-                      uma re-renderização da lista inteira e o cursor pularia. */}
-                  <div className="flex items-center justify-end gap-1">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      className="h-8 w-20 text-right font-mono text-sm tabular-nums"
-                      defaultValue={p.percentualReajuste ?? ""}
-                      placeholder={percentualEscola == null ? "—" : String(percentualEscola)}
-                      onBlur={(e) => salvarReajuste(p, e.target.value)}
-                    />
-                    <span className="text-xs text-muted-foreground">%</span>
-                  </div>
+                  <ReajusteInput
+                    plano={p}
+                    placeholder={percentualEscola == null ? "—" : String(percentualEscola)}
+                    onSalvar={salvarReajuste}
+                    className="h-8 w-20 text-right font-mono text-sm tabular-nums"
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
@@ -390,7 +459,7 @@ export default function MensalidadesPage() {
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Valor mensal</Label>
                 <Input
@@ -431,7 +500,7 @@ export default function MensalidadesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, dataInicio: e.target.value }))}
               />
             </div>
-            <div className="flex items-center justify-between rounded-md border border-dashed border-border p-2.5">
+            <div className="flex items-center justify-between gap-3 rounded-md border border-dashed border-border p-2.5 md:gap-0">
               <div>
                 <Label className="text-xs text-muted-foreground">Gerar cobrança real (Asaas)</Label>
                 <p className="text-xs text-muted-foreground">

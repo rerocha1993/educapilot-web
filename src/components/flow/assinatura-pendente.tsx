@@ -59,10 +59,10 @@ export function AssinaturaPendente({
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-4 py-8 text-center">
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-2 py-6 text-center md:px-4 md:py-8">
       <FileSignature className="size-10 text-primary" />
 
-      <div>
+      <div className="px-2 md:px-0">
         <p className="font-heading text-lg font-bold">Falta assinar</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Suas respostas já foram enviadas. A matrícula só é concluída depois da assinatura do
@@ -80,21 +80,24 @@ export function AssinaturaPendente({
               cobranca — mais simples de fazer e muito mais fraca de provar.
 
               O que muda aqui e so onde isso acontece: embutido, a familia nao sai do formulario
-              nem precisa entender que foi para outro site. */}
+              nem precisa entender que foi para outro site.
+
+              No celular o cartao quase nao tem margem lateral: cada pixel de largura conta para a
+              tela do provedor caber sem rolagem horizontal. */}
           <iframe
             src={data.link}
             title="Assinatura do contrato"
-            className="h-[70vh] min-h-125 w-full rounded-md border border-border bg-background"
+            className="h-[75vh] min-h-125 w-full rounded-md border border-border bg-background md:h-[70vh]"
             allow="camera; geolocation"
           />
 
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-3 px-2 text-sm text-muted-foreground md:mt-2 md:px-0 md:text-xs">
             Não conseguiu assinar aqui?{" "}
             <a
               href={data.link}
               target="_blank"
               rel="noreferrer"
-              className="text-primary underline"
+              className="inline-block py-1 text-primary underline md:inline md:py-0"
             >
               Abrir em uma nova aba
             </a>
@@ -105,7 +108,8 @@ export function AssinaturaPendente({
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Preparando o contrato para assinatura...
-        </p>      )}
+        </p>
+      )}
     </div>
   );
 }

@@ -74,18 +74,18 @@ function SubProductsCell({ product }: { product: ProductEventDto }) {
           <Input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="h-6 w-24 text-xs"
+            className="h-9 w-32 text-xs md:h-6 md:w-24"
             placeholder="com farofa"
             autoFocus
           />
-          <Button size="sm" className="h-6 px-2 text-xs" onClick={handleAdd}>
+          <Button size="sm" className="h-9 px-2 text-xs md:h-6" onClick={handleAdd}>
             OK
           </Button>
         </div>
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="text-xs text-muted-foreground underline hover:text-foreground"
+          className="min-h-9 text-xs text-muted-foreground underline hover:text-foreground md:min-h-0"
         >
           + variação
         </button>
@@ -134,7 +134,7 @@ export default function ProductsPage() {
     <div className="flex flex-col gap-4">
       <EventsNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Produtos do evento</h1>
           <p className="text-sm text-muted-foreground">
@@ -142,7 +142,7 @@ export default function ProductsPage() {
             produção, não o total.
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} disabled={!selectedGroupId}>
+        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)} disabled={!selectedGroupId}>
           + Novo produto
         </Button>
       </div>
@@ -150,7 +150,7 @@ export default function ProductsPage() {
       <div className="flex flex-col gap-[5px]">
         <Label className="text-xs text-muted-foreground">Grupo</Label>
         <Select value={selectedGroupId ?? ""} onValueChange={(v) => v && setSelectedGroupId(String(v))}>
-          <SelectTrigger className="w-64">
+          <SelectTrigger className="w-full md:w-64">
             <SelectValue>{() => selectedGroup?.nome ?? "Selecione um grupo"}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -169,7 +169,35 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-col gap-2 md:hidden">
+        {isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+        {!isLoading && products?.length === 0 && (
+          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhum produto neste grupo.
+          </div>
+        )}
+        {products?.map((p) => (
+          <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 font-medium break-words">{p.nome}</p>
+              {p.ativo ? (
+                <Badge className="bg-success-soft text-success-soft-foreground">Ativo</Badge>
+              ) : (
+                <Badge variant="secondary">Inativo</Badge>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(p.preco)}</span>
+              <span className="font-mono tabular-nums">
+                {p.estoque ?? <span className="text-muted-foreground">não controlado</span>}
+              </span>
+            </div>
+            <SubProductsCell product={p} />
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-lg border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -229,7 +257,7 @@ export default function ProductsPage() {
               <Label className="text-xs text-muted-foreground">Nome</Label>
               <Input value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Preço</Label>
                 <Input

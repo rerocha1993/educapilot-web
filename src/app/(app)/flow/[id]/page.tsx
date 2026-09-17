@@ -397,13 +397,13 @@ export default function FormBuilderPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/flow" className="text-xs text-muted-foreground hover:underline">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <Link href="/flow" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
             ← Formulários
           </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="font-heading text-xl font-bold">{form.nome}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-heading text-xl font-bold break-words">{form.nome}</h1>
             <Badge variant={form.status === "Ativo" ? "default" : "secondary"}>{form.status}</Badge>
             <TagDoTipo tipo={tipoDoFormulario(form)} />
             <Button
@@ -415,9 +415,9 @@ export default function FormBuilderPage() {
               <Pencil className="size-4" />
             </Button>
           </div>
-          {form.descricao && <p className="text-sm text-muted-foreground">{form.descricao}</p>}
+          {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handleCopiarLinkPublico} disabled={!form.publicToken}>
             <Link2 className="size-4" /> Copiar link público
           </Button>
@@ -464,13 +464,13 @@ export default function FormBuilderPage() {
               onReordenar={handleReordenar}
               renderItem={(field, i) => (
               <div
-                className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5"
+                className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-2.5 md:flex-row md:items-center md:justify-between"
               >
-                <div>
-                  <p className="text-sm font-medium">{field.label}</p>
-                  <p className="text-xs text-muted-foreground">{fieldSummary(field)}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium break-words">{field.label}</p>
+                  <p className="text-xs break-words text-muted-foreground">{fieldSummary(field)}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={field.obrigatorio ? "default" : "secondary"}>
                     {field.obrigatorio ? "Obrigatório" : "Opcional"}
                   </Badge>
@@ -535,8 +535,8 @@ export default function FormBuilderPage() {
             )}
             {automations?.map((rule) => (
               <div key={rule.id} className="rounded-lg border border-border bg-card px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">{rule.nome}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="min-w-0 text-sm font-medium break-words">{rule.nome}</p>
                   <Switch
                     checked={rule.ativo}
                     onCheckedChange={() => toggleAutomation.mutate(rule)}
@@ -648,7 +648,7 @@ export default function FormBuilderPage() {
             )}
 
             {fieldForm.tipo === "numero" && (
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="flex flex-1 flex-col gap-[5px]">
                   <Label className="text-xs text-muted-foreground">Mínimo (opcional)</Label>
                   <Input
@@ -669,7 +669,7 @@ export default function FormBuilderPage() {
             )}
 
             {(fieldForm.tipo === "texto_curto" || fieldForm.tipo === "texto_longo") && (
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="flex flex-1 flex-col gap-[5px]">
                   <Label className="text-xs text-muted-foreground">Mín. caracteres (opcional)</Label>
                   <Input

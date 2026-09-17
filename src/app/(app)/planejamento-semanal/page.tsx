@@ -130,9 +130,9 @@ export default function PlanejamentoSemanalPage() {
             Objetivos, atividades e materiais da semana por turma — modelo configurável.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
           <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-[calc(50%-0.25rem)] md:w-44">
               <SelectValue placeholder="Turma">{() => selectedClass?.className ?? "Turma"}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -145,7 +145,7 @@ export default function PlanejamentoSemanalPage() {
           </Select>
 
           <Select value={templateId?.toString() ?? ""} onValueChange={(v) => v && setTemplateId(Number(v))}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-[calc(50%-0.25rem)] md:w-48">
               <SelectValue placeholder="Modelo">
                 {() => selectedTemplate?.name ?? "Modelo"}
               </SelectValue>
@@ -159,7 +159,7 @@ export default function PlanejamentoSemanalPage() {
             </SelectContent>
           </Select>
 
-          <Button onClick={openNew} disabled={classId === null || templateId === null}>
+          <Button className="w-full md:w-auto" onClick={openNew} disabled={classId === null || templateId === null}>
             Novo planejamento
           </Button>
         </div>
@@ -190,7 +190,7 @@ export default function PlanejamentoSemanalPage() {
 
         {sorted.map((p) => (
           <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-xs text-muted-foreground">
                 {formatarSoData(p.startDate)} – {formatarSoData(p.endDate)}
               </span>
@@ -225,7 +225,7 @@ export default function PlanejamentoSemanalPage() {
           </DialogHeader>
 
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Início</Label>
                 <Input

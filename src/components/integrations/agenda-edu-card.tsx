@@ -83,7 +83,7 @@ export function AgendaEduCard() {
   // os botões desabilitados — indistinguível de "ainda não configurado".
   if (isError) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm break-words">
         {error instanceof Error ? error.message : "Não foi possível carregar a configuração do Agenda Edu."}
       </div>
     );
@@ -133,13 +133,23 @@ export function AgendaEduCard() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button onClick={handleSalvar} disabled={saveSettings.isPending}>
+        <Button onClick={handleSalvar} disabled={saveSettings.isPending} className="w-full md:w-auto">
           {saveSettings.isPending ? "Salvando..." : "Salvar credenciais"}
         </Button>
-        <Button variant="outline" onClick={handleTestar} disabled={!configurado || testConnection.isPending}>
+        <Button
+          variant="outline"
+          onClick={handleTestar}
+          disabled={!configurado || testConnection.isPending}
+          className="w-full md:w-auto"
+        >
           {testConnection.isPending ? "Testando..." : "Testar conexão"}
         </Button>
-        <Button variant="outline" onClick={handleImportar} disabled={!configurado || importar.isPending}>
+        <Button
+          variant="outline"
+          onClick={handleImportar}
+          disabled={!configurado || importar.isPending}
+          className="w-full md:w-auto"
+        >
           {importar.isPending ? "Importando..." : "Importar turmas, alunos e responsáveis"}
         </Button>
       </div>
@@ -158,7 +168,7 @@ export function AgendaEduCard() {
 function ResultadoImportacao({ resultado }: { resultado: AgendaEduImportResult }) {
   if (!resultado.sucesso) {
     return (
-      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
+      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm break-words">
         {resultado.erro ?? "A importação falhou."}
       </div>
     );
@@ -190,7 +200,7 @@ function ResultadoImportacao({ resultado }: { resultado: AgendaEduImportResult }
           <summary className="cursor-pointer">
             {resultado.ignorados.length} registro(s) não importado(s) — ver motivos
           </summary>
-          <ul className="mt-1 list-disc pl-4">
+          <ul className="mt-1 list-disc pl-4 break-words">
             {resultado.ignorados.map((motivo, i) => (
               <li key={i}>{motivo}</li>
             ))}

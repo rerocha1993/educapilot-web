@@ -12,7 +12,7 @@ import { formatarDistancia } from "@/lib/reception/distancia";
 // Só no navegador: o Leaflet mexe em window assim que é importado.
 const MapaPortaria = dynamic(() => import("@/components/reception/mapa-portaria"), {
   ssr: false,
-  loading: () => <Skeleton className="h-[420px] w-full rounded-lg lg:h-[560px]" />,
+  loading: () => <Skeleton className="h-[60vh] w-full rounded-lg md:h-[420px] lg:h-[560px]" />,
 });
 
 export default function MapaPage() {
@@ -42,10 +42,10 @@ export default function MapaPage() {
         </div>
       )}
 
-      {isLoading && <Skeleton className="h-[420px] w-full rounded-lg" />}
+      {isLoading && <Skeleton className="h-[60vh] w-full rounded-lg md:h-[420px]" />}
 
       {escola && !temLocal && (
-        <div className="rounded-lg border border-dashed border-border bg-card px-6 py-10 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card px-4 py-10 text-center md:px-6">
           <p className="font-medium">A escola ainda não tem localização.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Preencha o endereço da escola em{" "}
@@ -70,7 +70,7 @@ export default function MapaPage() {
             {trajetos.map((t) => (
               <div key={t.id} className="flex flex-col gap-1 rounded-lg border border-border bg-card p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium">{t.responsavelNome}</p>
+                  <p className="min-w-0 font-medium break-words">{t.responsavelNome}</p>
                   <BadgeSituacao situacao={t.situacao} />
                 </div>
                 <p className="text-sm">

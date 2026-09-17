@@ -36,8 +36,8 @@ export default function ConvitePage() {
   }
 
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center bg-background p-6">
-      <div className="flex w-full max-w-[420px] flex-col gap-4 rounded-[10px] border border-border bg-card p-7 shadow-[0_1px_2px_rgba(0,0,0,.04)]">
+    <main className="flex min-h-full flex-1 items-center justify-center bg-background p-4 md:p-6">
+      <div className="flex w-full max-w-[420px] flex-col gap-4 rounded-[10px] border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,.04)] md:p-7">
         <Image
           src="/logo.png"
           alt="EducaPilot"
@@ -49,7 +49,7 @@ export default function ConvitePage() {
 
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="font-heading text-base font-bold">Criar seu acesso</span>
-          <span className="text-[11.5px] text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground md:text-[11.5px]">
             Complete seus dados para entrar no sistema da escola.
           </span>
         </div>

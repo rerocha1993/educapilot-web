@@ -67,7 +67,7 @@ export default function RelatoriosConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-heading text-xl font-bold">Configurar relatórios</h1>
           <p className="text-sm text-muted-foreground">
@@ -120,15 +120,15 @@ export default function RelatoriosConfigPage() {
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap gap-x-4">
+            <label className="flex min-h-10 items-center gap-2 text-sm md:min-h-0">
               <Checkbox
                 checked={form.requiresClass}
                 onCheckedChange={(v) => setForm((f) => ({ ...f, requiresClass: v === true }))}
               />
               Pede turma
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex min-h-10 items-center gap-2 text-sm md:min-h-0">
               <Checkbox
                 checked={form.requiresDateRange}
                 onCheckedChange={(v) => setForm((f) => ({ ...f, requiresDateRange: v === true }))}
@@ -138,7 +138,7 @@ export default function RelatoriosConfigPage() {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleCreate} disabled={!form.name.trim() || saveType.isPending}>
+            <Button className="w-full md:w-auto" onClick={handleCreate} disabled={!form.name.trim() || saveType.isPending}>
               <Plus className="size-4" />
               Criar tipo de relatório
             </Button>
@@ -162,8 +162,8 @@ export default function RelatoriosConfigPage() {
 
         {reports?.map((r) => (
           <div key={r.id} className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
-            <div className="flex-1">
-              <p className="text-sm font-medium">{r.name}</p>
+            <div className="min-w-0 flex-1">
+              <p className="break-words text-sm font-medium">{r.name}</p>
               <p className="text-xs text-muted-foreground">
                 {REPORT_DATA_SOURCE_LABELS[r.dataSource] ?? r.dataSource} ·{" "}
                 {[r.requiresClass && "por turma", r.requiresDateRange && "por período"]
