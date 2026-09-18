@@ -112,8 +112,8 @@
   --accent-foreground: #5C4B8C;
 
   /* Ação: CTA principal, item ativo, pendência. Nunca decoração. */
-  --action: #B85C00;
-  --action-hover: #A05000;
+  --action: #E8730F;
+  --action-hover: #D2660B;
   --action-foreground: #FFFFFF;
   --action-brand: #F5851F;
   --action-soft: #FFF4E8;
@@ -127,7 +127,7 @@
   --success-border: #BFE0CE;
 
   /* Pendente usa o laranja de ação — no guia, pendência e ação são a mesma cor. */
-  --warning: #B85C00;
+  --warning: #C96A05;
   --warning-foreground: #FFFFFF;
   --warning-soft: #FFF4E8;
   --warning-soft-foreground: #B85C00;

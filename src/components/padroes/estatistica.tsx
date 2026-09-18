@@ -41,19 +41,21 @@ export function Estatistica({
 
   return (
     <div className={cn("rounded-xl border border-border bg-card px-4.5 pt-4.5 pb-4", className)}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[12.5px] font-medium text-muted-foreground">{rotulo}</span>
+      <div className="flex items-start justify-between gap-2">
+        <span className="min-w-0 text-[13px] font-medium leading-snug text-muted-foreground md:text-[12.5px]">
+          {rotulo}
+        </span>
         {etiqueta}
       </div>
 
       <div
         className={cn(
-          "mt-2.5 font-heading text-[30px] font-semibold tracking-[-.03em] tabular-nums",
+          "mt-2.5 font-heading text-[26px] font-semibold tracking-[-.03em] tabular-nums sm:text-[30px]",
           tom === "danger" && "text-destructive"
         )}
       >
         {valor}
-        {total !== undefined && <span className="text-[18px] text-[#B5AEBF]"> / {total}</span>}
+        {total !== undefined && <span className="text-[16px] text-[#B5AEBF] sm:text-[18px]"> / {total}</span>}
       </div>
 
       {barra && <div className="mt-3">{barra}</div>}
@@ -70,7 +72,7 @@ export function Estatistica({
         </div>
       )}
 
-      {rodape && <div className="mt-2 text-[11.5px] text-muted-foreground">{rodape}</div>}
+      {rodape && <div className="mt-2 text-[12.5px] leading-snug text-muted-foreground md:text-[11.5px]">{rodape}</div>}
     </div>
   );
 }
@@ -91,7 +93,10 @@ export function EtiquetaDoCartao({
   };
 
   return (
-    <span className={cn("rounded-md px-1.5 py-0.5 font-mono text-[11px] tabular-nums", tons[tom])}>
+    <span className={cn(
+        "shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap tabular-nums",
+        tons[tom]
+      )}>
       {children}
     </span>
   );

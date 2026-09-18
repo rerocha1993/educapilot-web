@@ -117,15 +117,17 @@ export default function InicioPage() {
       )}
 
       {isLoading ? (
-        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[148px] animate-pulse rounded-xl border border-border bg-card" />
+            <div key={i} className="h-[136px] animate-pulse rounded-xl border border-border bg-card sm:h-[148px]" />
           ))}
         </div>
       ) : (
         painel && (
           <>
-            <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+            {/* No celular os quatro números ficam dois por linha: é o que faz a tela parecer um
+                painel, e não uma pilha de cartões. */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-4">
               {rotaVisivel("/") && <CartaoPresencas painel={painel} />}
               {rotaVisivel("/flow/respostas") && <CartaoRematriculas painel={painel} />}
               {rotaVisivel("/finance/inadimplencia") && <CartaoEmAtraso painel={painel} />}
@@ -144,20 +146,22 @@ export default function InicioPage() {
 
       {atalhos.length > 0 && (
         <section>
-          <div className="mb-2.5 text-[11.5px] font-bold uppercase tracking-[.16em] text-muted-foreground">
+          <div className="mb-3 text-[12px] font-bold uppercase tracking-[.16em] text-muted-foreground">
             Atalhos
           </div>
-          <div className="flex flex-wrap gap-2.5">
+          {/* Celular: quadrados com ícone grande, que se acerta com o dedo. Computador: a linha
+              de pílulas do modelo, que ocupa menos altura. */}
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:flex md:flex-wrap md:gap-2.5">
             {atalhos.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-2.5 rounded-lg border border-border bg-card py-2.5 pl-2.5 pr-3.5 text-[13.5px] font-medium text-secondary-foreground transition-colors hover:border-action-brand hover:text-action"
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card px-2 py-4 text-center text-[13px] font-medium text-secondary-foreground transition-colors hover:border-action-brand hover:text-action active:bg-accent md:flex-row md:justify-start md:rounded-lg md:py-2.5 md:pl-2.5 md:pr-3.5 md:text-[13.5px]"
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-primary">
-                  <Icon className="size-4" />
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-primary md:size-7 md:rounded-md">
+                  <Icon className="size-5.5 md:size-4" />
                 </span>
-                {label}
+                <span className="leading-tight">{label}</span>
               </Link>
             ))}
           </div>
@@ -364,7 +368,7 @@ function PrecisaDeVoce({ tarefas }: { tarefas: Tarefa[] }) {
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-muted px-4.5 py-4">
-        <span className="font-heading text-[15.5px] font-semibold">Precisa de você</span>
+        <span className="font-heading text-[17px] font-semibold md:text-[15.5px]">Precisa de você</span>
         <EtiquetaDoCartao tom="action">{tarefas.length}</EtiquetaDoCartao>
       </div>
       <ul>
@@ -380,10 +384,10 @@ function PrecisaDeVoce({ tarefas }: { tarefas: Tarefa[] }) {
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0">
-                <span className="block text-sm font-semibold">{titulo}</span>
-                <span className="mt-0.5 block truncate text-[12.5px] text-muted-foreground">{sub}</span>
+                <span className="block text-[15px] font-semibold leading-snug md:text-sm">{titulo}</span>
+                <span className="mt-0.5 block truncate text-[13px] text-muted-foreground md:text-[12.5px]">{sub}</span>
               </span>
-              <span className="whitespace-nowrap text-[12.5px] font-semibold text-primary">{acao}</span>
+              <span className="whitespace-nowrap text-[13px] font-semibold text-primary md:text-[12.5px]">{acao}</span>
             </Link>
           </li>
         ))}
@@ -398,7 +402,7 @@ function RematriculaPorTurma({ painel }: { painel: PainelInicio }) {
   return (
     <section className="rounded-xl border border-border bg-card px-4.5 pb-4.5 pt-4">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-heading text-[15.5px] font-semibold">Rematrícula por turma</span>
+        <span className="font-heading text-[17px] font-semibold md:text-[15.5px]">Rematrícula por turma</span>
         <span className="font-mono text-xs tabular-nums text-muted-foreground">{proximoAno}</span>
       </div>
 
@@ -408,7 +412,7 @@ function RematriculaPorTurma({ painel }: { painel: PainelInicio }) {
           const pctAguardando = t.total > 0 ? (t.aguardando / t.total) * 100 : 0;
           return (
             <div key={t.turma}>
-              <div className="flex items-baseline justify-between gap-2.5 text-[13px]">
+              <div className="flex items-baseline justify-between gap-2.5 text-[14px] md:text-[13px]">
                 <span className="truncate font-medium text-secondary-foreground">{t.turma}</span>
                 <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                   {t.confirmadas} / {t.total}
