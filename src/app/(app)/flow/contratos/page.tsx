@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileCheck, Link2, MessageCircle, Settings, Trash2, TriangleAlert } from "lucide-react";
+import { FileCheck, Link2, MessageCircle, RefreshCw, Settings, Trash2, TriangleAlert } from "lucide-react";
 
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
   useContractsAwaitingApproval,
   useRejectContract,
   useDeleteContract,
+  useReissueContract,
   type Contract,
 } from "@/lib/contracts/use-contracts";
 import { formatarData, formatarDataHora } from "@/lib/format/date";
@@ -193,6 +194,7 @@ function CartaoAprovacao({ contrato }: { contrato: Contract }) {
 
 function Historico({ contratos }: { contratos: Contract[] }) {
   const excluir = useDeleteContract();
+  const reemitir = useReissueContract();
 
   // Contrato aberto para ver o motivo da falha. Um por vez: a lista fica legível, e o motivo
   // é sempre longo demais para caber numa coluna.
@@ -202,9 +204,25 @@ function Historico({ contratos }: { contratos: Contract[] }) {
   // regra existe para não oferecer um botão que vai falhar.
   // Qualquer contrato que ninguém assinou. O caso real: uma mãe preencheu duas vezes, assinou um
   // e o outro ficou aberto — duplicidade a limpar, e que não é falha de envio.
+  // Recusado (3) e cancelado (5) sao finais e sem assinatura: sao os unicos que valem reemitir.
+  const podeReemitir = (c: Contract) =>
+    (c.status === 3 || c.status === 5) && !c.signatarios.some((s) => !!s.assinadoEm);
+
   const podeExcluir = (c: Contract) =>
     !c.signatarios.some((s) => !!s.assinadoEm) &&
     !c.statusDescricao?.toLowerCase().includes("assinado");
+
+  // Recusa no Autentique encerra o documento: aquele link nao assina mais. Reemitir monta um
+  // contrato novo com a ficha que a familia ja enviou, para ela so precisar assinar de novo.
+  async function handleReemitir(c: Contract) {
+    try {
+      await reemitir.mutateAsync(c.id);
+      toast.success("Contrato novo gerado. Envie o novo link de assinatura para a família.");
+    } catch (err) {
+      // A mensagem vem do backend e diz o que a escola precisa ajustar.
+      toast.error(err instanceof Error ? err.message : "Não foi possível gerar um contrato novo.");
+    }
+  }
 
   async function handleExcluir(c: Contract) {
     try {
@@ -267,6 +285,19 @@ function Historico({ contratos }: { contratos: Contract[] }) {
         {/* Falhou: mostra o motivo e deixa excluir. Antes a linha só dizia
             "Falha no envio" e não havia o que clicar — nem para entender, nem
             para limpar. */}
+        {podeReemitir(c) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={reemitir.isPending}
+            onClick={() => handleReemitir(c)}
+            title="Monta um contrato novo com a mesma ficha, com link de assinatura novo."
+          >
+            <RefreshCw className="size-4 text-primary" />
+            Gerar novo
+          </Button>
+        )}
+
         {podeExcluir(c) && (
           <>
             <Button

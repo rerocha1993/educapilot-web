@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowApi } from "../api/client";
 import { unwrapApiResponse } from "../api/unwrap";
+import { getToken } from "../auth/session";
 
 export interface ContractSigner {
   id: string;
@@ -91,6 +92,42 @@ export function useRejectContract() {
  * apagá-lo não teria desfazer. Aqui a interface só oferece o botão onde ele é permitido, e a
  * checagem de verdade continua no servidor.
  */
+/**
+ * Gera um contrato novo a partir da mesma ficha que a família já enviou.
+ *
+ * Recusa no Autentique é definitiva: aquele link morre e não há como reenviá-lo. Sem isto, a
+ * única saída era pedir à família para preencher tudo de novo. O contrato recusado continua na
+ * lista — é o registro de que alguém recusou, com o motivo e a data.
+ *
+ * `fetch` cru porque a rota é nova e ainda não está nos tipos gerados do Swagger. A mensagem de
+ * erro do backend vai direto para a tela: é ela que diz o que a escola precisa ajustar.
+ */
+export function useReissueContract() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = getToken();
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141"}/api/Contracts/${id}/reemitir`,
+        { method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+      );
+
+      if (!res.ok) {
+        const corpo = await res.json().catch(() => null);
+        throw new Error(
+          (corpo as { message?: string } | null)?.message ??
+            "Não foi possível gerar um contrato novo."
+        );
+      }
+
+      return (await res.json()) as { contratoId: string };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
+  });
+}
+
 export function useDeleteContract() {
   const queryClient = useQueryClient();
   return useMutation({
