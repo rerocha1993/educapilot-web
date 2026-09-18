@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   House,
@@ -197,9 +198,14 @@ export function AppShell({
       >
         <div className={cn("flex items-center gap-2.5", collapsed ? "flex-col" : "px-2")}>
           <Link href={INICIO_HREF} className="flex items-center gap-2.5 overflow-hidden">
-            <span className="grid size-[30px] shrink-0 place-items-center rounded-[9px] bg-[linear-gradient(145deg,#6E5AA8,#F5851F)] font-heading text-[15px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(245,133,31,.9)]">
-              E
-            </span>
+            <Image
+              src="/icon-192.png"
+              alt=""
+              width={32}
+              height={32}
+              className="size-8 shrink-0"
+              priority
+            />
             {!collapsed && (
               <span className="whitespace-nowrap font-heading text-[17px] font-semibold tracking-tight text-white">
                 Educa<span className="text-action-brand">Pilot</span>
@@ -303,9 +309,7 @@ export function AppShell({
           </button>
 
           <Link href={INICIO_HREF} className="flex h-16 items-center justify-center gap-2">
-            <span className="grid size-8 shrink-0 place-items-center rounded-[9px] bg-[linear-gradient(145deg,#6E5AA8,#F5851F)] font-heading text-sm font-bold text-white">
-              E
-            </span>
+            <Image src="/icon-192.png" alt="" width={32} height={32} className="size-8 shrink-0" priority />
             <span className="font-heading text-xl font-semibold tracking-tight text-foreground">
               Educa<span className="text-action-brand">Pilot</span>
             </span>
@@ -374,9 +378,7 @@ export function AppShell({
           <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
               <span className="flex items-center gap-2.5">
-                <span className="grid size-[30px] place-items-center rounded-[9px] bg-[linear-gradient(145deg,#6E5AA8,#F5851F)] font-heading text-[15px] font-bold text-white">
-                  E
-                </span>
+                <Image src="/icon-192.png" alt="" width={30} height={30} className="size-[30px] shrink-0" />
                 <span className="font-heading text-[17px] font-semibold text-white">
                   Educa<span className="text-action-brand">Pilot</span>
                 </span>

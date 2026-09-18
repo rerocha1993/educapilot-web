@@ -41,7 +41,8 @@ export function Estatistica({
 
   return (
     <div className={cn("rounded-xl border border-border bg-card px-4.5 pt-4.5 pb-4", className)}>
-      <div className="flex items-start justify-between gap-2">
+      {/* flex-wrap: em cartão estreito a etiqueta desce em vez de espremer o rótulo. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
         <span className="min-w-0 text-[13px] font-medium leading-snug text-muted-foreground md:text-[12.5px]">
           {rotulo}
         </span>
