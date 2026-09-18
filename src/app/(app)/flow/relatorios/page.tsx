@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { EditorDeRelatorio } from "@/components/flow/editor-de-relatorio";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useForms } from "@/lib/flow/use-forms";
 import { useBaixarExcel } from "@/lib/flow/use-form-responses";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
@@ -48,25 +50,22 @@ export default function RelatoriosFormulariosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/flow" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
-            ← Formulários
-          </Link>
-          <h1 className="font-heading text-xl font-bold">Relatórios</h1>
-          <p className="text-sm text-muted-foreground">
-            Monte relatórios sobre qualquer formulário, escolhendo as perguntas e os envios que entram.
-          </p>
-        </div>
-        <Button onClick={() => setEditando("novo")}>
-          <Plus className="size-4" /> Novo relatório
-        </Button>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="← Formulários"
+        eyebrowHref="/flow"
+        titulo="Relatórios"
+        apoio="Monte relatórios sobre qualquer formulário, escolhendo as perguntas e os envios que entram."
+        acoes={
+          <Button variant="action" onClick={() => setEditando("novo")}>
+            <Plus className="size-4" /> Novo relatório
+          </Button>
+        }
+      />
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <Link
           href="/flow/relatorios/matriculas"
-          className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/40"
+          className="flex flex-col gap-1 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/60"
         >
           <div className="flex flex-wrap items-center gap-2">
             <GraduationCap className="size-4 text-muted-foreground" />
@@ -81,7 +80,7 @@ export default function RelatoriosFormulariosPage() {
         {isLoading && <Skeleton className="h-24 w-full rounded-lg" />}
 
         {(relatorios ?? []).map((r) => (
-          <div key={r.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+          <div key={r.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
             <Link href={`/flow/relatorios/${r.id}`} className="flex flex-col gap-1 hover:underline-offset-2">
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" />
@@ -90,7 +89,13 @@ export default function RelatoriosFormulariosPage() {
               <p className="truncate text-sm text-muted-foreground">
                 {r.formNome ?? "Formulário excluído"}
                 {" · "}
-                {r.camposIds.length === 0 ? "todas as perguntas" : `${r.camposIds.length} coluna(s)`}
+                {r.camposIds.length === 0 ? (
+                  "todas as perguntas"
+                ) : (
+                  <>
+                    <span className="font-mono tabular-nums">{r.camposIds.length}</span> coluna(s)
+                  </>
+                )}
                 {r.statusFiltro ? ` · só ${r.statusFiltro}` : ""}
               </p>
               {r.descricao && <p className="line-clamp-2 text-xs text-muted-foreground">{r.descricao}</p>}
@@ -111,10 +116,21 @@ export default function RelatoriosFormulariosPage() {
       </div>
 
       {!isLoading && (relatorios ?? []).length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          Nenhum relatório montado ainda. Clique em <strong>Novo relatório</strong>, escolha o formulário e as
-          perguntas que viram coluna.
-        </p>
+        <EstadoVazio
+          icone={<FileSpreadsheet />}
+          titulo="Nenhum relatório montado ainda."
+          texto={
+            <>
+              Clique em <strong>Novo relatório</strong>, escolha o formulário e as perguntas que viram
+              coluna.
+            </>
+          }
+          acao={
+            <Button onClick={() => setEditando("novo")}>
+              <Plus className="size-4" /> Novo relatório
+            </Button>
+          }
+        />
       )}
 
       <PlanilhasDosFormularios />
@@ -176,10 +192,10 @@ function PlanilhasDosFormularios() {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-heading text-base font-bold">Respostas completas dos formulários</h2>
+          <h2 className="font-heading text-[15.5px] font-semibold">Respostas completas dos formulários</h2>
           <p className="text-sm text-muted-foreground">
             Uma planilha por formulário, com todas as perguntas e todos os envios, sem montar relatório.
           </p>
@@ -196,7 +212,7 @@ function PlanilhasDosFormularios() {
 
       {isLoading && <Skeleton className="h-24 w-full" />}
 
-      <div className="flex flex-col rounded-lg border border-border">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border">
         {formularios.map((f) => (
           <div
             key={f.id}

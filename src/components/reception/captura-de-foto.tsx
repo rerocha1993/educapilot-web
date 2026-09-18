@@ -93,13 +93,13 @@ export function CapturaDeFoto({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-dashed border-border p-3">
-      <p className="text-xs text-muted-foreground">Foto do visitante</p>
+    <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border-dashed p-3">
+      <p className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Foto do visitante</p>
 
       {previa && (
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element -- prévia local, sem otimização */}
-          <img src={previa} alt="Prévia da foto" className="size-20 rounded-full object-cover" />
+          <img src={previa} alt="Prévia da foto" className="size-20 rounded-full bg-accent object-cover" />
           <Button type="button" variant="ghost" size="sm" onClick={descartar}>
             <RotateCcw /> Tirar outra
           </Button>
@@ -108,7 +108,7 @@ export function CapturaDeFoto({
 
       {!previa && cameraLigada && (
         <div className="flex flex-col gap-2">
-          <video ref={videoRef} playsInline muted className="aspect-[4/3] w-full rounded-md bg-black object-cover" />
+          <video ref={videoRef} playsInline muted className="aspect-[4/3] w-full rounded-lg bg-black object-cover" />
           <div className="flex gap-2">
             <Button type="button" size="sm" onClick={tirarFoto}>
               <Camera /> Tirar foto
@@ -125,7 +125,7 @@ export function CapturaDeFoto({
           <Button type="button" variant="outline" size="sm" onClick={ligarCamera}>
             <Camera /> Abrir câmera
           </Button>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted md:h-7">
+          <label className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-input bg-card px-2.5 text-[0.8rem] font-medium hover:bg-muted md:h-7">
             <ImageUp className="size-3.5" /> Enviar arquivo
             <input
               type="file"

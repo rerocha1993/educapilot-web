@@ -10,7 +10,7 @@ import { useClasses } from "@/lib/kernel/use-classes";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, Inbox } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -34,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useTuitionPlans,
   useSaveTuitionPlan,
@@ -221,28 +223,34 @@ export default function MensalidadesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <FinanceNav />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Mensalidades</h1>
-          <p className="text-sm text-muted-foreground">
-            Planos de cobrança recorrente — geram automaticamente uma Receita
-            (categoria Mensalidade) todo mês.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="flex-1 md:flex-none" onClick={handleGerar} disabled={gerar.isPending}>
-            {gerar.isPending
-              ? "Gerando..."
-              : `Gerar ${String(mes).padStart(2, "0")}/${ano} agora`}
-          </Button>
-          <Button className="flex-1 md:flex-none" onClick={() => setDialogOpen(true)}>
-            + Novo plano
-          </Button>
-        </div>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Financeiro"
+        titulo="Mensalidades"
+        apoio="Planos de cobrança recorrente — geram automaticamente uma Receita (categoria Mensalidade) todo mês."
+        acoes={
+          <>
+            <Button variant="outline" className="flex-1 md:flex-none" onClick={handleGerar} disabled={gerar.isPending}>
+              {gerar.isPending ? (
+                "Gerando..."
+              ) : (
+                <>
+                  Gerar{" "}
+                  <span className="font-mono tabular-nums">
+                    {String(mes).padStart(2, "0")}/{ano}
+                  </span>{" "}
+                  agora
+                </>
+              )}
+            </Button>
+            <Button variant="action" className="flex-1 md:flex-none" onClick={() => setDialogOpen(true)}>
+              + Novo plano
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-full md:w-auto md:min-w-56 md:flex-1">
@@ -276,12 +284,13 @@ export default function MensalidadesPage() {
         </Select>
 
         <p className="ml-auto text-sm text-muted-foreground">
-          {list.length} plano(s) · <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(totalFiltrado)}</span>/mês
+          <span className="font-mono tabular-nums">{list.length}</span> plano(s) ·{" "}
+          <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(totalFiltrado)}</span>/mês
         </p>
       </div>
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar os planos de mensalidade.
         </div>
       )}
@@ -292,13 +301,11 @@ export default function MensalidadesPage() {
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
 
         {!isLoading && list.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhum plano de mensalidade cadastrado ainda.
-          </div>
+          <EstadoVazio icone={<Inbox />} titulo="Nenhum plano de mensalidade cadastrado ainda." />
         )}
 
         {list.map((p) => (
-          <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+          <div key={p.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-medium break-words">{p.studentName ?? p.studentId}</p>
@@ -311,8 +318,12 @@ export default function MensalidadesPage() {
               </Button>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(p.valorMensal)}</span>
-              <span className="text-muted-foreground">Dia {p.diaVencimento}</span>
+              <span className="font-mono font-semibold whitespace-nowrap tabular-nums">
+                {formatCurrency(p.valorMensal)}
+              </span>
+              <span className="text-muted-foreground">
+                Dia <span className="font-mono tabular-nums">{p.diaVencimento}</span>
+              </span>
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs text-muted-foreground">Reajuste 2027</span>
@@ -331,7 +342,7 @@ export default function MensalidadesPage() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -356,9 +367,14 @@ export default function MensalidadesPage() {
               ))}
 
             {!isLoading && list.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhum plano de mensalidade cadastrado ainda.
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="py-10 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                    <Inbox className="size-[18px]" />
+                  </span>
+                  <p className="mt-3 font-heading text-[15px] font-semibold">
+                    Nenhum plano de mensalidade cadastrado ainda.
+                  </p>
                 </TableCell>
               </TableRow>
             )}
@@ -370,10 +386,12 @@ export default function MensalidadesPage() {
                   {nomeDaTurma.get(turmaPorAluno.get(p.studentId) ?? -1) ?? "—"}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{p.guardianName ?? "—"}</TableCell>
-                <TableCell className="text-right font-mono text-sm tabular-nums">
+                <TableCell className="text-right font-mono text-sm font-semibold tabular-nums">
                   {formatCurrency(p.valorMensal)}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">Dia {p.diaVencimento}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  Dia <span className="font-mono tabular-nums">{p.diaVencimento}</span>
+                </TableCell>
                 <TableCell>
                   <ReajusteInput
                     plano={p}

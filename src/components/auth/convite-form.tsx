@@ -10,7 +10,7 @@ import type { ConviteValido, DadosDoAceite } from "@/lib/kernel/use-convite";
 /** Mesmo mínimo do backend (UserService.TamanhoMinimoDaSenha). */
 const TAMANHO_MINIMO_DA_SENHA = 8;
 
-const rotulo = "font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]";
+const rotulo = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
 
 /**
  * Formulário de quem recebeu o convite.
@@ -74,7 +74,7 @@ export function ConviteForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-      <div className="rounded-md border border-border bg-accent px-3 py-2 text-[13px] break-words md:text-[12px]">
+      <div className="rounded-lg border border-border bg-accent px-3 py-2 text-[13px] break-words text-accent-foreground">
         <p>
           Convite para o sistema {convite.nomeEscola ? <strong>da {convite.nomeEscola}</strong> : "da escola"}.
         </p>
@@ -82,17 +82,17 @@ export function ConviteForm({
       </div>
 
       {erro && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">
           {erro}
         </div>
       )}
 
-      <div className="flex flex-col gap-[5px]">
+      <div className="flex flex-col gap-1.5">
         <Label className={rotulo}>E-mail</Label>
         <Input value={convite.email} readOnly disabled className="h-10 md:h-9" />
       </div>
 
-      <div className="flex flex-col gap-[5px]">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="nome" className={rotulo}>
           Nome completo
         </Label>
@@ -101,22 +101,22 @@ export function ConviteForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
-        <div className="flex flex-col gap-[5px]">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="cpf" className={rotulo}>
             CPF
           </Label>
-          <Input id="cpf" inputMode="numeric" className="h-10 md:h-9" {...campo("cpf")} />
+          <Input id="cpf" inputMode="numeric" className="h-10 font-mono tabular-nums md:h-9" {...campo("cpf")} />
           {mostrar(problemas.cpf)}
         </div>
-        <div className="flex flex-col gap-[5px]">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="celular" className={rotulo}>
             Celular (opcional)
           </Label>
-          <Input id="celular" inputMode="tel" autoComplete="tel" className="h-10 md:h-9" {...campo("celular")} />
+          <Input id="celular" inputMode="tel" autoComplete="tel" className="h-10 font-mono tabular-nums md:h-9" {...campo("celular")} />
         </div>
       </div>
 
-      <div className="flex flex-col gap-[5px]">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="senha" className={rotulo}>
           Crie uma senha
         </Label>
@@ -140,7 +140,7 @@ export function ConviteForm({
         {mostrar(problemas.senha)}
       </div>
 
-      <div className="flex flex-col gap-[5px]">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="confirmacao" className={rotulo}>
           Repita a senha
         </Label>
@@ -154,7 +154,8 @@ export function ConviteForm({
         {mostrar(problemas.confirmacao)}
       </div>
 
-      <Button type="submit" disabled={enviando} className="mt-1 h-12 text-base md:h-10 md:text-sm">
+      {/* Único laranja da tela: a decisão que ela pede. */}
+      <Button type="submit" variant="action" disabled={enviando} className="mt-1 h-12 w-full text-base md:h-10 md:text-sm">
         {enviando ? "Criando acesso..." : "Criar meu acesso"}
       </Button>
     </form>

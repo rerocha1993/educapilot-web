@@ -14,9 +14,9 @@ import {
 // tasks/flow/finance existem hoje) — fica oculto/bloqueado até o backend ganhar esse
 // módulo. Usado tanto pra montar o menu (AppShell) quanto pra proteger a rota
 // (ModuleGate) — as duas coisas precisam concordar, por isso é um arquivo só.
-// Administração saiu da sidebar (2026-09): ela lista serviços do dia a dia, e configuração de
-// escola não é um serviço — fica na engrenagem ao lado do avatar, junto de sair. A rota /admin
-// continua existindo e acessível; só deixou de ocupar uma linha do menu principal.
+// Administração voltou para a sidebar (2026-09, direção visual nova): o menu passou a ter dois
+// grupos, "Operação" (o dia a dia) e "Escola" (o que se mexe de vez em quando), e é nesse segundo
+// grupo que configurar a escola deixa de competir com a rotina. A engrenagem no cabeçalho continua.
 //
 // ADMIN_HREF fica aqui, e não solto no shell, porque findNavItemForPath continua sendo a fonte
 // de verdade sobre navegação — dois lugares definindo rota é como um deles envelhece.
@@ -40,12 +40,25 @@ export function slugDeAcesso(href: string): string | null {
   return null;
 }
 
+/** Tela de atalhos e visão do dia. Não é módulo vendido: está sempre visível. */
+export const INICIO_HREF = "/inicio";
+
 export const NAV_ITEMS = [
   { href: "/", label: "Rotina", icon: CalendarCheck, moduleSlug: "tasks" },
   { href: "/portaria", label: "Portaria", icon: DoorOpen, moduleSlug: "reception" },
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
   { href: "/flow", label: "Formulários", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
+] as const;
+
+/**
+ * Os dois grupos do menu, na ordem da entrega de design: Operação é o dia a dia, Escola é o que
+ * se ajusta de vez em quando. Cada href vem de NAV_ITEMS ou é Início/Administração, que não são
+ * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.
+ */
+export const GRUPOS_DO_MENU = [
+  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/flow", "/finance"] },
+  { titulo: "Escola", hrefs: [ADMIN_HREF, "/events"] },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */

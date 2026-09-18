@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PortariaNav } from "@/components/reception/portaria-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   useConfiguracaoPortaria,
   useSalvarConfiguracaoPortaria,
@@ -21,12 +22,11 @@ export default function ConfiguracaoPortariaPage() {
     <div className="flex flex-col gap-4">
       <PortariaNav />
 
-      <div>
-        <h1 className="font-heading text-xl font-bold">Configuração da portaria</h1>
-        <p className="text-sm text-muted-foreground">
-          Endereço da escola no mapa, distância de chegada dos responsáveis, horários dos períodos e multa por atraso.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Portaria"
+        titulo="Configuração da portaria"
+        apoio="Endereço da escola no mapa, distância de chegada dos responsáveis, horários dos períodos e multa por atraso."
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -79,10 +79,10 @@ const numero = (texto: string) => Number(texto.replace(",", "."));
 
 function Secao({ titulo, descricao, children }: { titulo: string; descricao?: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
       <div>
-        <h2 className="font-heading text-sm font-semibold">{titulo}</h2>
-        {descricao && <p className="text-xs text-muted-foreground">{descricao}</p>}
+        <h2 className="font-heading text-[15.5px] font-semibold">{titulo}</h2>
+        {descricao && <p className="mt-0.5 text-[13px] leading-[1.55] text-muted-foreground">{descricao}</p>}
       </div>
       {children}
     </div>
@@ -97,7 +97,7 @@ function Formulario({ inicial }: { inicial: ConfiguracaoPortaria }) {
   function Campo({ nome, rotulo, tipo = "text", className }: { nome: keyof Campos; rotulo: string; tipo?: string; className?: string }) {
     return (
       <div className={`flex flex-col gap-[5px] ${className ?? ""}`}>
-        <Label className="text-xs text-muted-foreground">{rotulo}</Label>
+        <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">{rotulo}</Label>
         <Input
           type={tipo}
           value={campos[nome]}
@@ -158,7 +158,10 @@ function Formulario({ inicial }: { inicial: ConfiguracaoPortaria }) {
         {localizada ? (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <MapPin className="size-4 shrink-0 text-success-soft-foreground" />
-            Localizada no mapa: {inicial.latitude!.toFixed(5)}, {inicial.longitude!.toFixed(5)}
+            Localizada no mapa:{" "}
+            <span className="font-mono tabular-nums">
+              {inicial.latitude!.toFixed(5)}, {inicial.longitude!.toFixed(5)}
+            </span>
             <a
               href={`https://www.openstreetmap.org/?mlat=${inicial.latitude}&mlon=${inicial.longitude}#map=18/${inicial.latitude}/${inicial.longitude}`}
               target="_blank"

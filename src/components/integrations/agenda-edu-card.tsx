@@ -83,17 +83,17 @@ export function AgendaEduCard() {
   // os botões desabilitados — indistinguível de "ainda não configurado".
   if (isError) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm break-words">
+      <div className="rounded-xl border border-destructive-border bg-destructive-soft p-4 text-sm break-words text-destructive-soft-foreground">
         {error instanceof Error ? error.message : "Não foi possível carregar a configuração do Agenda Edu."}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
       <div>
-        <h2 className="font-heading text-base font-bold">Agenda Edu</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="font-heading text-[15.5px] font-semibold">Agenda Edu</h2>
+        <p className="mt-1 text-[13.5px] leading-[1.55] text-pretty text-muted-foreground">
           Traz turmas, alunos e responsáveis direto do Agenda Edu. O Agenda Edu é a fonte da
           verdade: quem já foi importado antes é atualizado, não duplicado.
         </p>
@@ -101,15 +101,15 @@ export function AgendaEduCard() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">URL da API</label>
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">URL da API</label>
           <Input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} />
         </div>
         <div className="flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">Client ID</label>
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Client ID</label>
           <Input value={clientId} onChange={(e) => setClientId(e.target.value)} />
         </div>
         <div className="flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
             Secret Key {configurado && <span className="text-success-soft-foreground">(já configurada)</span>}
           </label>
           <Input
@@ -120,7 +120,7 @@ export function AgendaEduCard() {
           />
         </div>
         <div className="flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
             School Token {configurado && <span className="text-success-soft-foreground">(já configurado)</span>}
           </label>
           <Input
@@ -156,7 +156,8 @@ export function AgendaEduCard() {
 
       {settings?.ultimaImportacaoEm && (
         <p className="text-xs text-muted-foreground">
-          Última importação: {formatarDataHora(settings.ultimaImportacaoEm)}
+          Última importação:{" "}
+          <span className="font-mono tabular-nums">{formatarDataHora(settings.ultimaImportacaoEm)}</span>
         </p>
       )}
 
@@ -168,7 +169,7 @@ export function AgendaEduCard() {
 function ResultadoImportacao({ resultado }: { resultado: AgendaEduImportResult }) {
   if (!resultado.sucesso) {
     return (
-      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm break-words">
+      <div className="rounded-lg border border-destructive-border bg-destructive-soft px-3 py-2 text-sm break-words text-destructive-soft-foreground">
         {resultado.erro ?? "A importação falhou."}
       </div>
     );
@@ -181,15 +182,17 @@ function ResultadoImportacao({ resultado }: { resultado: AgendaEduImportResult }
   ] as const;
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-success-border bg-success-soft px-3 py-2 text-sm text-success-soft-foreground">
+    <div className="flex flex-col gap-2 rounded-lg border border-success-border bg-success-soft px-3 py-2 text-sm text-success-soft-foreground">
       <div className="grid gap-1">
         {linhas.map(([rotulo, criados, atualizados]) => (
           <div key={rotulo}>
-            <strong>{rotulo}:</strong> {criados} criados, {atualizados} atualizados
+            <strong>{rotulo}:</strong> <span className="font-mono tabular-nums">{criados}</span> criados,{" "}
+            <span className="font-mono tabular-nums">{atualizados}</span> atualizados
           </div>
         ))}
         <div>
-          <strong>Vínculos aluno/responsável:</strong> {resultado.vinculosCriados} criados
+          <strong>Vínculos aluno/responsável:</strong>{" "}
+          <span className="font-mono tabular-nums">{resultado.vinculosCriados}</span> criados
         </div>
       </div>
 
@@ -198,7 +201,8 @@ function ResultadoImportacao({ resultado }: { resultado: AgendaEduImportResult }
           {/* Registros pulados ficam visíveis de propósito: sem isso a conta não fecha
               ("o Agenda Edu tem 116 alunos e só entraram 113") e ninguém descobre o porquê. */}
           <summary className="cursor-pointer">
-            {resultado.ignorados.length} registro(s) não importado(s) — ver motivos
+            <span className="font-mono tabular-nums">{resultado.ignorados.length}</span> registro(s) não
+            importado(s) — ver motivos
           </summary>
           <ul className="mt-1 list-disc pl-4 break-words">
             {resultado.ignorados.map((motivo, i) => (

@@ -25,7 +25,7 @@ export function RegistryRulePanel({ campos }: { campos: FormFieldDto[] }) {
   if (destinos.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <Database className="size-4 shrink-0 text-primary" />
         <h3 className="font-heading text-sm font-semibold">Gravar no cadastro</h3>

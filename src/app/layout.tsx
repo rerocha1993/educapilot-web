@@ -1,20 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Outfit, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import { QueryProvider } from "@/lib/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Tipografia do design system — ver design_handoff_educapilot/README.md.
-const fontHeading = Plus_Jakarta_Sans({
+// Tipografia da direção visual 2026-09 (entrega "EducaPilot Sistema"): títulos em Outfit,
+// corpo em Plus Jakarta Sans, todo número em IBM Plex Mono com tabular-nums.
+const fontHeading = Outfit({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const fontBody = IBM_Plex_Sans({
+const fontBody = Plus_Jakarta_Sans({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const fontMono = IBM_Plex_Mono({
@@ -35,7 +36,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#FFFFFF",
+  themeColor: "#F7F6F3",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

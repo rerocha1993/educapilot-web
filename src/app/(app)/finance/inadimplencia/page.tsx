@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, RefreshCw, Stethoscope } from "lucide-react";
+import { ExternalLink, Inbox, RefreshCw, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useInadimplencia } from "@/lib/finance/use-tuition-plans";
 import {
   useDiagnosticoAgendaEdu,
@@ -28,10 +30,11 @@ function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function atrasoBadge(dias: number) {
-  if (dias > 30) return "bg-destructive-soft text-destructive-soft-foreground";
-  if (dias > 7) return "bg-warning-soft text-warning-soft-foreground";
-  return "bg-accent text-accent-foreground";
+// Atraso é situação do dado: as três faixas viram as etiquetas do guia.
+function atrasoBadge(dias: number): "overdue" | "pending" | "waiting" {
+  if (dias > 30) return "overdue";
+  if (dias > 7) return "pending";
+  return "waiting";
 }
 
 /**
@@ -60,11 +63,13 @@ function DiagnosticoAgendaEdu() {
       {aberto && isFetching && <Skeleton className="h-24 w-full" />}
 
       {aberto && data && (
-        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-xs">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-xs">
           {data.erro && <p className="text-destructive">{data.erro}</p>}
 
           <div>
-            <p className="mb-1 font-medium">Carteiras ({data.carteiras?.length ?? 0})</p>
+            <p className="mb-1 font-medium">
+              Carteiras (<span className="font-mono tabular-nums">{data.carteiras?.length ?? 0}</span>)
+            </p>
             {(data.carteiras ?? []).length === 0 && (
               <p className="text-muted-foreground">Nenhuma carteira devolvida pelo Agenda Edu.</p>
             )}
@@ -93,7 +98,9 @@ function DiagnosticoAgendaEdu() {
                     {r.status || "sem resposta"}
                   </span>
                   {r.status === 200 && (
-                    <span className="text-muted-foreground">{r.itens} item(ns)</span>
+                    <span className="text-muted-foreground">
+                      <span className="font-mono tabular-nums">{r.itens}</span> item(ns)
+                    </span>
                   )}
                 </div>
               ))}
@@ -145,7 +152,7 @@ function InadimplenciaAgendaEdu() {
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="font-heading text-base font-bold">Agenda Edu (EduPay)</h2>
+          <h2 className="font-heading text-[15.5px] font-semibold">Agenda Edu (EduPay)</h2>
           <p className="text-xs text-muted-foreground">
             {data.ultimaSincronizacaoEm
               ? `Lido em ${formatarDataHora(data.ultimaSincronizacaoEm)}. Atualiza sozinho a cada 15 minutos.`
@@ -166,33 +173,38 @@ function InadimplenciaAgendaEdu() {
       </div>
 
       {data.erro && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não consegui ler as cobranças do Agenda Edu na última tentativa: {data.erro}
           {itens.length > 0 && " A lista abaixo é da última leitura que funcionou."}
         </div>
       )}
 
       {itens.length > 0 && (
-        <div className="rounded-lg border border-border bg-card px-4 py-3">
-          <p className="text-sm text-muted-foreground">Em aberto no Agenda Edu</p>
-          <p className="font-heading text-2xl font-bold whitespace-nowrap text-destructive-soft-foreground">
+        <div className="rounded-xl border border-border bg-card p-[18px]">
+          <p className="text-[12.5px] font-medium text-muted-foreground">Em aberto no Agenda Edu</p>
+          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-destructive-soft-foreground">
             {formatCurrency(data.totalEmAberto)}
           </p>
-          <p className="text-xs text-muted-foreground">{itens.length} cobrança(s) vencida(s)</p>
+          <p className="mt-2 text-[11.5px] text-muted-foreground">
+            <span className="font-mono tabular-nums">{itens.length}</span> cobrança(s) vencida(s)
+          </p>
         </div>
       )}
 
       <div className="flex flex-col gap-2 md:hidden">
         {itens.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            {data.ultimaSincronizacaoEm && !data.erro
-              ? "Nenhuma cobrança do Agenda Edu em atraso."
-              : "Sem leitura válida do Agenda Edu ainda."}
-          </div>
+          <EstadoVazio
+            icone={<Inbox />}
+            titulo={
+              data.ultimaSincronizacaoEm && !data.erro
+                ? "Nenhuma cobrança do Agenda Edu em atraso."
+                : "Sem leitura válida do Agenda Edu ainda."
+            }
+          />
         )}
 
         {itens.map((c) => (
-          <div key={c.cobrancaId} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+          <div key={c.cobrancaId} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className={cn("font-medium break-words", !c.alunoId && "text-muted-foreground")}>
@@ -200,7 +212,9 @@ function InadimplenciaAgendaEdu() {
                 </p>
                 {c.turma && <p className="text-xs text-muted-foreground">{c.turma}</p>}
               </div>
-              <Badge className={atrasoBadge(c.diasAtraso)}>{c.diasAtraso} dia(s)</Badge>
+              <Badge variant={atrasoBadge(c.diasAtraso)}>
+                <span className="font-mono tabular-nums">{c.diasAtraso}</span> dia(s)
+              </Badge>
             </div>
             <p className="break-words">{c.titulo ?? "—"}</p>
             <div className="min-w-0">
@@ -217,9 +231,9 @@ function InadimplenciaAgendaEdu() {
                 <p className="font-mono tabular-nums">{formatarSoData(c.venceEm)}</p>
               </div>
               <div className="text-right">
-                <p className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(c.valorEmAberto)}</p>
+                <p className="font-mono font-semibold whitespace-nowrap tabular-nums">{formatCurrency(c.valorEmAberto)}</p>
                 {c.valorPago > 0 && (
-                  <p className="text-xs whitespace-nowrap text-muted-foreground">de {formatCurrency(c.valorTotal)}</p>
+                  <p className="font-mono text-xs whitespace-nowrap tabular-nums text-muted-foreground">de {formatCurrency(c.valorTotal)}</p>
                 )}
               </div>
             </div>
@@ -237,7 +251,7 @@ function InadimplenciaAgendaEdu() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -252,11 +266,16 @@ function InadimplenciaAgendaEdu() {
           </TableHeader>
           <TableBody>
             {itens.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  {data.ultimaSincronizacaoEm && !data.erro
-                    ? "Nenhuma cobrança do Agenda Edu em atraso."
-                    : "Sem leitura válida do Agenda Edu ainda."}
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7} className="py-10 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                    <Inbox className="size-[18px]" />
+                  </span>
+                  <p className="mt-3 font-heading text-[15px] font-semibold">
+                    {data.ultimaSincronizacaoEm && !data.erro
+                      ? "Nenhuma cobrança do Agenda Edu em atraso."
+                      : "Sem leitura válida do Agenda Edu ainda."}
+                  </p>
                 </TableCell>
               </TableRow>
             )}
@@ -278,17 +297,19 @@ function InadimplenciaAgendaEdu() {
                     </p>
                   )}
                 </TableCell>
-                <TableCell className="text-right font-mono text-sm tabular-nums">
+                <TableCell className="text-right font-mono text-sm font-semibold tabular-nums">
                   {formatCurrency(c.valorEmAberto)}
                   {c.valorPago > 0 && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="font-mono text-xs font-normal tabular-nums text-muted-foreground">
                       de {formatCurrency(c.valorTotal)}
                     </p>
                   )}
                 </TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(c.venceEm)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">{formatarSoData(c.venceEm)}</TableCell>
                 <TableCell>
-                  <Badge className={atrasoBadge(c.diasAtraso)}>{c.diasAtraso} dia(s)</Badge>
+                  <Badge variant={atrasoBadge(c.diasAtraso)}>
+                <span className="font-mono tabular-nums">{c.diasAtraso}</span> dia(s)
+              </Badge>
                 </TableCell>
                 <TableCell>
                   {c.boletoUrl && (
@@ -325,37 +346,38 @@ export default function InadimplenciaPage() {
   const mostrarInterna = !agendaConfigurada || isLoading || isError || list.length > 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <FinanceNav />
 
-      <div>
-        <h1 className="font-heading text-xl font-bold">Inadimplência</h1>
-        <p className="text-sm text-muted-foreground">
-          Mensalidades vencidas e não pagas — quem cobrar, e o contato pra fazer isso.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Financeiro"
+        titulo="Inadimplência"
+        apoio="Mensalidades vencidas e não pagas — quem cobrar, e o contato pra fazer isso."
+      />
 
       <InadimplenciaAgendaEdu />
 
       {mostrarInterna && (
         <>
           {agendaConfigurada && (
-            <h2 className="font-heading text-base font-bold">Mensalidades do EducaPilot</h2>
+            <h2 className="font-heading text-[15.5px] font-semibold">Mensalidades do EducaPilot</h2>
           )}
 
           {isError && (
-            <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+            <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
               Não foi possível carregar a inadimplência.
             </div>
           )}
 
           {!isLoading && list.length > 0 && (
-            <div className="rounded-lg border border-border bg-card px-4 py-3">
-              <p className="text-sm text-muted-foreground">Total em atraso</p>
-              <p className="font-heading text-2xl font-bold whitespace-nowrap text-destructive-soft-foreground">
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Total em atraso</p>
+              <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-destructive-soft-foreground">
                 {formatCurrency(total)}
               </p>
-              <p className="text-xs text-muted-foreground">{list.length} mensalidade(s) vencida(s)</p>
+              <p className="mt-2 text-[11.5px] text-muted-foreground">
+                <span className="font-mono tabular-nums">{list.length}</span> mensalidade(s) vencida(s)
+              </p>
             </div>
           )}
 
@@ -363,15 +385,13 @@ export default function InadimplenciaPage() {
             {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
 
             {!isLoading && list.length === 0 && (
-              <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-                Nenhuma mensalidade em atraso. 🎉
-              </div>
+              <EstadoVazio icone={<Inbox />} titulo="Nenhuma mensalidade em atraso. 🎉" />
             )}
 
             {list.map((d) => (
               <div
                 key={d.revenueEntryId}
-                className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm"
+                className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -381,17 +401,19 @@ export default function InadimplenciaPage() {
                       {d.guardianEmail ?? d.guardianPhone ?? "—"}
                     </p>
                   </div>
-                  <Badge className={atrasoBadge(d.diasAtraso)}>{d.diasAtraso} dia(s)</Badge>
+                  <Badge variant={atrasoBadge(d.diasAtraso)}>
+                    <span className="font-mono tabular-nums">{d.diasAtraso}</span> dia(s)
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono tabular-nums text-muted-foreground">{formatarSoData(d.dueDate)}</span>
-                  <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(d.valorEsperado)}</span>
+                  <span className="font-mono font-semibold whitespace-nowrap tabular-nums">{formatCurrency(d.valorEsperado)}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="hidden rounded-lg border border-border bg-card md:block">
+          <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -414,9 +436,14 @@ export default function InadimplenciaPage() {
                   ))}
 
                 {!isLoading && list.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                      Nenhuma mensalidade em atraso. 🎉
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={6} className="py-10 text-center">
+                      <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                        <Inbox className="size-[18px]" />
+                      </span>
+                      <p className="mt-3 font-heading text-[15px] font-semibold">
+                        Nenhuma mensalidade em atraso. 🎉
+                      </p>
                     </TableCell>
                   </TableRow>
                 )}
@@ -428,12 +455,14 @@ export default function InadimplenciaPage() {
                     <TableCell className="text-sm text-muted-foreground">
                       {d.guardianEmail ?? d.guardianPhone ?? "—"}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums">
+                    <TableCell className="text-right font-mono text-sm font-semibold tabular-nums">
                       {formatCurrency(d.valorEsperado)}
                     </TableCell>
-                    <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(d.dueDate)}</TableCell>
+                    <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">{formatarSoData(d.dueDate)}</TableCell>
                     <TableCell>
-                      <Badge className={atrasoBadge(d.diasAtraso)}>{d.diasAtraso} dia(s)</Badge>
+                      <Badge variant={atrasoBadge(d.diasAtraso)}>
+                    <span className="font-mono tabular-nums">{d.diasAtraso}</span> dia(s)
+                  </Badge>
                     </TableCell>
                   </TableRow>
                 ))}

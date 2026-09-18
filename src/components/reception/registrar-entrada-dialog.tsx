@@ -179,18 +179,18 @@ export function RegistrarEntradaDialog({
                       setVisitante(v);
                       setEtapa("entrada");
                     }}
-                    className="flex items-center gap-3 rounded-md border border-border px-3 py-2 text-left transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 text-left transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <FotoVisitante visitanteId={v.id} nome={v.nome} temFoto={v.temFoto} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{v.nome}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-mono text-xs tabular-nums text-muted-foreground">
                         {formatarCpf(v.cpf)}
                         {v.telefone ? ` · ${v.telefone}` : ""}
                       </p>
                     </div>
                     {v.visitaAbertaId && (
-                      <Badge className="bg-success-soft text-success-soft-foreground">Na escola</Badge>
+                      <Badge variant="success">Na escola</Badge>
                     )}
                   </button>
                 ))}
@@ -214,12 +214,12 @@ export function RegistrarEntradaDialog({
           <>
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Nome completo</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Nome completo</Label>
                 <Input autoFocus value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">CPF</Label>
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">CPF</Label>
                   <Input
                     inputMode="numeric"
                     value={form.cpf}
@@ -227,11 +227,11 @@ export function RegistrarEntradaDialog({
                   />
                 </div>
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">RG</Label>
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">RG</Label>
                   <Input value={form.rg} onChange={(e) => setForm((f) => ({ ...f, rg: e.target.value }))} />
                 </div>
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">Telefone</Label>
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Telefone</Label>
                   <Input
                     inputMode="tel"
                     value={form.telefone}
@@ -239,7 +239,7 @@ export function RegistrarEntradaDialog({
                   />
                 </div>
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">E-mail</Label>
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">E-mail</Label>
                   <Input
                     type="email"
                     value={form.email}
@@ -266,11 +266,13 @@ export function RegistrarEntradaDialog({
         {etapa === "entrada" && visitante && (
           <>
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-4 rounded-md border border-border p-3">
+              <div className="flex items-center gap-4 rounded-xl border border-border p-3">
                 <FotoVisitante visitanteId={visitante.id} nome={visitante.nome} temFoto={visitante.temFoto} tamanho="lg" />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium break-words">{visitante.nome}</p>
-                  <p className="text-xs text-muted-foreground">CPF {formatarCpf(visitante.cpf)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    CPF <span className="font-mono tabular-nums">{formatarCpf(visitante.cpf)}</span>
+                  </p>
                   <Button variant="link" size="sm" className="h-auto px-0" onClick={() => setTrocandoFoto((t) => !t)}>
                     {visitante.temFoto ? "Trocar foto" : "Adicionar foto"}
                   </Button>
@@ -280,7 +282,7 @@ export function RegistrarEntradaDialog({
               {trocandoFoto && <CapturaDeFoto onFotoPronta={trocarFoto} />}
 
               <div className="flex flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Motivo da visita</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Motivo da visita</Label>
                 <Input
                   placeholder="Ex.: reunião com a coordenação"
                   value={motivo}
@@ -290,7 +292,7 @@ export function RegistrarEntradaDialog({
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">Turma (opcional)</Label>
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Turma (opcional)</Label>
                   <Select
                     value={classId}
                     onValueChange={(v) => {
@@ -314,7 +316,7 @@ export function RegistrarEntradaDialog({
                   </Select>
                 </div>
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">Aluno visitado (opcional)</Label>
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Aluno visitado (opcional)</Label>
                   <Select
                     value={studentId}
                     onValueChange={(v) => setStudentId(v ? String(v) : NENHUM)}

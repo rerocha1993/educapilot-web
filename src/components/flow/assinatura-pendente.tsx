@@ -26,9 +26,11 @@ export function AssinaturaPendente({
 
   if (estado === "assinado") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card px-4 py-10 text-center">
-        <CheckCircle2 className="size-10 text-success-soft-foreground" />
-        <p className="font-heading text-lg font-bold">Tudo certo!</p>
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-4 py-10 text-center">
+        <span className="grid size-12 place-items-center rounded-xl bg-success-soft text-success-soft-foreground">
+          <CheckCircle2 className="size-6" />
+        </span>
+        <p className="font-heading text-lg font-semibold tracking-[-.03em]">Tudo certo!</p>
         <p className="text-sm text-muted-foreground">
           Formulário enviado e contrato assinado. A escola vai analisar e você receberá a via
           assinada por e-mail.
@@ -40,9 +42,11 @@ export function AssinaturaPendente({
   // Formulário sem contrato: a confirmação simples de sempre.
   if (estado === "indisponivel" && !data?.mensagem) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card px-4 py-10 text-center">
-        <CheckCircle2 className="size-10 text-success-soft-foreground" />
-        <p className="font-heading text-lg font-bold">Resposta enviada!</p>
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-4 py-10 text-center">
+        <span className="grid size-12 place-items-center rounded-xl bg-success-soft text-success-soft-foreground">
+          <CheckCircle2 className="size-6" />
+        </span>
+        <p className="font-heading text-lg font-semibold tracking-[-.03em]">Resposta enviada!</p>
         <p className="text-sm text-muted-foreground">Obrigado por preencher.</p>
       </div>
     );
@@ -50,20 +54,23 @@ export function AssinaturaPendente({
 
   if (estado === "indisponivel") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-warning-border bg-warning-soft px-4 py-8 text-center text-warning-soft-foreground">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-warning-border bg-warning-soft px-4 py-8 text-center text-warning-soft-foreground">
         <CheckCircle2 className="size-8" />
-        <p className="font-heading text-base font-bold">Respostas enviadas</p>
+        <p className="font-heading text-base font-semibold tracking-[-.03em]">Respostas enviadas</p>
         <p className="text-sm">{data?.mensagem}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-2 py-6 text-center md:px-4 md:py-8">
-      <FileSignature className="size-10 text-primary" />
+    <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card px-2 py-6 text-center md:px-4 md:py-8">
+      {/* Laranja: é a decisão que falta tomar agora (guia). */}
+      <span className="grid size-12 place-items-center rounded-xl bg-action-soft text-action-soft-foreground">
+        <FileSignature className="size-6" />
+      </span>
 
       <div className="px-2 md:px-0">
-        <p className="font-heading text-lg font-bold">Falta assinar</p>
+        <p className="font-heading text-lg font-semibold tracking-[-.03em]">Falta assinar</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Suas respostas já foram enviadas. A matrícula só é concluída depois da assinatura do
           contrato.
@@ -87,7 +94,7 @@ export function AssinaturaPendente({
           <iframe
             src={data.link}
             title="Assinatura do contrato"
-            className="h-[75vh] min-h-125 w-full rounded-md border border-border bg-background md:h-[70vh]"
+            className="h-[75vh] min-h-125 w-full rounded-lg border border-border bg-background md:h-[70vh]"
             allow="camera; geolocation"
           />
 
@@ -97,7 +104,7 @@ export function AssinaturaPendente({
               href={data.link}
               target="_blank"
               rel="noreferrer"
-              className="inline-block py-1 text-primary underline md:inline md:py-0"
+              className="inline-block py-1 font-medium text-primary underline md:inline md:py-0"
             >
               Abrir em uma nova aba
             </a>

@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   Table,
   TableBody,
@@ -55,6 +56,25 @@ import {
   usePeriodoDoAluno,
   usePeriodos,
 } from "@/lib/reception/use-portaria";
+
+/** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
+function SemAlunos({ semTurma, semBorda = false }: { semTurma: boolean; semBorda?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center px-5 py-9 text-center",
+        !semBorda && "rounded-xl border border-dashed border-border-dashed bg-card"
+      )}
+    >
+      <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+        <UserRound className="size-4" />
+      </span>
+      <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
+        {semTurma ? "Selecione uma turma." : "Nenhum aluno encontrado nesta turma."}
+      </p>
+    </div>
+  );
+}
 
 function PeriodoNaLista({ periodo }: { periodo?: Parameters<typeof descreverPeriodo>[0] }) {
   const descricao = periodo ? descreverPeriodo(periodo) : null;
@@ -185,39 +205,54 @@ export default function AlunosPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row">
-      {/* Coluna de turmas — ver A9 no handoff de design. No celular vira uma faixa que rola de lado. */}
-      <aside className="min-w-0 md:w-40 md:shrink-0">
-        <h2 className="mb-2 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-          Turmas
-        </h2>
-        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-col md:gap-0.5 md:overflow-visible md:px-0 md:pb-0">
-          {classesLoading &&
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-24 shrink-0 rounded-md md:h-8 md:w-full" />
-            ))}
-          {classes?.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedClassId(c.id ?? null)}
-              className={cn(
-                "flex min-h-10 shrink-0 items-center justify-between gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors md:min-h-0 md:gap-0 md:px-2",
-                selectedClassId === c.id
-                  ? "bg-accent font-medium text-accent-foreground"
-                  : "text-foreground hover:bg-accent/50"
-              )}
-            >
-              <span className="truncate">{c.className}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">
-                {c.students?.length ?? 0}
-              </span>
-            </button>
-          ))}
-        </div>
-      </aside>
+    <div className="flex flex-col gap-5">
+      <CabecalhoDaPagina
+        eyebrow="Administração"
+        titulo="Alunos"
+        apoio="Cadastro com data de nascimento, período e turma."
+        acoes={
+          <Button
+            variant="action"
+            onClick={() => abrirCadastro("new")}
+            disabled={selectedClassId === null}
+            className="w-full md:w-auto"
+          >
+            <Plus className="size-4" />
+            Novo aluno
+          </Button>
+        }
+      />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row">
+        {/* Coluna de turmas — ver A9 no handoff de design. No celular vira uma faixa que rola de lado. */}
+        <aside className="min-w-0 md:w-40 md:shrink-0">
+          <h2 className="mb-2 text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Turmas</h2>
+          <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-col md:gap-0.5 md:overflow-visible md:px-0 md:pb-0">
+            {classesLoading &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-24 shrink-0 rounded-md md:h-8 md:w-full" />
+              ))}
+            {classes?.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedClassId(c.id ?? null)}
+                className={cn(
+                  "flex min-h-10 shrink-0 items-center justify-between gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors md:min-h-0 md:gap-0 md:px-2",
+                  selectedClassId === c.id
+                    ? "bg-accent font-medium text-accent-foreground"
+                    : "text-foreground hover:bg-accent/50"
+                )}
+              >
+                <span className="truncate">{c.className}</span>
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                  {c.students?.length ?? 0}
+                </span>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="relative w-full md:w-72">
             <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -227,156 +262,146 @@ export default function AlunosPage() {
               className="pl-8 md:h-9"
             />
           </div>
-          <Button onClick={() => abrirCadastro("new")} disabled={selectedClassId === null} className="w-full md:w-auto">
-            <Plus className="size-4" />
-            Novo aluno
-          </Button>
-        </div>
 
-        {isError && (
-          <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
-            Não foi possível carregar os alunos.
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2 md:hidden">
-          {studentsLoading &&
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
-
-          {!studentsLoading && filteredStudents.length === 0 && (
-            <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-              {selectedClassId === null ? "Selecione uma turma." : "Nenhum aluno encontrado nesta turma."}
+          {isError && (
+            <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+              Não foi possível carregar os alunos.
             </div>
           )}
 
-          {filteredStudents.map((s) => (
-            <div key={s.id} className="flex items-start gap-2 rounded-lg border border-border bg-card p-3">
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex flex-wrap items-center gap-1.5 font-medium">
-                  <span className="min-w-0 break-words">{s.fullName}</span>
-                  {s.allergies && (
-                    <Badge className="gap-1 bg-destructive-soft text-destructive-soft-foreground">
-                      <AlertTriangle className="size-3" />
-                      Alergia
-                    </Badge>
+          <div className="flex flex-col gap-2 md:hidden">
+            {studentsLoading &&
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+
+            {!studentsLoading && filteredStudents.length === 0 && <SemAlunos semTurma={selectedClassId === null} />}
+
+            {filteredStudents.map((s) => (
+              <div key={s.id} className="flex items-start gap-2 rounded-xl border border-border bg-card p-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-1.5 font-medium">
+                    <span className="min-w-0 break-words">{s.fullName}</span>
+                    {s.allergies && (
+                      <Badge variant="overdue" className="gap-1">
+                        <AlertTriangle className="size-3" />
+                        Alergia
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="font-mono text-sm tabular-nums text-muted-foreground">{formatarSoData(s.birthDate)}</span>
+                  {temPortaria && (
+                    <div className="text-sm">
+                      <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
+                    </div>
                   )}
                 </div>
-                <span className="font-mono text-sm tabular-nums text-muted-foreground">{formatarSoData(s.birthDate)}</span>
-                {temPortaria && (
-                  <div className="text-sm">
-                    <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
-                  </div>
-                )}
+                <div className="flex shrink-0 gap-1">
+                  <Link
+                    href={`/admin/alunos/${s.id}`}
+                    title="Ficha do aluno"
+                    className={buttonVariants({ variant: "ghost", size: "icon" })}
+                  >
+                    <IdCard className="size-4" />
+                  </Link>
+                  <Button variant="ghost" size="icon" onClick={() => abrirCadastro(s)}>
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDelete(s)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex shrink-0 gap-1">
-                <Link
-                  href={`/admin/alunos/${s.id}`}
-                  title="Ficha do aluno"
-                  className={buttonVariants({ variant: "ghost", size: "icon" })}
-                >
-                  <IdCard className="size-4" />
-                </Link>
-                <Button variant="ghost" size="icon" onClick={() => abrirCadastro(s)}>
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => handleDelete(s)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="hidden rounded-lg border border-border bg-card md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Aluno</TableHead>
-                <TableHead>Data de nascimento</TableHead>
-                {temPortaria && <TableHead>Período</TableHead>}
-                <TableHead className="w-20 text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {studentsLoading &&
-                Array.from({ length: 4 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={temPortaria ? 4 : 3}>
-                      <Skeleton className="h-5 w-full" />
+          <div className="hidden rounded-xl border border-border bg-card md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead>Data de nascimento</TableHead>
+                  {temPortaria && <TableHead>Período</TableHead>}
+                  <TableHead className="w-20 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {studentsLoading &&
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={temPortaria ? 4 : 3}>
+                        <Skeleton className="h-5 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                {!studentsLoading && filteredStudents.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={temPortaria ? 4 : 3} className="p-0">
+                      <SemAlunos semTurma={selectedClassId === null} semBorda />
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {filteredStudents.map((s) => (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {s.fullName}
+                        {s.allergies && (
+                          <Badge variant="overdue" className="gap-1">
+                            <AlertTriangle className="size-3" />
+                            Alergia
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm tabular-nums">
+                      {formatarSoData(s.birthDate)}
+                    </TableCell>
+                    {temPortaria && (
+                      <TableCell className="text-sm">
+                        <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
+                      </TableCell>
+                    )}
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Link
+                          href={`/admin/alunos/${s.id}`}
+                          title="Ficha do aluno"
+                          className={buttonVariants({ variant: "ghost", size: "icon", className: "size-7" })}
+                        >
+                          <IdCard className="size-3.5" />
+                        </Link>
+                        <Button variant="ghost" size="icon" className="size-7" onClick={() => abrirCadastro(s)}>
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(s)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </div>
 
-              {!studentsLoading && filteredStudents.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={temPortaria ? 4 : 3} className="py-10 text-center text-sm text-muted-foreground">
-                    {selectedClassId === null
-                      ? "Selecione uma turma."
-                      : "Nenhum aluno encontrado nesta turma."}
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {filteredStudents.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-1.5">
-                      {s.fullName}
-                      {s.allergies && (
-                        <Badge className="gap-1 bg-destructive-soft text-destructive-soft-foreground">
-                          <AlertTriangle className="size-3" />
-                          Alergia
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm tabular-nums">
-                    {formatarSoData(s.birthDate)}
-                  </TableCell>
-                  {temPortaria && (
-                    <TableCell className="text-sm">
-                      <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
-                    </TableCell>
-                  )}
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Link
-                        href={`/admin/alunos/${s.id}`}
-                        title="Ficha do aluno"
-                        className={buttonVariants({ variant: "ghost", size: "icon", className: "size-7" })}
-                      >
-                        <IdCard className="size-3.5" />
-                      </Link>
-                      <Button variant="ghost" size="icon" className="size-7" onClick={() => abrirCadastro(s)}>
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(s)}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {/* Matrícula, responsável e status fazem parte do wireframe A9, mas o backend
+              ainda não tem esses campos em Student — ver design/handoff/README.md. */}
+          <p className="text-xs text-muted-foreground">
+            Matrícula, responsável e status ainda não são suportados pelo backend —
+            próxima etapa.
+          </p>
         </div>
-
-        {/* Matrícula, responsável e status fazem parte do wireframe A9, mas o backend
-            ainda não tem esses campos em Student — ver design/handoff/README.md. */}
-        <p className="text-xs text-muted-foreground">
-          Matrícula, responsável e status ainda não são suportados pelo backend —
-          próxima etapa.
-        </p>
       </div>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
@@ -387,20 +412,20 @@ export default function AlunosPage() {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Nome completo
               </Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} autoFocus />
             </div>
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Data de nascimento
               </Label>
               <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Turma
               </Label>
               <Select
@@ -426,7 +451,7 @@ export default function AlunosPage() {
 
             {temPortaria && (
               <div className="border-t border-border pt-3">
-                <p className="mb-3 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                   Período
                 </p>
                 {carregandoPeriodo ? (
@@ -443,7 +468,7 @@ export default function AlunosPage() {
             )}
 
             <div className="border-t border-border pt-3">
-              <p className="mb-3 font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Saúde (R5)
               </p>
               <div className="flex flex-col gap-3">

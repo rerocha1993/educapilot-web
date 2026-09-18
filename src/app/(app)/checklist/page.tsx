@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { ListChecks, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -17,6 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { cn } from "@/lib/utils";
 import { getSession } from "@/lib/auth/session";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
@@ -104,68 +107,87 @@ export default function ChecklistFillPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">
-            Checklist{selectedClass ? ` · ${selectedClass.className}` : ""}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {items.length > 0 ? `${doneCount} de ${items.length} concluídos` : "Selecione turma e checklist."}
-          </p>
-        </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo={`Checklist${selectedClass ? ` · ${selectedClass.className}` : ""}`}
+        apoio={
+          items.length > 0 ? (
+            <>
+              <span className="font-numeric">{doneCount}</span> de{" "}
+              <span className="font-numeric">{items.length}</span> concluídos
+            </>
+          ) : (
+            "Selecione turma e checklist."
+          )
+        }
+        acoes={
+          <div className="grid w-full grid-cols-2 items-end gap-2 md:flex md:w-auto">
+            <div className="flex min-w-0 flex-col gap-[5px]">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Turma
+              </span>
+              <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Selecione">{() => selectedClass?.className ?? "Selecione"}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {classes?.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.className}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="grid w-full grid-cols-2 items-end gap-2 md:flex md:w-auto">
-          <div className="flex min-w-0 flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Turma
-            </span>
-            <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Selecione">{() => selectedClass?.className ?? "Selecione"}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {classes?.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.className}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex min-w-0 flex-col gap-[5px]">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Checklist
+              </span>
+              <Select
+                value={templateId?.toString() ?? ""}
+                onValueChange={(v) => v && setTemplateId(Number(v))}
+              >
+                <SelectTrigger className="w-full md:w-44">
+                  <SelectValue placeholder="Selecione">
+                    {() => templates?.find((t) => t.id === templateId)?.name ?? "Selecione"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {templates?.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2 flex min-w-0 flex-col gap-[5px]">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Data
+              </span>
+              <Input
+                type="date"
+                value={dateStr}
+                onChange={(e) => setDateStr(e.target.value)}
+                className="h-10 w-full font-numeric md:h-9 md:w-40"
+              />
+            </div>
           </div>
+        }
+      />
 
-          <div className="flex min-w-0 flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Checklist
-            </span>
-            <Select
-              value={templateId?.toString() ?? ""}
-              onValueChange={(v) => v && setTemplateId(Number(v))}
-            >
-              <SelectTrigger className="w-full md:w-44">
-                <SelectValue placeholder="Selecione">
-                  {() => templates?.find((t) => t.id === templateId)?.name ?? "Selecione"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {templates?.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="col-span-2 flex min-w-0 flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Data
-            </span>
-            <Input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className="h-10 w-full md:h-9 md:w-40" />
-          </div>
-        </div>
-      </div>
-
-      {items.length > 0 && <Progress value={(doneCount / items.length) * 100} />}
+      {/* Guia (Estatística): barra fina de 6px, roxa — laranja enquanto falta muito. */}
+      {items.length > 0 && (
+        <Progress
+          value={(doneCount / items.length) * 100}
+          className={cn(
+            "[&_[data-slot=progress-track]]:h-1.5",
+            doneCount / items.length < 0.5 && "[&_[data-slot=progress-indicator]]:bg-action"
+          )}
+        />
+      )}
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -173,51 +195,61 @@ export default function ChecklistFillPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
-        {(classesLoading || templatesLoading || fillLoading) &&
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="border-b border-border px-4 py-3 last:border-0">
-              <Skeleton className="h-5 w-full" />
-            </div>
-          ))}
-
-        {!classesLoading && !templatesLoading && !fillLoading && templates?.length === 0 && (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            Nenhum checklist configurado para esta turma.{" "}
-            <Link href="/checklist/config" className="text-primary hover:underline">
+      {!classesLoading && !templatesLoading && !fillLoading && templates?.length === 0 ? (
+        <EstadoVazio
+          icone={<ListChecks />}
+          titulo="Nenhum checklist configurado para esta turma."
+          acao={
+            <Link href="/checklist/config" className={buttonVariants()}>
               Configurar
             </Link>
-          </p>
-        )}
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          {(classesLoading || templatesLoading || fillLoading) &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="border-b border-border px-4 py-3 last:border-0">
+                <Skeleton className="h-5 w-full" />
+              </div>
+            ))}
 
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0">
-            <label className="flex min-w-0 flex-1 items-center gap-3">
-              {item.tipo === "Contagem" ? (
-                <Input
-                  type="number"
-                  min={0}
-                  value={marks[item.id]?.countValue ?? ""}
-                  onChange={(e) => setCount(item.id, Number(e.target.value))}
-                  className="h-10 w-20 shrink-0 md:h-8"
-                />
-              ) : (
-                <Checkbox
-                  className="size-[18px]"
-                  checked={marks[item.id]?.isChecked ?? false}
-                  onCheckedChange={(v) => toggle(item.id, v === true)}
-                />
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0"
+            >
+              <label className="flex min-w-0 flex-1 items-center gap-3">
+                {item.tipo === "Contagem" ? (
+                  <Input
+                    type="number"
+                    min={0}
+                    value={marks[item.id]?.countValue ?? ""}
+                    onChange={(e) => setCount(item.id, Number(e.target.value))}
+                    className="h-10 w-20 shrink-0 font-numeric md:h-8"
+                  />
+                ) : (
+                  <Checkbox
+                    className="size-[18px]"
+                    checked={marks[item.id]?.isChecked ?? false}
+                    onCheckedChange={(v) => toggle(item.id, v === true)}
+                  />
+                )}
+                <span
+                  className={marks[item.id]?.isChecked ? "text-muted-foreground line-through" : ""}
+                >
+                  {item.description}
+                </span>
+              </label>
+              {item.checkedAt && (
+                <span className="shrink-0 font-numeric text-xs text-muted-foreground">
+                  {formatarHora(item.checkedAt)}
+                </span>
               )}
-              <span className={marks[item.id]?.isChecked ? "text-[#9C9C95] line-through" : ""}>
-                {item.description}
-              </span>
-            </label>
-            {item.checkedAt && (
-              <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatarHora(item.checkedAt)}</span>
-            )}
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <Link

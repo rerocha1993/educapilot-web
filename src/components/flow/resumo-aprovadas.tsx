@@ -4,6 +4,11 @@ export const SEM_TURMA = "Sem turma";
 const moeda = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Cartão escuro do modelo ("Caixa de envios"): os tons abaixo só existem sobre esse fundo e não
+// têm token na paleta clara — por isso vêm em hex, direto da entrega de design.
+const ROTULO = "text-xs text-[#A9A2B8]";
+const NUMERO = "mt-1.5 font-heading text-[27px] leading-none font-semibold tracking-[-.03em] font-mono tabular-nums";
+
 /**
  * Resumo do que já foi aprovado na Caixa de envios.
  *
@@ -28,42 +33,55 @@ export function ResumoAprovadas({
   rotuloAprovadas?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-lg border border-border bg-card px-4 py-3">
-      <div>
-        <p className="text-xs text-muted-foreground">Mensalidades aprovadas</p>
-        <p className="font-mono text-lg font-semibold tabular-nums">{moeda(totalMensal)}</p>
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground">No ano (12x)</p>
-        <p className="font-mono text-sm tabular-nums">{moeda(totalMensal * 12)}</p>
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground">{rotuloAprovadas}</p>
-        <p className="font-mono text-sm tabular-nums">{aprovadas}</p>
+    <div className="flex flex-col gap-5 rounded-xl bg-[linear-gradient(135deg,#17141B,#2A2333)] px-5 py-5 text-white">
+      <div className="grid gap-5 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))]">
+        <div>
+          <p className={ROTULO}>Mensalidades aprovadas</p>
+          <p className={`${NUMERO} text-[#FFB673]`}>{moeda(totalMensal)}</p>
+        </div>
+        <div>
+          <p className={ROTULO}>No ano (12x)</p>
+          <p className={NUMERO}>{moeda(totalMensal * 12)}</p>
+        </div>
+        <div>
+          <p className={ROTULO}>{rotuloAprovadas}</p>
+          <p className={NUMERO}>{aprovadas}</p>
+        </div>
       </div>
 
-      {porTurma.map(([turma, quantidade], i) => {
-        // Aprovada sem turma é a única que pede ação: a escola precisa definir a turma antes de
-        // contar a vaga. Por isso só ela muda de cor.
-        const alerta = turma === SEM_TURMA;
-        return (
-          <div key={turma} className={i === 0 ? "border-l border-border pl-6" : undefined}>
-            <p className={`text-xs ${alerta ? "text-destructive" : "text-muted-foreground"}`}>
-              {turma}
-            </p>
-            <p className={`font-mono text-sm tabular-nums ${alerta ? "text-destructive" : ""}`}>
-              {quantidade}
-            </p>
-          </div>
-        );
-      })}
+      {porTurma.length > 0 && (
+        <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
+          {porTurma.map(([turma, quantidade]) => {
+            // Aprovada sem turma é a única que pede ação: a escola precisa definir a turma antes de
+            // contar a vaga. Por isso só ela muda de cor.
+            const alerta = turma === SEM_TURMA;
+            return (
+              <span
+                key={turma}
+                className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[12.5px] ${
+                  alerta
+                    ? "border-destructive-border/40 bg-destructive/25 text-white"
+                    : "border-white/10 bg-white/[.07]"
+                }`}
+              >
+                {turma}
+                <strong className="font-mono font-semibold tabular-nums text-[#FFB673]">
+                  {quantidade}
+                </strong>
+              </span>
+            );
+          })}
+        </div>
+      )}
 
-      <p className="basis-full text-xs text-muted-foreground">
-        Soma o campo <strong>{rotuloValor}</strong> das respostas concluídas.
+      <p className="text-[11.5px] leading-[1.55] text-[#8F87A0]">
+        Soma o campo <strong className="font-semibold text-[#A9A2B8]">{rotuloValor}</strong> das
+        respostas concluídas.
         {rotuloTurma && (
           <>
             {" "}
-            As turmas vêm do campo <strong>{rotuloTurma}</strong>.
+            As turmas vêm do campo{" "}
+            <strong className="font-semibold text-[#A9A2B8]">{rotuloTurma}</strong>.
           </>
         )}{" "}
         Pendentes ficam de fora — ainda podem ser reprovadas.

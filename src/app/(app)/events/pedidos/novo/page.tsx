@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Minus } from "lucide-react";
@@ -10,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { EventsNav } from "@/components/events/events-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { useAllProducts } from "@/lib/events/use-products";
 import { useCreateOrder } from "@/lib/events/use-orders";
 
@@ -76,33 +76,30 @@ export default function NovoPedidoPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <EventsNav />
 
-      <div>
-        <Link href="/events/pedidos" className="text-xs text-muted-foreground hover:underline">
-          ← Pedidos
-        </Link>
-        <h1 className="font-heading text-xl font-bold">Novo pedido</h1>
-      </div>
+      <CabecalhoDaPagina eyebrow="← Pedidos" eyebrowHref="/events/pedidos" titulo="Novo pedido" />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1fr_280px]">
         <div className="flex flex-col gap-3">
           <Input
             placeholder="Buscar produto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {isLoading && <p className="text-sm text-muted-foreground">Carregando produtos...</p>}
             {filtered.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addToCart(p.id, p.nome, p.preco)}
-                className="flex flex-col items-start gap-1 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 hover:bg-accent/40"
+                className="flex flex-col items-start gap-1 rounded-xl border border-border bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-accent/40"
               >
                 <span className="text-sm font-medium break-words">{p.nome}</span>
-                <span className="font-mono text-sm whitespace-nowrap text-primary">{formatCurrency(p.preco)}</span>
+                <span className="font-mono text-sm font-semibold whitespace-nowrap tabular-nums text-primary">
+                  {formatCurrency(p.preco)}
+                </span>
               </button>
             ))}
             {!isLoading && filtered.length === 0 && (
@@ -111,7 +108,7 @@ export default function NovoPedidoPage() {
           </div>
         </div>
 
-        <div ref={carrinhoRef} className="flex scroll-mt-4 flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4">
+        <div ref={carrinhoRef} className="flex scroll-mt-4 flex-col gap-3 rounded-xl border border-border bg-muted/40 p-4">
           <div className="flex flex-col gap-[5px]">
             <Label className="text-xs text-muted-foreground">Comprador</Label>
             <Input value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} />
@@ -132,7 +129,7 @@ export default function NovoPedidoPage() {
                   >
                     <Minus className="size-3" />
                   </Button>
-                  <span className="w-4 text-center font-mono">{l.quantidade}</span>
+                  <span className="w-4 text-center font-mono tabular-nums">{l.quantidade}</span>
                   <Button
                     variant="outline"
                     size="icon-sm"
@@ -148,8 +145,8 @@ export default function NovoPedidoPage() {
             ))}
           </div>
 
-          <div className="border-t border-border pt-2">
-            <div className="flex items-center justify-between font-heading text-lg font-bold">
+          <div className="border-t border-border pt-2.5">
+            <div className="flex items-center justify-between font-heading text-lg font-semibold tracking-[-.03em]">
               <span>Total</span>
               <span className="font-mono tabular-nums">{formatCurrency(total)}</span>
             </div>
@@ -157,16 +154,17 @@ export default function NovoPedidoPage() {
 
           <div className="flex flex-col gap-[5px]">
             <Label className="text-xs text-muted-foreground">Pagamento</Label>
-            <div className="flex gap-2">
+            {/* Pílulas do guia: faixa cinza, escolhido em branco com sombra leve. */}
+            <div className="flex gap-1 rounded-lg bg-muted p-1">
               {(["Dinheiro", "Pix"] as const).map((forma) => (
                 <button
                   key={forma}
                   onClick={() => setFormaPagamento(forma)}
                   className={cn(
-                    "min-h-10 flex-1 rounded-md border px-3 py-2 text-sm md:min-h-0 font-medium transition-colors",
+                    "min-h-9 flex-1 rounded-[9px] px-3 py-2 text-[13.5px] transition-colors md:min-h-0",
                     formaPagamento === forma
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground hover:bg-accent"
+                      ? "bg-card font-semibold text-foreground shadow-[0_1px_3px_rgba(42,37,48,.12)]"
+                      : "font-medium text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {forma}
@@ -184,6 +182,7 @@ export default function NovoPedidoPage() {
           </div>
 
           <Button
+            variant="action"
             className="w-full"
             onClick={handleFinalizar}
             disabled={createOrder.isPending || !nomeCliente.trim() || cart.length === 0}
@@ -195,16 +194,17 @@ export default function NovoPedidoPage() {
 
       {/* Celular: a lista de produtos empurra o carrinho para baixo, então o total e o botão de
           finalizar ficam presos acima da barra de abas; tocar no total rola até o carrinho. */}
-      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-md md:hidden">
+      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-md md:hidden">
         <button
           type="button"
           onClick={() => carrinhoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          className="flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 text-left font-heading font-bold"
+          className="flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 text-left font-heading font-semibold tracking-[-.03em]"
         >
           <span>Total</span>
           <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(total)}</span>
         </button>
         <Button
+          variant="action"
           onClick={handleFinalizar}
           disabled={createOrder.isPending || !nomeCliente.trim() || cart.length === 0}
         >

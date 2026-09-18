@@ -33,6 +33,9 @@ import { useSubmitForm, useUploadFormFile } from "@/lib/flow/use-form-fill";
 // Decisão deliberada de escopo: preenchimento por usuário autenticado (staff), não
 // anônimo/público — ver comentário em FormResponsesController.Submit.
 
+/** Rótulo de campo do guia: maiúsculas pequenas, bold, muito espaçadas. */
+const rotulo = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
+
 function isVisible(field: FormFieldDto, answers: Record<string, string>): boolean {
   const config = decodeFieldConfig(field.config);
   if (!config.visibleIf) return true;
@@ -87,13 +90,21 @@ function FieldInput({
           type="number"
           min={config.min}
           max={config.max}
+          className="font-mono tabular-nums"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
       );
 
     case "data":
-      return <Input type="date" value={value} onChange={(e) => onChange(e.target.value)} />;
+      return (
+        <Input
+          type="date"
+          className="font-mono tabular-nums"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
 
     case "sim_nao":
       return (
@@ -104,10 +115,10 @@ function FieldInput({
               type="button"
               onClick={() => onChange(opt)}
               className={cn(
-                "flex-1 rounded-md border px-3 py-3 text-sm transition-colors md:py-2",
+                "flex-1 rounded-lg border px-3 py-3 text-sm font-medium transition-colors md:py-2",
                 value === opt
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:bg-muted"
               )}
             >
               {opt}
@@ -143,10 +154,10 @@ function FieldInput({
               type="button"
               onClick={() => onChange(o)}
               className={cn(
-                "rounded-md border px-3 py-3 text-left text-sm break-words transition-colors md:py-2",
+                "rounded-lg border px-3 py-3 text-left text-sm break-words transition-colors md:py-2",
                 value === o
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:bg-muted"
               )}
             >
               {o}
@@ -187,10 +198,10 @@ function FieldInput({
               type="button"
               onClick={() => onChange(String(n))}
               className={cn(
-                "flex size-10 items-center justify-center rounded-full border text-sm font-medium transition-colors md:size-9",
+                "flex size-10 items-center justify-center rounded-full border font-mono text-sm tabular-nums transition-colors md:size-9",
                 Number(value) >= n
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:bg-muted"
               )}
             >
               {n}
@@ -245,7 +256,7 @@ function FieldInput({
         <div className="flex flex-col gap-1.5">
           {/* Botao de verdade em vez do <input type=file> cru, que so mostrava o texto do
               navegador e nao parecia clicavel. */}
-          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-accent/50 md:w-fit md:justify-start md:py-2">
+          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-input bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-muted md:w-fit md:justify-start md:py-2">
             <Paperclip className="size-4" />
             {uploadFile.isPending
               ? "Enviando..."
@@ -355,7 +366,7 @@ export default function FormFillPage() {
 
   if (isError || !form) {
     return (
-      <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+      <div className="rounded-xl border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
         Não foi possível carregar o formulário.
       </div>
     );
@@ -367,7 +378,7 @@ export default function FormFillPage() {
         <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
           ← {form.nome}
         </Link>
-        <div className="rounded-md border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-soft-foreground">
+        <div className="rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-soft-foreground">
           Este formulário está em {form.status.toLowerCase()} e não está aberto para
           respostas. Publique-o na tela do formulário pra habilitar o preenchimento.
         </div>
@@ -381,13 +392,17 @@ export default function FormFillPage() {
         <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
           ← {form.nome}
         </Link>
-        <h1 className="font-heading text-xl font-bold break-words">{form.nome}</h1>
-        {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
+        <h1 className="font-heading text-[clamp(24px,3vw,32px)] font-semibold tracking-[-.03em] break-words">
+          {form.nome}
+        </h1>
+        {form.descricao && (
+          <p className="mt-1 text-sm break-words text-muted-foreground">{form.descricao}</p>
+        )}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
-        <div className="flex flex-col gap-[5px]">
-          <Label className="text-xs text-muted-foreground">Nome/Referência (opcional)</Label>
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 md:p-5">
+        <div className="flex flex-col gap-1.5">
+          <Label className={rotulo}>Nome/Referência (opcional)</Label>
           <Input value={nomeReferencia} onChange={(e) => setNomeReferencia(e.target.value)} />
         </div>
 
@@ -396,10 +411,11 @@ export default function FormFillPage() {
         )}
 
         {camposVisiveis.map((field) => (
-          <div key={field.id} className="flex flex-col gap-[5px]">
-            <Label className="block text-sm leading-snug break-words md:flex md:leading-none">
+          <div key={field.id} className="flex flex-col gap-1.5">
+            <Label className="block text-sm leading-snug font-medium break-words md:flex md:leading-none">
               {field.label}
-              {field.obrigatorio && <span className="text-destructive"> *</span>}
+              {/* Laranja: marca o que ainda falta decidir, não é erro. */}
+              {field.obrigatorio && <span className="text-action"> *</span>}
             </Label>
             <FieldInput
               field={field}
@@ -411,16 +427,17 @@ export default function FormFillPage() {
           </div>
         ))}
 
-        <div className="flex flex-col gap-[5px]">
-          <Label className="text-xs text-muted-foreground">Observações (opcional)</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label className={rotulo}>Observações (opcional)</Label>
           <Textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
         </div>
       </div>
 
       <Button
+        variant="action"
         onClick={handleSubmit}
         disabled={submitForm.isPending || camposVisiveis.length === 0}
-        className="h-11 md:h-8"
+        className="h-12 w-full text-base md:h-10 md:text-sm"
       >
         {submitForm.isPending ? "Enviando..." : "Enviar resposta"}
       </Button>

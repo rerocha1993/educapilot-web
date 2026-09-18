@@ -1,13 +1,16 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MarcaEducaPilot } from "@/components/auth/marca";
 import { useDefinirSenhaResponsavel } from "@/lib/reception/use-responsavel";
+
+/** Rótulo de campo do guia: maiúsculas pequenas, bold, muito espaçadas. */
+const rotulo = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
 
 /**
  * Tela que o link de acesso do responsável abre: /responsavel/definir-senha?token=...
@@ -17,14 +20,14 @@ import { useDefinirSenhaResponsavel } from "@/lib/reception/use-responsavel";
 export default function DefinirSenhaPage() {
   return (
     <main className="flex min-h-full flex-1 items-center justify-center bg-background p-4 md:p-6">
-      <div className="flex w-full max-w-[380px] flex-col gap-4 rounded-[10px] border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,.04)] md:p-7">
-        <Image src="/logo.png" alt="EducaPilot" width={156} height={123} className="mx-auto h-13 w-auto" priority />
+      <div className="flex w-full max-w-[380px] flex-col gap-5 rounded-xl border border-border bg-card p-5 shadow-[0_18px_44px_-32px_rgba(42,37,48,.45)] md:p-7">
+        <MarcaEducaPilot className="mx-auto" />
 
         <div className="flex flex-col items-center gap-1 text-center">
-          <span className="font-heading text-base font-bold">Criar sua senha</span>
-          <span className="text-[13px] text-muted-foreground md:text-[11.5px]">
+          <h1 className="font-heading text-[22px] font-semibold tracking-[-.03em]">Criar sua senha</h1>
+          <p className="text-[13px] text-muted-foreground">
             Com ela você entra no site da escola e avisa quando estiver a caminho.
-          </span>
+          </p>
         </div>
 
         <Suspense fallback={<Skeleton className="h-48 w-full" />}>
@@ -48,7 +51,7 @@ function FormularioDeSenha() {
 
   if (!token) {
     return (
-      <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-sm">
+      <div className="rounded-lg border border-warning-border bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground">
         Este link não traz um acesso. Abra o link direto da mensagem que a escola mandou, ou peça um novo.
       </div>
     );
@@ -70,13 +73,13 @@ function FormularioDeSenha() {
   return (
     <form onSubmit={enviar} className="flex flex-col gap-4">
       {definir.error && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">
           {definir.error.message}
         </div>
       )}
 
-      <div className="flex flex-col gap-[5px]">
-        <Label htmlFor="senha" className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="senha" className={rotulo}>
           Senha
         </Label>
         <Input
@@ -90,8 +93,8 @@ function FormularioDeSenha() {
         {tentou && curta && <p className="text-sm text-destructive">A senha precisa ter pelo menos 8 caracteres.</p>}
       </div>
 
-      <div className="flex flex-col gap-[5px]">
-        <Label htmlFor="confirmacao" className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground md:text-[9.5px]">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="confirmacao" className={rotulo}>
           Confirmar senha
         </Label>
         <Input
@@ -105,7 +108,7 @@ function FormularioDeSenha() {
         {tentou && !curta && diferente && <p className="text-sm text-destructive">As senhas não conferem.</p>}
       </div>
 
-      <Button type="submit" disabled={definir.isPending} className="mt-1 h-12 text-base md:h-10 md:text-sm">
+      <Button type="submit" variant="action" disabled={definir.isPending} className="mt-1 h-12 w-full text-base md:h-10 md:text-sm">
         {definir.isPending ? "Salvando..." : "Criar senha"}
       </Button>
     </form>

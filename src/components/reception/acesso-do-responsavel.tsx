@@ -36,9 +36,9 @@ export function AcessoDoResponsavel({ guardianId }: { guardianId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap">
-        <p className="text-sm font-medium">Acesso ao site do responsável</p>
+        <p className="font-heading text-[15.5px] font-semibold">Acesso ao site do responsável</p>
         {acesso && <BadgeAcesso temAcesso={acesso.temAcesso} senhaDefinida={acesso.senhaDefinida} />}
       </div>
 
@@ -52,7 +52,7 @@ export function AcessoDoResponsavel({ guardianId }: { guardianId: string }) {
           </p>
 
           {!acesso.email && (
-            <p className="text-xs text-warning-soft-foreground">
+            <p className="text-xs text-action">
               Cadastre um e-mail para este responsável: é com ele que o responsável entra no site.
             </p>
           )}
@@ -79,7 +79,7 @@ export function AcessoDoResponsavel({ guardianId }: { guardianId: string }) {
                 {gerado.emailEnviado
                   ? `Enviamos o link para ${gerado.email}.`
                   : "Não foi possível enviar por e-mail: copie e mande por WhatsApp."}{" "}
-                O link vale 7 dias; gerar um novo invalida o anterior.
+                O link vale <span className="font-mono tabular-nums">7</span> dias; gerar um novo invalida o anterior.
               </p>
             </div>
           )}
@@ -90,7 +90,7 @@ export function AcessoDoResponsavel({ guardianId }: { guardianId: string }) {
 }
 
 function BadgeAcesso({ temAcesso, senhaDefinida }: { temAcesso: boolean; senhaDefinida: boolean }) {
-  if (senhaDefinida) return <Badge className="bg-success-soft text-success-soft-foreground">Acesso ativo</Badge>;
-  if (temAcesso) return <Badge className="bg-warning-soft text-warning-soft-foreground">Aguardando criar senha</Badge>;
+  if (senhaDefinida) return <Badge variant="success">Acesso ativo</Badge>;
+  if (temAcesso) return <Badge variant="pending">Aguardando criar senha</Badge>;
   return <Badge variant="secondary">Sem acesso</Badge>;
 }

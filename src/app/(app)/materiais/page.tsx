@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Search, Package, Trash2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useMaterials,
   useSaveMaterial,
@@ -98,13 +99,17 @@ export default function MateriaisPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Materiais</h1>
-          <p className="text-sm text-muted-foreground">Cadastro geral e controle de estoque da escola.</p>
-        </div>
-        <Button className="w-full md:w-auto" onClick={openCreate}>+ Novo material</Button>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo="Materiais"
+        apoio="Cadastro geral e controle de estoque da escola."
+        acoes={
+          // Único botão laranja da tela: é a decisão a tomar aqui.
+          <Button variant="action" className="w-full md:w-auto" onClick={openCreate}>
+            + Novo material
+          </Button>
+        }
+      />
 
       <div className="relative w-full md:w-72">
         <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -122,19 +127,24 @@ export default function MateriaisPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card">
+      {/* O botão roxo só aparece quando o cadastro está realmente vazio (na busca
+          sem resultado não há ação a oferecer). */}
+      {!isLoading && filtered.length === 0 ? (
+        <EstadoVazio
+          icone={<Package />}
+          titulo={
+            materials?.length === 0 ? "Nenhum material cadastrado ainda." : "Nenhum material encontrado."
+          }
+          acao={materials?.length === 0 ? <Button onClick={openCreate}>+ Novo material</Button> : undefined}
+        />
+      ) : (
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         {isLoading &&
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="border-b border-border px-4 py-3 last:border-0">
               <Skeleton className="h-5 w-full" />
             </div>
           ))}
-
-        {!isLoading && filtered.length === 0 && (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            {materials?.length === 0 ? "Nenhum material cadastrado ainda." : "Nenhum material encontrado."}
-          </p>
-        )}
 
         {filtered.map((m) => (
           <div
@@ -163,7 +173,7 @@ export default function MateriaisPage() {
               >
                 <Minus className="size-3.5" />
               </Button>
-              <span className="w-10 text-center font-mono text-sm tabular-nums">
+              <span className="w-10 text-center font-numeric text-sm">
                 {m.availableQuantity}
               </span>
               <Button
@@ -188,6 +198,7 @@ export default function MateriaisPage() {
           </div>
         ))}
       </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
@@ -197,7 +208,7 @@ export default function MateriaisPage() {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Nome
               </span>
               <Input
@@ -208,7 +219,7 @@ export default function MateriaisPage() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Categoria
               </span>
               <Input
@@ -219,12 +230,13 @@ export default function MateriaisPage() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Quantidade em estoque
               </span>
               <Input
                 type="number"
                 min={0}
+                className="font-numeric"
                 value={form.availableQuantity}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, availableQuantity: Math.max(0, Number(e.target.value)) }))

@@ -85,10 +85,10 @@ export function SeletorDeAcesso({
               type="button"
               onClick={() => onChange({ ...valor, userType: opcao.valor })}
               className={cn(
-                "flex-1 rounded-md border px-3 py-2 text-left text-sm transition-colors",
+                "flex-1 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
                 valor.userType === opcao.valor
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:border-primary"
               )}
             >
               <span className="block font-medium">{opcao.rotulo}</span>
@@ -99,7 +99,7 @@ export function SeletorDeAcesso({
       </div>
 
       {ehProfessor && (
-        <div className="flex flex-col gap-2 rounded-md border border-dashed border-border p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border-dashed p-3">
           <Label className="text-sm">Turmas</Label>
           <p className="text-xs text-muted-foreground">
             Ela verá apenas os alunos destas turmas.
@@ -144,8 +144,8 @@ export function SeletorDeAcesso({
             <div
               key={modulo.slug}
               className={cn(
-                "rounded-md border p-3 transition-colors",
-                marcado ? "border-primary/40 bg-accent/20" : "border-border"
+                "rounded-lg border p-3 transition-colors",
+                marcado ? "border-primary bg-accent/20" : "border-border"
               )}
             >
               <label className="flex min-h-10 items-center gap-2 text-sm font-medium md:min-h-0">

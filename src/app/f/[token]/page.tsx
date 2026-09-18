@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Paperclip, CheckCircle2 } from "lucide-react";
+import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ import {
   encodeOpcoes,
   type AutoFillKey,
 } from "@/lib/flow/use-form-fields";
+import { MarcaEducaPilot } from "@/components/auth/marca";
 import { RematriculaLookup } from "@/components/integrations/rematricula-lookup";
 import { decodeFormConfig } from "@/lib/flow/form-config";
 import { ContractField } from "@/components/flow/contract-field";
@@ -51,6 +52,9 @@ import {
 //    nome à mão é seguro e, na prática, é como ele preencheria de qualquer jeito.
 // 2. Sem redirecionamento pós-envio (não existe tela de respostas pra um visitante) —
 //    mostra uma confirmação inline.
+
+/** Rótulo de campo do guia: maiúsculas pequenas, bold, muito espaçadas. */
+const rotulo = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
 
 function isVisible(field: PublicFormFieldDto, answers: Record<string, string>): boolean {
   const config = decodeFieldConfig(field.config);
@@ -100,7 +104,7 @@ function FieldInput({
         value={value}
         readOnly
         tabIndex={-1}
-        className="bg-muted/50 text-muted-foreground"
+        className="bg-muted text-muted-foreground"
       />
     );
   }
@@ -119,13 +123,21 @@ function FieldInput({
           type="number"
           min={config.min}
           max={config.max}
+          className="font-mono tabular-nums"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
       );
 
     case "data":
-      return <Input type="date" value={value} onChange={(e) => onChange(e.target.value)} />;
+      return (
+        <Input
+          type="date"
+          className="font-mono tabular-nums"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
 
     case "sim_nao":
       return (
@@ -136,10 +148,10 @@ function FieldInput({
               type="button"
               onClick={() => onChange(opt)}
               className={cn(
-                "flex-1 rounded-md border px-3 py-3 text-sm transition-colors md:py-2",
+                "flex-1 rounded-lg border px-3 py-3 text-sm font-medium transition-colors md:py-2",
                 value === opt
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:bg-muted"
               )}
             >
               {opt}
@@ -175,10 +187,10 @@ function FieldInput({
               type="button"
               onClick={() => onChange(o)}
               className={cn(
-                "rounded-md border px-3 py-3 text-left text-sm break-words transition-colors md:py-2",
+                "rounded-lg border px-3 py-3 text-left text-sm break-words transition-colors md:py-2",
                 value === o
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:bg-muted"
               )}
             >
               {o}
@@ -219,10 +231,10 @@ function FieldInput({
               type="button"
               onClick={() => onChange(String(n))}
               className={cn(
-                "flex size-10 items-center justify-center rounded-full border text-sm font-medium transition-colors md:size-9",
+                "flex size-10 items-center justify-center rounded-full border font-mono text-sm tabular-nums transition-colors md:size-9",
                 Number(value) >= n
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card hover:bg-accent/50"
+                  : "border-input bg-card hover:bg-muted"
               )}
             >
               {n}
@@ -260,7 +272,7 @@ function FieldInput({
           {/* O <input type=file> cru so mostrava o texto do navegador ("Nenhum arquivo
               escolhido"), sem nada com cara de botao: ninguem descobria onde clicar. O input
               fica invisivel dentro do label, que vira a area clicavel. */}
-          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-accent/50 md:w-fit md:justify-start md:py-2">
+          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-input bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-muted md:w-fit md:justify-start md:py-2">
             <Paperclip className="size-4" />
             {uploadFile.isPending
               ? "Enviando..."
@@ -367,6 +379,37 @@ function valorAutoPreenchido(chave: AutoFillKey, dados: DadosRematricula): strin
   }
 }
 
+/**
+ * Trilha de etapas do link público (identificação → preenchimento → assinatura).
+ *
+ * Cores do guia: laranja é a etapa que pede uma decisão agora; as outras ficam em cinza.
+ */
+function Etapas({ etapas, atual }: { etapas: string[]; atual: number }) {
+  return (
+    <ol className="mb-4 flex flex-wrap items-center justify-center gap-y-1.5 text-[11px] font-bold uppercase tracking-[.1em]">
+      {etapas.map((etapa, i) => (
+        <li key={etapa} className="flex items-center gap-2">
+          {i > 0 && <span aria-hidden className="mx-1 h-px w-4 bg-border md:w-6" />}
+          <span
+            aria-current={i === atual ? "step" : undefined}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-2 py-1",
+              i === atual
+                ? "bg-action-soft text-action-soft-foreground"
+                : i < atual
+                  ? "text-muted-foreground"
+                  : "text-muted-foreground/60"
+            )}
+          >
+            <span className="font-mono tabular-nums">{i + 1}</span>
+            {etapa}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export default function PublicFormFillPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
@@ -423,6 +466,18 @@ export default function PublicFormFillPage() {
   const exigeIdentificacao = usaAutoPreenchimento && !!regras.exigirIdentificacao;
   const mostrarCampos = !exigeIdentificacao || autoPreenchido || preenchendoManualmente;
 
+  // Etapas mostradas no topo: só existem as que este formulário de fato tem.
+  const etapas = [
+    ...(usaAutoPreenchimento ? ["Identificação"] : []),
+    "Preenchimento",
+    ...(campos.some((c) => c.tipo === "contrato") ? ["Assinatura"] : []),
+  ];
+  const etapaAtual = respostaId
+    ? etapas.length - 1
+    : mostrarCampos
+      ? etapas.length - 1 - (etapas[etapas.length - 1] === "Assinatura" ? 1 : 0)
+      : 0;
+
   // Espalha o endereco achado pelo CEP nos campos marcados para receber cada parte.
   //
   // Sobrescreve o que estiver la: quem corrige o CEP espera o endereco todo trocar junto, e
@@ -477,21 +532,23 @@ export default function PublicFormFillPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:py-10">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:py-10">
       <div className="w-full max-w-2xl">
-        <p className="mb-4 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          EducaPilot
-        </p>
+        <MarcaEducaPilot className="mb-5" />
+
+        {!isLoading && form && form.status === "Ativo" && etapas.length > 1 && (
+          <Etapas etapas={etapas} atual={etapaAtual} />
+        )}
 
         {isLoading && (
-          <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 md:p-6">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 md:p-6">
             <Skeleton className="h-8 w-full max-w-64" />
             <Skeleton className="h-64 w-full" />
           </div>
         )}
 
         {!isLoading && (isError || !form) && (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive-border bg-destructive-soft px-4 py-6 text-center text-sm text-destructive-soft-foreground">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-destructive-border bg-destructive-soft px-4 py-6 text-center text-sm text-destructive-soft-foreground">
             <p>
               {loadErrorKind === "not-found"
                 ? "Este link não é válido ou o formulário foi removido."
@@ -507,7 +564,7 @@ export default function PublicFormFillPage() {
         )}
 
         {!isLoading && form && form.status !== "Ativo" && (
-          <div className="rounded-lg border border-warning-border bg-warning-soft px-4 py-6 text-center text-sm text-warning-soft-foreground">
+          <div className="rounded-xl border border-warning-border bg-warning-soft px-4 py-6 text-center text-sm text-warning-soft-foreground">
             Este formulário não está aberto para respostas no momento.
           </div>
         )}
@@ -519,8 +576,12 @@ export default function PublicFormFillPage() {
         {!isLoading && form && form.status === "Ativo" && !respostaId && (
           <div className="flex flex-col gap-4">
             <div className="text-center">
-              <h1 className="font-heading text-xl font-bold break-words">{form.nome}</h1>
-              {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
+              <h1 className="font-heading text-[clamp(22px,4vw,28px)] font-semibold tracking-[-.03em] break-words">
+                {form.nome}
+              </h1>
+              {form.descricao && (
+                <p className="mt-1 text-sm break-words text-muted-foreground">{form.descricao}</p>
+              )}
             </div>
 
             {usaAutoPreenchimento && (
@@ -538,9 +599,9 @@ export default function PublicFormFillPage() {
             )}
 
             {mostrarCampos && (
-            <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
-              <div className="flex flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Seu nome (opcional)</Label>
+            <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 md:p-5">
+              <div className="flex flex-col gap-1.5">
+                <Label className={rotulo}>Seu nome (opcional)</Label>
                 <Input value={nomeReferencia} onChange={(e) => setNomeReferencia(e.target.value)} />
               </div>
 
@@ -554,10 +615,11 @@ export default function PublicFormFillPage() {
                 const travado = !!config.travado;
 
                 return (
-                  <div key={field.id} className="flex flex-col gap-[5px]">
-                    <Label className="block text-sm leading-snug break-words md:flex md:leading-none">
+                  <div key={field.id} className="flex flex-col gap-1.5">
+                    <Label className="block text-sm leading-snug font-medium break-words md:flex md:leading-none">
                       {field.label}
-                      {field.obrigatorio && !travado && <span className="text-destructive"> *</span>}
+                      {/* Laranja: marca o que ainda falta decidir, não é erro. */}
+                      {field.obrigatorio && !travado && <span className="text-action"> *</span>}
                     </Label>
                     <FieldInput
                       field={field}
@@ -577,15 +639,20 @@ export default function PublicFormFillPage() {
                 );
               })}
 
-              <div className="flex flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Observações (opcional)</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label className={rotulo}>Observações (opcional)</Label>
                 <Textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
               </div>
             </div>
             )}
 
             {mostrarCampos && (
-              <Button onClick={handleSubmit} disabled={submitForm.isPending} className="h-12 text-base md:h-8 md:text-sm">
+              <Button
+                variant="action"
+                onClick={handleSubmit}
+                disabled={submitForm.isPending}
+                className="h-12 w-full text-base md:h-10 md:text-sm"
+              >
                 {submitForm.isPending ? "Enviando..." : "Enviar resposta"}
               </Button>
             )}

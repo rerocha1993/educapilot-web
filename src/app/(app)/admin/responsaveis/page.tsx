@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2 } from "lucide-react";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { Contact, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -46,6 +48,25 @@ import { AcessoDoResponsavel } from "@/components/reception/acesso-do-responsave
 
 const EMPTY_FORM = { fullName: "", cpf: "", email: "", phone: "" };
 const EMPTY_VINCULO_FORM = { studentId: "", parentesco: "", responsavelFinanceiro: true };
+
+/** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
+function SemResponsaveis({ semBorda = false }: { semBorda?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center px-5 py-9 text-center",
+        !semBorda && "rounded-xl border border-dashed border-border-dashed bg-card"
+      )}
+    >
+      <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+        <Contact className="size-4" />
+      </span>
+      <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
+        Nenhum responsável cadastrado ainda.
+      </p>
+    </div>
+  );
+}
 
 export default function ResponsaveisPage() {
   const { data: guardians, isLoading, isError } = useGuardians();
@@ -134,18 +155,17 @@ export default function ResponsaveisPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Responsáveis</h1>
-          <p className="text-sm text-muted-foreground">
-            Quem paga a mensalidade de cada aluno — base do módulo de mensalidade
-            recorrente e assinam o contrato.
-          </p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)} className="w-full md:w-auto">
-          + Novo responsável
-        </Button>
-      </div>
+      <CabecalhoDaPagina
+        className="md:items-center md:gap-0"
+        eyebrow="Administração"
+        titulo="Responsáveis"
+        apoio="Quem paga a mensalidade de cada aluno — base do módulo de mensalidade recorrente e assinam o contrato."
+        acoes={
+          <Button variant="action" onClick={() => setDialogOpen(true)} className="w-full md:w-auto">
+            + Novo responsável
+          </Button>
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -156,22 +176,18 @@ export default function ResponsaveisPage() {
       <div className="flex flex-col gap-2 md:hidden">
         {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
 
-        {!isLoading && list.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhum responsável cadastrado ainda.
-          </div>
-        )}
+        {!isLoading && list.length === 0 && <SemResponsaveis />}
 
         {list.map((g) => (
           <div
             key={g.id}
-            className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-card p-3"
+            className="flex cursor-pointer items-start gap-2 rounded-xl border border-border bg-card p-3"
             onClick={() => setDetailId(g.id)}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <p className="font-medium break-words">{g.fullName}</p>
               <p className="text-sm break-words text-muted-foreground">
-                {g.cpf ?? "—"} · {g.email ?? g.phone ?? "—"}
+                <span className="font-mono tabular-nums">{g.cpf ?? "—"}</span> · {g.email ?? g.phone ?? "—"}
               </p>
               {g.vinculos && g.vinculos.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
@@ -199,7 +215,7 @@ export default function ResponsaveisPage() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -222,8 +238,8 @@ export default function ResponsaveisPage() {
 
             {!isLoading && list.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhum responsável cadastrado ainda.
+                <TableCell colSpan={5} className="p-0">
+                  <SemResponsaveis semBorda />
                 </TableCell>
               </TableRow>
             )}
@@ -231,7 +247,7 @@ export default function ResponsaveisPage() {
             {list.map((g) => (
               <TableRow key={g.id} className="cursor-pointer" onClick={() => setDetailId(g.id)}>
                 <TableCell className="font-medium">{g.fullName}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{g.cpf ?? "—"}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">{g.cpf ?? "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {g.email ?? g.phone ?? "—"}
                 </TableCell>
@@ -273,21 +289,21 @@ export default function ResponsaveisPage() {
           </DialogHeader>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Nome completo</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Nome completo</Label>
               <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">CPF</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">CPF</Label>
                 <Input value={form.cpf} onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))} />
               </div>
               <div className="flex flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Telefone</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Telefone</Label>
                 <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
               </div>
             </div>
             <div className="flex flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">E-mail</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">E-mail</Label>
               <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -315,7 +331,8 @@ export default function ResponsaveisPage() {
           {detail && (
             <div className="flex flex-col gap-3">
               <div className="text-sm break-words text-muted-foreground">
-                {detail.cpf ?? "CPF não cadastrado"} · {detail.email ?? "—"} · {detail.phone ?? "—"}
+                <span className="font-mono tabular-nums">{detail.cpf ?? "CPF não cadastrado"}</span> ·{" "}
+                {detail.email ?? "—"} · <span className="font-mono tabular-nums">{detail.phone ?? "—"}</span>
               </div>
 
               <EnderecosDoResponsavel guardianId={detail.id} />

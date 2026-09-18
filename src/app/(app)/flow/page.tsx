@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, FileText, Trash2 } from "lucide-react";
 import {
   useForms,
   useCreateForm,
@@ -26,16 +26,19 @@ import {
 } from "@/lib/flow/use-forms";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { SeletorDeTipo } from "@/components/flow/seletor-de-tipo";
+import { AbasDePilulas, CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { decodeFormConfig, encodeFormConfig, type TipoDeFormulario } from "@/lib/flow/form-config";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
 
-const STATUS_BADGE: Record<string, string> = {
-  Rascunho: "bg-accent text-accent-foreground",
-  Ativo: "bg-success-soft text-success-soft-foreground",
-  Arquivado: "bg-muted text-muted-foreground",
-};
+// Situação do formulário nas cores do guia: ativo é dado concluído, rascunho ainda aguarda.
+const STATUS_VARIANTE = {
+  Rascunho: "waiting",
+  Ativo: "success",
+  Arquivado: "secondary",
+} as const;
 
 export default function FormulariosPage() {
   const { data: forms, isLoading, isError } = useForms();
@@ -124,36 +127,34 @@ export default function FormulariosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Formulários</h1>
-          <p className="text-sm text-muted-foreground">Construtor de formulários dinâmicos.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {/* Cada botão é uma área da permissão: quem não tem "Caixa de envios" não vê o botão. */}
-          {podeVerRota(meuAcesso, "/flow/respostas") && (
-            <Link href="/flow/respostas" className={buttonVariants({ variant: "outline" })}>
-              Caixa de envios
-            </Link>
-          )}
-          {podeVerRota(meuAcesso, "/flow/contratos") && (
-            <Link href="/flow/contratos" className={buttonVariants({ variant: "outline" })}>
-              Contratos
-            </Link>
-          )}
-          {podeVerRota(meuAcesso, "/flow/relatorios") && (
-            <Link href="/flow/relatorios" className={buttonVariants({ variant: "outline" })}>
-              Relatórios
-            </Link>
-          )}
-          {podeVerRota(meuAcesso, "/flow/referencias") && (
-            <Link href="/flow/referencias" className={buttonVariants({ variant: "outline" })}>
-              Dados de referência
-            </Link>
-          )}
-          <Button onClick={() => setDialogOpen(true)}>+ Novo formulário</Button>
-        </div>
-      </div>
+      {/* Cada pílula é uma área da permissão: quem não tem "Caixa de envios" não vê a pílula. */}
+      <AbasDePilulas
+        itens={[
+          { rotulo: "Formulários", ativo: true },
+          ...(podeVerRota(meuAcesso, "/flow/respostas")
+            ? [{ rotulo: "Caixa de envios", href: "/flow/respostas" }]
+            : []),
+          ...(podeVerRota(meuAcesso, "/flow/contratos")
+            ? [{ rotulo: "Contratos", href: "/flow/contratos" }]
+            : []),
+          ...(podeVerRota(meuAcesso, "/flow/relatorios")
+            ? [{ rotulo: "Relatórios", href: "/flow/relatorios" }]
+            : []),
+          ...(podeVerRota(meuAcesso, "/flow/referencias")
+            ? [{ rotulo: "Dados de referência", href: "/flow/referencias" }]
+            : []),
+        ]}
+      />
+
+      <CabecalhoDaPagina
+        titulo="Formulários"
+        apoio="Construtor de formulários dinâmicos."
+        acoes={
+          <Button variant="action" onClick={() => setDialogOpen(true)}>
+            + Novo formulário
+          </Button>
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -170,9 +171,11 @@ export default function FormulariosPage() {
       )}
 
       {!isLoading && forms?.length === 0 && (
-        <div className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-          Nenhum formulário criado ainda.
-        </div>
+        <EstadoVazio
+          icone={<FileText />}
+          titulo="Nenhum formulário criado ainda."
+          acao={<Button onClick={() => setDialogOpen(true)}>+ Novo formulário</Button>}
+        />
       )}
 
       <div className="flex flex-col gap-2">
@@ -180,7 +183,7 @@ export default function FormulariosPage() {
           <Link
             key={form.id}
             href={`/flow/${form.id}`}
-            className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/50 md:flex-row md:items-center md:justify-between"
+            className="flex flex-col gap-2 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/60 md:flex-row md:items-center md:justify-between"
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -191,9 +194,14 @@ export default function FormulariosPage() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground">
-                {form.campos?.length ?? 0} campo{form.campos?.length === 1 ? "" : "s"}
+                <span className="font-mono tabular-nums">{form.campos?.length ?? 0}</span> campo
+                {form.campos?.length === 1 ? "" : "s"}
               </span>
-              <Badge className={STATUS_BADGE[form.status] ?? ""}>{form.status}</Badge>
+              <Badge
+                variant={STATUS_VARIANTE[form.status as keyof typeof STATUS_VARIANTE] ?? "secondary"}
+              >
+                {form.status}
+              </Badge>
               {/* O card inteiro é um link: sem preventDefault, duplicar navegaria para o
                   formulário de origem no mesmo clique. */}
               <Button

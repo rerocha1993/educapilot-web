@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   Select,
   SelectContent,
@@ -37,11 +38,36 @@ import { AcessoDialog } from "@/components/access/acesso-dialog";
 import { SeletorDeAcesso } from "@/components/access/seletor-de-acesso";
 import { type AcessoDoUsuario } from "@/lib/access/use-acessos";
 
+// Pilulas do guia: a ativa e um cartao branco com sombra leve dentro da faixa bg-muted.
+const PILULA =
+  "shrink-0 rounded-[9px] px-3 py-1.5 text-xs whitespace-nowrap transition-colors max-md:inline-flex max-md:min-h-9 max-md:items-center";
+const PILULA_ATIVA = "bg-card font-semibold text-foreground shadow-[0_1px_3px_rgba(42,37,48,.12)]";
+const PILULA_INATIVA = "font-medium text-muted-foreground hover:text-foreground";
+
 const ROLE_LABELS: Record<string, string> = {
   Admin: "Administrador",
   Teacher: "Professor",
   Master: "Master",
 };
+
+/** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
+function SemUsuarios({ semBorda = false }: { semBorda?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center px-5 py-9 text-center",
+        !semBorda && "rounded-xl border border-dashed border-border-dashed bg-card"
+      )}
+    >
+      <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+        <UserPlus className="size-4" />
+      </span>
+      <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
+        Nenhum usuário encontrado.
+      </p>
+    </div>
+  );
+}
 
 export default function UsuariosPage() {
   const { data, isLoading, isError } = useUsers(1, 100);
@@ -138,49 +164,51 @@ export default function UsuariosPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <CabecalhoDaPagina
+        eyebrow="Administração"
+        titulo="Usuários"
+        apoio="Professores, coordenação e convites."
+        acoes={
+          <Button variant="action" onClick={() => setInviteOpen(true)} className="w-full md:w-auto">
+            <UserPlus className="size-4" />
+            Convidar
+          </Button>
+        }
+      />
+
       <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setRoleFilter(null)}
-            className={cn(
-              "min-h-9 rounded-full px-3 py-1 text-xs font-medium transition-colors md:min-h-0",
-              roleFilter === null
-                ? "bg-primary text-primary-foreground"
-                : "bg-accent text-accent-foreground hover:bg-accent/70"
-            )}
-          >
-            Todos ({users.length})
-          </button>
-          {roles.map((role) => (
+        <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
+          <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
             <button
-              key={role}
-              onClick={() => setRoleFilter(role)}
-              className={cn(
-                "min-h-9 rounded-full px-3 py-1 text-xs font-medium transition-colors md:min-h-0",
-                roleFilter === role
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-accent text-accent-foreground hover:bg-accent/70"
-              )}
+              onClick={() => setRoleFilter(null)}
+              className={cn(PILULA, roleFilter === null ? PILULA_ATIVA : PILULA_INATIVA)}
             >
-              {ROLE_LABELS[role] ?? role} ({users.filter((u) => u.userType === role).length})
+              Todos <span className="font-mono tabular-nums">({users.length})</span>
             </button>
-          ))}
+            {roles.map((role) => (
+              <button
+                key={role}
+                onClick={() => setRoleFilter(role)}
+                className={cn(PILULA, roleFilter === role ? PILULA_ATIVA : PILULA_INATIVA)}
+              >
+                {ROLE_LABELS[role] ?? role}{" "}
+                <span className="font-mono tabular-nums">
+                  ({users.filter((u) => u.userType === role).length})
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <Button onClick={() => setInviteOpen(true)} className="w-full md:w-auto">
-          <UserPlus className="size-4" />
-          Convidar
-        </Button>
-      </div>
-
-      <div className="relative w-full md:w-72">
-        <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome ou e-mail"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-8 md:h-9"
-        />
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome ou e-mail"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 md:h-9"
+          />
+        </div>
       </div>
 
       {isError && (
@@ -192,23 +220,19 @@ export default function UsuariosPage() {
       <div className="flex flex-col gap-2 md:hidden">
         {isLoading && Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
 
-        {!isLoading && filtered.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhum usuário encontrado.
-          </div>
-        )}
+        {!isLoading && filtered.length === 0 && <SemUsuarios />}
 
         {filtered.map((u) => (
-          <div key={u.id} className="flex items-start gap-2 rounded-lg border border-border bg-card p-3">
+          <div key={u.id} className="flex items-start gap-2 rounded-xl border border-border bg-card p-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <p className="font-medium break-words">{u.fullName}</p>
               <p className="text-sm break-all text-muted-foreground">{u.email}</p>
               <div className="flex flex-wrap gap-1">
                 <Badge variant="secondary">{ROLE_LABELS[u.userType] ?? u.userType}</Badge>
                 {u.ativo ? (
-                  <Badge className="bg-success-soft text-success-soft-foreground">Ativo</Badge>
+                  <Badge variant="success">Ativo</Badge>
                 ) : (
-                  <Badge className="bg-destructive-soft text-destructive-soft-foreground">Inativo</Badge>
+                  <Badge variant="overdue">Inativo</Badge>
                 )}
               </div>
             </div>
@@ -232,7 +256,7 @@ export default function UsuariosPage() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -255,8 +279,8 @@ export default function UsuariosPage() {
 
             {!isLoading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhum usuário encontrado.
+                <TableCell colSpan={5} className="p-0">
+                  <SemUsuarios semBorda />
                 </TableCell>
               </TableRow>
             )}
@@ -270,9 +294,9 @@ export default function UsuariosPage() {
                 </TableCell>
                 <TableCell>
                   {u.ativo ? (
-                    <Badge className="bg-success-soft text-success-soft-foreground">Ativo</Badge>
+                    <Badge variant="success">Ativo</Badge>
                   ) : (
-                    <Badge className="bg-destructive-soft text-destructive-soft-foreground">Inativo</Badge>
+                    <Badge variant="overdue">Inativo</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
@@ -328,25 +352,25 @@ export default function UsuariosPage() {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Nome completo
               </Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 CPF
               </Label>
               <Input value={cpf} onChange={(e) => setCpf(e.target.value)} />
             </div>
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 E-mail
               </Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Papel
               </Label>
               <Select value={userType} onValueChange={(v) => v && setUserType(v)}>
@@ -389,13 +413,13 @@ export default function UsuariosPage() {
             </p>
 
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Nome (opcional)
               </Label>
               <Input value={inviteNome} onChange={(e) => setInviteNome(e.target.value)} />
             </div>
             <div className="flex flex-col gap-[5px]">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 E-mail
               </Label>
               <Input

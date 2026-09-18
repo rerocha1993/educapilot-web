@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { toast } from "sonner";
 import {
   useClasses,
@@ -62,19 +63,23 @@ export default function TurmasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
-        <div>
-          <h1 className="font-heading text-2xl font-bold">Turmas</h1>
-          <p className="text-sm text-muted-foreground">
-            {classes?.length ?? 0} turma{classes?.length === 1 ? "" : "s"} cadastrada
-            {classes?.length === 1 ? "" : "s"}
-          </p>
-        </div>
-        <Button onClick={() => setSelectedId("new")} className="w-full md:w-auto">
-          <Plus className="size-4" />
-          Nova turma
-        </Button>
-      </div>
+      <CabecalhoDaPagina
+        className="md:items-center md:gap-0"
+        eyebrow="Administração"
+        titulo="Turmas"
+        apoio={
+          <>
+            <span className="font-mono tabular-nums">{classes?.length ?? 0}</span> turma
+            {classes?.length === 1 ? "" : "s"} cadastrada{classes?.length === 1 ? "" : "s"}
+          </>
+        }
+        acoes={
+          <Button variant="action" onClick={() => setSelectedId("new")} className="w-full md:w-auto">
+            <Plus className="size-4" />
+            Nova turma
+          </Button>
+        }
+      />
 
       <div className="flex flex-col gap-4 md:flex-row">
         {/* Lista à esquerda — ver A7 no handoff de design */}
@@ -91,9 +96,14 @@ export default function TurmasPage() {
           )}
 
           {!isLoading && classes?.length === 0 && (
-            <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-12 text-center">
-              <p className="text-sm text-muted-foreground">Nenhuma turma cadastrada ainda.</p>
-              <Button variant="outline" onClick={() => setSelectedId("new")}>
+            <div className="flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
+              <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                <Users className="size-4" />
+              </span>
+              <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
+                Nenhuma turma cadastrada ainda.
+              </p>
+              <Button className="mt-3.5" onClick={() => setSelectedId("new")}>
                 Criar a primeira turma
               </Button>
             </div>
@@ -110,7 +120,7 @@ export default function TurmasPage() {
                 key={c.id}
                 onClick={() => setSelectedId(c.id ?? null)}
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-lg border bg-card px-4 md:gap-0 py-3 text-left transition-colors hover:bg-accent/40",
+                  "flex items-center justify-between gap-3 rounded-xl border bg-card px-4 md:gap-0 py-3 text-left transition-colors hover:border-primary",
                   selectedId === c.id ? "border-primary bg-accent/40" : "border-border"
                 )}
               >
@@ -120,7 +130,7 @@ export default function TurmasPage() {
                     {professores.length > 0 ? professores.join(", ") : "Sem professor vinculado"}
                   </span>
                 </div>
-                <Badge variant="secondary" className="gap-1 font-mono text-[11px]">
+                <Badge variant="secondary" className="gap-1 font-mono text-[11px] tabular-nums">
                   <Users className="size-3" />
                   {c.students?.length ?? 0}
                 </Badge>
@@ -132,16 +142,16 @@ export default function TurmasPage() {
         {/* Painel de edição à direita — fundo #FAFAF9 per A7. No celular fica acima da lista, senão
             abriria lá embaixo, fora da tela de quem tocou na turma. */}
         {selectedId && (
-          <div className="order-first w-full rounded-lg md:order-none md:w-80 md:shrink-0 border border-border bg-background p-4">
+          <div className="order-first w-full rounded-xl md:order-none md:w-80 md:shrink-0 border border-border bg-card p-5">
             <form onSubmit={handleSave} className="flex flex-col gap-4">
-              <h2 className="font-heading text-sm font-bold">
+              <h2 className="font-heading text-[15.5px] font-semibold">
                 {selectedId === "new" ? "Nova turma" : "Editar turma"}
               </h2>
 
               <div className="flex flex-col gap-[5px]">
                 <Label
                   htmlFor="className"
-                  className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground"
+                  className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground"
                 >
                   Nome
                 </Label>

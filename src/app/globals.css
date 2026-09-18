@@ -30,8 +30,18 @@
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-foreground: var(--action-foreground);
+  --color-action-brand: var(--action-brand);
+  --color-action-soft: var(--action-soft);
+  --color-action-soft-foreground: var(--action-soft-foreground);
+  --color-action-border: var(--action-border);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-surface: var(--sidebar-surface);
   --color-input: var(--input);
   --color-border: var(--border);
+  --color-border-dashed: var(--border-dashed);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-soft: var(--destructive-soft);
@@ -64,80 +74,97 @@
   --color-kernel-foreground: var(--kernel-foreground);
   --color-kernel-accent: var(--kernel-accent);
   --color-kernel-border: var(--kernel-border);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Guia: raio 10px em controles (rounded-lg), 16px em cartões (rounded-xl). */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-2xl: 18px;
+  --radius-3xl: 22px;
+  --radius-4xl: 999px;
 }
 
 :root {
-  --background: #FAFAF9;
-  --foreground: #1D1D1B;
+  /* Direção visual 2026-09 (entrega "EducaPilot Sistema", tela Guia de aplicação):
+     roxo = estrutura, laranja = ação (só onde existe decisão), semânticos só para
+     situação de dado. Os hex vêm de lá; não inventar tom intermediário. */
+  --background: #F7F6F3;
+  --foreground: #2A2530;
   --card: #FFFFFF;
-  --card-foreground: #1D1D1B;
+  --card-foreground: #2A2530;
   --popover: #FFFFFF;
-  --popover-foreground: #1D1D1B;
-  --muted: #F5F5F3;
-  --muted-foreground: #77776F;
-  --border: #D9D7D2;
-  --input: #D9D7D2;
-  --ring: #5B4E86;
+  --popover-foreground: #2A2530;
+  --muted: #F4F2EE;
+  --muted-foreground: #6F6879;
+  --border: #E9E5DF;
+  /* Borda do estado vazio, mais quente que a comum (guia). */
+  --border-dashed: #E0DAD2;
+  --input: #E4DFD8;
+  /* Foco é decisão: anel laranja, como no guia. */
+  --ring: #F5851F;
 
-  --primary: #5B4E86;
-  --primary-hover: #4A3F70;
+  --primary: #5C4B8C;
+  --primary-hover: #4A3C73;
   --primary-foreground: #FFFFFF;
-  /* Secundário fica neutro de propósito — o laranja da marca não é cor de UI. */
-  --secondary: #F5F5F3;
-  --secondary-foreground: #2C2C29;
-  --accent: #EDEBF3;
-  --accent-foreground: #4A3F70;
+  --secondary: #F4F2EE;
+  --secondary-foreground: #413B49;
+  --accent: #F2EFFA;
+  --accent-foreground: #5C4B8C;
 
-  --success: #2E7D5B;
+  /* Ação: CTA principal, item ativo, pendência. Nunca decoração. */
+  --action: #B85C00;
+  --action-hover: #A05000;
+  --action-foreground: #FFFFFF;
+  --action-brand: #F5851F;
+  --action-soft: #FFF4E8;
+  --action-soft-foreground: #B85C00;
+  --action-border: #FBD8B4;
+
+  --success: #2E6B4F;
   --success-foreground: #FFFFFF;
-  --success-soft: #E7F3EC;
-  --success-soft-foreground: #22664A;
+  --success-soft: #EAF4EE;
+  --success-soft-foreground: #2E6B4F;
   --success-border: #BFE0CE;
 
-  --warning: #B7791F;
+  /* Pendente usa o laranja de ação — no guia, pendência e ação são a mesma cor. */
+  --warning: #B85C00;
   --warning-foreground: #FFFFFF;
-  --warning-soft: #FBF2DF;
-  --warning-soft-foreground: #8A5A16;
-  --warning-border: #EBD8AC;
+  --warning-soft: #FFF4E8;
+  --warning-soft-foreground: #B85C00;
+  --warning-border: #FBD8B4;
 
-  --destructive: #B3261E;
+  --destructive: #A8321F;
   --destructive-foreground: #FFFFFF;
-  --destructive-soft: #FBEAE8;
-  --destructive-soft-foreground: #8F1F19;
-  --destructive-border: #F0CCC8;
+  --destructive-soft: #FCEDEA;
+  --destructive-soft-foreground: #A8321F;
+  --destructive-border: #F3CFC8;
 
-  --chart-1: #5B4E86;
-  --chart-2: #C4C0D4;
+  --chart-1: #5C4B8C;
+  --chart-2: #F5851F;
   --chart-3: #8C82AE;
-  --chart-4: #77776F;
-  --chart-5: #9C9C95;
+  --chart-4: #2E6B4F;
+  --chart-5: #B5AEBF;
 
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
-  --sidebar: #FAFAF9;
-  --sidebar-foreground: #1D1D1B;
-  --sidebar-primary: #5B4E86;
+  /* Navegação escura: a sidebar é tinta da interface, não o fundo da página. */
+  --sidebar: #17141B;
+  --sidebar-foreground: #A9A2B8;
+  --sidebar-primary: #F5851F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EDEBF3;
-  --sidebar-accent-foreground: #4A3F70;
-  --sidebar-border: #ECEAE6;
-  --sidebar-ring: #5B4E86;
+  --sidebar-accent: #231F2C;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #2B2633;
+  --sidebar-ring: #F5851F;
+  --sidebar-muted: #6A6377;
+  --sidebar-surface: #1F1B26;
 
-  /* Superfície escura exclusiva do kernel/master (não é o .dark de preferência
-     do usuário — é uma área do produto sempre escura, pra deixar explícito que
-     é outro escopo). Ver README do handoff, seção "Estrutura de navegação". */
-  --kernel: #1D1D1B;
-  --kernel-foreground: #F5F5F3;
-  --kernel-accent: #B9AEDD;
-  --kernel-border: #35352F;
+  --kernel: #17141B;
+  --kernel-foreground: #E9E5EF;
+  --kernel-accent: #F5851F;
+  --kernel-border: #2B2633;
 }
+
 
 .dark {
   --background: #1A1A18;
@@ -149,6 +176,7 @@
   --muted: #232320;
   --muted-foreground: #9C9C95;
   --border: #35352F;
+  --border-dashed: #454540;
   --input: #35352F;
   --ring: #B9AEDD;
 

@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Link2, MessageCircle, Settings, Trash2, TriangleAlert } from "lucide-react";
+import { FileCheck, Link2, MessageCircle, Settings, Trash2, TriangleAlert } from "lucide-react";
 
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useApproveContract,
   useContracts,
@@ -32,35 +35,30 @@ export default function ContratosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Contratos</h1>
-          <p className="text-sm text-muted-foreground">
-            Contratos assinados pelas famílias aguardando conferência. Aprovar envia a via assinada
-            por e-mail; o contrato em si já foi assinado e não muda.
-          </p>
-        </div>
-        <Link
-          href="/flow/contratos/configuracao"
-          className="inline-flex w-fit shrink-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/50"
-        >
-          <Settings className="size-4" />
-          Configuração
-        </Link>
-      </div>
+      <CabecalhoDaPagina
+        titulo="Contratos"
+        apoio="Contratos assinados pelas famílias aguardando conferência. Aprovar envia a via assinada por e-mail; o contrato em si já foi assinado e não muda."
+        acoes={
+          <Link
+            href="/flow/contratos/configuracao"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <Settings className="size-4" />
+            Configuração
+          </Link>
+        }
+      />
 
-      {isLoading && <Skeleton className="h-40 w-full rounded-lg" />}
+      {isLoading && <Skeleton className="h-40 w-full rounded-xl" />}
 
       {isError && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+        <div className="rounded-xl border border-destructive-border bg-destructive-soft p-4 text-sm text-destructive-soft-foreground">
           {error instanceof Error ? error.message : "Não foi possível carregar a fila."}
         </div>
       )}
 
       {!isLoading && !isError && (fila?.length ?? 0) === 0 && (
-        <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-          Nenhum contrato aguardando conferência.
-        </div>
+        <EstadoVazio icone={<FileCheck />} titulo="Nenhum contrato aguardando conferência." />
       )}
 
       {/* Dois por linha a partir de telas medias: a fila de aprovacao chega em rajada na janela
@@ -118,16 +116,17 @@ function CartaoAprovacao({ contrato }: { contrato: Contract }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-heading text-base font-bold break-words">{contrato.titulo}</h2>
+          <h2 className="font-heading text-[15.5px] font-semibold break-words">{contrato.titulo}</h2>
           <p className="text-sm break-words text-muted-foreground">
             {responsavel?.nome} · {responsavel?.email}
           </p>
           {responsavel?.assinadoEm && (
             <p className="text-xs text-muted-foreground">
-              Assinado em {formatarDataHora(responsavel.assinadoEm)}
+              Assinado em{" "}
+              <span className="font-mono tabular-nums">{formatarDataHora(responsavel.assinadoEm)}</span>
             </p>
           )}
         </div>
@@ -225,7 +224,9 @@ function Historico({ contratos }: { contratos: Contract[] }) {
       {c.sandbox && (
         // Contrato de teste não tem valor jurídico nenhum e some do provedor em
         // poucos dias — precisa ser impossível confundir com um real.
-        <span className="ml-2 rounded bg-warning-soft px-1 text-xs">teste</span>
+        <Badge variant="pending" className="ml-2 h-5">
+          teste
+        </Badge>
       )}
     </>
   );
@@ -236,9 +237,9 @@ function Historico({ contratos }: { contratos: Contract[] }) {
       {/* Só quando a via realmente saiu: assinado não quer dizer entregue, e a
           secretaria precisa saber a diferença antes de responder à família. */}
       {c.copiaEnviadaEm && (
-        <span className="ml-2 rounded bg-success-soft px-1 text-xs text-success-soft-foreground">
+        <Badge variant="success" className="ml-2 h-5">
           via enviada
-        </span>
+        </Badge>
       )}
     </>
   );
@@ -297,14 +298,14 @@ function Historico({ contratos }: { contratos: Contract[] }) {
   );
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
-      <h2 className="font-heading text-base font-bold">Todos os contratos</h2>
+    <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+      <h2 className="font-heading text-[15.5px] font-semibold">Todos os contratos</h2>
 
       <div className="flex flex-col gap-2 md:hidden">
         {contratos.map((c) => {
           const resp = c.signatarios.find((s) => s.papel === 0);
           return (
-            <div key={c.id} className="flex flex-col gap-1.5 rounded-md border border-border p-3 text-sm">
+            <div key={c.id} className="flex flex-col gap-1.5 rounded-lg border border-border p-3 text-sm">
               <p className="font-medium break-words">{titulo(c)}</p>
               {(resp?.nome || resp?.email) && (
                 <p className="break-words">
@@ -313,7 +314,8 @@ function Historico({ contratos }: { contratos: Contract[] }) {
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                {situacao(c)} · Criado {formatarData(c.criadoEm)}
+                {situacao(c)} · Criado{" "}
+                <span className="font-mono tabular-nums">{formatarData(c.criadoEm)}</span>
               </p>
               <div className="flex flex-wrap items-center gap-1">{acoes(c)}</div>
               {detalhando === c.id && <div className="rounded-md bg-muted/30 p-2">{motivo(c)}</div>}
@@ -324,13 +326,13 @@ function Historico({ contratos }: { contratos: Contract[] }) {
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
-          <thead className="text-left text-xs text-muted-foreground">
+          <thead className="text-left text-[11px] font-bold tracking-[.1em] uppercase text-muted-foreground">
             <tr>
-              <th className="py-1">Contrato</th>
-              <th className="py-1">Responsável</th>
-              <th className="py-1">Situação</th>
-              <th className="py-1">Criado</th>
-              <th className="py-1"></th>
+              <th className="py-2">Contrato</th>
+              <th className="py-2">Responsável</th>
+              <th className="py-2">Situação</th>
+              <th className="py-2">Criado</th>
+              <th className="py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -345,7 +347,7 @@ function Historico({ contratos }: { contratos: Contract[] }) {
                     {resp?.email && <span className="block text-xs text-muted-foreground">{resp.email}</span>}
                   </td>
                   <td className="py-2">{situacao(c)}</td>
-                  <td className="py-2">{formatarData(c.criadoEm)}</td>
+                  <td className="py-2 font-mono tabular-nums">{formatarData(c.criadoEm)}</td>
                   <td className="py-2 text-right">
                     <div className="flex items-center justify-end gap-1">{acoes(c)}</div>
                   </td>

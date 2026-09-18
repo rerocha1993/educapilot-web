@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PortariaNav } from "@/components/reception/portaria-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { BadgeSituacao, ROTULO_FINALIDADE } from "@/components/reception/situacao-trajeto";
 import { useMapaPortaria } from "@/lib/reception/use-mapa";
 import { horaBrasilia } from "@/lib/reception/formatar";
@@ -29,12 +31,11 @@ export default function MapaPage() {
     <div className="flex flex-col gap-4">
       <PortariaNav />
 
-      <div>
-        <h1 className="font-heading text-xl font-bold">Mapa</h1>
-        <p className="text-sm text-muted-foreground">
-          Responsáveis a caminho da escola agora. Atualiza sozinho a cada 10 segundos.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Portaria"
+        titulo="Mapa"
+        apoio="Responsáveis a caminho da escola agora. Atualiza sozinho a cada 10 segundos."
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -45,9 +46,12 @@ export default function MapaPage() {
       {isLoading && <Skeleton className="h-[60vh] w-full rounded-lg md:h-[420px]" />}
 
       {escola && !temLocal && (
-        <div className="rounded-lg border border-dashed border-border bg-card px-4 py-10 text-center md:px-6">
-          <p className="font-medium">A escola ainda não tem localização.</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
+          <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+            <MapPin className="size-4" />
+          </span>
+          <p className="mt-3 font-heading text-[15px] font-semibold">A escola ainda não tem localização.</p>
+          <p className="mt-1.5 max-w-[320px] text-[13px] leading-[1.55] text-pretty text-muted-foreground">
             Preencha o endereço da escola em{" "}
             <Link href="/portaria/configuracao" className="text-primary hover:underline">
               Portaria › Configuração
@@ -63,12 +67,17 @@ export default function MapaPage() {
 
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">
-              {trajetos.length === 0
-                ? "Ninguém a caminho agora."
-                : `${trajetos.length} ${trajetos.length === 1 ? "responsável" : "responsáveis"} a caminho`}
+              {trajetos.length === 0 ? (
+                "Ninguém a caminho agora."
+              ) : (
+                <>
+                  <span className="font-mono tabular-nums">{trajetos.length}</span>{" "}
+                  {trajetos.length === 1 ? "responsável" : "responsáveis"} a caminho
+                </>
+              )}
             </p>
             {trajetos.map((t) => (
-              <div key={t.id} className="flex flex-col gap-1 rounded-lg border border-border bg-card p-3">
+              <div key={t.id} className="flex flex-col gap-1 rounded-xl border border-border bg-card p-3">
                 <div className="flex items-start justify-between gap-2">
                   <p className="min-w-0 font-medium break-words">{t.responsavelNome}</p>
                   <BadgeSituacao situacao={t.situacao} />
@@ -77,8 +86,14 @@ export default function MapaPage() {
                   <span className="text-muted-foreground">{ROTULO_FINALIDADE[t.finalidade]}</span> {t.alunos.join(", ")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {formatarDistancia(t.distanciaMetros)} da escola · atualizado às {horaBrasilia(t.atualizadoEm)}
-                  {t.chegouEm && ` · chegou às ${horaBrasilia(t.chegouEm)}`}
+                  <span className="font-mono tabular-nums">{formatarDistancia(t.distanciaMetros)}</span> da escola ·
+                  atualizado às <span className="font-mono tabular-nums">{horaBrasilia(t.atualizadoEm)}</span>
+                  {t.chegouEm && (
+                    <>
+                      {" · chegou às "}
+                      <span className="font-mono tabular-nums">{horaBrasilia(t.chegouEm)}</span>
+                    </>
+                  )}
                 </p>
               </div>
             ))}

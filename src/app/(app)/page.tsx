@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Users } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useAttendanceByClass,
@@ -30,6 +34,22 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
   F: "Falta",
   A: "Atraso",
 };
+
+// Guia: a opção escolhida do segmentado é tingida pela situação do dado
+// (verde presente, vermelho falta, laranja atraso).
+const STATUS_SELECTED: Record<AttendanceStatus, string> = {
+  P: "bg-success-soft text-success-soft-foreground",
+  F: "bg-destructive-soft text-destructive-soft-foreground",
+  A: "bg-action-soft text-action-soft-foreground",
+};
+
+// Iniciais do aluno pro avatar da linha (modelo "Rotina · Chamada").
+function iniciais(nome: string) {
+  const partes = nome.trim().split(/\s+/);
+  const primeira = partes[0]?.[0] ?? "";
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
+  return (primeira + ultima).toUpperCase();
+}
 
 // Reestruturado (2026-09, feedback do cliente): "essa aba chamada pode dividir tela
 // com a faltas [...] pensar no mobile tbm". Duas mudanças:
@@ -153,57 +173,70 @@ export default function ChamadaPage() {
     <div className="flex flex-col gap-4 pb-20">
       <RotinaNav />
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">
-            Chamada{selectedClass ? ` · ${selectedClass.className}` : ""}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {roster.length} alunos · {presentCount} presentes
-          </p>
-        </div>
-
-        <div className="grid w-full grid-cols-2 items-end gap-2 md:flex md:w-auto">
-          <div className="flex min-w-0 flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Turma
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo={`Chamada${selectedClass ? ` · ${selectedClass.className}` : ""}`}
+        apoio={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>
+              <span className="font-numeric">{roster.length}</span> alunos
             </span>
-            <Select
-              value={selectedClassId?.toString() ?? ""}
-              onValueChange={(v) => v && setSelectedClassId(Number(v))}
+            <span className="text-border">·</span>
+            <Badge variant="success">
+              <span className="font-numeric">{presentCount}</span> presentes
+            </Badge>
+          </span>
+        }
+        acoes={
+          <div className="grid w-full grid-cols-2 items-end gap-2 md:flex md:w-auto">
+            <div className="flex min-w-0 flex-col gap-[5px]">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Turma
+              </span>
+              <Select
+                value={selectedClassId?.toString() ?? ""}
+                onValueChange={(v) => v && setSelectedClassId(Number(v))}
+              >
+                <SelectTrigger className="w-full md:w-44">
+                  <SelectValue placeholder="Selecione">
+                    {() => selectedClass?.className ?? "Selecione"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {classes?.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.className}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-[5px]">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Data
+              </span>
+              <Input
+                type="date"
+                value={dateStr}
+                onChange={(e) => setDateStr(e.target.value)}
+                className="h-10 w-full font-numeric md:h-9 md:w-40"
+              />
+            </div>
+
+            {/* Único botão laranja da tela: é a decisão a tomar aqui (o salvar é
+                estrutural, fica roxo na barra fixa). */}
+            <Button
+              variant="action"
+              className="col-span-2"
+              onClick={markAllPresent}
+              disabled={roster.length === 0}
             >
-              <SelectTrigger className="w-full md:w-44">
-                <SelectValue placeholder="Selecione">
-                  {() => selectedClass?.className ?? "Selecione"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {classes?.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.className}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              Marcar todos presentes
+            </Button>
           </div>
-
-          <div className="flex min-w-0 flex-col gap-[5px]">
-            <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
-              Data
-            </span>
-            <Input
-              type="date"
-              value={dateStr}
-              onChange={(e) => setDateStr(e.target.value)}
-              className="h-10 w-full md:h-9 md:w-40"
-            />
-          </div>
-
-          <Button variant="outline" className="col-span-2" onClick={markAllPresent} disabled={roster.length === 0}>
-            Marcar todos presentes
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -212,76 +245,89 @@ export default function ChamadaPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 rounded-lg border border-border bg-card overflow-x-auto">
-          {/* No celular cada aluno vira um bloco (nome em cima, presença embaixo com os
-              três botões dividindo a largura): lado a lado o nome ficava espremido. */}
-          <table className="w-full text-sm md:min-w-[420px]">
-            <thead className="hidden md:table-header-group">
-              <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                <th className="px-4 py-2 font-medium">Aluno</th>
-                <th className="px-4 py-2 font-medium">Presença</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(classesLoading || attendanceLoading) &&
-                Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3" colSpan={2}>
-                      <Skeleton className="h-5 w-full" />
-                    </td>
-                  </tr>
-                ))}
-
-              {!classesLoading && !attendanceLoading && roster.length === 0 && (
-                <tr>
-                  <td colSpan={2} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    {selectedClassId === null ? "Selecione uma turma." : "Turma sem alunos."}
-                  </td>
+        {!classesLoading && !attendanceLoading && roster.length === 0 ? (
+          // Sem botão: a ação (escolher turma) já está no cabeçalho.
+          <EstadoVazio
+            icone={<Users />}
+            titulo="Nenhum aluno para chamar"
+            texto={selectedClassId === null ? "Selecione uma turma." : "Turma sem alunos."}
+          />
+        ) : (
+          <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
+            {/* No celular cada aluno vira um bloco (nome em cima, presença embaixo com os
+                três botões dividindo a largura): lado a lado o nome ficava espremido. */}
+            <table className="w-full text-sm md:min-w-[420px]">
+              <thead className="hidden md:table-header-group">
+                <tr className="border-b border-border bg-muted/50 text-left">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+                    Aluno
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+                    Presença
+                  </th>
                 </tr>
-              )}
+              </thead>
+              <tbody>
+                {(classesLoading || attendanceLoading) &&
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i} className="border-b border-border last:border-0">
+                      <td className="px-4 py-3" colSpan={2}>
+                        <Skeleton className="h-5 w-full" />
+                      </td>
+                    </tr>
+                  ))}
 
-              {roster.map((student) => {
-                const status = marks[student.id]?.status ?? null;
-                return (
-                  <tr key={student.id} className="flex flex-col gap-2 border-b border-border px-3 py-2.5 last:border-0 md:table-row md:p-0">
-                    <td className="break-words font-medium md:px-4 md:py-2.5">{student.fullName}</td>
-                    <td className="md:h-11 md:px-4 md:py-2">
-                      <div className="grid grid-cols-3 overflow-hidden rounded-md border border-border md:inline-flex">
-                        {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => setStatus(student.id, s)}
-                            className={cn(
-                              "px-3 py-2.5 text-xs font-medium transition-colors md:py-1.5",
-                              status === s
-                                ? s === "P"
-                                  ? "bg-success-soft text-success-soft-foreground"
-                                  : s === "F"
-                                    ? "bg-destructive-soft text-destructive-soft-foreground"
-                                    : "bg-warning-soft text-warning-soft-foreground"
-                                : "bg-transparent text-muted-foreground hover:bg-accent"
-                            )}
-                          >
-                            {STATUS_LABELS[s]}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                {roster.map((student) => {
+                  const status = marks[student.id]?.status ?? null;
+                  return (
+                    <tr
+                      key={student.id}
+                      className="flex flex-col gap-2 border-b border-border px-3 py-2.5 last:border-0 md:table-row md:p-0"
+                    >
+                      <td className="md:px-4 md:py-2.5">
+                        <span className="flex min-w-0 items-center gap-3">
+                          <span className="grid size-[30px] shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground">
+                            {iniciais(student.fullName)}
+                          </span>
+                          <span className="min-w-0 break-words font-medium">{student.fullName}</span>
+                        </span>
+                      </td>
+                      <td className="md:h-11 md:px-4 md:py-2 md:text-right">
+                        <div className="grid grid-cols-3 gap-1 rounded-[9px] bg-muted p-[3px] md:inline-grid">
+                          {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => setStatus(student.id, s)}
+                              className={cn(
+                                "rounded-[7px] px-3 py-3 text-[12.5px] font-semibold transition-colors md:py-1.5",
+                                status === s
+                                  ? STATUS_SELECTED[s]
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              {STATUS_LABELS[s]}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Novo (2026-09, feedback do cliente) — "essa aba chamada pode dividir tela
             com a faltas": painel de faltas pendentes da turma selecionada, com
             justificativa inline, sem precisar sair da chamada. A rota /faltas e a
             aba própria foram removidas — este painel passou a ser o único lugar
             pra justificar falta. */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-1 font-heading text-sm font-semibold">Faltas pendentes da turma</h2>
-          <p className="mb-3 text-xs text-muted-foreground">Justifique sem sair da chamada.</p>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="font-heading text-[15.5px] font-semibold">Faltas pendentes da turma</h2>
+          <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
+            Justifique sem sair da chamada.
+          </p>
 
           {selectedClassId === null ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Selecione uma turma.</p>
@@ -292,12 +338,14 @@ export default function ChamadaPage() {
           ) : (
             <div className="flex flex-col gap-2">
               {pendingAbsences.map((a) => (
-                <div key={a.id} className="rounded-md border border-border p-2.5">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="min-w-0 break-words text-sm font-medium">
+                <div key={a.id} className="rounded-[11px] border border-muted p-3">
+                  <div className="mb-1 flex items-center gap-2.5">
+                    {/* Barra laranja do modelo: marca a pendência (decisão a tomar). */}
+                    <span className="h-7 w-[7px] shrink-0 rounded bg-action-brand" />
+                    <span className="min-w-0 flex-1 break-words text-[13.5px] font-semibold">
                       {a.attendance?.student?.fullName ?? `Aluno #${a.attendance?.studentId}`}
                     </span>
-                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                    <span className="shrink-0 font-numeric text-[11.5px] text-muted-foreground">
                       {formatarSoData(a.attendanceDate)}
                     </span>
                   </div>
@@ -351,9 +399,14 @@ export default function ChamadaPage() {
         backend — próxima etapa.
       </p>
 
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-border bg-card px-4 py-3 shadow-[0_-1px_4px_rgba(0,0,0,.04)] md:bottom-0 lg:left-56 lg:px-6">
+      {/* No celular a barra flutua acima das abas; no computador ela gruda no fim do conteúdo, e
+          não na janela — assim acompanha o menu lateral recolhido ou expandido sem largura fixa. */}
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-border bg-background/90 px-4 py-3 backdrop-blur-[10px] md:sticky md:inset-x-auto md:-mx-6 md:bottom-0 md:px-6">
         <span className="text-sm text-muted-foreground">
-          {roster.length} alunos · {presentCount} presentes
+          <span className="font-numeric">{roster.length}</span> alunos ·{" "}
+          <strong className="font-semibold text-foreground">
+            <span className="font-numeric">{presentCount}</span> presentes
+          </strong>
         </span>
         <Button onClick={handleSave} disabled={saveAttendance.isPending || roster.length === 0}>
           {saveAttendance.isPending ? "Salvando..." : "Salvar"}

@@ -35,7 +35,7 @@ export function PreCadastrosCard() {
   // requisição tinha falhado.
   if (isError) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm break-words">
+      <div className="rounded-xl border border-destructive-border bg-destructive-soft p-4 text-sm break-words text-destructive-soft-foreground">
         {error instanceof Error ? error.message : "Não foi possível carregar os pré-cadastros."}
       </div>
     );
@@ -44,12 +44,12 @@ export function PreCadastrosCard() {
   if (!pendentes || pendentes.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-warning-border bg-warning-soft p-4">
+    <div className="flex flex-col gap-4 rounded-xl border border-action-border bg-action-soft p-5">
       <div>
-        <h2 className="font-heading text-base font-bold">
-          {pendentes.length} aluno(s) aguardando complemento
+        <h2 className="font-heading text-[15.5px] font-semibold text-action-soft-foreground">
+          <span className="font-mono tabular-nums">{pendentes.length}</span> aluno(s) aguardando complemento
         </h2>
-        <p className="text-sm">
+        <p className="mt-1 text-[13.5px] leading-[1.55] text-pretty">
           Vieram do Agenda Edu sem um dado obrigatório. Complete o que falta para cadastrá-los, ou
           descarte se não devem entrar. Corrigir no Agenda Edu e importar de novo também resolve.
         </p>
@@ -101,7 +101,7 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3">
       <div>
         <div className="text-sm font-medium break-words">{pendente.nome}</div>
         <div className="text-xs text-muted-foreground">
@@ -114,7 +114,7 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
 
       <div className="grid grid-cols-2 items-end gap-2 md:flex md:flex-wrap">
         <div className="col-span-2 flex min-w-0 flex-col gap-[5px] md:min-w-40">
-          <label className="text-xs text-muted-foreground">Turma</label>
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Turma</label>
           <Select value={classId} onValueChange={(v) => v && setClassId(v)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione">
@@ -132,7 +132,7 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
         </div>
 
         <div className="col-span-2 flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">Data de nascimento</label>
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Data de nascimento</label>
           <Input
             type="date"
             value={dataNascimento}

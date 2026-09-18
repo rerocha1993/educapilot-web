@@ -100,9 +100,9 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-dashed border-border p-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border-dashed p-3">
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-sm font-medium">
+        <p className="flex items-center gap-1.5 font-heading text-[15.5px] font-semibold">
           <MapPin className="size-4 text-primary" />
           Endereços
         </p>
@@ -126,14 +126,14 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
         (enderecos ?? []).map((e) => (
           <div
             key={e.id}
-            className="flex items-start justify-between gap-2 rounded-md border border-border px-3 py-2"
+            className="flex items-start justify-between gap-2 rounded-lg border border-border px-3 py-2"
           >
             <button
               type="button"
               onClick={() => abrir(e)}
               className="min-w-0 flex-1 text-left text-sm break-words hover:underline"
             >
-              <span className="text-xs text-muted-foreground">{e.tipo}</span>
+              <span className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">{e.tipo}</span>
               <br />
               {e.resumo || "Endereço em branco"}
             </button>
@@ -146,7 +146,7 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
       {form && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-[5px]">
-            <Label className="text-xs text-muted-foreground">CEP</Label>
+            <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">CEP</Label>
             <CepInput
               value={form.cep}
               onChange={(v) => setForm((a) => (a ? { ...a, cep: v } : a))}
@@ -156,14 +156,14 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
 
           <div className="flex gap-2">
             <div className="flex min-w-0 flex-[3] flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Rua</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Rua</Label>
               <Input
                 value={form.logradouro}
                 onChange={(e) => setForm((a) => (a ? { ...a, logradouro: e.target.value } : a))}
               />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Número</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Número</Label>
               <Input
                 value={form.numero}
                 onChange={(e) => setForm((a) => (a ? { ...a, numero: e.target.value } : a))}
@@ -173,14 +173,14 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex flex-1 flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Complemento</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Complemento</Label>
               <Input
                 value={form.complemento}
                 onChange={(e) => setForm((a) => (a ? { ...a, complemento: e.target.value } : a))}
               />
             </div>
             <div className="flex flex-1 flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Bairro</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Bairro</Label>
               <Input
                 value={form.bairro}
                 onChange={(e) => setForm((a) => (a ? { ...a, bairro: e.target.value } : a))}
@@ -190,14 +190,14 @@ export function EnderecosDoResponsavel({ guardianId }: { guardianId: string }) {
 
           <div className="flex gap-2">
             <div className="flex min-w-0 flex-[3] flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Cidade</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Cidade</Label>
               <Input
                 value={form.cidade}
                 onChange={(e) => setForm((a) => (a ? { ...a, cidade: e.target.value } : a))}
               />
             </div>
             <div className="flex w-20 flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">UF</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">UF</Label>
               <Input
                 maxLength={2}
                 value={form.uf}

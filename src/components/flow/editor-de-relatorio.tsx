@@ -149,7 +149,9 @@ export function EditorDeRelatorio({
         {form && (
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-x-2">
-              <Label className="text-xs text-muted-foreground">Colunas ({perguntas.length} perguntas)</Label>
+              <Label className="text-xs text-muted-foreground">
+                Colunas (<span className="font-mono tabular-nums">{perguntas.length}</span> perguntas)
+              </Label>
               <div className="flex gap-2">
                 <Button variant="link" size="sm" className="h-auto min-h-10 px-0 md:min-h-0" onClick={() => setCampos(null)}>
                   Marcar todas
@@ -159,7 +161,7 @@ export function EditorDeRelatorio({
                 </Button>
               </div>
             </div>
-            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-md border border-border p-2">
+            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
               {perguntas.length === 0 && (
                 <p className="px-1 py-2 text-xs text-muted-foreground">Este formulário ainda não tem perguntas.</p>
               )}

@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useForm } from "@/lib/flow/use-forms";
@@ -13,11 +12,13 @@ import {
   useFormResponses,
   useMarkResponseReviewed,
   useExportResponses,
-  RESPONSE_STATUS_BADGE,
   type FormResponseDto,
 } from "@/lib/flow/use-form-responses";
 import { decodeOpcoes } from "@/lib/flow/use-form-fields";
 import { AttachmentLink } from "@/components/flow/attachment-link";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { BadgeDeSituacao } from "@/components/flow/badge-de-situacao";
 import { formatarDataHora } from "@/lib/format/date";
 
 function renderValor(tipo: string | undefined, valor: string | null) {
@@ -65,19 +66,23 @@ export default function FormResponsesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <Link href={`/flow/${formId}`} className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
-            ← {form?.nome ?? "Formulário"}
-          </Link>
-          <h1 className="font-heading text-xl font-bold">Respostas</h1>
-        </div>
-        {responses && responses.length > 0 && (
-          <Button variant="outline" className="w-full md:w-auto" onClick={handleExport} disabled={exportResponses.isPending}>
-            {exportResponses.isPending ? "Exportando..." : "Exportar Excel"}
-          </Button>
-        )}
-      </div>
+      <CabecalhoDaPagina
+        eyebrow={`← ${form?.nome ?? "Formulário"}`}
+        eyebrowHref={`/flow/${formId}`}
+        titulo="Respostas"
+        acoes={
+          responses && responses.length > 0 ? (
+            <Button
+              variant="action"
+              className="w-full md:w-auto"
+              onClick={handleExport}
+              disabled={exportResponses.isPending}
+            >
+              {exportResponses.isPending ? "Exportando..." : "Exportar Excel"}
+            </Button>
+          ) : undefined
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -88,37 +93,40 @@ export default function FormResponsesPage() {
       {isLoading && <Skeleton className="h-64 w-full" />}
 
       {!isLoading && responses?.length === 0 && (
-        <div className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-          Nenhuma resposta enviada ainda.
-        </div>
+        <EstadoVazio icone={<Inbox />} titulo="Nenhuma resposta enviada ainda." />
       )}
 
       {!isLoading && responses && responses.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="rounded-lg border border-border bg-card">
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
             {responses.map((r) => (
               <button
                 key={r.id}
                 onClick={() => setSelectedId(r.id)}
                 className={cn(
-                  "flex w-full items-center justify-between gap-3 border-b border-border px-4 py-3 text-left text-sm last:border-b-0 hover:bg-accent/50",
-                  selected?.id === r.id && "bg-accent/50"
+                  "flex w-full items-center justify-between gap-3 border-b border-border px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-muted/50",
+                  selected?.id === r.id && "bg-muted/60"
                 )}
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{r.nomeReferencia ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">{formatDateTime(r.dataPreenchimento)}</p>
+                  <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                    {formatDateTime(r.dataPreenchimento)}
+                  </p>
                 </div>
-                <Badge className={RESPONSE_STATUS_BADGE[r.status] ?? ""}>{r.status}</Badge>
+                <BadgeDeSituacao situacao={r.status} />
               </button>
             ))}
           </div>
 
           {selected && (
-            <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-4">
-              <p className="font-heading text-sm font-semibold break-words">Resposta · {selected.nomeReferencia ?? "—"}</p>
+            <div className="min-w-0 rounded-xl border border-border bg-muted/30 p-4">
+              <p className="font-heading text-[15.5px] font-semibold break-words">
+                Resposta · {selected.nomeReferencia ?? "—"}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {form?.nome} · {formatDateTime(selected.dataPreenchimento)}
+                {form?.nome} ·{" "}
+                <span className="font-mono tabular-nums">{formatDateTime(selected.dataPreenchimento)}</span>
               </p>
               <div className="mt-3 flex flex-col gap-2">
                 {selected.itens?.map((item) => {

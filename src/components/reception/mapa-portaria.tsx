@@ -68,7 +68,7 @@ export default function MapaPortaria({ escola, trajetos }: { escola: EscolaComLo
 
   return (
     // isolate: os panes do Leaflet têm z-index 400+ e passariam por cima do menu e dos diálogos.
-    <div className="isolate h-[60vh] overflow-hidden rounded-lg border border-border md:h-[420px] lg:h-[560px]">
+    <div className="isolate h-[60vh] overflow-hidden rounded-xl border border-border md:h-[420px] lg:h-[560px]">
       <MapContainer center={centro} zoom={15} scrollWheelZoom className="size-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

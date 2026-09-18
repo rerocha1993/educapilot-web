@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   Select,
   SelectContent,
@@ -55,13 +56,11 @@ export default function ImportarPage() {
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-4">
-      <div>
-        <h1 className="font-heading text-xl font-bold">Importação em massa</h1>
-        <p className="text-sm text-muted-foreground">
-          Envio direto de arquivo — sem preview de linhas nem validação (ver
-          disclaimer abaixo).
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Administração"
+        titulo="Importação em massa"
+        apoio="Envio direto de arquivo — sem preview de linhas nem validação (ver disclaimer abaixo)."
+      />
 
       <AgendaEduCard />
 
@@ -69,10 +68,10 @@ export default function ImportarPage() {
 
       <TuitionImportCard />
 
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-        <h2 className="font-heading text-base font-bold">Importar de arquivo</h2>
+      <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
+        <h2 className="font-heading text-[15.5px] font-semibold">Importar de arquivo</h2>
         <div className="flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">O que importar</label>
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">O que importar</label>
           <Select value={tipo} onValueChange={(v) => v && setTipo(v as ImportTipo)}>
             <SelectTrigger className="w-full">
               <SelectValue>{() => tipoInfo.label}</SelectValue>
@@ -89,13 +88,13 @@ export default function ImportarPage() {
         </div>
 
         <div className="flex flex-col gap-[5px]">
-          <label className="text-xs text-muted-foreground">Arquivo</label>
+          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Arquivo</label>
           <input
             ref={fileInputRef}
             type="file"
             accept={tipoInfo.accept}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs"
+            className="w-full min-w-0 rounded-lg border border-input bg-card px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs file:font-medium"
           />
         </div>
 

@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Search, ChevronLeft, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search, ChevronLeft, Inbox, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -16,13 +15,15 @@ import {
 } from "@/components/ui/select";
 import { AttachmentLink } from "@/components/flow/attachment-link";
 import { ResumoAprovadas, SEM_TURMA } from "@/components/flow/resumo-aprovadas";
-import { Button } from "@/components/ui/button";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { BadgeDeSituacao } from "@/components/flow/badge-de-situacao";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useForms } from "@/lib/flow/use-forms";
 import { formatarData, formatarDataHora } from "@/lib/format/date";
 import {
   useRespostasDosFormularios,
   useDeleteFormResponse,
-  RESPONSE_STATUS_BADGE,
   type FormResponseDto,
 } from "@/lib/flow/use-form-responses";
 import { decodeOpcoes, decodeFieldConfig } from "@/lib/flow/use-form-fields";
@@ -55,6 +56,12 @@ function valorPorRotulo(
     if (termos.some((t) => rotulo.includes(t)) && item.valor?.trim()) return item.valor.trim();
   }
   return null;
+}
+
+/** Iniciais para o quadradinho da lista — vêm do nome já exibido, não de um dado novo. */
+function iniciaisDe(nome: string) {
+  const partes = nome.split(/\s+/).filter(Boolean);
+  return (partes[0]?.[0] ?? "") + (partes.length > 1 ? (partes[partes.length - 1][0] ?? "") : "");
 }
 
 function ValorDoCampo({ tipo, valor }: { tipo?: string; valor: string | null }) {
@@ -236,39 +243,38 @@ export default function CaixaDeEnviosPage() {
           <ChevronLeft className="size-3.5" /> Voltar para a lista
         </button>
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <h1 className="font-heading text-xl font-bold break-words">{linha?.nome ?? "Resposta"}</h1>
-            <p className="text-sm break-words text-muted-foreground">
-              {[linha?.email, linha?.formNome].filter(Boolean).join(" · ")}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <TagDoTipo tipo={linha?.tipo ?? null} />
-            <Badge className={RESPONSE_STATUS_BADGE[detalhe.status] ?? ""}>{detalhe.status}</Badge>
-            {/* Só na ficha aberta, nunca na lista: excluir de uma lista de dezenas de famílias é
-                clique errado esperando acontecer. Resposta com contrato assinado o servidor
-                recusa, e o motivo aparece no aviso. */}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              title="Excluir resposta"
-              disabled={excluir.isPending}
-              onClick={() => handleExcluir(detalhe.id)}
-            >
-              <Trash2 className="size-4 text-destructive" />
-            </Button>
-          </div>
-        </div>
+        <CabecalhoDaPagina
+          titulo={linha?.nome ?? "Resposta"}
+          apoio={[linha?.email, linha?.formNome].filter(Boolean).join(" · ")}
+          acoes={
+            <>
+              <TagDoTipo tipo={linha?.tipo ?? null} />
+              <BadgeDeSituacao situacao={detalhe.status} />
+              {/* Só na ficha aberta, nunca na lista: excluir de uma lista de dezenas de famílias é
+                  clique errado esperando acontecer. Resposta com contrato assinado o servidor
+                  recusa, e o motivo aparece no aviso. */}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Excluir resposta"
+                disabled={excluir.isPending}
+                onClick={() => handleExcluir(detalhe.id)}
+              >
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </>
+          }
+        />
 
         <p className="text-xs text-muted-foreground">
-          Enviado em {formatarDataHora(detalhe.dataPreenchimento)}
+          Enviado em{" "}
+          <span className="font-mono tabular-nums">{formatarDataHora(detalhe.dataPreenchimento)}</span>
         </p>
 
         {/* Todos os campos do formulário, na ordem em que a família preencheu — inclusive os que
             ficaram em branco. Esconder os vazios faria parecer que o campo não existe, quando o
             que aconteceu foi ninguém responder. */}
-        <div className="flex flex-col rounded-lg border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           {camposDe(detalhe.formId).map((campo) => (
             <div key={campo.id} className="border-b border-border px-4 py-3 last:border-b-0">
               <p className="text-xs text-muted-foreground">{campo.label}</p>
@@ -280,7 +286,7 @@ export default function CaixaDeEnviosPage() {
         </div>
 
         {detalhe.observacoes && (
-          <div className="rounded-lg border border-border bg-card px-4 py-3">
+          <div className="rounded-xl border border-border bg-card px-4 py-3">
             <p className="text-xs text-muted-foreground">Observações</p>
             <p className="mt-0.5 text-sm break-words">{detalhe.observacoes}</p>
           </div>
@@ -299,18 +305,31 @@ export default function CaixaDeEnviosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Caixa de envios</h1>
-          <p className="text-sm text-muted-foreground">
-            Tudo o que as famílias enviaram. Clique para ver a matrícula inteira.
-          </p>
-        </div>
+      <CabecalhoDaPagina
+        titulo="Caixa de envios"
+        apoio="Tudo o que as famílias enviaram. Clique para ver a matrícula inteira."
+        acoes={
+          <>
+            <Link href="/flow/relatorios" className={buttonVariants({ variant: "outline" })}>
+              Baixar Excel em Relatórios
+            </Link>
+            <Link href="/flow/contratos" className={buttonVariants({ variant: "action" })}>
+              Ir para Contratos
+            </Link>
+          </>
+        }
+      />
 
-        <Link href="/flow/contratos" className="text-sm text-primary hover:underline">
-          Ir para Contratos
-        </Link>
-      </div>
+      {campoValor && aprovadas.length > 0 && (
+        <ResumoAprovadas
+          totalMensal={totalMensal}
+          aprovadas={aprovadas.length}
+          porTurma={porTurma}
+          rotuloValor={campoValor.label}
+          rotuloTurma={campoTurma?.label ?? null}
+          rotuloAprovadas={rotuloAprovadas}
+        />
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={formId} onValueChange={(v) => v && setFormId(String(v))}>
@@ -350,58 +369,54 @@ export default function CaixaDeEnviosPage() {
           />
         </div>
 
-        <span className="text-sm text-muted-foreground">{lista.length} envio(s)</span>
-
-        <Link href="/flow/relatorios" className="text-sm text-primary hover:underline">
-          Baixar Excel em Relatórios
-        </Link>
+        <span className="text-sm text-muted-foreground">
+          <span className="font-mono tabular-nums">{lista.length}</span> envio(s)
+        </span>
       </div>
-
-      {campoValor && aprovadas.length > 0 && (
-        <ResumoAprovadas
-          totalMensal={totalMensal}
-          aprovadas={aprovadas.length}
-          porTurma={porTurma}
-          rotuloValor={campoValor.label}
-          rotuloTurma={campoTurma?.label ?? null}
-          rotuloAprovadas={rotuloAprovadas}
-        />
-      )}
 
       {isLoading && <Skeleton className="h-64 w-full" />}
 
       {!isLoading && lista.length === 0 && (
-        <p className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-          Nenhum envio ainda.
-        </p>
+        <EstadoVazio
+          icone={<Inbox />}
+          titulo="Nenhum envio ainda."
+        />
       )}
 
-      <div className="flex flex-col rounded-lg border border-border bg-card">
-        {lista.map(({ resposta, nome, email, tipo, formNome }) => (
-          <button
-            key={resposta.id}
-            type="button"
-            onClick={() => setAberta(resposta.id)}
-            className="flex items-start justify-between gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent/40"
-          >
-            <div className="min-w-0">
-              <p className="truncate font-medium">{nome}</p>
-              {email && <p className="truncate text-sm text-muted-foreground">{email}</p>}
-              {todos && formNome && <p className="truncate text-xs text-muted-foreground">{formNome}</p>}
-              <div className="mt-1 flex flex-wrap gap-1">
-                <Badge className={RESPONSE_STATUS_BADGE[resposta.status] ?? ""}>{resposta.status}</Badge>
-                <TagDoTipo tipo={tipo} />
+      {lista.length > 0 && (
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          {lista.map(({ resposta, nome, email, tipo, formNome }) => (
+            <button
+              key={resposta.id}
+              type="button"
+              onClick={() => setAberta(resposta.id)}
+              className="grid grid-cols-[38px_minmax(0,1fr)] items-center gap-x-3.5 gap-y-2 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/50 md:grid-cols-[38px_minmax(0,1fr)_auto]"
+            >
+              <span className="grid size-[38px] place-items-center self-start rounded-[11px] bg-accent text-xs font-bold text-accent-foreground md:self-center">
+                {iniciaisDe(nome)}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{nome}</p>
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                  {email && <span className="truncate">{email}</span>}
+                  {email && todos && formNome && <span className="text-border">·</span>}
+                  {todos && formNome && <span className="truncate">{formNome}</span>}
+                </p>
               </div>
-            </div>
-            <span className="shrink-0 text-sm text-muted-foreground">
-              {formatarData(resposta.dataPreenchimento, {
-                day: "2-digit",
-                month: "short",
-              })}
-            </span>
-          </button>
-        ))}
-      </div>
+              <div className="col-start-2 flex flex-wrap items-center gap-2 md:col-start-3 md:justify-end">
+                <TagDoTipo tipo={tipo} />
+                <BadgeDeSituacao situacao={resposta.status} />
+                <span className="font-mono text-xs whitespace-nowrap tabular-nums text-muted-foreground">
+                  {formatarData(resposta.dataPreenchimento, {
+                    day: "2-digit",
+                    month: "short",
+                  })}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Download } from "lucide-react";
+import { Download, FileSearch } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PortariaNav } from "@/components/reception/portaria-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useRelatorioDeMultas,
@@ -38,10 +40,11 @@ export default function RelatoriosPortariaPage() {
     <div className="flex flex-col gap-4">
       <PortariaNav />
 
-      <div>
-        <h1 className="font-heading text-xl font-bold">Relatórios</h1>
-        <p className="text-sm text-muted-foreground">Visitas e multas por atraso no período, no horário de Brasília.</p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Portaria"
+        titulo="Relatórios"
+        apoio="Visitas e multas por atraso no período, no horário de Brasília."
+      />
 
       <Tabs defaultValue="visitas">
         <TabsList>
@@ -65,7 +68,7 @@ function SeletorDeTurma({ classId, onChange }: { classId: number | null; onChang
 
   return (
     <div className="flex min-w-0 flex-col gap-[5px] md:min-w-48">
-      <Label className="text-xs text-muted-foreground">Turma</Label>
+      <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Turma</Label>
       <Select value={classId ? String(classId) : TODAS} onValueChange={(v) => onChange(v && v !== TODAS ? Number(v) : null)}>
         <SelectTrigger className="w-full">
           <SelectValue>{() => lista.find((t) => t.id === classId)?.className ?? "Todas"}</SelectValue>
@@ -86,7 +89,7 @@ function SeletorDeTurma({ classId, onChange }: { classId: number | null; onChang
 function CampoData({ rotulo, valor, onChange }: { rotulo: string; valor: string; onChange: (valor: string) => void }) {
   return (
     <div className="flex flex-col gap-[5px]">
-      <Label className="text-xs text-muted-foreground">{rotulo}</Label>
+      <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">{rotulo}</Label>
       <Input type="date" className="w-full md:w-40" value={valor} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
@@ -106,11 +109,11 @@ function RelatorioDeVisitas() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 items-end gap-3 rounded-lg border border-border bg-card p-4 md:flex md:flex-wrap">
+      <div className="grid grid-cols-2 items-end gap-3 rounded-xl border border-border bg-card p-4 md:flex md:flex-wrap">
         <CampoData rotulo="De" valor={filtro.de} onChange={(de) => setFiltro((f) => ({ ...f, de }))} />
         <CampoData rotulo="Até" valor={filtro.ate} onChange={(ate) => setFiltro((f) => ({ ...f, ate }))} />
         <div className="flex min-w-0 flex-col gap-[5px] md:min-w-36">
-          <Label className="text-xs text-muted-foreground">Situação</Label>
+          <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Situação</Label>
           <Select
             value={filtro.situacao || "todas"}
             onValueChange={(v) => setFiltro((f) => ({ ...f, situacao: v === "todas" ? "" : (v as Situacao) }))}
@@ -129,7 +132,7 @@ function RelatorioDeVisitas() {
         </div>
         <SeletorDeTurma classId={filtro.classId} onChange={(classId) => setFiltro((f) => ({ ...f, classId }))} />
         <div className="col-span-2 flex min-w-0 flex-1 flex-col gap-[5px] md:min-w-56">
-          <Label className="text-xs text-muted-foreground">Visitante</Label>
+          <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Visitante</Label>
           <Input
             placeholder="Nome ou CPF"
             value={filtro.busca}
@@ -169,13 +172,17 @@ function RelatorioDeVisitas() {
         {!isLoading && visitas.length === 0 && <CartaoVazio texto="Nenhuma visita no período." />}
 
         {visitas.map((v) => (
-          <div key={v.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+          <div key={v.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-medium break-words">{v.visitanteNome}</p>
-                <p className="text-xs text-muted-foreground">{formatarCpf(v.visitanteCpf)}</p>
+                <p className="font-mono text-xs tabular-nums text-muted-foreground">{formatarCpf(v.visitanteCpf)}</p>
               </div>
-              {!v.saidaEm && <Badge className="shrink-0 bg-success-soft text-success-soft-foreground">Na escola</Badge>}
+              {!v.saidaEm && (
+                <Badge variant="success" className="shrink-0">
+                  Na escola
+                </Badge>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
               <InfoDoCartao rotulo="Motivo">
@@ -185,15 +192,21 @@ function RelatorioDeVisitas() {
                 {v.alunoNome ?? v.turmaNome ?? <span className="text-muted-foreground">—</span>}
                 {v.alunoNome && v.turmaNome && <span className="block text-xs text-muted-foreground">{v.turmaNome}</span>}
               </InfoDoCartao>
-              <InfoDoCartao rotulo="Entrada">{dataHoraBrasilia(v.entradaEm)}</InfoDoCartao>
-              <InfoDoCartao rotulo="Saída">{v.saidaEm ? dataHoraBrasilia(v.saidaEm) : "—"}</InfoDoCartao>
-              <InfoDoCartao rotulo="Duração">{v.saidaEm ? formatarDuracao(v.duracaoMinutos) : "—"}</InfoDoCartao>
+              <InfoDoCartao rotulo="Entrada">
+                <span className="font-mono tabular-nums">{dataHoraBrasilia(v.entradaEm)}</span>
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Saída">
+                <span className="font-mono tabular-nums">{v.saidaEm ? dataHoraBrasilia(v.saidaEm) : "—"}</span>
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Duração">
+                <span className="font-mono tabular-nums">{v.saidaEm ? formatarDuracao(v.duracaoMinutos) : "—"}</span>
+              </InfoDoCartao>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -214,22 +227,22 @@ function RelatorioDeVisitas() {
               <TableRow key={v.id}>
                 <TableCell>
                   <p className="font-medium">{v.visitanteNome}</p>
-                  <p className="text-xs text-muted-foreground">{formatarCpf(v.visitanteCpf)}</p>
+                  <p className="font-mono text-xs tabular-nums text-muted-foreground">{formatarCpf(v.visitanteCpf)}</p>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{v.motivo ?? "—"}</TableCell>
                 <TableCell className="text-sm">
                   {v.alunoNome ?? v.turmaNome ?? <span className="text-muted-foreground">—</span>}
                   {v.alunoNome && v.turmaNome && <span className="block text-xs text-muted-foreground">{v.turmaNome}</span>}
                 </TableCell>
-                <TableCell className="text-sm">{dataHoraBrasilia(v.entradaEm)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{dataHoraBrasilia(v.entradaEm)}</TableCell>
                 <TableCell className="text-sm">
                   {v.saidaEm ? (
-                    dataHoraBrasilia(v.saidaEm)
+                    <span className="font-mono tabular-nums">{dataHoraBrasilia(v.saidaEm)}</span>
                   ) : (
-                    <Badge className="bg-success-soft text-success-soft-foreground">Na escola</Badge>
+                    <Badge variant="success">Na escola</Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-sm">{v.saidaEm ? formatarDuracao(v.duracaoMinutos) : "—"}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{v.saidaEm ? formatarDuracao(v.duracaoMinutos) : "—"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -251,7 +264,7 @@ function RelatorioDeMultasPorAtraso() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 items-end gap-3 rounded-lg border border-border bg-card p-4 md:flex md:flex-wrap">
+      <div className="grid grid-cols-2 items-end gap-3 rounded-xl border border-border bg-card p-4 md:flex md:flex-wrap">
         <CampoData rotulo="De" valor={filtro.de} onChange={(de) => setFiltro((f) => ({ ...f, de }))} />
         <CampoData rotulo="Até" valor={filtro.ate} onChange={(ate) => setFiltro((f) => ({ ...f, ate }))} />
         <SeletorDeTurma classId={filtro.classId} onChange={(classId) => setFiltro((f) => ({ ...f, classId }))} />
@@ -282,7 +295,7 @@ function RelatorioDeMultasPorAtraso() {
         {!isLoading && linhas.length === 0 && <CartaoVazio texto="Nenhuma multa por atraso no período." />}
 
         {linhas.map((l) => (
-          <div key={`${l.data}-${l.studentId}`} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+          <div key={`${l.data}-${l.studentId}`} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-medium break-words">{l.alunoNome}</p>
@@ -291,26 +304,30 @@ function RelatorioDeMultasPorAtraso() {
                   {l.retiradoPor ? ` · com ${l.retiradoPor}` : ""}
                 </p>
               </div>
-              <span className="shrink-0 font-medium tabular-nums">{formatarMoeda(l.valorMulta)}</span>
+              <span className="shrink-0 font-mono font-medium tabular-nums">{formatarMoeda(l.valorMulta)}</span>
             </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
               <InfoDoCartao rotulo="Dia">
-                <span className="tabular-nums">{formatarDia(l.data)}</span>
+                <span className="font-mono tabular-nums">{formatarDia(l.data)}</span>
               </InfoDoCartao>
               <InfoDoCartao rotulo="Saída prevista">
-                <span className="tabular-nums">{l.saidaPrevista ?? "—"}</span>
+                <span className="font-mono tabular-nums">{l.saidaPrevista ?? "—"}</span>
               </InfoDoCartao>
               <InfoDoCartao rotulo="Saiu">
-                <span className="tabular-nums">{l.saidaEm ? horaBrasilia(l.saidaEm) : "—"}</span>
+                <span className="font-mono tabular-nums">{l.saidaEm ? horaBrasilia(l.saidaEm) : "—"}</span>
               </InfoDoCartao>
-              <InfoDoCartao rotulo="Atraso">{l.minutosAtraso} min</InfoDoCartao>
-              <InfoDoCartao rotulo="Horas cobradas">{descreverHoras(l.horasMulta, l.horasMultaDobrada)}</InfoDoCartao>
+              <InfoDoCartao rotulo="Atraso">
+                <span className="font-mono tabular-nums">{l.minutosAtraso}</span> min
+              </InfoDoCartao>
+              <InfoDoCartao rotulo="Horas cobradas">
+                <span className="font-mono tabular-nums">{descreverHoras(l.horasMulta, l.horasMultaDobrada)}</span>
+              </InfoDoCartao>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -330,7 +347,7 @@ function RelatorioDeMultasPorAtraso() {
 
             {linhas.map((l) => (
               <TableRow key={`${l.data}-${l.studentId}`}>
-                <TableCell className="text-sm tabular-nums">{formatarDia(l.data)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{formatarDia(l.data)}</TableCell>
                 <TableCell>
                   <p className="font-medium">{l.alunoNome}</p>
                   <p className="text-xs text-muted-foreground">
@@ -338,11 +355,13 @@ function RelatorioDeMultasPorAtraso() {
                     {l.retiradoPor ? ` · com ${l.retiradoPor}` : ""}
                   </p>
                 </TableCell>
-                <TableCell className="text-sm tabular-nums">{l.saidaPrevista ?? "—"}</TableCell>
-                <TableCell className="text-sm tabular-nums">{l.saidaEm ? horaBrasilia(l.saidaEm) : "—"}</TableCell>
-                <TableCell className="text-sm">{l.minutosAtraso} min</TableCell>
-                <TableCell className="text-sm">{descreverHoras(l.horasMulta, l.horasMultaDobrada)}</TableCell>
-                <TableCell className="text-right font-medium tabular-nums">{formatarMoeda(l.valorMulta)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{l.saidaPrevista ?? "—"}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{l.saidaEm ? horaBrasilia(l.saidaEm) : "—"}</TableCell>
+                <TableCell className="text-sm">
+                  <span className="font-mono tabular-nums">{l.minutosAtraso}</span> min
+                </TableCell>
+                <TableCell className="font-mono text-sm tabular-nums">{descreverHoras(l.horasMulta, l.horasMultaDobrada)}</TableCell>
+                <TableCell className="text-right font-mono font-medium tabular-nums">{formatarMoeda(l.valorMulta)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -390,16 +409,27 @@ function CartoesCarregando() {
   );
 }
 
-function CartaoVazio({ texto }: { texto: string }) {
+/** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
+function CartaoVazio({ texto, semBorda = false }: { texto: string; semBorda?: boolean }) {
   return (
-    <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">{texto}</div>
+    <div
+      className={cn(
+        "flex flex-col items-center px-5 py-9 text-center",
+        !semBorda && "rounded-xl border border-dashed border-border-dashed bg-card"
+      )}
+    >
+      <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+        <FileSearch className="size-4" />
+      </span>
+      <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">{texto}</p>
+    </div>
   );
 }
 
 function InfoDoCartao({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (
     <div className="min-w-0 break-words">
-      <p className="text-xs text-muted-foreground">{rotulo}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">{rotulo}</p>
       {children}
     </div>
   );
@@ -408,8 +438,8 @@ function InfoDoCartao({ rotulo, children }: { rotulo: string; children: ReactNod
 function LinhaVazia({ colunas, texto }: { colunas: number; texto: string }) {
   return (
     <TableRow>
-      <TableCell colSpan={colunas} className="py-10 text-center text-sm text-muted-foreground">
-        {texto}
+      <TableCell colSpan={colunas} className="p-0">
+        <CartaoVazio texto={texto} semBorda />
       </TableCell>
     </TableRow>
   );
@@ -418,9 +448,15 @@ function LinhaVazia({ colunas, texto }: { colunas: number; texto: string }) {
 function Resumo({ rotulo, valor, carregando }: { rotulo: string; valor: number | string | undefined; carregando: boolean }) {
   return (
     <Card size="sm">
-      <CardContent className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">{rotulo}</span>
-        {carregando ? <Skeleton className="h-7 w-16" /> : <span className="font-heading text-2xl font-bold">{valor ?? "—"}</span>}
+      <CardContent className="flex flex-col gap-2">
+        <span className="text-[12.5px] font-medium text-muted-foreground">{rotulo}</span>
+        {carregando ? (
+          <Skeleton className="h-7 w-16" />
+        ) : (
+          <span className="font-mono text-[26px] leading-none font-semibold tabular-nums tracking-[-.03em]">
+            {valor ?? "—"}
+          </span>
+        )}
       </CardContent>
     </Card>
   );

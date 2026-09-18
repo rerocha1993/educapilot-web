@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { LogIn, LogOut, Smartphone, Undo2 } from "lucide-react";
+import { LogIn, LogOut, Smartphone, Undo2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ import {
 } from "@/lib/reception/use-portaria";
 import { horaBrasilia } from "@/lib/reception/formatar";
 import { formatarDistancia, formatarMoeda } from "@/lib/reception/numeros";
+import { cn } from "@/lib/utils";
 
 const TODAS = "0";
 
@@ -57,18 +58,40 @@ export default function PortariaHojePage() {
 function SeloDoResponsavel({ responsavel }: { responsavel: ResponsavelACaminho }) {
   const texto =
     responsavel.situacao === "Chegou" ? "chegou" : responsavel.situacao === "Chegando" ? "chegando" : "a caminho";
-  const cor =
-    responsavel.situacao === "Chegou"
-      ? "bg-success-soft text-success-soft-foreground"
-      : responsavel.situacao === "Chegando"
-        ? "bg-warning-soft text-warning-soft-foreground"
-        : "bg-muted text-muted-foreground";
+  const variante =
+    responsavel.situacao === "Chegou" ? "success" : responsavel.situacao === "Chegando" ? "pending" : "waiting";
 
   return (
-    <Badge className={`gap-1 ${cor}`}>
+    <Badge variant={variante} className="gap-1">
       <Smartphone className="size-3" />
       {responsavel.nome} {texto}
-      {responsavel.situacao !== "Chegou" && responsavel.distanciaMetros != null && ` · ${formatarDistancia(responsavel.distanciaMetros)}`}
+      {responsavel.situacao !== "Chegou" && responsavel.distanciaMetros != null && (
+        <>
+          {" · "}
+          <span className="font-mono tabular-nums">{formatarDistancia(responsavel.distanciaMetros)}</span>
+        </>
+      )}
+    </Badge>
+  );
+}
+
+/** Iniciais do aluno para o avatar da linha. */
+function iniciais(nome: string) {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  const primeira = partes[0]?.[0] ?? "";
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
+  return (primeira + ultima).toUpperCase() || "?";
+}
+
+// Pílula de situação do modelo: aguardando é laranja sólido (tem decisão a tomar), na escola é
+// neutra e quem já saiu fica só contornado.
+function PilulaDeSituacao({ situacao }: { situacao: PresencaDoAluno["situacao"] }) {
+  if (situacao === "aguardando")
+    return <Badge variant="action">aguardando</Badge>;
+  if (situacao === "na-escola") return <Badge variant="secondary">na escola</Badge>;
+  return (
+    <Badge variant="outline" className="border-input text-muted-foreground">
+      saiu
     </Badge>
   );
 }
@@ -119,14 +142,17 @@ function PainelDoDia() {
 
       <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:justify-between">
         <div>
-          <h1 className="font-heading text-xl font-bold">Hoje</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[11.5px] font-bold uppercase tracking-[.16em] text-action">Portaria</p>
+          <h1 className="mt-1 font-heading text-[clamp(24px,3vw,32px)] font-semibold leading-[1.1] tracking-[-.03em]">
+            Hoje
+          </h1>
+          <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
             Chegada e saída dos alunos. Quem vem com o celular cadastrado tem a chegada marcada sozinha ao chegar perto.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row md:flex-wrap md:items-end">
           <div className="flex min-w-44 flex-col gap-[5px] sm:flex-1 md:flex-none">
-            <Label className="text-xs text-muted-foreground">Turma</Label>
+            <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Turma</Label>
             <Select
               value={classId ? String(classId) : TODAS}
               onValueChange={(v) => setClassId(v && v !== TODAS ? Number(v) : null)}
@@ -145,7 +171,7 @@ function PainelDoDia() {
             </Select>
           </div>
           <div className="flex flex-col gap-[5px] sm:flex-1 md:w-56 md:flex-none">
-            <Label className="text-xs text-muted-foreground">Aluno</Label>
+            <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Aluno</Label>
             <Input placeholder="Buscar pelo nome" value={busca} onChange={(e) => setBusca(e.target.value)} />
           </div>
         </div>
@@ -159,6 +185,7 @@ function PainelDoDia() {
           rotulo="Multas de hoje"
           valor={data ? (data.comMulta === 0 ? "—" : `${formatarMoeda(data.valorMultas)} (${data.comMulta})`) : undefined}
           carregando={isLoading}
+          alerta={!!data && data.comMulta > 0}
         />
       </div>
 
@@ -173,18 +200,16 @@ function PainelDoDia() {
         {isLoading && Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
 
         {!isLoading && alunos.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            {termo ? "Nenhum aluno com esse nome." : "Nenhum aluno nesta turma."}
-          </div>
+          <ListaVazia termo={termo} />
         )}
 
         {alunos.map((a) => (
-          <div key={a.studentId} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
-            <CabecalhoDoAluno aluno={a} />
+          <div key={a.studentId} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
+            <div className="flex items-start justify-between gap-2">
+              <CabecalhoDoAluno aluno={a} />
+              <PilulaDeSituacao situacao={a.situacao} />
+            </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-              <InfoDoCartao rotulo="Período">
-                <PeriodoDoAluno aluno={a} />
-              </InfoDoCartao>
               <InfoDoCartao rotulo="Chegada">
                 <ChegadaDoAluno aluno={a} />
               </InfoDoCartao>
@@ -200,15 +225,15 @@ function PainelDoDia() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Aluno</TableHead>
-              <TableHead>Período</TableHead>
-              <TableHead>Chegada</TableHead>
-              <TableHead>Saída</TableHead>
-              <TableHead>Multa</TableHead>
+              <TableHead className="w-24">Chegada</TableHead>
+              <TableHead className="w-24">Saída</TableHead>
+              <TableHead className="w-28">Multa</TableHead>
+              <TableHead className="w-28">Situação</TableHead>
               <TableHead className="w-48 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -224,19 +249,16 @@ function PainelDoDia() {
 
             {!isLoading && alunos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  {termo ? "Nenhum aluno com esse nome." : "Nenhum aluno nesta turma."}
+                <TableCell colSpan={6} className="p-0">
+                  <ListaVazia termo={termo} semBorda />
                 </TableCell>
               </TableRow>
             )}
 
             {alunos.map((a) => (
               <TableRow key={a.studentId}>
-                <TableCell>
+                <TableCell className="min-w-0">
                   <CabecalhoDoAluno aluno={a} />
-                </TableCell>
-                <TableCell className="text-sm">
-                  <PeriodoDoAluno aluno={a} />
                 </TableCell>
                 <TableCell className="text-sm">
                   <ChegadaDoAluno aluno={a} />
@@ -246,6 +268,9 @@ function PainelDoDia() {
                 </TableCell>
                 <TableCell className="text-sm">
                   <MultaDoAluno aluno={a} />
+                </TableCell>
+                <TableCell>
+                  <PilulaDeSituacao situacao={a.situacao} />
                 </TableCell>
                 <TableCell className="text-right">
                   <AcoesDoAluno aluno={a} {...acoes} />
@@ -267,14 +292,44 @@ function PainelDoDia() {
 
 function CabecalhoDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
   return (
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground">
+        {iniciais(aluno.alunoNome)}
+      </span>
+      <div className="min-w-0">
+        <p className="truncate font-medium">{aluno.alunoNome}</p>
+        <p className="truncate text-[11.5px] text-muted-foreground">
+          {aluno.turmaNome ?? "—"} · <MetaDoPeriodo aluno={aluno} />
+        </p>
+        {aluno.responsavelACaminho && (
+          <div className="mt-1">
+            <SeloDoResponsavel responsavel={aluno.responsavelACaminho} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** "turma · período" da linha: o rótulo do período e, quando existe, a faixa de horário em mono. */
+function MetaDoPeriodo({ aluno }: { aluno: PresencaDoAluno }) {
+  const periodo = descreverPeriodo({
+    tipo: aluno.periodo,
+    entradaPrevista: aluno.entradaPrevista,
+    saidaPrevista: aluno.saidaPrevista,
+  });
+
+  if (!periodo)
+    return (
+      <Link href="/admin/alunos" className="hover:underline">
+        sem período
+      </Link>
+    );
+
+  return (
     <>
-      <p className="font-medium">{aluno.alunoNome}</p>
-      <p className="text-xs text-muted-foreground">{aluno.turmaNome ?? "—"}</p>
-      {aluno.responsavelACaminho && (
-        <div className="mt-1">
-          <SeloDoResponsavel responsavel={aluno.responsavelACaminho} />
-        </div>
-      )}
+      {periodo.rotulo}
+      {periodo.horarios && <span className="font-mono tabular-nums"> · {periodo.horarios}</span>}
     </>
   );
 }
@@ -282,30 +337,35 @@ function CabecalhoDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
 function InfoDoCartao({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (
     <div className="min-w-0 break-words">
-      <p className="text-xs text-muted-foreground">{rotulo}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">{rotulo}</p>
       {children}
     </div>
   );
 }
 
-function PeriodoDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
-  const periodo = descreverPeriodo({ tipo: aluno.periodo, entradaPrevista: aluno.entradaPrevista, saidaPrevista: aluno.saidaPrevista });
-  return periodo ? (
-    <>
-      <p>{periodo.rotulo}</p>
-      {periodo.horarios && <p className="text-xs text-muted-foreground">{periodo.horarios}</p>}
-    </>
-  ) : (
-    <Link href="/admin/alunos" className="text-xs text-muted-foreground hover:underline">
-      Sem período
-    </Link>
+/** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
+function ListaVazia({ termo, semBorda = false }: { termo: string; semBorda?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center px-5 py-9 text-center",
+        !semBorda && "rounded-xl border border-dashed border-border-dashed bg-card"
+      )}
+    >
+      <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+        <Users className="size-4" />
+      </span>
+      <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
+        {termo ? "Nenhum aluno com esse nome." : "Nenhum aluno nesta turma."}
+      </p>
+    </div>
   );
 }
 
 function ChegadaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
   return aluno.chegadaEm ? (
-    <div className="flex items-center gap-1.5">
-      {horaBrasilia(aluno.chegadaEm)}
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="font-mono tabular-nums">{horaBrasilia(aluno.chegadaEm)}</span>
       {aluno.chegadaOrigem === "Automatica" && (
         <Badge variant="secondary" className="gap-1">
           <Smartphone className="size-3" /> celular
@@ -320,11 +380,13 @@ function ChegadaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
 function SaidaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
   return aluno.saidaEm ? (
     <>
-      <p>{horaBrasilia(aluno.saidaEm)}</p>
+      <p className="font-mono tabular-nums">{horaBrasilia(aluno.saidaEm)}</p>
       {aluno.retiradoPor && <p className="text-xs text-muted-foreground">com {aluno.retiradoPor}</p>}
     </>
   ) : aluno.saidaPrevista ? (
-    <span className="text-muted-foreground">prevista {aluno.saidaPrevista}</span>
+    <span className="text-muted-foreground">
+      prevista <span className="font-mono tabular-nums">{aluno.saidaPrevista}</span>
+    </span>
   ) : (
     <span className="text-muted-foreground">—</span>
   );
@@ -334,8 +396,12 @@ function MultaDoAluno({ aluno }: { aluno: PresencaDoAluno }) {
   const temMulta = aluno.horasMulta + aluno.horasMultaDobrada > 0;
   return temMulta ? (
     <>
-      <Badge className="bg-warning-soft text-warning-soft-foreground">{formatarMoeda(aluno.valorMulta)}</Badge>
-      <p className="text-xs text-muted-foreground">{aluno.minutosAtraso} min de atraso</p>
+      <Badge variant="pending" className="font-mono tabular-nums">
+        {formatarMoeda(aluno.valorMulta)}
+      </Badge>
+      <p className="text-xs text-muted-foreground">
+        <span className="font-mono tabular-nums">{aluno.minutosAtraso}</span> min de atraso
+      </p>
     </>
   ) : (
     <span className="text-muted-foreground">—</span>
@@ -437,13 +503,20 @@ function RegistrarSaida({ aluno, onFechar }: { aluno: PresencaDoAluno; onFechar:
       </DialogHeader>
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-[5px]">
-          <Label className="text-xs text-muted-foreground">Quem buscou (opcional)</Label>
+          <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+            Quem buscou (opcional)
+          </Label>
           <Input autoFocus placeholder="Ex.: mãe, avó Maria" value={retiradoPor} onChange={(e) => setRetiradoPor(e.target.value)} />
         </div>
         <p className="text-xs text-muted-foreground">
-          {aluno.saidaPrevista
-            ? `Saída prevista às ${aluno.saidaPrevista}. Atraso acima da tolerância gera multa, calculada ao confirmar.`
-            : "O aluno não tem período cadastrado, então não há multa por atraso."}
+          {aluno.saidaPrevista ? (
+            <>
+              Saída prevista às <span className="font-mono tabular-nums">{aluno.saidaPrevista}</span>. Atraso acima da
+              tolerância gera multa, calculada ao confirmar.
+            </>
+          ) : (
+            "O aluno não tem período cadastrado, então não há multa por atraso."
+          )}
         </p>
       </div>
       <DialogFooter>
@@ -458,12 +531,36 @@ function RegistrarSaida({ aluno, onFechar }: { aluno: PresencaDoAluno; onFechar:
   );
 }
 
-function Resumo({ rotulo, valor, carregando }: { rotulo: string; valor: number | string | undefined; carregando: boolean }) {
+function Resumo({
+  rotulo,
+  valor,
+  carregando,
+  alerta = false,
+}: {
+  rotulo: string;
+  valor: number | string | undefined;
+  carregando: boolean;
+  /** Multa é pendência: no guia, pendência é laranja. */
+  alerta?: boolean;
+}) {
   return (
-    <Card size="sm">
-      <CardContent className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">{rotulo}</span>
-        {carregando ? <Skeleton className="h-7 w-16" /> : <span className="font-heading text-2xl font-bold">{valor ?? "—"}</span>}
+    <Card size="sm" className={alerta ? "border-action-border" : undefined}>
+      <CardContent className="flex flex-col gap-2">
+        <span className={cn("text-[12.5px] font-medium", alerta ? "text-action" : "text-muted-foreground")}>
+          {rotulo}
+        </span>
+        {carregando ? (
+          <Skeleton className="h-7 w-16" />
+        ) : (
+          <span
+            className={cn(
+              "font-mono text-[26px] leading-none font-semibold tabular-nums tracking-[-.03em]",
+              alerta && "text-action"
+            )}
+          >
+            {valor ?? "—"}
+          </span>
+        )}
       </CardContent>
     </Card>
   );

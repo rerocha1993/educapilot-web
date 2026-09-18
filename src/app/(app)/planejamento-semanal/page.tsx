@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { CalendarRange, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useWeeklyPlanTemplates,
@@ -41,11 +43,12 @@ import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 // /planejamento-semanal/config) — o formulário se monta sozinho a partir dos campos
 // ativos do modelo selecionado.
 
-const STATUS_BADGE: Record<string, string> = {
-  Sim: "bg-success-soft text-success-soft-foreground",
-  Não: "bg-destructive-soft text-destructive-soft-foreground",
-  Parcial: "bg-warning-soft text-warning-soft-foreground",
-};
+// Guia: situação do dado vira variante de Badge.
+const STATUS_BADGE_VARIANT = {
+  Sim: "success",
+  Não: "overdue",
+  Parcial: "pending",
+} as const;
 
 export default function PlanejamentoSemanalPage() {
   const { data: classes } = useClasses();
@@ -123,55 +126,63 @@ export default function PlanejamentoSemanalPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Planejamento semanal</h1>
-          <p className="text-sm text-muted-foreground">
-            Objetivos, atividades e materiais da semana por turma — modelo configurável.
-          </p>
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
-          <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-            <SelectTrigger className="w-[calc(50%-0.25rem)] md:w-44">
-              <SelectValue placeholder="Turma">{() => selectedClass?.className ?? "Turma"}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {classes?.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {c.className}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo="Planejamento semanal"
+        apoio="Objetivos, atividades e materiais da semana por turma — modelo configurável."
+        acoes={
+          <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
+            <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
+              <SelectTrigger className="w-[calc(50%-0.25rem)] md:w-44">
+                <SelectValue placeholder="Turma">{() => selectedClass?.className ?? "Turma"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {classes?.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.className}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={templateId?.toString() ?? ""} onValueChange={(v) => v && setTemplateId(Number(v))}>
-            <SelectTrigger className="w-[calc(50%-0.25rem)] md:w-48">
-              <SelectValue placeholder="Modelo">
-                {() => selectedTemplate?.name ?? "Modelo"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {templates?.map((t) => (
-                <SelectItem key={t.id} value={String(t.id)}>
-                  {t.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Select value={templateId?.toString() ?? ""} onValueChange={(v) => v && setTemplateId(Number(v))}>
+              <SelectTrigger className="w-[calc(50%-0.25rem)] md:w-48">
+                <SelectValue placeholder="Modelo">
+                  {() => selectedTemplate?.name ?? "Modelo"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {templates?.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Button className="w-full md:w-auto" onClick={openNew} disabled={classId === null || templateId === null}>
-            Novo planejamento
-          </Button>
-        </div>
-      </div>
+            {/* Único botão laranja da tela: é a decisão a tomar aqui. */}
+            <Button
+              variant="action"
+              className="w-full md:w-auto"
+              onClick={openNew}
+              disabled={classId === null || templateId === null}
+            >
+              Novo planejamento
+            </Button>
+          </div>
+        }
+      />
 
       {!templatesLoading && (templates?.length ?? 0) === 0 && (
-        <div className="rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-          Nenhum modelo configurado ainda.{" "}
-          <Link href="/planejamento-semanal/config" className="text-primary hover:underline">
-            Criar o primeiro modelo
-          </Link>
-        </div>
+        <EstadoVazio
+          icone={<CalendarRange />}
+          titulo="Nenhum modelo configurado ainda."
+          acao={
+            <Link href="/planejamento-semanal/config" className={buttonVariants()}>
+              Criar o primeiro modelo
+            </Link>
+          }
+        />
       )}
 
       {isError && (
@@ -185,16 +196,31 @@ export default function PlanejamentoSemanalPage() {
           Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-lg" />)}
 
         {!isLoading && sorted.length === 0 && (templates?.length ?? 0) > 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum planejamento registrado no período.</p>
+          <EstadoVazio
+            className="sm:col-span-2"
+            icone={<CalendarRange />}
+            titulo="Nenhum planejamento registrado no período."
+            acao={
+              <Button onClick={openNew} disabled={classId === null || templateId === null}>
+                Novo planejamento
+              </Button>
+            }
+          />
         )}
 
         {sorted.map((p) => (
-          <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+          <div key={p.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-mono text-xs text-muted-foreground">
+              <span className="font-numeric text-xs text-muted-foreground">
                 {formatarSoData(p.startDate)} – {formatarSoData(p.endDate)}
               </span>
-              <Badge className={STATUS_BADGE[p.previousWeekTasksExecutionStatus] ?? ""}>
+              <Badge
+                variant={
+                  STATUS_BADGE_VARIANT[
+                    p.previousWeekTasksExecutionStatus as keyof typeof STATUS_BADGE_VARIANT
+                  ] ?? "secondary"
+                }
+              >
                 {p.previousWeekTasksExecutionStatus === "Sim"
                   ? "Semana anterior concluída"
                   : p.previousWeekTasksExecutionStatus === "Parcial"
@@ -230,6 +256,7 @@ export default function PlanejamentoSemanalPage() {
                 <Label className="text-xs text-muted-foreground">Início</Label>
                 <Input
                   type="date"
+                  className="font-numeric"
                   value={dates.startDate}
                   onChange={(e) => setDates((d) => ({ ...d, startDate: e.target.value }))}
                 />
@@ -238,6 +265,7 @@ export default function PlanejamentoSemanalPage() {
                 <Label className="text-xs text-muted-foreground">Fim</Label>
                 <Input
                   type="date"
+                  className="font-numeric"
                   value={dates.endDate}
                   onChange={(e) => setDates((d) => ({ ...d, endDate: e.target.value }))}
                 />

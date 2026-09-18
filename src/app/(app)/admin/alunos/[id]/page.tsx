@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ClipboardList, Contact } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,18 +76,22 @@ export default function FichaAlunoPage() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card p-4 md:flex-nowrap">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-heading text-lg font-bold text-primary">
+      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-5 md:flex-nowrap">
+        <div className="grid size-12 shrink-0 place-items-center rounded-full bg-accent font-heading text-lg font-semibold text-accent-foreground">
           {student.fullName.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1 md:flex-initial">
-          <h1 className="font-heading text-xl font-bold break-words">{student.fullName}</h1>
-          <p className="text-sm text-muted-foreground">
-            {className ?? "Sem turma"} · {calcularIdade(student.birthDate)} anos
+          <p className="text-[11.5px] font-bold uppercase tracking-[.16em] text-action">Administração</p>
+          <h1 className="mt-1 font-heading text-[clamp(20px,2.4vw,26px)] font-semibold leading-[1.15] tracking-[-.03em] break-words">
+            {student.fullName}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {className ?? "Sem turma"} ·{" "}
+            <span className="font-mono tabular-nums">{calcularIdade(student.birthDate)}</span> anos
           </p>
         </div>
         {student.allergies && (
-          <Badge className="bg-destructive-soft md:ml-auto text-destructive-soft-foreground">
+          <Badge variant="overdue" className="md:ml-auto">
             Alergia registrada
           </Badge>
         )}
@@ -108,18 +112,18 @@ export default function FichaAlunoPage() {
         </TabsList>
 
         <TabsContent value="dados" className="mt-4">
-          <div className="grid grid-cols-1 gap-4 rounded-lg sm:grid-cols-3 border border-border bg-card p-4">
+          <div className="grid grid-cols-1 gap-4 rounded-xl sm:grid-cols-3 border border-border bg-card p-5">
             <div>
-              <p className="text-xs text-muted-foreground">Nascimento</p>
-              <p className="text-sm font-medium">{formatarSoData(student.birthDate)}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Nascimento</p>
+              <p className="font-mono text-sm font-medium tabular-nums">{formatarSoData(student.birthDate)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Turma</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Turma</p>
               <p className="text-sm font-medium">{className ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Cadastrado em</p>
-              <p className="text-sm font-medium">{formatarData(student.createdAt)}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Cadastrado em</p>
+              <p className="font-mono text-sm font-medium tabular-nums">{formatarData(student.createdAt)}</p>
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
@@ -131,16 +135,19 @@ export default function FichaAlunoPage() {
         <TabsContent value="ocorrencias" className="mt-4">
           {loadingOccurrences && <Skeleton className="h-32 w-full" />}
           {!loadingOccurrences && occurrences?.length === 0 && (
-            <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-              Nenhuma ocorrência registrada.
+            <div className="flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
+              <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                <ClipboardList className="size-4" />
+              </span>
+              <p className="mt-3 font-heading text-[15px] font-semibold">Nenhuma ocorrência registrada.</p>
             </div>
           )}
           <div className="flex flex-col gap-2">
             {occurrences?.map((o) => (
-              <div key={o.id} className="rounded-lg border border-border bg-card px-4 py-3">
+              <div key={o.id} className="rounded-xl border border-border bg-card px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap md:gap-0">
                   <Badge variant="secondary">{o.categoria ?? "—"}</Badge>
-                  <span className="font-mono text-xs text-muted-foreground">
+                  <span className="font-mono text-xs tabular-nums text-muted-foreground">
                     {formatarData(o.createdAt)}
                   </span>
                 </div>
@@ -157,21 +164,21 @@ export default function FichaAlunoPage() {
         </TabsContent>
 
         <TabsContent value="saude" className="mt-4">
-          <div className="grid grid-cols-1 gap-4 rounded-lg sm:grid-cols-2 border border-border bg-card p-4">
+          <div className="grid grid-cols-1 gap-4 rounded-xl sm:grid-cols-2 border border-border bg-card p-5">
             <div>
-              <p className="text-xs text-muted-foreground">Alergias</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Alergias</p>
               <p className="text-sm font-medium">{student.allergies ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Medicação contínua</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Medicação contínua</p>
               <p className="text-sm font-medium">{student.continuousMedication ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Restrição alimentar</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Restrição alimentar</p>
               <p className="text-sm font-medium">{student.dietaryRestriction ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Plano de saúde</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Plano de saúde</p>
               <p className="text-sm font-medium">{student.healthInsurance ?? "—"}</p>
             </div>
           </div>
@@ -185,12 +192,17 @@ export default function FichaAlunoPage() {
           {loadingGuardians && <Skeleton className="h-24 w-full" />}
 
           {!loadingGuardians && (guardians ?? []).length === 0 && (
-            <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-              Nenhum responsável vinculado a este aluno.
-              <span className="mt-1 block text-xs">
+            <div className="flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
+              <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                <Contact className="size-4" />
+              </span>
+              <p className="mt-3 font-heading text-[15px] font-semibold">
+                Nenhum responsável vinculado a este aluno.
+              </p>
+              <p className="mt-1.5 max-w-[320px] text-[13px] leading-[1.55] text-pretty text-muted-foreground">
                 Os responsáveis vêm da importação do Agenda Edu ou do cadastro em Administração →
                 Responsáveis.
-              </span>
+              </p>
             </div>
           )}
 
@@ -204,7 +216,7 @@ export default function FichaAlunoPage() {
                 <Link
                   key={g.id}
                   href={`/admin/responsaveis?responsavel=${g.id}`}
-                  className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                  className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -228,7 +240,7 @@ export default function FichaAlunoPage() {
                       ["Telefone", g.phone],
                     ].map(([rotulo, valor]) => (
                       <div key={rotulo}>
-                        <dt className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                        <dt className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
                           {rotulo}
                         </dt>
                         <dd className="break-words">{valor || "—"}</dd>
@@ -243,7 +255,7 @@ export default function FichaAlunoPage() {
 
         {NOT_AVAILABLE_TABS.map((t) => (
           <TabsContent key={t.value} value={t.value} className="mt-4">
-            <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-border-dashed bg-card p-4 text-[13px] leading-[1.55] text-pretty text-muted-foreground">
               {t.reason}
             </div>
           </TabsContent>

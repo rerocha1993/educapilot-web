@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Inbox } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EventsNav } from "@/components/events/events-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useSalesGroups, useSaveSalesGroup, useDeleteSalesGroup } from "@/lib/events/use-sales-groups";
 import { useAllProducts } from "@/lib/events/use-products";
 import { useOrders } from "@/lib/events/use-orders";
@@ -75,16 +78,21 @@ export default function SalesGroupsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <EventsNav />
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-heading text-xl font-bold">Grupos de venda</h1>
-        <Button onClick={() => setDialogOpen(true)}>+ Novo grupo</Button>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow={<>Eventos &amp; vendas</>}
+        titulo="Grupos de venda"
+        acoes={
+          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+            + Novo grupo
+          </Button>
+        }
+      />
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar os grupos.
         </div>
       )}
@@ -102,12 +110,14 @@ export default function SalesGroupsPage() {
           const arrecadado = arrecadadoDoGrupo(g.id);
           const pct = g.meta && g.meta > 0 ? Math.min(100, Math.round((arrecadado / g.meta) * 100)) : null;
           return (
-            <div key={g.id} className="rounded-lg border border-border bg-card p-4">
+            <div key={g.id} className="rounded-xl border border-border bg-card p-[18px]">
               <div className="flex items-start justify-between">
                 <div className="min-w-0 break-words">
-                  <p className="font-heading font-semibold">{g.nome}</p>
+                  <p className="font-heading text-[15.5px] font-semibold">{g.nome}</p>
                   {g.meta && (
-                    <p className="text-xs text-muted-foreground">meta {formatCurrency(g.meta)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      meta <span className="font-mono tabular-nums">{formatCurrency(g.meta)}</span>
+                    </p>
                   )}
                   {g.responsavel && (
                     <p className="text-xs text-muted-foreground">Responsável: {g.responsavel}</p>
@@ -122,18 +132,36 @@ export default function SalesGroupsPage() {
                   <Trash2 className="size-3.5 text-destructive" />
                 </Button>
               </div>
-              {pct !== null && <Progress value={pct} className="mt-3" />}
-              <p className="mt-2 text-xs text-muted-foreground">
-                {formatCurrency(arrecadado)}
-                {g.meta ? ` arrecadado · ${pct}% da meta` : " arrecadado"}
+              {/* Barra fina de 6px do guia — laranja quando ainda falta muito pra meta. */}
+              {pct !== null && (
+                <Progress
+                  value={pct}
+                  className={cn(
+                    "mt-3.5 [&>[data-slot=progress-track]]:h-1.5",
+                    pct < 50 && "[&_[data-slot=progress-indicator]]:bg-action"
+                  )}
+                />
+              )}
+              <p className="mt-2.5 text-xs text-muted-foreground">
+                <span className="font-mono tabular-nums">{formatCurrency(arrecadado)}</span>
+                {g.meta ? (
+                  <>
+                    {" arrecadado · "}
+                    <span className="font-mono tabular-nums">{pct}%</span> da meta
+                  </>
+                ) : (
+                  " arrecadado"
+                )}
               </p>
             </div>
           );
         })}
         {!isLoading && groups?.length === 0 && (
-          <div className="col-span-full rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-            Nenhum grupo de venda ainda.
-          </div>
+          <EstadoVazio
+            icone={<Inbox />}
+            titulo="Nenhum grupo de venda ainda."
+            className="col-span-full"
+          />
         )}
       </div>
 

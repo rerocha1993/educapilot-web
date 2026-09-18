@@ -4,7 +4,31 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Link2, Plus, Trash2, X, Pencil } from "lucide-react";
+import {
+  AlignLeft,
+  ArrowDown,
+  ArrowUp,
+  Calendar,
+  CheckSquare,
+  ChevronDown,
+  CircleDot,
+  FileSignature,
+  Hash,
+  LayoutList,
+  Link2,
+  MapPin,
+  Paperclip,
+  Plus,
+  Search,
+  Star,
+  ToggleLeft,
+  Trash2,
+  Type,
+  X,
+  Pencil,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -48,6 +72,8 @@ import { REFERENCE_TABLES } from "@/lib/flow/use-reference-data";
 import { ListaOrdenavel } from "@/components/flow/lista-ordenavel";
 import { DadosDoFormulario } from "@/components/flow/dados-do-formulario";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import { CEP_PARTE_OPTIONS } from "@/lib/flow/cep";
 import { CAMPO_CADASTRO_OPTIONS, rotuloDoDestino } from "@/lib/registry/campos-do-cadastro";
@@ -95,40 +121,78 @@ const EMPTY_FIELD_FORM = {
 };
 const EMPTY_RULE_FORM = { nome: "", evento: "", acao: "" };
 
-function fieldSummary(field: FormFieldDto): string {
+// Aba em pílula do guia: o item ativo é branco com sombra leve dentro da faixa `bg-muted`.
+const ABA_PILULA =
+  "rounded-md px-3.5 text-[13.5px] data-active:bg-card data-active:font-semibold data-active:shadow-[0_1px_3px_rgba(42,37,48,.12)]";
+
+/** Ícone de cada tipo de campo — é o glifo da coluna da esquerda no modelo. */
+const ICONE_DO_TIPO: Record<string, LucideIcon> = {
+  texto_curto: Type,
+  texto_longo: AlignLeft,
+  numero: Hash,
+  data: Calendar,
+  sim_nao: ToggleLeft,
+  selecao: CircleDot,
+  checkbox: CheckSquare,
+  dropdown: ChevronDown,
+  avaliacao: Star,
+  anexo: Paperclip,
+  referencia: Search,
+  contrato: FileSignature,
+  cep: MapPin,
+};
+
+/**
+ * Resumo do campo em três partes, como no modelo: o tipo, o "auto: ..." (quando o sistema preenche
+ * sozinho) e o resto dos detalhes, que continua na mesma linha em cinza.
+ */
+function resumoDoCampo(field: FormFieldDto): { tipo: string; auto: string | null; detalhes: string[] } {
   const config = decodeFieldConfig(field.config);
-  const parts: string[] = [fieldTypeLabel(field.tipo)];
+  const detalhes: string[] = [];
 
   if (config.tabelaReferencia) {
-    parts.push(`ref. ${REFERENCE_TABLES.find((t) => t.value === config.tabelaReferencia)?.label ?? config.tabelaReferencia}`);
+    detalhes.push(`ref. ${REFERENCE_TABLES.find((t) => t.value === config.tabelaReferencia)?.label ?? config.tabelaReferencia}`);
   }
   if ((CHOICE_FIELD_TYPES as readonly string[]).includes(field.tipo)) {
     const opcoes = decodeOpcoes(field.opcoes);
-    if (opcoes.length > 0) parts.push(opcoes.join(", "));
+    if (opcoes.length > 0) detalhes.push(opcoes.join(", "));
   }
   if (field.tipo === "numero" && (config.min !== undefined || config.max !== undefined)) {
-    parts.push(`entre ${config.min ?? "—"} e ${config.max ?? "—"}`);
+    detalhes.push(`entre ${config.min ?? "—"} e ${config.max ?? "—"}`);
   }
   if (field.tipo === "avaliacao") {
-    parts.push(`1 a ${config.maxEstrelas ?? 5}`);
+    detalhes.push(`1 a ${config.maxEstrelas ?? 5}`);
   }
   if (config.visibleIf) {
-    parts.push("condicional");
+    detalhes.push("condicional");
   }
   if (field.tipo === "contrato") {
-    parts.push(config.contratoTexto ? "texto cadastrado" : "SEM TEXTO — a família não verá nada");
+    detalhes.push(config.contratoTexto ? "texto cadastrado" : "SEM TEXTO — a família não verá nada");
   }
   if (config.gravarEm) {
-    parts.push(`grava em ${rotuloDoDestino(config.gravarEm)}`);
+    detalhes.push(`grava em ${rotuloDoDestino(config.gravarEm)}`);
   }
   if (config.preenchidoPeloCep) {
-    parts.push(`vem do CEP: ${CEP_PARTE_OPTIONS.find((o) => o.value === config.preenchidoPeloCep)?.label}`);
+    detalhes.push(`vem do CEP: ${CEP_PARTE_OPTIONS.find((o) => o.value === config.preenchidoPeloCep)?.label}`);
   }
-  if (config.autoPreenchimento) {
-    const opcao = AUTO_FILL_OPTIONS.find((o) => o.value === config.autoPreenchimento);
-    parts.push(config.travado ? `auto: ${opcao?.label} (travado)` : `auto: ${opcao?.label}`);
-  }
-  return parts.join(" · ");
+
+  const opcao = config.autoPreenchimento
+    ? AUTO_FILL_OPTIONS.find((o) => o.value === config.autoPreenchimento)
+    : undefined;
+
+  return {
+    tipo: fieldTypeLabel(field.tipo),
+    // "travado" saiu do texto porque agora é a etiqueta laranja à direita.
+    auto: config.autoPreenchimento ? `auto: ${opcao?.label}` : null,
+    detalhes,
+  };
+}
+
+/** Obrigatório = roxo, Travado = laranja (a escola decide), Opcional = neutro. */
+function etiquetaDoCampo(field: FormFieldDto): { texto: string; variante: "waiting" | "pending" | "secondary" } {
+  if (decodeFieldConfig(field.config).travado) return { texto: "Travado", variante: "pending" };
+  if (field.obrigatorio) return { texto: "Obrigatório", variante: "waiting" };
+  return { texto: "Opcional", variante: "secondary" };
 }
 
 export default function FormBuilderPage() {
@@ -160,6 +224,22 @@ export default function FormBuilderPage() {
 
   const campos = [...(form?.campos ?? [])].sort((a, b) => a.ordem - b.ordem);
   const isChoiceType = (CHOICE_FIELD_TYPES as readonly string[]).includes(fieldForm.tipo);
+
+  // Placar do formulário, tudo somado dos próprios campos — igual ao "Resumo" do modelo.
+  const resumoDoFormulario: { rotulo: string; valor: number; destaque: boolean }[] = [
+    { rotulo: "Campos", valor: campos.length, destaque: false },
+    { rotulo: "Obrigatórios", valor: campos.filter((c) => c.obrigatorio).length, destaque: false },
+    {
+      rotulo: "Preenchidos pelo sistema",
+      valor: campos.filter((c) => !!decodeFieldConfig(c.config).autoPreenchimento).length,
+      destaque: true,
+    },
+    {
+      rotulo: "Travados para a família",
+      valor: campos.filter((c) => !!decodeFieldConfig(c.config).travado).length,
+      destaque: false,
+    },
+  ];
 
   // Marcadores do contrato que não casam com nenhum campo.
   //
@@ -240,6 +320,13 @@ export default function FormBuilderPage() {
     });
 
     setEditandoCampoId(field.id);
+    setFieldDialogOpen(true);
+  }
+
+  // Abrir já com o tipo escolhido: é o que a coluna de tipos do modelo faz ao ser clicada.
+  function abrirNovoCampo(tipo?: string) {
+    setEditandoCampoId(null);
+    setFieldForm(tipo ? { ...EMPTY_FIELD_FORM, tipo } : EMPTY_FIELD_FORM);
     setFieldDialogOpen(true);
   }
 
@@ -397,14 +484,14 @@ export default function FormBuilderPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <Link href="/flow" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
-            ← Formulários
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-heading text-xl font-bold break-words">{form.nome}</h1>
-            <Badge variant={form.status === "Ativo" ? "default" : "secondary"}>{form.status}</Badge>
+      <CabecalhoDaPagina
+        eyebrow="← Formulários"
+        eyebrowHref="/flow"
+        titulo={form.nome}
+        apoio={form.descricao || undefined}
+        tags={
+          <>
+            <Badge variant={form.status === "Ativo" ? "success" : "waiting"}>{form.status}</Badge>
             <TagDoTipo tipo={tipoDoFormulario(form)} />
             <Button
               variant="ghost"
@@ -414,24 +501,25 @@ export default function FormBuilderPage() {
             >
               <Pencil className="size-4" />
             </Button>
-          </div>
-          {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleCopiarLinkPublico} disabled={!form.publicToken}>
-            <Link2 className="size-4" /> Copiar link público
-          </Button>
-          <Link href={`/flow/${formId}/preencher`} className={buttonVariants({ variant: "outline" })}>
-            Preencher
-          </Link>
-          <Link href={`/flow/${formId}/respostas`} className={buttonVariants({ variant: "outline" })}>
-            Respostas
-          </Link>
-          <Button onClick={handlePublicar} disabled={updateForm.isPending}>
-            {form.status === "Ativo" ? "Voltar a rascunho" : "Publicar"}
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+        acoes={
+          <>
+            <Button variant="outline" onClick={handleCopiarLinkPublico} disabled={!form.publicToken}>
+              <Link2 className="size-4" /> Copiar link público
+            </Button>
+            <Link href={`/flow/${formId}/preencher`} className={buttonVariants({ variant: "outline" })}>
+              Preencher
+            </Link>
+            <Link href={`/flow/${formId}/respostas`} className={buttonVariants({ variant: "outline" })}>
+              Respostas
+            </Link>
+            <Button variant="action" onClick={handlePublicar} disabled={updateForm.isPending}>
+              {form.status === "Ativo" ? "Voltar a rascunho" : "Publicar"}
+            </Button>
+          </>
+        }
+      />
       {form.status !== "Ativo" && (
         <p className="-mt-2 text-xs text-muted-foreground">
           O link público existe mas só aceita respostas quando o formulário está
@@ -446,69 +534,154 @@ export default function FormBuilderPage() {
       </Dialog>
 
       <Tabs defaultValue="campos">
-        <TabsList>
-          <TabsTrigger value="campos">Campos</TabsTrigger>
-          <TabsTrigger value="automacoes">Automações</TabsTrigger>
+        <TabsList className="gap-1 rounded-lg bg-muted p-1">
+          <TabsTrigger value="campos" className={ABA_PILULA}>
+            Campos
+          </TabsTrigger>
+          <TabsTrigger value="automacoes" className={ABA_PILULA}>
+            Automações
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="campos" className="mt-4">
-          <div className="flex flex-col gap-2">
-            {campos.length === 0 && (
-              <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-                Nenhum campo ainda.
-              </div>
-            )}
-            <ListaOrdenavel
-              itens={campos}
-              desabilitado={reordenar.isPending}
-              onReordenar={handleReordenar}
-              renderItem={(field, i) => (
-              <div
-                className="flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-2.5 md:flex-row md:items-center md:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium break-words">{field.label}</p>
-                  <p className="text-xs break-words text-muted-foreground">{fieldSummary(field)}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={field.obrigatorio ? "default" : "secondary"}>
-                    {field.obrigatorio ? "Obrigatório" : "Opcional"}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={i === 0}
-                    onClick={() => handleMove(field, "up")}
-                  >
-                    <ArrowUp className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={i === campos.length - 1}
-                    onClick={() => handleMove(field, "down")}
-                  >
-                    <ArrowDown className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => abrirEdicao(field)}>
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteField(field.id)}>
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+            {/* Coluna da esquerda do modelo: tipos de campo e o placar do formulário. */}
+            <div className="flex w-full flex-col gap-3.5 lg:w-[250px] lg:shrink-0">
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="text-[10.5px] font-bold tracking-[.14em] uppercase text-muted-foreground">
+                  Tipos de campo
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-1">
+                  {FIELD_TYPES.map((t) => {
+                    const Icone = ICONE_DO_TIPO[t.value] ?? Type;
+                    return (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => abrirNovoCampo(t.value)}
+                        className="flex min-h-10 items-center gap-2.5 rounded-lg border border-dashed border-input px-2.5 py-2 text-left text-[13px] transition-colors hover:border-solid hover:border-action-brand hover:text-action"
+                      >
+                        <span className="grid size-[22px] shrink-0 place-items-center rounded-[7px] bg-muted text-muted-foreground [&_svg]:size-3.5">
+                          <Icone />
+                        </span>
+                        <span className="min-w-0 truncate">{t.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
+              <div className="rounded-xl bg-kernel px-4 py-4 text-kernel-foreground">
+                <p className="text-[10.5px] font-bold tracking-[.14em] uppercase text-sidebar-muted">
+                  Resumo
+                </p>
+                <div className="mt-3 flex flex-col gap-2.5 text-[13px]">
+                  {resumoDoFormulario.map((linha) => (
+                    <span key={linha.rotulo} className="flex justify-between gap-3">
+                      <span className="text-sidebar-foreground">{linha.rotulo}</span>
+                      <strong
+                        className={`font-mono font-semibold tabular-nums ${
+                          linha.destaque ? "text-kernel-accent" : ""
+                        }`}
+                      >
+                        {linha.valor}
+                      </strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              {campos.length === 0 ? (
+                <EstadoVazio
+                  icone={<LayoutList />}
+                  titulo="Nenhum campo ainda."
+                  acao={
+                    <Button onClick={() => abrirNovoCampo()}>
+                      <Plus className="size-4" /> Adicionar campo
+                    </Button>
+                  }
+                />
+              ) : (
+                <div className="rounded-xl border border-border bg-card">
+                  <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-3">
+                    <span className="text-[11px] font-bold tracking-[.1em] uppercase text-muted-foreground">
+                      Campos
+                    </span>
+                    <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                      {campos.length} campos
+                    </span>
+                  </div>
+
+                  <div className="p-2">
+                    <ListaOrdenavel
+                      itens={campos}
+                      desabilitado={reordenar.isPending}
+                      onReordenar={handleReordenar}
+                      renderItem={(field, i) => {
+                        const { tipo, auto, detalhes } = resumoDoCampo(field);
+                        const etiqueta = etiquetaDoCampo(field);
+                        return (
+                          <div className="flex flex-col gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50 md:flex-row md:items-center md:justify-between">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium break-words">{field.label}</p>
+                              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] text-muted-foreground">
+                                <span className="font-mono">{tipo}</span>
+                                {auto && (
+                                  <span className="flex items-center gap-1.5 text-action">
+                                    <span className="size-1 rounded-full bg-action-brand" />
+                                    {auto}
+                                  </span>
+                                )}
+                                {detalhes.length > 0 && (
+                                  <span className="min-w-0 break-words">{detalhes.join(" · ")}</span>
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge variant={etiqueta.variante}>{etiqueta.texto}</Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                disabled={i === 0}
+                                onClick={() => handleMove(field, "up")}
+                              >
+                                <ArrowUp className="size-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                disabled={i === campos.length - 1}
+                                onClick={() => handleMove(field, "down")}
+                              >
+                                <ArrowDown className="size-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon-sm" title="Editar" onClick={() => abrirEdicao(field)}>
+                                <Pencil className="size-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteField(field.id)}>
+                                <Trash2 className="size-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Button variant="outline" className="mt-2" onClick={() => abrirNovoCampo()}>
+                      + Adicionar campo
+                    </Button>
+                  </div>
+                </div>
               )}
-            />
-            <Button variant="outline" className="mt-2" onClick={() => setFieldDialogOpen(true)}>
-              + Adicionar campo
-            </Button>
+
+              <p className="mt-3 text-xs text-muted-foreground">
+                Reordenação por setas (sem arrastar — mesmo padrão simplificado usado no
+                Checklist). Um campo já criado não pode ser editado por aqui — remova e
+                crie de novo se precisar mudar o tipo ou as opções.
+              </p>
+            </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Reordenação por setas (sem arrastar — mesmo padrão simplificado usado no
-            Checklist). Um campo já criado não pode ser editado por aqui — remova e
-            crie de novo se precisar mudar o tipo ou as opções.
-          </p>
         </TabsContent>
 
         <TabsContent value="automacoes" className="mt-4">
@@ -522,19 +695,21 @@ export default function FormBuilderPage() {
           </div>
 
           <div className="mt-4 flex items-center justify-between">
-            <h2 className="font-heading text-sm font-semibold">Automações</h2>
+            <h2 className="font-heading text-[15.5px] font-semibold">Automações</h2>
             <Button size="sm" onClick={() => setRuleDialogOpen(true)}>
               + Nova regra
             </Button>
           </div>
           <div className="mt-3 flex flex-col gap-2">
             {automations?.length === 0 && (
-              <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-                Nenhuma regra ainda.
-              </div>
+              <EstadoVazio
+                icone={<Workflow />}
+                titulo="Nenhuma regra ainda."
+                acao={<Button onClick={() => setRuleDialogOpen(true)}>+ Nova regra</Button>}
+              />
             )}
             {automations?.map((rule) => (
-              <div key={rule.id} className="rounded-lg border border-border bg-card px-4 py-3">
+              <div key={rule.id} className="rounded-xl border border-border bg-card px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="min-w-0 text-sm font-medium break-words">{rule.nome}</p>
                   <Switch

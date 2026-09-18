@@ -40,10 +40,10 @@ export function TuitionImportCard() {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
       <div>
-        <h2 className="font-heading text-base font-bold">Mensalidades (Agenda Edu)</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="font-heading text-[15.5px] font-semibold">Mensalidades (Agenda Edu)</h2>
+        <p className="mt-1 text-[13.5px] leading-[1.55] text-pretty text-muted-foreground">
           Relatório de cobranças recorrentes exportado do Agenda Edu (.xls ou .xlsx). Cada aluno é
           identificado pelo id do Agenda Edu, não pelo nome — então reimportar atualiza os valores
           em vez de duplicar.
@@ -51,13 +51,13 @@ export function TuitionImportCard() {
       </div>
 
       <div className="flex flex-col gap-[5px]">
-        <label className="text-xs text-muted-foreground">Arquivo</label>
+        <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Arquivo</label>
         <input
           ref={inputRef}
           type="file"
           accept=".xls,.xlsx"
           onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
-          className="w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-sm file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs"
+          className="w-full min-w-0 rounded-lg border border-input bg-card px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs file:font-medium"
         />
         <p className="text-xs text-muted-foreground">
           Importe primeiro turmas e alunos do Agenda Edu — a planilha só consegue vincular o valor
@@ -77,24 +77,28 @@ export function TuitionImportCard() {
 function ResultadoImportacao({ resultado }: { resultado: TuitionImportResult }) {
   if (!resultado.sucesso) {
     return (
-      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm break-words">
+      <div className="rounded-lg border border-destructive-border bg-destructive-soft px-3 py-2 text-sm break-words text-destructive-soft-foreground">
         {resultado.erro ?? "A importação falhou."}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-success-border bg-success-soft px-3 py-2 text-sm text-success-soft-foreground">
+    <div className="flex flex-col gap-2 rounded-lg border border-success-border bg-success-soft px-3 py-2 text-sm text-success-soft-foreground">
       <div>
-        <strong>{resultado.criados}</strong> mensalidades criadas,{" "}
-        <strong>{resultado.atualizados}</strong> atualizadas
-        {resultado.semAlteracao > 0 && <> e {resultado.semAlteracao} sem mudança</>}.
+        <strong className="font-mono tabular-nums">{resultado.criados}</strong> mensalidades criadas,{" "}
+        <strong className="font-mono tabular-nums">{resultado.atualizados}</strong> atualizadas
+        {resultado.semAlteracao > 0 && (
+          <> e <span className="font-mono tabular-nums">{resultado.semAlteracao}</span> sem mudança</>
+        )}
+        .
       </div>
 
       {resultado.ignorados.length > 0 && (
         <details className="text-xs">
           <summary className="cursor-pointer">
-            {resultado.ignorados.length} linha(s) não importada(s) — ver motivos
+            <span className="font-mono tabular-nums">{resultado.ignorados.length}</span> linha(s) não importada(s)
+            — ver motivos
           </summary>
           <ul className="mt-1 list-disc pl-4 break-words">
             {resultado.ignorados.map((m, i) => (
@@ -109,7 +113,8 @@ function ResultadoImportacao({ resultado }: { resultado: TuitionImportResult }) 
           {/* Costuma apontar justamente quem precisa de atenção: bolsista, aluno que entrou
               depois da exportação, ou alguém que saiu e ninguém deu baixa. */}
           <summary className="cursor-pointer">
-            {resultado.alunosSemMensalidade.length} aluno(s) cadastrado(s) sem mensalidade na planilha
+            <span className="font-mono tabular-nums">{resultado.alunosSemMensalidade.length}</span> aluno(s)
+            cadastrado(s) sem mensalidade na planilha
           </summary>
           <ul className="mt-1 list-disc pl-4 break-words">
             {resultado.alunosSemMensalidade.map((n, i) => (

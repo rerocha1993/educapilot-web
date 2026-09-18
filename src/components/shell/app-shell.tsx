@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   House,
@@ -13,6 +12,7 @@ import {
   PanelLeftOpen,
   Settings,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,9 +24,10 @@ import {
 import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
 import { clearSession } from "@/lib/auth/session";
-import { ADMIN_HREF, NAV_ITEMS } from "@/lib/kernel/nav-items";
+import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS } from "@/lib/kernel/nav-items";
 import { acessoDaRota } from "@/lib/access/pode-ver";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
+import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { cn } from "@/lib/utils";
 import { AlterarSenhaDialog } from "@/components/shell/alterar-senha-dialog";
 
@@ -40,13 +41,32 @@ const COLLAPSE_STORAGE_KEY = "educapilot_sidebar_collapsed";
 // embaixo e a tela Início com atalhos. A barra tem espaço para cinco abas: Início, três módulos e
 // "Mais", que abre o menu completo. Os módulos entram nesta ordem de preferência, pulando os que a
 // escola não contratou ou a pessoa não pode ver.
-const INICIO_HREF = "/inicio";
 const ABAS_PREFERIDAS = ["/", "/flow", "/finance", "/portaria", "/events"];
 const ROTULO_CURTO: Record<string, string> = { "/events": "Vendas" };
+
+/** Título que o cabeçalho mostra depois do nome da escola, por módulo. */
+const TITULO_DO_MODULO: Record<string, string> = {
+  tasks: "Rotina",
+  reception: "Portaria",
+  flow: "Formulários",
+  finance: "Financeiro",
+  events: "Eventos & vendas",
+  admin: "Administração",
+};
 
 /** Módulo dono de uma rota, para marcar a aba certa em telas internas (/checklist é da Rotina). */
 function moduloDaRota(pathname: string) {
   return acessoDaRota(pathname)?.modulo ?? null;
+}
+
+/** Itens do menu, já resolvidos: Início e Administração não estão em NAV_ITEMS. */
+const ITENS_EXTRA: Record<string, { href: string; label: string; icon: LucideIcon }> = {
+  [INICIO_HREF]: { href: INICIO_HREF, label: "Início", icon: House },
+  [ADMIN_HREF]: { href: ADMIN_HREF, label: "Administração", icon: Settings },
+};
+
+function itemDoMenu(href: string) {
+  return ITENS_EXTRA[href] ?? NAV_ITEMS.find((i) => i.href === href);
 }
 
 export function AppShell({
@@ -66,6 +86,7 @@ export function AppShell({
   const abrirMenu = () => setMenuAbertoEm(pathname);
   const fecharMenu = () => setMenuAbertoEm(null);
   const { moduloVisivel } = useVisibilidade();
+  const { data: modulosAtivos } = useActiveModules();
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -101,14 +122,22 @@ export function AppShell({
 
   // Duas perguntas diferentes, ambas obrigatorias: a escola contratou o modulo E esta pessoa tem
   // permissao nele. Passar so numa delas nao basta. Ver useVisibilidade.
+  const grupos = GRUPOS_DO_MENU.map((grupo) => ({
+    titulo: grupo.titulo,
+    itens: grupo.hrefs
+      .filter((href) => href === INICIO_HREF || moduloVisivel(href))
+      .map(itemDoMenu)
+      .filter((i) => i !== undefined),
+  })).filter((g) => g.itens.length > 0);
+
   const visibleItems = NAV_ITEMS.filter((item) => moduloVisivel(item.href));
-  const podeVerAdmin = moduloVisivel(ADMIN_HREF);
 
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
     .slice(0, 3);
 
   function itemAtivo(href: string) {
+    if (href === INICIO_HREF) return pathname === INICIO_HREF;
     if (href === "/") return pathname === "/" || moduloDaRota(pathname) === "tasks";
     return pathname === href || pathname.startsWith(`${href}/`);
   }
@@ -124,6 +153,9 @@ export function AppShell({
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
     .join("");
+
+  const tituloDaTela =
+    pathname === INICIO_HREF ? "Início" : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
 
   const menuDoUsuario = (tamanho: "sm" | "lg") => (
     <DropdownMenu>
@@ -155,18 +187,22 @@ export function AppShell({
 
   return (
     <div className="flex min-h-full">
+      {/* Navegação escura da entrega de design: a barra é a tinta da interface, e o laranja marca
+          só o item ativo — é a única decisão que existe aqui. */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar py-5 transition-[width] duration-150 md:flex",
-          collapsed ? "w-14 px-2" : "w-56 px-3"
+          "hidden shrink-0 flex-col bg-sidebar py-5 transition-[width] duration-150 md:flex",
+          collapsed ? "w-16 px-2" : "w-[250px] px-3"
         )}
       >
-        <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between px-2")}>
-          <Link href="/" className="flex items-center gap-2 overflow-hidden">
-            <Image src="/logo.png" alt="EducaPilot" width={28} height={22} className="h-6 w-auto shrink-0" />
+        <div className={cn("flex items-center gap-2.5", collapsed ? "flex-col" : "px-2")}>
+          <Link href={INICIO_HREF} className="flex items-center gap-2.5 overflow-hidden">
+            <span className="grid size-[30px] shrink-0 place-items-center rounded-[9px] bg-[linear-gradient(145deg,#6E5AA8,#F5851F)] font-heading text-[15px] font-bold text-white shadow-[0_6px_16px_-8px_rgba(245,133,31,.9)]">
+              E
+            </span>
             {!collapsed && (
-              <span className="whitespace-nowrap font-heading text-sm font-bold text-sidebar-foreground">
-                EducaPilot
+              <span className="whitespace-nowrap font-heading text-[17px] font-semibold tracking-tight text-white">
+                Educa<span className="text-action-brand">Pilot</span>
               </span>
             )}
           </Link>
@@ -176,85 +212,102 @@ export function AppShell({
             size="icon-sm"
             onClick={toggleCollapsed}
             title={collapsed ? "Expandir menu" : "Recolher menu"}
-            className="shrink-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="ml-auto shrink-0 text-sidebar-muted hover:bg-sidebar-accent hover:text-white"
           >
             {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
           </Button>
         </div>
 
-        <nav className="flex flex-col gap-1">
-          {visibleItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  collapsed && "justify-center px-0",
-                  active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <Icon className="size-4 shrink-0" />
-                {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
-              </Link>
-            );
-          })}
+        <nav className="mt-6 flex flex-col">
+          {grupos.map((grupo) => (
+            <div key={grupo.titulo} className="mb-1.5">
+              {!collapsed && (
+                <div className="px-2.5 pb-2 pt-2.5 text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted">
+                  {grupo.titulo}
+                </div>
+              )}
+              {grupo.itens.map((item) => (
+                <ItemDaSidebar
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  ativo={itemAtivo(item.href)}
+                  recolhido={collapsed}
+                />
+              ))}
+            </div>
+          ))}
         </nav>
+
+        {!collapsed && (
+          <div className="mt-auto pt-4">
+            <div className="rounded-xl border border-sidebar-border bg-sidebar-surface px-3.5 py-3">
+              {/* O cartão da entrega mostra a escola; enquanto o painel não devolve o nome dela,
+                  mostra quem está logado — o dado que existe hoje. */}
+              <div className="text-[10.5px] font-bold uppercase tracking-[.14em] text-sidebar-muted">
+                Conta
+              </div>
+              <div className="mt-1.5 truncate text-[13.5px] font-semibold leading-snug text-white">
+                {session.name}
+              </div>
+              <div className="mt-1 text-[11.5px] text-sidebar-muted">{session.role}</div>
+              <div className="mt-2.5 flex items-center gap-2 text-[11.5px] text-sidebar-muted">
+                <span className="size-1.5 rounded-full bg-success" />
+                {(modulosAtivos ?? []).length} módulos ativos
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden h-14 shrink-0 items-center justify-between border-b border-border bg-card px-6 md:flex">
-          <div className="flex items-baseline gap-2 text-sm">
-            <span className="font-heading font-semibold">{session.name}</span>
+        <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
+          <div className="flex min-w-0 items-center gap-2 text-[13px] text-muted-foreground">
+            <span className="truncate">{session.name}</span>
+            {tituloDaTela && (
+              <>
+                <span className="text-border">/</span>
+                <span className="font-semibold text-foreground">{tituloDaTela}</span>
+              </>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Administração mora aqui, e não na sidebar: a sidebar lista o que se usa todo dia,
-                e configurar a escola é coisa de vez em quando — ao lado de sair, que é o outro
-                lugar onde já se procura ajuste de conta. */}
-            {podeVerAdmin && (
-            <Link
-              href={ADMIN_HREF}
-              title="Administração"
-              aria-label="Administração"
-              className={cn(
-                "flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                pathname.startsWith(ADMIN_HREF) && "bg-accent text-foreground"
-              )}
-            >
-              <Settings className="size-4" />
-            </Link>
+          <div className="ml-auto flex items-center gap-2.5">
+            {moduloVisivel(ADMIN_HREF) && (
+              <Link
+                href={ADMIN_HREF}
+                title="Administração"
+                aria-label="Administração"
+                className={cn(
+                  "grid size-9 place-items-center rounded-lg border border-input bg-card text-muted-foreground transition-colors hover:text-foreground",
+                  pathname.startsWith(ADMIN_HREF) && "text-foreground"
+                )}
+              >
+                <Settings className="size-4" />
+              </Link>
             )}
-
-          {menuDoUsuario("sm")}
+            {menuDoUsuario("sm")}
           </div>
         </header>
 
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
-        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[3rem_1fr_3rem] items-center border-b border-sidebar-border bg-card/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[3rem_1fr_3rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
           <button
             type="button"
             onClick={abrirMenu}
             aria-label="Abrir menu"
-            className="flex size-11 items-center justify-center rounded-full text-foreground active:bg-accent"
+            className="flex size-11 items-center justify-center rounded-full text-foreground active:bg-muted"
           >
             <Menu className="size-6" />
           </button>
 
           <Link href={INICIO_HREF} className="flex h-16 items-center justify-center gap-2">
-            <Image src="/icon-192.png" alt="" width={36} height={36} className="size-9" priority />
-            <span className="flex flex-col leading-none">
-              <span className="font-heading text-xl font-extrabold tracking-tight text-foreground">
-                Educa<span className="text-primary">Pilot</span>
-              </span>
-              <span className="mt-1 text-[8.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Gestão escolar sem complicação
-              </span>
+            <span className="grid size-8 shrink-0 place-items-center rounded-[9px] bg-[linear-gradient(145deg,#6E5AA8,#F5851F)] font-heading text-sm font-bold text-white">
+              E
+            </span>
+            <span className="font-heading text-xl font-semibold tracking-tight text-foreground">
+              Educa<span className="text-action-brand">Pilot</span>
             </span>
           </Link>
 
@@ -267,7 +320,7 @@ export function AppShell({
             mesmo o conteúdo interno tendo seu próprio scroll horizontal. Achado
             testando a Chamada no mobile. No celular o padding de baixo abre espaço
             para a barra de abas fixa. */}
-        <main className="min-w-0 flex-1 overflow-auto bg-background p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-6">
+        <main className="min-w-0 flex-1 overflow-auto bg-background p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pb-11 md:pt-6">
           {children}
         </main>
       </div>
@@ -275,10 +328,15 @@ export function AppShell({
       {/* Barra de abas do celular. */}
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-sidebar-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
         <ul className="grid grid-cols-5">
-          <AbaDoCelular href={INICIO_HREF} label="Início" icon={House} ativa={pathname === INICIO_HREF} />
+          <AbaDoCelular
+            href={INICIO_HREF}
+            label="Início"
+            icon={House}
+            ativa={pathname === INICIO_HREF}
+          />
           {abas.map((item) => (
             <AbaDoCelular
               key={item.href}
@@ -304,80 +362,83 @@ export function AppShell({
         </ul>
       </nav>
 
-      {/* Menu completo do celular, deslizando da esquerda. */}
+      {/* Menu completo do celular, deslizando da esquerda — mesma barra escura do computador. */}
       {menuAberto && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button
             type="button"
             aria-label="Fechar menu"
             onClick={fecharMenu}
-            className="absolute inset-0 bg-foreground/40 animate-in fade-in"
+            className="absolute inset-0 bg-[#17141B]/60 animate-in fade-in"
           />
-          <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-card pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-xl animate-in slide-in-from-left duration-200">
+          <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
-              <span className="flex items-center gap-2">
-                <Image src="/icon-192.png" alt="" width={32} height={32} className="size-8" />
-                <span className="font-heading text-lg font-extrabold">
-                  Educa<span className="text-primary">Pilot</span>
+              <span className="flex items-center gap-2.5">
+                <span className="grid size-[30px] place-items-center rounded-[9px] bg-[linear-gradient(145deg,#6E5AA8,#F5851F)] font-heading text-[15px] font-bold text-white">
+                  E
+                </span>
+                <span className="font-heading text-[17px] font-semibold text-white">
+                  Educa<span className="text-action-brand">Pilot</span>
                 </span>
               </span>
               <button
                 type="button"
                 onClick={fecharMenu}
                 aria-label="Fechar menu"
-                className="flex size-10 items-center justify-center rounded-full text-muted-foreground active:bg-accent"
+                className="flex size-10 items-center justify-center rounded-full text-sidebar-muted active:bg-sidebar-accent"
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            <div className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-accent px-4 py-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {initials || "?"}
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate font-medium">{session.name}</span>
-                <span className="block text-xs text-muted-foreground">{session.role}</span>
-              </span>
-            </div>
-
-            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
-              <ItemDoMenu href={INICIO_HREF} label="Início" icon={House} ativo={pathname === INICIO_HREF} />
-              {visibleItems.map((item) => (
-                <ItemDoMenu
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  ativo={itemAtivo(item.href)}
-                />
+            <nav className="flex flex-1 flex-col overflow-y-auto px-3">
+              {grupos.map((grupo) => (
+                <div key={grupo.titulo} className="mb-1.5">
+                  <div className="px-2.5 pb-2 pt-2.5 text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted">
+                    {grupo.titulo}
+                  </div>
+                  {grupo.itens.map((item) => (
+                    <ItemDaSidebar
+                      key={item.href}
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      ativo={itemAtivo(item.href)}
+                      recolhido={false}
+                      grande
+                    />
+                  ))}
+                </div>
               ))}
-              {podeVerAdmin && (
-                <ItemDoMenu
-                  href={ADMIN_HREF}
-                  label="Administração"
-                  icon={Settings}
-                  ativo={pathname.startsWith(ADMIN_HREF)}
-                />
-              )}
             </nav>
 
             <div className="flex flex-col gap-1 border-t border-sidebar-border px-3 py-3">
+              <div className="flex items-center gap-2.5 px-2 pb-2">
+                <span className="grid size-9 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {initials || "?"}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[13px] font-semibold text-white">
+                    {session.name}
+                  </span>
+                  <span className="block text-[11px] text-sidebar-muted">{session.role}</span>
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => {
                   fecharMenu();
                   setAlterandoSenha(true);
                 }}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-left font-medium active:bg-accent"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-sidebar-foreground active:bg-sidebar-accent"
               >
-                <KeyRound className="size-5 text-muted-foreground" />
+                <KeyRound className="size-5 text-sidebar-muted" />
                 Alterar senha
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-left font-medium text-destructive active:bg-destructive-soft"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-[#E9897C] active:bg-sidebar-accent"
               >
                 <LogOut className="size-5" />
                 Sair
@@ -392,7 +453,51 @@ export function AppShell({
   );
 }
 
-type Icone = React.ComponentType<{ className?: string }>;
+function ItemDaSidebar({
+  href,
+  label,
+  icon: Icon,
+  ativo,
+  recolhido,
+  grande,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  ativo: boolean;
+  recolhido: boolean;
+  grande?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      title={recolhido ? label : undefined}
+      aria-current={ativo ? "page" : undefined}
+      className={cn(
+        "relative flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+        grande ? "py-3" : "py-2.5",
+        recolhido && "justify-center px-0",
+        ativo
+          ? "bg-white/[.07] text-white"
+          : "text-sidebar-foreground hover:bg-white/5 hover:text-white"
+      )}
+    >
+      {/* A marca laranja à esquerda diz onde a pessoa está — some quando o item não é o atual. */}
+      {ativo && !recolhido && (
+        <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r-[3px] bg-action-brand" />
+      )}
+      <span
+        className={cn(
+          "grid size-6 shrink-0 place-items-center rounded-md transition-colors",
+          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-[#8F87A0]"
+        )}
+      >
+        <Icon className="size-3.5" />
+      </span>
+      {!recolhido && <span className="truncate">{label}</span>}
+    </Link>
+  );
+}
 
 function AbaDoCelular({
   href,
@@ -402,7 +507,7 @@ function AbaDoCelular({
 }: {
   href: string;
   label: string;
-  icon: Icone;
+  icon: LucideIcon;
   ativa: boolean;
 }) {
   return (
@@ -412,7 +517,7 @@ function AbaDoCelular({
         aria-current={ativa ? "page" : undefined}
         className={cn(
           "flex h-16 flex-col items-center justify-center gap-1 transition-colors",
-          ativa ? "text-primary" : "text-muted-foreground active:text-foreground"
+          ativa ? "text-action" : "text-muted-foreground active:text-foreground"
         )}
       >
         <Icon className="size-6" />
@@ -421,31 +526,5 @@ function AbaDoCelular({
         </span>
       </Link>
     </li>
-  );
-}
-
-function ItemDoMenu({
-  href,
-  label,
-  icon: Icon,
-  ativo,
-}: {
-  href: string;
-  label: string;
-  icon: Icone;
-  ativo: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={ativo ? "page" : undefined}
-      className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-3 font-medium transition-colors",
-        ativo ? "bg-primary text-primary-foreground" : "text-foreground active:bg-accent"
-      )}
-    >
-      <Icon className="size-5 shrink-0" />
-      {label}
-    </Link>
   );
 }

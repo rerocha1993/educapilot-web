@@ -24,7 +24,7 @@ export function CepRulePanel({ campos }: { campos: FormFieldDto[] }) {
   if (!campoCep && destinos.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <MapPin className="size-4 shrink-0 text-primary" />
         <h3 className="font-heading text-sm font-semibold">Endereço pelo CEP</h3>

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, FileBarChart, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useAvailableReports,
   useSaveReportType,
@@ -67,28 +69,24 @@ export default function RelatoriosConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Configurar relatórios</h1>
-          <p className="text-sm text-muted-foreground">
-            Cadastre os tipos de relatório disponíveis e de onde vêm os dados.
-          </p>
-        </div>
-        <Link
-          href="/relatorios"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Voltar para relatórios
-        </Link>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina · Relatórios"
+        titulo="Configurar relatórios"
+        apoio="Cadastre os tipos de relatório disponíveis e de onde vêm os dados."
+        acoes={
+          <Link href="/relatorios" className={buttonVariants({ variant: "outline" })}>
+            <ArrowLeft className="size-3.5" />
+            Voltar para relatórios
+          </Link>
+        }
+      />
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h2 className="mb-3 font-heading text-sm font-semibold">Novo tipo de relatório</h2>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Novo tipo de relatório</h2>
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Nome
               </span>
               <Input
@@ -99,7 +97,7 @@ export default function RelatoriosConfigPage() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 De onde vêm os dados
               </span>
               <Select
@@ -146,19 +144,17 @@ export default function RelatoriosConfigPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
+      {/* Sem botão: a ação (o formulário acima) já está na tela. */}
+      {!isLoading && (reports?.length ?? 0) === 0 ? (
+        <EstadoVazio icone={<FileBarChart />} titulo="Nenhum tipo de relatório cadastrado ainda." />
+      ) : (
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         {isLoading &&
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="border-b border-border px-4 py-3 last:border-0">
               <Skeleton className="h-5 w-full" />
             </div>
           ))}
-
-        {!isLoading && (reports?.length ?? 0) === 0 && (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            Nenhum tipo de relatório cadastrado ainda.
-          </p>
-        )}
 
         {reports?.map((r) => (
           <div key={r.id} className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
@@ -183,6 +179,7 @@ export default function RelatoriosConfigPage() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

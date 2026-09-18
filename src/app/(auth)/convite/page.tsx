@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConviteForm } from "@/components/auth/convite-form";
+import { MarcaEducaPilot } from "@/components/auth/marca";
 import { useAceitarConvite, useValidarConvite } from "@/lib/kernel/use-convite";
 
 /**
@@ -37,21 +37,14 @@ export default function ConvitePage() {
 
   return (
     <main className="flex min-h-full flex-1 items-center justify-center bg-background p-4 md:p-6">
-      <div className="flex w-full max-w-[420px] flex-col gap-4 rounded-[10px] border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,.04)] md:p-7">
-        <Image
-          src="/logo.png"
-          alt="EducaPilot"
-          width={156}
-          height={123}
-          className="mx-auto h-13 w-auto"
-          priority
-        />
+      <div className="flex w-full max-w-[420px] flex-col gap-5 rounded-xl border border-border bg-card p-5 shadow-[0_18px_44px_-32px_rgba(42,37,48,.45)] md:p-7">
+        <MarcaEducaPilot className="mx-auto" />
 
         <div className="flex flex-col items-center gap-1 text-center">
-          <span className="font-heading text-base font-bold">Criar seu acesso</span>
-          <span className="text-[13px] text-muted-foreground md:text-[11.5px]">
+          <h1 className="font-heading text-[22px] font-semibold tracking-[-.03em]">Criar seu acesso</h1>
+          <p className="text-[13px] text-muted-foreground">
             Complete seus dados para entrar no sistema da escola.
-          </span>
+          </p>
         </div>
 
         {(!lido || (token && convite.isLoading)) && <Skeleton className="h-64 w-full" />}
@@ -84,7 +77,7 @@ export default function ConvitePage() {
 
 function Aviso({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-sm">
+    <div className="rounded-lg border border-warning-border bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground">
       {children}
     </div>
   );

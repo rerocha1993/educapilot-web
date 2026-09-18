@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Inbox } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -30,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useExpensesByMonth,
   useCreateExpense,
@@ -109,44 +112,57 @@ export default function DespesasPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <FinanceNav />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Despesas</h1>
-          <p className="text-sm text-muted-foreground">
+      <CabecalhoDaPagina
+        eyebrow="Financeiro"
+        titulo="Despesas"
+        apoio={
+          <span className="font-mono tabular-nums">
             {new Date(year, month - 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-          </p>
-        </div>
-        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
-          Nova despesa
-        </Button>
-      </div>
+          </span>
+        }
+        acoes={
+          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+            Nova despesa
+          </Button>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">A pagar</p>
-          <p className="font-mono text-xl font-semibold tabular-nums">
+      {/* Estatística do guia: rótulo pequeno, número grande em mono, contagem em cinza ao lado. */}
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+        <div className="rounded-xl border border-border bg-card p-[18px]">
+          <p className="text-[12.5px] font-medium text-muted-foreground">A pagar</p>
+          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
             {formatCurrency(aPagar.reduce((s, e) => s + e.valor, 0))}
           </p>
-        </div>
-        <div className="rounded-lg border border-destructive-border bg-destructive-soft p-4">
-          <p className="text-xs text-destructive-soft-foreground">Atrasado</p>
-          <p className="font-mono text-xl font-semibold tabular-nums text-destructive-soft-foreground">
-            {formatCurrency(atrasado.reduce((s, e) => s + e.valor, 0))}
+          <p className="mt-2 font-mono text-[11.5px] tabular-nums text-muted-foreground">
+            {aPagar.length} conta(s)
           </p>
         </div>
-        <div className="rounded-lg border border-success-border bg-success-soft p-4">
-          <p className="text-xs text-success-soft-foreground">Pago no mês</p>
-          <p className="font-mono text-xl font-semibold tabular-nums text-success-soft-foreground">
+        <div className="rounded-xl border border-border bg-card p-[18px]">
+          <p className="text-[12.5px] font-medium text-muted-foreground">Atrasado</p>
+          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-destructive-soft-foreground">
+            {formatCurrency(atrasado.reduce((s, e) => s + e.valor, 0))}
+          </p>
+          <p className="mt-2 font-mono text-[11.5px] tabular-nums text-muted-foreground">
+            {atrasado.length} conta(s)
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-[18px]">
+          <p className="text-[12.5px] font-medium text-muted-foreground">Pago no mês</p>
+          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-success-soft-foreground">
             {formatCurrency(pagoNoMes.reduce((s, e) => s + e.valor, 0))}
+          </p>
+          <p className="mt-2 font-mono text-[11.5px] tabular-nums text-muted-foreground">
+            {pagoNoMes.length} conta(s)
           </p>
         </div>
       </div>
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar as despesas.
         </div>
       )}
@@ -155,13 +171,11 @@ export default function DespesasPage() {
         {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
 
         {!isLoading && list.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhuma despesa neste mês.
-          </div>
+          <EstadoVazio icone={<Inbox />} titulo="Nenhuma despesa neste mês." />
         )}
 
         {list.map((e) => (
-          <div key={e.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+          <div key={e.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-medium break-words">{e.nome}</p>
@@ -171,22 +185,22 @@ export default function DespesasPage() {
                 </p>
               </div>
               {e.statusPagamento === "Pago" ? (
-                <Badge className="bg-success-soft text-success-soft-foreground">Pago</Badge>
+                <Badge variant="success">Pago</Badge>
               ) : isOverdue(e) ? (
-                <Badge className="bg-destructive-soft text-destructive-soft-foreground">Atrasado</Badge>
+                <Badge variant="overdue">Atrasado</Badge>
               ) : (
-                <Badge variant="secondary">Pendente</Badge>
+                <Badge variant="pending">Pendente</Badge>
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono tabular-nums text-muted-foreground">{formatarSoData(e.dataVencimento)}</span>
-              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(e.valor)}</span>
+              <span className="font-mono font-semibold whitespace-nowrap tabular-nums">{formatCurrency(e.valor)}</span>
             </div>
             {e.statusPagamento !== "Pago" && (
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-success-border text-success-soft-foreground hover:bg-success-soft"
+                className="w-full"
                 onClick={() => handleMarkPaid(e.id)}
                 disabled={markPaid.isPending}
               >
@@ -197,7 +211,7 @@ export default function DespesasPage() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -220,9 +234,12 @@ export default function DespesasPage() {
               ))}
 
             {!isLoading && list.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhuma despesa neste mês.
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={6} className="py-10 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                    <Inbox className="size-[18px]" />
+                  </span>
+                  <p className="mt-3 font-heading text-[15px] font-semibold">Nenhuma despesa neste mês.</p>
                 </TableCell>
               </TableRow>
             )}
@@ -234,15 +251,19 @@ export default function DespesasPage() {
                   {EXPENSE_CATEGORIES.find((c) => c.value === e.categoria)?.label ?? e.categoria}
                   {e.subcategoria ? ` · ${e.subcategoria}` : ""}
                 </TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(e.dataVencimento)}</TableCell>
-                <TableCell className="text-right font-mono text-sm tabular-nums">{formatCurrency(e.valor)}</TableCell>
+                <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">
+                  {formatarSoData(e.dataVencimento)}
+                </TableCell>
+                <TableCell className="text-right font-mono text-sm font-semibold tabular-nums">
+                  {formatCurrency(e.valor)}
+                </TableCell>
                 <TableCell>
                   {e.statusPagamento === "Pago" ? (
-                    <Badge className="bg-success-soft text-success-soft-foreground">Pago</Badge>
+                    <Badge variant="success">Pago</Badge>
                   ) : isOverdue(e) ? (
-                    <Badge className="bg-destructive-soft text-destructive-soft-foreground">Atrasado</Badge>
+                    <Badge variant="overdue">Atrasado</Badge>
                   ) : (
-                    <Badge variant="secondary">Pendente</Badge>
+                    <Badge variant="pending">Pendente</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
@@ -250,7 +271,6 @@ export default function DespesasPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-success-border text-success-soft-foreground hover:bg-success-soft"
                       onClick={() => handleMarkPaid(e.id)}
                       disabled={markPaid.isPending}
                     >

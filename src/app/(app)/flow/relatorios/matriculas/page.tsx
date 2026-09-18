@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { Download, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   useBaixarRelatorioMatriculas,
@@ -17,14 +17,26 @@ import {
 } from "@/lib/flow/use-relatorios";
 import { formatarData } from "@/lib/format/date";
 
-const COR_DA_SITUACAO: Record<SituacaoDaMatricula, string> = {
-  rematriculado: "bg-success-soft text-success-soft-foreground",
-  "rematricula-pendente": "bg-warning-soft text-warning-soft-foreground",
-  "nao-rematriculado": "bg-destructive-soft text-destructive-soft-foreground",
-  "matricula-nova": "bg-primary/10 text-primary",
-  "matricula-nova-pendente": "bg-warning-soft text-warning-soft-foreground",
-  "rematricula-sem-cadastro": "bg-muted text-muted-foreground",
+// Situação do dado nas cores do guia: concluída (verde), pendente (laranja, pede decisão da
+// escola), aguardando (roxo), vencida (vermelho) e neutra para o que nem começou.
+const VARIANTE_DA_SITUACAO: Record<
+  SituacaoDaMatricula,
+  "success" | "pending" | "waiting" | "overdue" | "secondary"
+> = {
+  rematriculado: "success",
+  "rematricula-pendente": "pending",
+  "nao-rematriculado": "overdue",
+  "matricula-nova": "waiting",
+  "matricula-nova-pendente": "pending",
+  "rematricula-sem-cadastro": "secondary",
 };
+
+/** Cabeçalho de coluna do guia. */
+const CABECALHO_DE_COLUNA = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
+
+/** Estatística do guia: número grande em mono, rótulo pequeno acima. */
+const ESTATISTICA =
+  "font-heading text-[30px] leading-none font-semibold tracking-[-.03em] font-mono tabular-nums";
 
 const TODAS = "todas";
 
@@ -74,24 +86,23 @@ export default function MatriculasXRematriculasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/flow/relatorios" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
-            ← Relatórios
-          </Link>
-          <h1 className="font-heading text-xl font-bold">
-            Matrículas {ano} x Rematrículas {proximo}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Todos os alunos ativos em {ano}, com a situação da rematrícula para {proximo}, mais as matrículas novas.
-            O envio é ligado ao aluno pelo nome e pela data de nascimento preenchidos na ficha.
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleBaixar} disabled={baixar.isPending || !data}>
-          <Download className="size-4" />
-          {baixar.isPending ? "Gerando..." : "Baixar Excel"}
-        </Button>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="← Relatórios"
+        eyebrowHref="/flow/relatorios"
+        titulo={
+          <>
+            Matrículas <span className="font-mono tabular-nums">{ano}</span> x Rematrículas{" "}
+            <span className="font-mono tabular-nums">{proximo}</span>
+          </>
+        }
+        apoio={`Todos os alunos ativos em ${ano}, com a situação da rematrícula para ${proximo}, mais as matrículas novas. O envio é ligado ao aluno pelo nome e pela data de nascimento preenchidos na ficha.`}
+        acoes={
+          <Button variant="action" onClick={handleBaixar} disabled={baixar.isPending || !data}>
+            <Download className="size-4" />
+            {baixar.isPending ? "Gerando..." : "Baixar Excel"}
+          </Button>
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -102,17 +113,17 @@ export default function MatriculasXRematriculasPage() {
       {isLoading && <Skeleton className="h-24 w-full" />}
 
       {data && (
-        <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-lg border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap gap-x-8 gap-y-4 rounded-xl border border-border bg-card px-4 py-4">
           {resumo.map((r) => (
             <button key={r.rotulo} type="button" onClick={() => setSituacao(r.situacao)} className="text-left" title="Filtrar a lista">
               <p className="text-xs text-muted-foreground">{r.rotulo}</p>
-              <p className="font-mono text-lg font-semibold tabular-nums">{r.valor}</p>
+              <p className={`mt-1 ${ESTATISTICA}`}>{r.valor}</p>
             </button>
           ))}
           {data.rematriculasSemCadastro > 0 && (
             <button type="button" onClick={() => setSituacao("rematricula-sem-cadastro")} className="text-left">
               <p className="text-xs text-destructive">Rematrícula sem aluno no cadastro</p>
-              <p className="font-mono text-lg font-semibold tabular-nums text-destructive">{data.rematriculasSemCadastro}</p>
+              <p className={`mt-1 ${ESTATISTICA} text-destructive`}>{data.rematriculasSemCadastro}</p>
             </button>
           )}
         </div>
@@ -135,11 +146,13 @@ export default function MatriculasXRematriculasPage() {
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Buscar aluno ou turma" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
-        <span className="text-sm text-muted-foreground">{linhas.length} aluno(s)</span>
+        <span className="text-sm text-muted-foreground">
+          <span className="font-mono tabular-nums">{linhas.length}</span> aluno(s)
+        </span>
       </div>
 
       {/* Celular: um cartão por aluno em vez das cinco colunas. */}
-      <div className="flex flex-col rounded-lg border border-border bg-card md:hidden">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card md:hidden">
         {!isLoading && linhas.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">Nenhum aluno nesta situação.</p>
         )}
@@ -150,7 +163,7 @@ export default function MatriculasXRematriculasPage() {
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="min-w-0 font-medium break-words">{l.aluno}</p>
-              <Badge className={COR_DA_SITUACAO[l.situacao]}>{l.situacaoDescricao}</Badge>
+              <Badge variant={VARIANTE_DA_SITUACAO[l.situacao]}>{l.situacaoDescricao}</Badge>
             </div>
             <p className="text-sm">
               <span className="text-muted-foreground">Turma em {ano}: </span>
@@ -161,22 +174,30 @@ export default function MatriculasXRematriculasPage() {
               {l.turmaProximoAno ?? <span className="text-muted-foreground">—</span>}
             </p>
             <p className="text-xs break-words text-muted-foreground">
-              Envio: {l.enviadoEm ? `${l.statusEnvio ?? ""} · ${formatarData(l.enviadoEm)}` : "—"}
+              Envio:{" "}
+              {l.enviadoEm ? (
+                <>
+                  {l.statusEnvio ?? ""} ·{" "}
+                  <span className="font-mono tabular-nums">{formatarData(l.enviadoEm)}</span>
+                </>
+              ) : (
+                "—"
+              )}
               {l.formulario && <span className="block">{l.formulario}</span>}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Aluno</TableHead>
-              <TableHead>Turma em {ano}</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead>Turma em {proximo}</TableHead>
-              <TableHead>Envio</TableHead>
+              <TableHead className={CABECALHO_DE_COLUNA}>Aluno</TableHead>
+              <TableHead className={CABECALHO_DE_COLUNA}>Turma em {ano}</TableHead>
+              <TableHead className={CABECALHO_DE_COLUNA}>Situação</TableHead>
+              <TableHead className={CABECALHO_DE_COLUNA}>Turma em {proximo}</TableHead>
+              <TableHead className={CABECALHO_DE_COLUNA}>Envio</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -192,11 +213,18 @@ export default function MatriculasXRematriculasPage() {
                 <TableCell className="font-medium">{l.aluno}</TableCell>
                 <TableCell className="text-sm">{l.turmaAtual ?? <span className="text-muted-foreground">—</span>}</TableCell>
                 <TableCell>
-                  <Badge className={COR_DA_SITUACAO[l.situacao]}>{l.situacaoDescricao}</Badge>
+                  <Badge variant={VARIANTE_DA_SITUACAO[l.situacao]}>{l.situacaoDescricao}</Badge>
                 </TableCell>
                 <TableCell className="text-sm">{l.turmaProximoAno ?? <span className="text-muted-foreground">—</span>}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {l.enviadoEm ? `${l.statusEnvio ?? ""} · ${formatarData(l.enviadoEm)}` : "—"}
+                  {l.enviadoEm ? (
+                    <>
+                      {l.statusEnvio ?? ""} ·{" "}
+                      <span className="font-mono tabular-nums">{formatarData(l.enviadoEm)}</span>
+                    </>
+                  ) : (
+                    "—"
+                  )}
                   {l.formulario && <span className="block">{l.formulario}</span>}
                 </TableCell>
               </TableRow>

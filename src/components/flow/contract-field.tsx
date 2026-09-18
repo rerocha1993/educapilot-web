@@ -72,7 +72,7 @@ export function ContractField({
     // Campo de contrato criado sem texto: avisa em vez de mostrar uma caixa vazia, que era
     // justamente o sintoma do bug original.
     return (
-      <p className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+      <p className="rounded-lg border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
         O contrato ainda não foi cadastrado neste formulário. Fale com a escola antes de enviar.
       </p>
     );
@@ -82,11 +82,13 @@ export function ContractField({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30">
+      <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted/30">
         {titulo && (
           <div className="flex items-center gap-2 border-b border-border px-3 py-2">
             <FileText className="size-4 shrink-0 text-primary" />
-            <span className="min-w-0 font-heading text-sm font-semibold break-words">{titulo}</span>
+            <span className="min-w-0 font-heading text-[15.5px] font-semibold tracking-[-.02em] break-words">
+              {titulo}
+            </span>
           </div>
         )}
 

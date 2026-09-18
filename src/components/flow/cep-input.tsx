@@ -63,10 +63,12 @@ export function CepInput({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="relative">
+        {/* Guia: todo número em mono tabular. */}
         <Input
           value={value}
           inputMode="numeric"
           placeholder="00000-000"
+          className="pr-9 font-mono tabular-nums"
           onChange={(e) => mudar(e.target.value)}
         />
         {buscando && (

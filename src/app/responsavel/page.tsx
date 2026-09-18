@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { MarcaEducaPilot } from "@/components/auth/marca";
 import { clearSession } from "@/lib/auth/session";
 import { useSessaoLocal } from "@/lib/auth/use-sessao-local";
 import { horaBrasilia } from "@/lib/reception/formatar";
@@ -62,7 +62,7 @@ function PortalDoResponsavel() {
     // barra de gesto: o padding respeita essas áreas (no computador env() é 0 e fica o p-4).
     <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col gap-4 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between">
-        <Image src="/logo.png" alt="EducaPilot" width={156} height={123} className="h-8 w-auto" priority />
+        <MarcaEducaPilot />
         <Button variant="ghost" size="sm" onClick={sair}>
           <LogOut /> Sair
         </Button>
@@ -71,7 +71,7 @@ function PortalDoResponsavel() {
       {isLoading && <Skeleton className="h-40 w-full" />}
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-xl border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar seus dados. Tente de novo em instantes.
         </div>
       )}
@@ -79,7 +79,9 @@ function PortalDoResponsavel() {
       {painel && (
         <>
           <div>
-            <h1 className="font-heading text-xl font-bold">Olá, {painel.nome}</h1>
+            <h1 className="font-heading text-[clamp(22px,6vw,26px)] font-semibold tracking-[-.03em]">
+              Olá, {painel.nome}
+            </h1>
             <p className="text-sm text-muted-foreground">{painel.escola.nome}</p>
           </div>
 
@@ -92,39 +94,49 @@ function PortalDoResponsavel() {
             ))}
           </section>
 
-          <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+          <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
             {trajeto && (
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-heading text-lg font-bold">{TEXTO_SITUACAO[trajeto.situacao]}</p>
-                  {rastreando && (
-                    <Badge className="bg-success-soft text-success-soft-foreground">Enviando localização</Badge>
-                  )}
+                  <p className="font-heading text-lg font-semibold tracking-[-.03em]">
+                    {TEXTO_SITUACAO[trajeto.situacao]}
+                  </p>
+                  {rastreando && <Badge variant="success">Enviando localização</Badge>}
                 </div>
                 {trajeto.distanciaMetros != null && trajeto.situacao !== "Chegou" && (
-                  <p className="text-sm">Você está a {formatarDistancia(trajeto.distanciaMetros)} da escola.</p>
+                  <p className="text-sm">
+                    Você está a{" "}
+                    <span className="font-mono tabular-nums">
+                      {formatarDistancia(trajeto.distanciaMetros)}
+                    </span>{" "}
+                    da escola.
+                  </p>
                 )}
                 {trajeto.situacao === "Chegou" && (
                   <p className="text-sm">A escola já foi avisada da sua chegada.</p>
                 )}
-                <p className="text-xs text-muted-foreground">Atualizado às {horaBrasilia(trajeto.atualizadoEm)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Atualizado às{" "}
+                  <span className="font-mono tabular-nums">{horaBrasilia(trajeto.atualizadoEm)}</span>
+                </p>
               </div>
             )}
 
             {rastreio.aviso && (
-              <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground">
+              <div className="rounded-lg border border-warning-border bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground">
                 {rastreio.aviso}
               </div>
             )}
             {rastreio.erro && (
-              <div className="rounded-md border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">
+              <div className="rounded-lg border border-destructive-border bg-destructive-soft px-3 py-2 text-sm text-destructive-soft-foreground">
                 {rastreio.erro}
               </div>
             )}
 
             {!trajeto && (
               <Button
-                className="h-14 text-base md:h-14"
+                variant="action"
+                className="h-14 w-full text-base md:h-14"
                 onClick={() => rastreio.comecar()}
                 disabled={rastreio.estado === "iniciando" || painel.alunos.length === 0}
               >
@@ -135,7 +147,8 @@ function PortalDoResponsavel() {
 
             {trajeto && !rastreando && trajeto.situacao !== "Chegou" && (
               <Button
-                className="h-14 text-base md:h-14"
+                variant="action"
+                className="h-14 w-full text-base md:h-14"
                 onClick={() => rastreio.comecar(trajeto)}
                 disabled={rastreio.estado === "iniciando"}
               >
@@ -144,7 +157,7 @@ function PortalDoResponsavel() {
             )}
 
             {trajeto && (
-              <Button variant="outline" className="h-12 md:h-11" onClick={() => rastreio.encerrar(trajeto.id)}>
+              <Button variant="outline" className="h-12 w-full md:h-11" onClick={() => rastreio.encerrar(trajeto.id)}>
                 Encerrar
               </Button>
             )}
@@ -162,23 +175,31 @@ function PortalDoResponsavel() {
 function CartaoDoAluno({ aluno }: { aluno: AlunoDoResponsavel }) {
   let situacao: React.ReactNode;
   if (aluno.saidaEm) {
-    situacao = <Badge variant="secondary">Saiu às {horaBrasilia(aluno.saidaEm)}</Badge>;
+    situacao = (
+      <Badge variant="secondary">
+        Saiu às <span className="font-mono tabular-nums">{horaBrasilia(aluno.saidaEm)}</span>
+      </Badge>
+    );
   } else if (aluno.chegadaEm) {
     situacao = (
-      <Badge className="bg-success-soft text-success-soft-foreground">Na escola desde {horaBrasilia(aluno.chegadaEm)}</Badge>
+      <Badge variant="success">
+        Na escola desde <span className="font-mono tabular-nums">{horaBrasilia(aluno.chegadaEm)}</span>
+      </Badge>
     );
   } else {
-    situacao = <Badge className="bg-warning-soft text-warning-soft-foreground">Aguardando chegada</Badge>;
+    situacao = <Badge variant="pending">Aguardando chegada</Badge>;
   }
 
-  const previsto = aluno.saidaEm
+  // Horário separado do rótulo para sair em mono, como todo número do guia.
+  const horaPrevista = aluno.saidaEm
     ? null
     : aluno.chegadaEm
-      ? aluno.saidaPrevista && `Saída prevista às ${aluno.saidaPrevista}`
-      : aluno.entradaPrevista && `Entrada prevista às ${aluno.entradaPrevista}`;
+      ? aluno.saidaPrevista
+      : aluno.entradaPrevista;
+  const rotuloPrevisto = aluno.chegadaEm ? "Saída prevista às" : "Entrada prevista às";
 
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-border bg-card p-3">
+    <div className="flex flex-col gap-1 rounded-xl border border-border bg-card p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-medium">{aluno.nome}</p>
@@ -186,7 +207,11 @@ function CartaoDoAluno({ aluno }: { aluno: AlunoDoResponsavel }) {
         </div>
         {situacao}
       </div>
-      {previsto && <p className="text-xs text-muted-foreground">{previsto}</p>}
+      {horaPrevista && (
+        <p className="text-xs text-muted-foreground">
+          {rotuloPrevisto} <span className="font-mono tabular-nums">{horaPrevista}</span>
+        </p>
+      )}
     </div>
   );
 }

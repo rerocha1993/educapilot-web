@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowRight, GraduationCap, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   Select,
   SelectContent,
@@ -79,13 +80,11 @@ export default function ProgressaoTurmaPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-xl font-bold">Progressão de turma</h1>
-        <p className="text-sm text-muted-foreground">
-          Para qual turma cada turma passa na virada do ano. Usado também para preencher a turma do
-          próximo ano na rematrícula.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Administração"
+        titulo="Progressão de turma"
+        apoio="Para qual turma cada turma passa na virada do ano. Usado também para preencher a turma do próximo ano na rematrícula."
+      />
 
       {isLoading && (
         <div className="flex flex-col gap-2">
@@ -102,20 +101,23 @@ export default function ProgressaoTurmaPage() {
       )}
 
       {!isLoading && !isError && linhas.length === 0 && (
-        <p className="rounded-lg border border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
-          Nenhuma turma cadastrada ainda.
-        </p>
+        <div className="flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
+          <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+            <GraduationCap className="size-4" />
+          </span>
+          <p className="mt-3 font-heading text-[15px] font-semibold">Nenhuma turma cadastrada ainda.</p>
+        </div>
       )}
 
       {linhas.map((linha) => (
         <div
           key={linha.classOrigemId}
-          className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-center gap-3">
             <GraduationCap className="size-5 shrink-0 text-primary" />
             <div className="min-w-0">
-              <p className="font-heading text-sm font-semibold">{linha.turmaOrigem}</p>
+              <p className="font-heading text-[15.5px] font-semibold">{linha.turmaOrigem}</p>
               <p className="text-xs text-muted-foreground">
                 {linha.turmaDestino ? (
                   <span className="inline-flex items-center gap-1">

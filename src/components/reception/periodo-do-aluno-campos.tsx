@@ -143,8 +143,8 @@ function Opcao({
       onClick={onClick}
       aria-pressed={selecionada}
       className={cn(
-        "flex items-start gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
-        selecionada ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted"
+        "flex items-start gap-2 rounded-lg border px-3 py-2 text-left transition-colors max-md:min-h-10",
+        selecionada ? "border-primary bg-accent/40 ring-1 ring-primary" : "border-input hover:border-primary"
       )}
     >
       {Icone && <Icone className="mt-0.5 size-4 shrink-0 text-muted-foreground" />}
@@ -217,8 +217,8 @@ export function PeriodoDoAlunoCampos({
       </div>
 
       {mostrarOutros && (
-        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border p-3">
-          <p className="text-xs text-muted-foreground">Opções</p>
+        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border-dashed p-3">
+          <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Opções</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Opcao
               selecionada={valor.tipo === "MeioPeriodoManha"}
@@ -258,8 +258,8 @@ export function PeriodoDoAlunoCampos({
           </div>
 
           {horas && (
-            <div className="flex flex-col gap-3 rounded-md bg-muted/50 p-3">
-              <p className="text-xs font-medium">Orientação</p>
+            <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3">
+              <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Orientação</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Opcao
                   selecionada={valor.orientacao === "Entrada"}
@@ -276,7 +276,7 @@ export function PeriodoDoAlunoCampos({
               </div>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="flex flex-col gap-[5px]">
-                  <Label className="text-xs text-muted-foreground">
+                  <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                     {valor.orientacao === "Saida" ? "Horário de saída" : "Horário de entrada"}
                   </Label>
                   <Input
@@ -288,7 +288,8 @@ export function PeriodoDoAlunoCampos({
                 </div>
                 {previsto.entrada && previsto.saida && (
                   <p className="pb-2 text-sm">
-                    Entra <strong>{previsto.entrada}</strong> e sai <strong>{previsto.saida}</strong>
+                    Entra <strong className="font-mono tabular-nums">{previsto.entrada}</strong> e sai{" "}
+                    <strong className="font-mono tabular-nums">{previsto.saida}</strong>
                   </p>
                 )}
               </div>

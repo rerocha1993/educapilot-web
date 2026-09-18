@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Download, Pencil, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +11,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EditorDeRelatorio } from "@/components/flow/editor-de-relatorio";
-import { RESPONSE_STATUS_BADGE } from "@/lib/flow/use-form-responses";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { BadgeDeSituacao } from "@/components/flow/badge-de-situacao";
 import {
   useBaixarRelatorio,
   useDadosDoRelatorio,
   useRelatorioDeFormulario,
 } from "@/lib/flow/use-relatorios";
 import { formatarDataHora } from "@/lib/format/date";
+
+/** Cabeçalho de coluna do guia. */
+const CABECALHO_DE_COLUNA = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
 
 export default function RelatorioPage() {
   const { id } = useParams<{ id: string }>();
@@ -47,34 +49,35 @@ export default function RelatorioPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Link href="/flow/relatorios" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
-            ← Relatórios
-          </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="truncate font-heading text-xl font-bold">{data?.nome ?? definicao?.nome ?? "Relatório"}</h1>
-            {definicao && (
-              <Button variant="ghost" size="icon-sm" title="Editar relatório" onClick={() => setEditando(true)}>
-                <Pencil className="size-4" />
-              </Button>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
+      <CabecalhoDaPagina
+        eyebrow="← Relatórios"
+        eyebrowHref="/flow/relatorios"
+        titulo={data?.nome ?? definicao?.nome ?? "Relatório"}
+        tags={
+          definicao ? (
+            <Button variant="ghost" size="icon-sm" title="Editar relatório" onClick={() => setEditando(true)}>
+              <Pencil className="size-4" />
+            </Button>
+          ) : undefined
+        }
+        apoio={
+          <>
             {data?.formNome ?? definicao?.formNome}
             {data?.statusFiltro ? ` · só envios ${data.statusFiltro}` : ""}
-          </p>
-          {(data?.descricao ?? definicao?.descricao) && (
-            <p className="text-sm break-words text-muted-foreground">{data?.descricao ?? definicao?.descricao}</p>
-          )}
-        </div>
-        <Button variant="outline" onClick={handleBaixar} disabled={baixar.isPending || !data}>
-          <Download className="size-4" />
-          {baixar.isPending ? "Gerando..." : "Baixar Excel"}
-        </Button>
-      </div>
+            {(data?.descricao ?? definicao?.descricao) && (
+              <span className="block break-words">{data?.descricao ?? definicao?.descricao}</span>
+            )}
+          </>
+        }
+        acoes={
+          <Button variant="action" onClick={handleBaixar} disabled={baixar.isPending || !data}>
+            <Download className="size-4" />
+            {baixar.isPending ? "Gerando..." : "Baixar Excel"}
+          </Button>
+        }
+      />
 
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
         <div className="flex w-[calc(50%-6px)] flex-col gap-[5px] md:w-auto">
           <Label className="text-xs text-muted-foreground">Enviados de</Label>
           <Input type="date" className="w-full md:w-40" value={de} onChange={(e) => setDe(e.target.value)} />
@@ -87,7 +90,9 @@ export default function RelatorioPage() {
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Buscar em qualquer coluna" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
-        <span className="text-sm text-muted-foreground">{linhas.length} envio(s)</span>
+        <span className="text-sm text-muted-foreground">
+          <span className="font-mono tabular-nums">{linhas.length}</span> envio(s)
+        </span>
       </div>
 
       {isError && (
@@ -99,14 +104,14 @@ export default function RelatorioPage() {
       {isLoading && <Skeleton className="h-64 w-full" />}
 
       {data && (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="whitespace-nowrap">Enviado em</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className={`${CABECALHO_DE_COLUNA} whitespace-nowrap`}>Enviado em</TableHead>
+                <TableHead className={CABECALHO_DE_COLUNA}>Status</TableHead>
                 {data.colunas.map((coluna, i) => (
-                  <TableHead key={`${coluna}-${i}`} className="whitespace-nowrap">
+                  <TableHead key={`${coluna}-${i}`} className={`${CABECALHO_DE_COLUNA} whitespace-nowrap`}>
                     {coluna}
                   </TableHead>
                 ))}
@@ -122,9 +127,11 @@ export default function RelatorioPage() {
               )}
               {linhas.map((l) => (
                 <TableRow key={l.respostaId}>
-                  <TableCell className="whitespace-nowrap text-sm">{formatarDataHora(l.enviadoEm)}</TableCell>
+                  <TableCell className="font-mono text-sm whitespace-nowrap tabular-nums">
+                    {formatarDataHora(l.enviadoEm)}
+                  </TableCell>
                   <TableCell>
-                    <Badge className={RESPONSE_STATUS_BADGE[l.status] ?? ""}>{l.status}</Badge>
+                    <BadgeDeSituacao situacao={l.status} />
                   </TableCell>
                   {l.valores.map((valor, i) => (
                     <TableCell key={i} className="max-w-72 truncate text-sm" title={valor}>

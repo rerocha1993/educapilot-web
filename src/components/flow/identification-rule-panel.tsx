@@ -46,7 +46,7 @@ export function IdentificationRulePanel({ form }: { form: FormDto }) {
   const permitirSemEncontrar = config.permitirSemEncontrar !== false;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center gap-2">
         <UserSearch className="size-4 shrink-0 text-primary" />
         <h3 className="font-heading text-sm font-semibold">Identificação antes de preencher</h3>

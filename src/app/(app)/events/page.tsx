@@ -2,7 +2,9 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { EventsNav } from "@/components/events/events-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { useSalesGroups } from "@/lib/events/use-sales-groups";
 import { useAllProducts } from "@/lib/events/use-products";
 import { useOrders } from "@/lib/events/use-orders";
@@ -40,19 +42,22 @@ export default function EventsDashboardPage() {
   const estoqueBaixo = (products ?? []).filter((p) => p.ativo && p.estoque !== null && p.estoque <= 5);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <EventsNav />
 
-      <div>
-        <h1 className="font-heading text-xl font-bold">Dashboard de vendas</h1>
-        <p className="text-sm text-muted-foreground">
-          Não existe conceito de &quot;evento&quot; (nome, prazo, status) no backend —
-          este painel soma tudo que já foi vendido no tenant, sem recorte por campanha.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow={<>Eventos &amp; vendas</>}
+        titulo="Dashboard de vendas"
+        apoio={
+          <>
+            Não existe conceito de &quot;evento&quot; (nome, prazo, status) no backend — este painel
+            soma tudo que já foi vendido no tenant, sem recorte por campanha.
+          </>
+        }
+      />
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar os dados de vendas.
         </div>
       )}
@@ -61,33 +66,38 @@ export default function EventsDashboardPage() {
 
       {!isLoading && (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-lg border border-success-border bg-success-soft p-4">
-              <p className="text-xs text-success-soft-foreground">Vendas confirmadas</p>
-              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl text-success-soft-foreground">
+          {/* Estatística do guia: rótulo pequeno, número grande em mono. */}
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Vendas confirmadas</p>
+              <p className="mt-2 font-heading font-mono text-[clamp(20px,2.2vw,28px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-success-soft-foreground">
                 {formatCurrency(vendasConfirmadas)}
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Pedidos pagos</p>
-              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl">{pedidosPagos.length}</p>
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Pedidos pagos</p>
+              <p className="mt-2 font-heading font-mono text-[clamp(20px,2.2vw,28px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
+                {pedidosPagos.length}
+              </p>
             </div>
-            <div className="rounded-lg border border-warning-border bg-warning-soft p-4">
-              <p className="text-xs text-warning-soft-foreground">Aguardando Pix</p>
-              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl text-warning-soft-foreground">
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Aguardando Pix</p>
+              <p className="mt-2 font-heading font-mono text-[clamp(20px,2.2vw,28px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-action">
                 {pedidosAguardando.length}
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Ticket médio</p>
-              <p className="font-mono text-lg font-semibold whitespace-nowrap tabular-nums md:text-xl">{formatCurrency(ticketMedio)}</p>
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Ticket médio</p>
+              <p className="mt-2 font-heading font-mono text-[clamp(20px,2.2vw,28px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
+                {formatCurrency(ticketMedio)}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h2 className="mb-3 font-heading text-sm font-semibold">Vendas por grupo</h2>
-              <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1fr_260px]">
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <h2 className="font-heading text-[15.5px] font-semibold">Vendas por grupo</h2>
+              <div className="mt-4 flex flex-col gap-3.5">
                 {groupTotals.length === 0 && (
                   <p className="text-sm text-muted-foreground">Nenhum grupo de venda cadastrado.</p>
                 )}
@@ -100,18 +110,31 @@ export default function EventsDashboardPage() {
                         {g.meta ? ` de ${formatCurrency(g.meta)}` : ""}
                       </span>
                     </div>
-                    {g.pct !== null && <Progress value={g.pct} className="mt-1" />}
+                    {/* Barra fina de 6px do guia — laranja quando ainda falta muito pra meta. */}
+                    {g.pct !== null && (
+                      <Progress
+                        value={g.pct}
+                        className={cn(
+                          "mt-2 [&>[data-slot=progress-track]]:h-1.5",
+                          g.pct < 50 && "[&_[data-slot=progress-indicator]]:bg-action"
+                        )}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <h2 className="mb-3 font-heading text-sm font-semibold">Pendências</h2>
-              <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-                <li>{pedidosAguardando.length} pedido(s) aguardando pagamento</li>
+            <div className="rounded-xl border border-border bg-muted/40 p-[18px]">
+              <h2 className="font-heading text-[15.5px] font-semibold">Pendências</h2>
+              <ul className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
                 <li>
-                  {estoqueBaixo.length} produto(s) com estoque baixo (≤5)
+                  <span className="font-mono tabular-nums">{pedidosAguardando.length}</span> pedido(s) aguardando
+                  pagamento
+                </li>
+                <li>
+                  <span className="font-mono tabular-nums">{estoqueBaixo.length}</span> produto(s) com estoque baixo
+                  (≤<span className="font-mono tabular-nums">5</span>)
                   {estoqueBaixo.length === 0 && products?.every((p) => p.estoque === null)
                     ? " — nenhum produto tem estoque controlado"
                     : ""}

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Inbox } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -30,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EventsNav } from "@/components/events/events-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useSalesGroups } from "@/lib/events/use-sales-groups";
 import {
   useProductsByGroup,
@@ -131,21 +134,24 @@ export default function ProductsPage() {
   const selectedGroup = groups?.find((g) => g.id === selectedGroupId);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <EventsNav />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Produtos do evento</h1>
-          <p className="text-sm text-muted-foreground">
-            Subproduto = variação sem preço próprio (ex.: com/sem farofa); afeta
-            produção, não o total.
-          </p>
-        </div>
-        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)} disabled={!selectedGroupId}>
-          + Novo produto
-        </Button>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow={<>Eventos &amp; vendas</>}
+        titulo="Produtos do evento"
+        apoio="Subproduto = variação sem preço próprio (ex.: com/sem farofa); afeta produção, não o total."
+        acoes={
+          <Button
+            variant="action"
+            className="w-full md:w-auto"
+            onClick={() => setDialogOpen(true)}
+            disabled={!selectedGroupId}
+          >
+            + Novo produto
+          </Button>
+        }
+      />
 
       <div className="flex flex-col gap-[5px]">
         <Label className="text-xs text-muted-foreground">Grupo</Label>
@@ -164,7 +170,7 @@ export default function ProductsPage() {
       </div>
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar os produtos.
         </div>
       )}
@@ -172,24 +178,24 @@ export default function ProductsPage() {
       <div className="flex flex-col gap-2 md:hidden">
         {isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
         {!isLoading && products?.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhum produto neste grupo.
-          </div>
+          <EstadoVazio icone={<Inbox />} titulo="Nenhum produto neste grupo." />
         )}
         {products?.map((p) => (
-          <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+          <div key={p.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm">
             <div className="flex items-start justify-between gap-2">
               <p className="min-w-0 font-medium break-words">{p.nome}</p>
               {p.ativo ? (
-                <Badge className="bg-success-soft text-success-soft-foreground">Ativo</Badge>
+                <Badge variant="success">Ativo</Badge>
               ) : (
                 <Badge variant="secondary">Inativo</Badge>
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(p.preco)}</span>
+              <span className="font-mono font-semibold whitespace-nowrap tabular-nums">
+                {formatCurrency(p.preco)}
+              </span>
               <span className="font-mono tabular-nums">
-                {p.estoque ?? <span className="text-muted-foreground">não controlado</span>}
+                {p.estoque ?? <span className="font-sans text-muted-foreground">não controlado</span>}
               </span>
             </div>
             <SubProductsCell product={p} />
@@ -197,7 +203,7 @@ export default function ProductsPage() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -218,9 +224,12 @@ export default function ProductsPage() {
                 </TableRow>
               ))}
             {!isLoading && products?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhum produto neste grupo.
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={5} className="py-10 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                    <Inbox className="size-[18px]" />
+                  </span>
+                  <p className="mt-3 font-heading text-[15px] font-semibold">Nenhum produto neste grupo.</p>
                 </TableCell>
               </TableRow>
             )}
@@ -230,13 +239,15 @@ export default function ProductsPage() {
                 <TableCell>
                   <SubProductsCell product={p} />
                 </TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatCurrency(p.preco)}</TableCell>
+                <TableCell className="font-mono text-sm font-semibold tabular-nums">
+                  {formatCurrency(p.preco)}
+                </TableCell>
                 <TableCell className="font-mono text-sm tabular-nums">
-                  {p.estoque ?? <span className="text-muted-foreground">não controlado</span>}
+                  {p.estoque ?? <span className="font-sans text-muted-foreground">não controlado</span>}
                 </TableCell>
                 <TableCell>
                   {p.ativo ? (
-                    <Badge className="bg-success-soft text-success-soft-foreground">Ativo</Badge>
+                    <Badge variant="success">Ativo</Badge>
                   ) : (
                     <Badge variant="secondary">Inativo</Badge>
                   )}

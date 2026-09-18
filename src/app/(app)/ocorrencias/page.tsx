@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Printer } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
 import { useStudentsByClass } from "@/lib/kernel/use-students";
@@ -172,55 +174,70 @@ export default function OcorrenciasPage() {
         <RotinaNav />
       </div>
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">
-            Relatório de ocorrências · {new Date(start + "T00:00:00").toLocaleDateString("pt-BR")} a{" "}
-            {new Date(end + "T00:00:00").toLocaleDateString("pt-BR")}
-          </h1>
-          <p className="text-sm text-muted-foreground">{totalCount} ocorrências no período.</p>
-        </div>
-
-        <div className="flex w-full flex-wrap items-end gap-2 md:w-auto print:hidden">
-          <Input
-            type="date"
-            value={start}
-            onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
-            className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
-          />
-          <Input
-            type="date"
-            value={end}
-            onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
-            className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
-          />
-          {/* Novo (2026-08, feedback do cliente): filtro de turma no relatório —
-              "Todas as turmas" quando null, mesmo comportamento do backend. */}
-          <Select
-            value={reportClassId?.toString() ?? "__all__"}
-            onValueChange={(v) => setReportClassId(v === "__all__" ? null : Number(v))}
-          >
-            <SelectTrigger className="h-9 w-full md:w-44">
-              <SelectValue>
-                {() => (reportClassId ? classes?.find((c) => c.id === reportClassId)?.className : "Todas as turmas")}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">Todas as turmas</SelectItem>
-              {classes?.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {c.className}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" className="w-full md:w-auto" onClick={() => window.print()}>
-            <Printer className="size-4" />
-            Exportar PDF
-          </Button>
-          <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>+ Registrar ocorrência</Button>
-        </div>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo={
+          <>
+            Relatório de ocorrências ·{" "}
+            <span className="font-numeric">
+              {new Date(start + "T00:00:00").toLocaleDateString("pt-BR")}
+            </span>{" "}
+            a{" "}
+            <span className="font-numeric">
+              {new Date(end + "T00:00:00").toLocaleDateString("pt-BR")}
+            </span>
+          </>
+        }
+        apoio={
+          <>
+            <span className="font-numeric">{totalCount}</span> ocorrências no período.
+          </>
+        }
+        acoes={
+          <div className="flex w-full flex-wrap items-end gap-2 md:w-auto print:hidden">
+            <Input
+              type="date"
+              value={start}
+              onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
+              className="h-10 w-[calc(50%-0.25rem)] font-numeric md:h-9 md:w-40"
+            />
+            <Input
+              type="date"
+              value={end}
+              onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
+              className="h-10 w-[calc(50%-0.25rem)] font-numeric md:h-9 md:w-40"
+            />
+            {/* Novo (2026-08, feedback do cliente): filtro de turma no relatório —
+                "Todas as turmas" quando null, mesmo comportamento do backend. */}
+            <Select
+              value={reportClassId?.toString() ?? "__all__"}
+              onValueChange={(v) => setReportClassId(v === "__all__" ? null : Number(v))}
+            >
+              <SelectTrigger className="h-9 w-full md:w-44">
+                <SelectValue>
+                  {() => (reportClassId ? classes?.find((c) => c.id === reportClassId)?.className : "Todas as turmas")}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todas as turmas</SelectItem>
+                {classes?.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.className}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" className="w-full md:w-auto" onClick={() => window.print()}>
+              <Printer className="size-4" />
+              Exportar PDF
+            </Button>
+            {/* Único botão laranja da tela: é a decisão a tomar aqui. */}
+            <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+              + Registrar ocorrência
+            </Button>
+          </div>
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -229,8 +246,8 @@ export default function OcorrenciasPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-sm font-semibold">Ocorrências por turma</h2>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Ocorrências por turma</h2>
 
           {isLoading && <Skeleton className="h-32 w-full" />}
 
@@ -244,20 +261,20 @@ export default function OcorrenciasPage() {
             {data?.byClass.map((c) => (
               <div key={c.classId} className="flex items-center gap-3">
                 <span className="w-28 shrink-0 truncate text-sm">{c.className}</span>
-                <div className="h-5 flex-1 overflow-hidden rounded bg-accent">
+                <div className="h-5 flex-1 overflow-hidden rounded bg-muted">
                   <div
                     className="h-full rounded bg-primary"
                     style={{ width: `${(c.count / maxCount) * 100}%` }}
                   />
                 </div>
-                <span className="w-6 shrink-0 text-right font-mono text-xs tabular-nums">{c.count}</span>
+                <span className="w-6 shrink-0 text-right font-numeric text-xs">{c.count}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-sm font-semibold">Alunos com mais registros</h2>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Alunos com mais registros</h2>
           <p className="mb-3 text-xs text-muted-foreground">
             A cor do ponto é a categoria mais comum do aluno no período — o backend não tem um
             conceito de gravidade separado.
@@ -280,7 +297,7 @@ export default function OcorrenciasPage() {
                   <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[s.topCategoria])} />
                   <span className="truncate">{s.studentName}</span>
                 </div>
-                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                <span className="shrink-0 font-numeric text-xs text-muted-foreground">
                   {s.count}
                 </span>
               </button>
@@ -289,9 +306,9 @@ export default function OcorrenciasPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4 print:hidden">
-        <h2 className="mb-1 font-heading text-sm font-semibold">Observação semanal da turma</h2>
-        <p className="mb-3 text-xs text-muted-foreground">Resumo da semana enviado à coordenação.</p>
+      <div className="rounded-xl border border-border bg-card p-4 print:hidden">
+        <h2 className="font-heading text-[15.5px] font-semibold">Observação semanal da turma</h2>
+        <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">Resumo da semana enviado à coordenação.</p>
 
         {reportClassId === null ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
@@ -301,7 +318,7 @@ export default function OcorrenciasPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-3">
               <div>
-                <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+                <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                   Semana do mês
                 </span>
                 <div className="flex gap-2">
@@ -310,7 +327,7 @@ export default function OcorrenciasPage() {
                       key={w}
                       onClick={() => setWeek(w)}
                       className={cn(
-                        "size-10 rounded-full border text-sm font-medium transition-colors md:size-9",
+                        "size-10 rounded-full border font-numeric text-sm font-medium transition-colors md:size-9",
                         week === w
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-transparent text-foreground hover:bg-accent"
@@ -337,7 +354,7 @@ export default function OcorrenciasPage() {
             </div>
 
             <div>
-              <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Histórico do mês
               </span>
 
@@ -349,10 +366,10 @@ export default function OcorrenciasPage() {
 
               <div className="flex max-h-56 flex-col gap-2 overflow-y-auto">
                 {weeklyHistory?.map((h) => (
-                  <div key={h.id} className="rounded-lg border border-border bg-background p-3">
+                  <div key={h.id} className="rounded-xl border border-border bg-background p-3">
                     <div className="mb-1 flex items-center justify-between">
-                      <span className="font-mono text-xs text-muted-foreground">Semana {h.weekOfMonth}</span>
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">Semana <span className="font-numeric">{h.weekOfMonth}</span></span>
+                      <span className="font-numeric text-xs text-muted-foreground">
                         {formatarData(h.createdAt)}
                       </span>
                     </div>
@@ -384,13 +401,13 @@ export default function OcorrenciasPage() {
               .slice()
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((o) => (
-                <div key={o.id} className="rounded-lg border border-border p-3">
+                <div key={o.id} className="rounded-xl border border-border p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-sm font-medium">
                       <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[o.categoria])} />
                       {o.categoria}
                     </span>
-                    <span className="font-mono text-xs text-muted-foreground">
+                    <span className="font-numeric text-xs text-muted-foreground">
                       {formatarData(o.createdAt)}
                     </span>
                   </div>
@@ -401,9 +418,9 @@ export default function OcorrenciasPage() {
                     </p>
                   )}
                   {o.parentsNotified && (
-                    <span className="mt-2 inline-block rounded-full bg-success-soft px-2 py-0.5 text-xs text-success-soft-foreground">
+                    <Badge variant="success" className="mt-2">
                       Responsável notificado
-                    </span>
+                    </Badge>
                   )}
                 </div>
               ))}
@@ -419,7 +436,7 @@ export default function OcorrenciasPage() {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Turma
               </span>
               <Select
@@ -445,7 +462,7 @@ export default function OcorrenciasPage() {
                 antes só dava pra escolher 1 aluno por ocorrência; agora é uma lista de
                 checkboxes, registra a mesma ocorrência pra cada aluno marcado. */}
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Alunos envolvidos
               </span>
               {form.classId === null && (
@@ -470,7 +487,7 @@ export default function OcorrenciasPage() {
             </div>
 
             <div>
-              <span className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Categoria
               </span>
               <div className="flex flex-wrap gap-2">
@@ -492,7 +509,7 @@ export default function OcorrenciasPage() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Descrição
               </span>
               <Textarea
@@ -507,7 +524,7 @@ export default function OcorrenciasPage() {
                 que ela fez na situação. Occurrence.Solution já existia na entidade,
                 nunca era exposto em nenhuma tela. */}
             <div className="flex flex-col gap-[5px]">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Solução (opcional)
               </span>
               <Textarea

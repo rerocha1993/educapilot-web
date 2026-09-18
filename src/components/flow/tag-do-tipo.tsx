@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import type { TipoDeFormulario } from "@/lib/flow/form-config";
 import { ROTULO_DO_TIPO } from "@/lib/flow/tipo-do-formulario";
 
@@ -8,14 +7,8 @@ export function TagDoTipo({ tipo, className }: { tipo: TipoDeFormulario | null; 
   if (tipo !== "matricula" && tipo !== "rematricula") return null;
 
   return (
-    <Badge
-      className={cn(
-        tipo === "rematricula"
-          ? "bg-primary/10 text-primary"
-          : "border border-border bg-transparent text-foreground",
-        className
-      )}
-    >
+    // Rematrícula em roxo tinta, matrícula só com a borda: as duas são dado neutro, não situação.
+    <Badge variant={tipo === "rematricula" ? "waiting" : "outline"} className={className}>
       {ROTULO_DO_TIPO[tipo]}
     </Badge>
   );

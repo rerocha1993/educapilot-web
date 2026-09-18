@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useBudgets,
   useBudgetComparativo,
@@ -89,24 +91,26 @@ export default function OrcamentoPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <FinanceNav />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Orçamento {ano}</h1>
-          <p className="text-sm text-muted-foreground">
-            Planejado x realizado por categoria — realizado é sempre dinheiro que
-            efetivamente entrou/saiu (recebido/pago), não o previsto.
-          </p>
-        </div>
-        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
-          + Novo orçamento
-        </Button>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Financeiro"
+        titulo={
+          <>
+            Orçamento <span className="font-mono tabular-nums">{ano}</span>
+          </>
+        }
+        apoio="Planejado x realizado por categoria — realizado é sempre dinheiro que efetivamente entrou/saiu (recebido/pago), não o previsto."
+        acoes={
+          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+            + Novo orçamento
+          </Button>
+        }
+      />
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar o comparativo.
         </div>
       )}
@@ -115,9 +119,14 @@ export default function OrcamentoPage() {
         {loadingComparativo && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
 
         {!loadingComparativo && (comparativo ?? []).length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhum orçamento cadastrado pra {ano} ainda.
-          </div>
+          <EstadoVazio
+            icone={<Inbox />}
+            titulo={
+              <>
+                Nenhum orçamento cadastrado pra <span className="font-mono tabular-nums">{ano}</span> ainda.
+              </>
+            }
+          />
         )}
 
         {comparativo?.map((c) => {
@@ -125,7 +134,7 @@ export default function OrcamentoPage() {
           return (
             <div
               key={`${c.tipo}-${c.categoria}`}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm"
+              className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <Badge variant={c.tipo === "Receita" ? "default" : "secondary"}>{c.tipo}</Badge>
@@ -157,7 +166,7 @@ export default function OrcamentoPage() {
         })}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -179,9 +188,14 @@ export default function OrcamentoPage() {
               ))}
 
             {!loadingComparativo && (comparativo ?? []).length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhum orçamento cadastrado pra {ano} ainda.
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={5} className="py-10 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                    <Inbox className="size-[18px]" />
+                  </span>
+                  <p className="mt-3 font-heading text-[15px] font-semibold">
+                    Nenhum orçamento cadastrado pra <span className="font-mono tabular-nums">{ano}</span> ainda.
+                  </p>
                 </TableCell>
               </TableRow>
             )}
@@ -217,8 +231,8 @@ export default function OrcamentoPage() {
         </Table>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">Orçamentos cadastrados</p>
+      <div className="flex flex-col gap-2.5">
+        <h2 className="font-heading text-[15.5px] font-semibold">Orçamentos cadastrados</h2>
         {loadingBudgets && <Skeleton className="h-20 w-full" />}
         {!loadingBudgets && (budgets ?? []).length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhum ainda.</p>
@@ -227,14 +241,23 @@ export default function OrcamentoPage() {
           {budgets?.map((b) => (
             <div
               key={b.id}
-              className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm md:gap-0"
+              className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3.5 py-2.5 text-sm md:gap-0"
             >
               <span className="min-w-0 break-words">
                 <Badge variant={b.tipo === "Receita" ? "default" : "secondary"} className="mr-2">
                   {b.tipo}
                 </Badge>
-                {b.categoriaLabel} · {b.mes ? `${String(b.mes).padStart(2, "0")}/${b.ano}` : `ano ${b.ano} inteiro`} ·{" "}
-                {formatCurrency(b.valorPlanejado)}
+                {b.categoriaLabel} ·{" "}
+                {b.mes ? (
+                  <span className="font-mono tabular-nums">
+                    {String(b.mes).padStart(2, "0")}/{b.ano}
+                  </span>
+                ) : (
+                  <>
+                    ano <span className="font-mono tabular-nums">{b.ano}</span> inteiro
+                  </>
+                )}{" "}
+                · <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(b.valorPlanejado)}</span>
               </span>
               <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(b.id)}>
                 <Trash2 className="size-4 text-destructive" />

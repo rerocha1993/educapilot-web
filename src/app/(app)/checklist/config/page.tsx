@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUp, ArrowDown, ArrowLeft, Trash2, Plus } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowLeft, ListChecks, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
@@ -152,24 +154,20 @@ export default function ChecklistConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Configurar checklists</h1>
-          <p className="text-sm text-muted-foreground">
-            Itens, turmas atendidas e ordem de cada checklist da sala.
-          </p>
-        </div>
-        {/* Novo (2026-08, feedback do cliente) — antes não tinha como voltar pro
-            preenchimento sem sair pelo menu; cada edição aqui já salva na hora
-            (mutations individuais), então "voltar" é só navegação mesmo. */}
-        <Link
-          href="/checklist"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Voltar para o preenchimento
-        </Link>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina · Checklist"
+        titulo="Configurar checklists"
+        apoio="Itens, turmas atendidas e ordem de cada checklist da sala."
+        acoes={
+          // Novo (2026-08, feedback do cliente) — antes não tinha como voltar pro
+          // preenchimento sem sair pelo menu; cada edição aqui já salva na hora
+          // (mutations individuais), então "voltar" é só navegação mesmo.
+          <Link href="/checklist" className={buttonVariants({ variant: "outline" })}>
+            <ArrowLeft className="size-3.5" />
+            Voltar para o preenchimento
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
         <div className="flex flex-col gap-2">
@@ -186,7 +184,7 @@ export default function ChecklistConfigPage() {
               )}
             >
               <span className="truncate">{t.name}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">{t.items.length}</span>
+              <span className="font-numeric text-[10px] text-muted-foreground">{t.items.length}</span>
             </button>
           ))}
 
@@ -204,13 +202,13 @@ export default function ChecklistConfigPage() {
         </div>
 
         {!selected ? (
-          <div className="rounded-lg border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
-            Selecione ou crie um checklist.
-          </div>
+          <EstadoVazio icone={<ListChecks />} titulo="Selecione ou crie um checklist." />
         ) : (
-          <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-4">
+          <div className="flex flex-col gap-5 rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="min-w-0 break-words font-heading text-base font-semibold">{selected.name}</p>
+              <p className="min-w-0 break-words font-heading text-[15.5px] font-semibold">
+                {selected.name}
+              </p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -223,7 +221,7 @@ export default function ChecklistConfigPage() {
             </div>
 
             <div>
-              <Label className="mb-2 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="mb-2 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Turmas atendidas (nenhuma marcada = todas)
               </Label>
               <div className="flex flex-wrap gap-3">
@@ -243,7 +241,7 @@ export default function ChecklistConfigPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Itens
               </Label>
               {orderedItems.length === 0 && (
@@ -275,7 +273,9 @@ export default function ChecklistConfigPage() {
                     {item.description}
                   </span>
 
-                  <span className="font-mono text-[10px] text-muted-foreground">{TIPO_LABELS[item.tipo]}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+                    {TIPO_LABELS[item.tipo]}
+                  </span>
 
                   <Switch checked={item.ativo} onCheckedChange={(v) => toggleItemAtivo(item, v)} />
 

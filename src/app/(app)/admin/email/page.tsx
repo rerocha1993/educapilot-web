@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   useTenantEmail,
   useSaveTenantEmail,
@@ -78,13 +79,11 @@ export default function EmailEscolaPage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-xl font-bold">E-mail da escola</h1>
-        <p className="text-sm text-muted-foreground">
-          Conta usada para enviar as mensagens automáticas — entre elas o contrato assinado, depois
-          que a gestão aprova a matrícula. É este endereço que a família vê como remetente.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Administração"
+        titulo="E-mail da escola"
+        apoio="Conta usada para enviar as mensagens automáticas — entre elas o contrato assinado, depois que a gestão aprova a matrícula. É este endereço que a família vê como remetente."
+      />
 
       {isLoading && <Skeleton className="h-72 w-full" />}
 
@@ -96,10 +95,10 @@ export default function EmailEscolaPage() {
 
       {!isLoading && !isError && (
         <>
-          <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+          <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
             <div className="flex gap-3">
               <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Servidor de envio (SMTP)</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Servidor de envio (SMTP)</Label>
                 <Input
                   value={valores.host}
                   placeholder="smtp.gmail.com"
@@ -117,7 +116,7 @@ export default function EmailEscolaPage() {
                 )}
               </div>
               <div className="flex w-24 flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Porta</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Porta</Label>
                 <Input
                   type="number"
                   value={valores.port}
@@ -127,7 +126,7 @@ export default function EmailEscolaPage() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Usuário</Label>
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Usuário</Label>
               <Input
                 value={valores.username}
                 placeholder="atendimento@suaescola.com.br"
@@ -136,7 +135,7 @@ export default function EmailEscolaPage() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Senha {data?.configurado && "(deixe em branco para manter a atual)"}
               </Label>
               <Input
@@ -156,7 +155,7 @@ export default function EmailEscolaPage() {
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex flex-1 flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Remetente (opcional)</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Remetente (opcional)</Label>
                 <Input
                   value={valores.remetente}
                   placeholder="igual ao usuário"
@@ -164,7 +163,7 @@ export default function EmailEscolaPage() {
                 />
               </div>
               <div className="flex flex-1 flex-col gap-[5px]">
-                <Label className="text-xs text-muted-foreground">Nome exibido</Label>
+                <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Nome exibido</Label>
                 <Input
                   value={valores.nomeRemetente}
                   placeholder="Colégio Aprender & Saber"
@@ -178,10 +177,10 @@ export default function EmailEscolaPage() {
             </Button>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+          <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
             <div className="flex items-center gap-2">
               <Mail className="size-4 shrink-0 text-primary" />
-              <h2 className="font-heading text-sm font-semibold">Testar envio</h2>
+              <h2 className="font-heading text-[15.5px] font-semibold">Testar envio</h2>
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -193,7 +192,7 @@ export default function EmailEscolaPage() {
               <p className="flex items-center gap-1 text-xs text-success-soft-foreground">
                 <CheckCircle2 className="size-3.5" />
                 Último teste bem-sucedido em{" "}
-                {formatarDataHora(data.testadoEm)}
+                <span className="font-mono tabular-nums">{formatarDataHora(data.testadoEm)}</span>
               </p>
             )}
 

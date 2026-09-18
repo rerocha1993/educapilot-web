@@ -2,13 +2,13 @@
 
 import { SignaturePad } from "@/components/flow/signature-pad";
 import { useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   useContractSettings,
   useSaveContractSettings,
@@ -46,26 +46,23 @@ export default function ConfiguracaoContratosPage() {
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6">
-      <div>
-        <Link href="/flow/contratos" className="inline-flex min-h-10 items-center text-xs text-muted-foreground hover:underline md:inline md:min-h-0">
-          ← Contratos
-        </Link>
-        <h1 className="font-heading text-xl font-bold">Configuração de contratos</h1>
-        <p className="text-sm text-muted-foreground">
-          Vale para todos os contratos gerados pelos formulários da escola.
-        </p>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="← Contratos"
+        eyebrowHref="/flow/contratos"
+        titulo="Configuração de contratos"
+        apoio="Vale para todos os contratos gerados pelos formulários da escola."
+      />
 
       {isLoading && <Skeleton className="h-64 w-full" />}
 
       {isError && (
-        <p className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <p className="rounded-xl border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar a configuração. Recarregue a página.
         </p>
       )}
 
       {form && (
-        <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-4">
+        <div className="flex flex-col gap-5 rounded-xl border border-border bg-card p-4">
           <div className="flex flex-col gap-[5px]">
             <Label className="text-sm">Reajuste da rematrícula (%)</Label>
             <Input
@@ -187,7 +184,7 @@ export default function ConfiguracaoContratosPage() {
             </>
           )}
 
-          <Button onClick={handleSalvar} disabled={salvar.isPending || !edicao}>
+          <Button variant="action" onClick={handleSalvar} disabled={salvar.isPending || !edicao}>
             {salvar.isPending ? "Salvando..." : "Salvar"}
           </Button>
         </div>

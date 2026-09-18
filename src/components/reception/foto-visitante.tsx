@@ -25,7 +25,7 @@ export function FotoVisitante({
   const { data: url } = useFotoVisitante(visitanteId, temFoto);
 
   const classe = cn(
-    "shrink-0 rounded-full bg-muted object-cover",
+    "shrink-0 rounded-full bg-accent object-cover",
     tamanho === "lg" ? "size-20 text-xl" : "size-9 text-xs"
   );
 
@@ -35,7 +35,7 @@ export function FotoVisitante({
   }
 
   return (
-    <div className={cn(classe, "flex items-center justify-center font-semibold text-muted-foreground")}>
+    <div className={cn(classe, "flex items-center justify-center font-bold text-accent-foreground")}>
       {iniciais(nome)}
     </div>
   );

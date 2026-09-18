@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { FileBarChart, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -14,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
 import { useAvailableReports, REPORT_DATA_SOURCE_LABELS, type ReportTypeDto } from "@/lib/tasks/use-reports";
@@ -55,19 +58,17 @@ export default function RelatoriosPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Central de relatórios</h1>
-          <p className="text-sm text-muted-foreground">Escolha um tipo de relatório pra gerar na hora.</p>
-        </div>
-        <Link
-          href="/relatorios/config"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <Settings className="size-3.5" />
-          Configurar tipos
-        </Link>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo="Central de relatórios"
+        apoio="Escolha um tipo de relatório pra gerar na hora."
+        acoes={
+          <Link href="/relatorios/config" className={buttonVariants({ variant: "outline" })}>
+            <Settings className="size-3.5" />
+            Configurar tipos
+          </Link>
+        }
+      />
 
       {isError && (
         <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -80,12 +81,16 @@ export default function RelatoriosPage() {
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
 
         {!isLoading && (reports?.length ?? 0) === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Nenhum tipo de relatório cadastrado ainda.{" "}
-            <Link href="/relatorios/config" className="text-primary hover:underline">
-              Criar o primeiro
-            </Link>
-          </p>
+          <EstadoVazio
+            className="sm:col-span-2"
+            icone={<FileBarChart />}
+            titulo="Nenhum tipo de relatório cadastrado ainda."
+            acao={
+              <Link href="/relatorios/config" className={buttonVariants()}>
+                Criar o primeiro
+              </Link>
+            }
+          />
         )}
 
         {reports?.map((r) => (
@@ -93,7 +98,7 @@ export default function RelatoriosPage() {
             key={r.id}
             onClick={() => selectType(r)}
             className={cn(
-              "flex items-center gap-3 rounded-lg border bg-card p-4 text-left transition-colors",
+              "flex items-center gap-3 rounded-xl border bg-card p-4 text-left transition-colors",
               selected?.id === r.id ? "border-primary ring-1 ring-primary/30" : "border-border hover:border-primary/40"
             )}
           >
@@ -114,9 +119,9 @@ export default function RelatoriosPage() {
       </div>
 
       {selected && (
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="rounded-xl border border-border bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-heading text-sm font-semibold">{selected.name}</h2>
+            <h2 className="font-heading text-[15.5px] font-semibold">{selected.name}</h2>
             <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
               {selected.requiresClass && (
                 <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
@@ -140,13 +145,13 @@ export default function RelatoriosPage() {
                     type="date"
                     value={start}
                     onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
-                    className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
+                    className="h-10 w-[calc(50%-0.25rem)] font-numeric md:h-9 md:w-40"
                   />
                   <Input
                     type="date"
                     value={end}
                     onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
-                    className="h-10 w-[calc(50%-0.25rem)] md:h-9 md:w-40"
+                    className="h-10 w-[calc(50%-0.25rem)] font-numeric md:h-9 md:w-40"
                   />
                 </>
               )}
@@ -204,7 +209,7 @@ function OcorrenciasReportBody({ classId, start, end }: { classId: number | null
       {data?.topStudents.map((s) => (
         <div key={s.studentId} className="flex items-center justify-between gap-2 text-sm">
           <span className="min-w-0 break-words">{s.studentName}</span>
-          <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{s.count}</span>
+          <span className="shrink-0 font-numeric text-xs text-muted-foreground">{s.count}</span>
         </div>
       ))}
     </div>
@@ -230,10 +235,10 @@ function FaltasReportBody({ classId, start, end }: { classId: number | null; sta
         <div key={a.id} className="flex items-center justify-between gap-2 text-sm">
           <span className="min-w-0 break-words">{a.attendance?.student?.fullName ?? `Aluno #${a.attendance?.studentId}`}</span>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="text-xs text-muted-foreground">
+            <Badge variant={a.reason === UNJUSTIFIED_REASON || !a.reason ? "pending" : "success"}>
               {a.reason === UNJUSTIFIED_REASON || !a.reason ? "Pendente" : "Justificada"}
-            </span>
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+            </Badge>
+            <span className="font-numeric text-xs text-muted-foreground">
               {formatarSoData(a.attendanceDate)}
             </span>
           </div>
@@ -255,10 +260,12 @@ function ObservacaoSemanalReportBody({ classId }: { classId: number | null }) {
         <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma observação este mês.</p>
       )}
       {data?.map((w) => (
-        <div key={w.id} className="rounded-md border border-border p-2 text-sm">
+        <div key={w.id} className="rounded-xl border border-border p-2 text-sm">
           <div className="mb-0.5 flex items-center justify-between">
-            <span className="font-mono text-xs text-muted-foreground">Semana {w.weekOfMonth}</span>
-            <span className="font-mono text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
+            <span className="text-xs text-muted-foreground">
+              Semana <span className="font-numeric">{w.weekOfMonth}</span>
+            </span>
+            <span className="font-numeric text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
           </div>
           <p className="break-words">{w.weeklyObservation}</p>
         </div>
@@ -308,13 +315,17 @@ function MeetingIndicatorRow({
   const { data: report } = useMeetingReport(classId, weekStart, weekEnd);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md border border-border p-2 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-border p-2 text-sm">
       {/* Meeting.createdAt é a chave da semana (segunda-feira), não um instante: só-data. */}
-      <span>{formatarSoData(meetingCreatedAt)}</span>
-      <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-muted-foreground">
-        <span>{(report?.students ?? []).flatMap((s) => s.absences).length} faltas</span>
-        <span>{(report?.students ?? []).flatMap((s) => s.occurrences).length} ocorrências</span>
-        <span>{status}</span>
+      <span className="font-numeric">{formatarSoData(meetingCreatedAt)}</span>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="font-numeric">
+          {(report?.students ?? []).flatMap((s) => s.absences).length} faltas
+        </span>
+        <span className="font-numeric">
+          {(report?.students ?? []).flatMap((s) => s.occurrences).length} ocorrências
+        </span>
+        <Badge variant={status === "Finalizado" ? "success" : "pending"}>{status}</Badge>
       </div>
     </div>
   );

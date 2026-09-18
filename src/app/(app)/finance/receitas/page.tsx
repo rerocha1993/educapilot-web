@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Inbox } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -30,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
   useRevenuesByMonth,
   useCreateRevenue,
@@ -44,11 +47,14 @@ function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const STATUS_BADGE: Record<number, string> = {
-  1: "bg-warning-soft text-warning-soft-foreground", // Planejado
-  2: "bg-success-soft text-success-soft-foreground", // Recebido
-  3: "bg-destructive-soft text-destructive-soft-foreground", // Vencido
-  4: "bg-accent text-accent-foreground", // Cancelado
+type BadgeVariant = "success" | "pending" | "waiting" | "overdue";
+
+// Situação do dado, nas quatro etiquetas do guia.
+const STATUS_BADGE: Record<number, BadgeVariant> = {
+  1: "pending", // Planejado
+  2: "success", // Recebido
+  3: "overdue", // Vencido
+  4: "waiting", // Cancelado
 };
 
 const EMPTY_FORM = {
@@ -105,23 +111,26 @@ export default function ReceitasPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-[18px]">
       <FinanceNav />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Receitas</h1>
-          <p className="text-sm text-muted-foreground">
+      <CabecalhoDaPagina
+        eyebrow="Financeiro"
+        titulo="Receitas"
+        apoio={
+          <span className="font-mono tabular-nums">
             {new Date(year, month - 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-          </p>
-        </div>
-        <Button className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
-          Nova receita
-        </Button>
-      </div>
+          </span>
+        }
+        acoes={
+          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+            Nova receita
+          </Button>
+        }
+      />
 
       {isError && (
-        <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+        <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar as receitas.
         </div>
       )}
@@ -130,29 +139,27 @@ export default function ReceitasPage() {
         {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
 
         {!isLoading && list.length === 0 && (
-          <div className="rounded-lg border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-            Nenhuma receita neste mês.
-          </div>
+          <EstadoVazio icone={<Inbox />} titulo="Nenhuma receita neste mês." />
         )}
 
         {list.map((r) => (
-          <div key={r.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+          <div key={r.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-medium break-words">{r.description}</p>
                 <p className="text-muted-foreground">{revenueCategoryLabel(r.category)}</p>
               </div>
-              <Badge className={STATUS_BADGE[r.status] ?? ""}>{revenueStatusLabel(r.status)}</Badge>
+              <Badge variant={STATUS_BADGE[r.status] ?? "waiting"}>{revenueStatusLabel(r.status)}</Badge>
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono tabular-nums text-muted-foreground">{formatarSoData(r.dueDate)}</span>
-              <span className="font-mono whitespace-nowrap tabular-nums">{formatCurrency(r.expectedAmount)}</span>
+              <span className="font-mono font-semibold whitespace-nowrap tabular-nums">{formatCurrency(r.expectedAmount)}</span>
             </div>
             {r.status !== 2 && (
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full border-success-border text-success-soft-foreground hover:bg-success-soft"
+                className="w-full"
                 onClick={() => handleMarkReceived(r)}
                 disabled={markReceived.isPending}
               >
@@ -163,7 +170,7 @@ export default function ReceitasPage() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -186,9 +193,12 @@ export default function ReceitasPage() {
               ))}
 
             {!isLoading && list.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Nenhuma receita neste mês.
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={6} className="py-10 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
+                    <Inbox className="size-[18px]" />
+                  </span>
+                  <p className="mt-3 font-heading text-[15px] font-semibold">Nenhuma receita neste mês.</p>
                 </TableCell>
               </TableRow>
             )}
@@ -197,19 +207,20 @@ export default function ReceitasPage() {
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.description}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{revenueCategoryLabel(r.category)}</TableCell>
-                <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(r.dueDate)}</TableCell>
-                <TableCell className="text-right font-mono text-sm tabular-nums">
+                <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">
+                  {formatarSoData(r.dueDate)}
+                </TableCell>
+                <TableCell className="text-right font-mono text-sm font-semibold tabular-nums">
                   {formatCurrency(r.expectedAmount)}
                 </TableCell>
                 <TableCell>
-                  <Badge className={STATUS_BADGE[r.status] ?? ""}>{revenueStatusLabel(r.status)}</Badge>
+                  <Badge variant={STATUS_BADGE[r.status] ?? "waiting"}>{revenueStatusLabel(r.status)}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   {r.status !== 2 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-success-border text-success-soft-foreground hover:bg-success-soft"
                       onClick={() => handleMarkReceived(r)}
                       disabled={markReceived.isPending}
                     >

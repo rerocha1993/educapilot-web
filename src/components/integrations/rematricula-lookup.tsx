@@ -18,6 +18,9 @@ import {
   type DadosRematricula,
 } from "@/lib/integrations/use-rematricula";
 
+/** Rótulo de campo do guia: maiúsculas pequenas, bold, muito espaçadas. */
+const rotulo = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
+
 /**
  * Identificação do aluno no formulário público, que dispara o preenchimento automático.
  *
@@ -79,7 +82,7 @@ export function RematriculaLookup({
 
   if (encontrado) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-success-border bg-success-soft px-4 py-3 text-sm text-success-soft-foreground">
+      <div className="flex items-center gap-2 rounded-xl border border-success-border bg-success-soft px-4 py-3 text-sm text-success-soft-foreground">
         <CheckCircle2 className="size-4 shrink-0" />
         <span className="min-w-0 break-words">
           Dados de <strong>{encontrado}</strong> carregados. Confira tudo antes de enviar.
@@ -89,16 +92,16 @@ export function RematriculaLookup({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
       <div>
-        <h2 className="font-heading text-sm font-bold">Identifique o aluno</h2>
-        <p className="text-xs text-muted-foreground">
+        <h2 className="font-heading text-[15.5px] font-semibold tracking-[-.02em]">Identifique o aluno</h2>
+        <p className="text-sm text-muted-foreground">
           Preenchemos o resto do formulário automaticamente com os dados que já temos.
         </p>
       </div>
 
-      <div className="flex flex-col gap-[5px]">
-        <Label className="text-sm">Nome do aluno</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label className={rotulo}>Nome do aluno</Label>
         <Input
           value={nome}
           onChange={(e) => setNome(e.target.value)}
@@ -106,19 +109,20 @@ export function RematriculaLookup({
         />
       </div>
 
-      <div className="flex flex-col gap-[5px]">
-        <Label className="text-sm">Data de nascimento</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label className={rotulo}>Data de nascimento</Label>
         <Input
           type="date"
+          className="font-mono tabular-nums"
           value={dataNascimento}
           onChange={(e) => setDataNascimento(e.target.value)}
         />
       </div>
 
-      <div className="flex flex-col gap-[5px]">
+      <div className="flex flex-col gap-1.5">
         {/* "atual" em destaque: o erro mais comum é a família informar a turma do ano que vem. */}
-        <Label className="text-sm">
-          Turma que ele frequenta <strong>atualmente</strong>
+        <Label className={rotulo}>
+          Turma que ele frequenta <strong className="text-foreground">atualmente</strong>
         </Label>
         <Select value={classId || undefined} onValueChange={(v) => v && setClassId(String(v))}>
           <SelectTrigger className="w-full">
@@ -137,7 +141,7 @@ export function RematriculaLookup({
       </div>
 
       {erro && (
-        <p className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+        <p className="rounded-lg border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
           {erro}
         </p>
       )}
@@ -145,7 +149,7 @@ export function RematriculaLookup({
       <Button
         onClick={handleBuscar}
         disabled={!podeBuscar || buscar.isPending}
-        className="h-12 text-base md:h-8 md:text-sm"
+        className="h-12 w-full text-base md:h-8 md:text-sm"
       >
         <Search className="size-4" />
         {buscar.isPending ? "Buscando..." : "Buscar meus dados"}

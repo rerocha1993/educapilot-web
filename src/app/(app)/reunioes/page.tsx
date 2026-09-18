@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
@@ -59,10 +62,15 @@ function formatShort(d: Date) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  Aberto: "bg-warning-soft text-warning-soft-foreground",
-  Finalizado: "bg-success-soft text-success-soft-foreground",
-};
+// Guia: situação do dado vira variante de Badge (pendente / concluída).
+const STATUS_BADGE_VARIANT = {
+  Aberto: "pending",
+  Finalizado: "success",
+} as const;
+
+function statusVariant(status: string) {
+  return STATUS_BADGE_VARIANT[status as keyof typeof STATUS_BADGE_VARIANT] ?? "secondary";
+}
 
 export default function ReunioesPage() {
   const { data: classes } = useClasses();
@@ -141,26 +149,25 @@ export default function ReunioesPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Reuniões</h1>
-          <p className="text-sm text-muted-foreground">
-            Faltas, ocorrências e observação semanal da turma, por semana.
-          </p>
-        </div>
-        <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-          <SelectTrigger className="w-full md:w-44">
-            <SelectValue placeholder="Turma">{() => selectedClass?.className ?? "Turma"}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {classes?.map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>
-                {c.className}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina"
+        titulo="Reuniões"
+        apoio="Faltas, ocorrências e observação semanal da turma, por semana."
+        acoes={
+          <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
+            <SelectTrigger className="w-full md:w-44">
+              <SelectValue placeholder="Turma">{() => selectedClass?.className ?? "Turma"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {classes?.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.className}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      />
 
       {/* "a diretora clica na semana" — chips das últimas 8 semanas (segunda a domingo). */}
       <div className="flex flex-wrap gap-2">
@@ -171,7 +178,7 @@ export default function ReunioesPage() {
               key={i}
               onClick={() => setWeekIndex(i)}
               className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-medium transition-colors md:py-1.5",
+                "flex items-center gap-1.5 rounded-full border px-3 py-2.5 font-numeric text-xs font-medium transition-colors md:py-1.5",
                 weekIndex === i
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-transparent text-foreground hover:bg-accent"
@@ -188,10 +195,11 @@ export default function ReunioesPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">
-          Semana de {formatShort(week.start)} a {formatShort(week.end)}
+          Semana de <span className="font-numeric">{formatShort(week.start)}</span> a{" "}
+          <span className="font-numeric">{formatShort(week.end)}</span>
         </span>
         {currentMeeting && (
-          <Badge className={STATUS_BADGE[currentMeeting.status]}>{currentMeeting.status}</Badge>
+          <Badge variant={statusVariant(currentMeeting.status)}>{currentMeeting.status}</Badge>
         )}
       </div>
 
@@ -200,8 +208,8 @@ export default function ReunioesPage() {
           scroll": cada painel agora tem sua própria altura máxima com scroll interno,
           em vez de esticar a página inteira quando tem muito conteúdo na semana. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-sm font-semibold">Relatório de faltas</h2>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Relatório de faltas</h2>
           {reportLoading && <Skeleton className="h-24 w-full" />}
           {!reportLoading && absences.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma falta na semana.</p>
@@ -212,13 +220,13 @@ export default function ReunioesPage() {
               olho [...] preciso de indicadores". */}
           {topAbsences.length > 0 && (
             <div className="mb-3 flex flex-col gap-1 border-b border-border pb-3">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Top faltas
               </span>
               {topAbsences.map((t) => (
                 <div key={t.studentName} className="flex items-center justify-between gap-2 text-sm">
                   <span className="min-w-0 truncate">{t.studentName}</span>
-                  <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{t.count}</span>
+                  <span className="shrink-0 font-numeric text-xs text-muted-foreground">{t.count}</span>
                 </div>
               ))}
             </div>
@@ -231,19 +239,23 @@ export default function ReunioesPage() {
                 <div key={a.id} className="rounded-md border border-border p-2 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="min-w-0 break-words font-medium">{a.studentName}</span>
-                    <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatarData(a.createdAt)}</span>
+                    <span className="shrink-0 font-numeric text-xs text-muted-foreground">{formatarData(a.createdAt)}</span>
                   </div>
-                  <p className={cn("mt-0.5 text-xs", isPending ? "text-warning" : "text-muted-foreground")}>
-                    {isPending ? "Pendente de justificativa" : a.reason}
-                  </p>
+                  {isPending ? (
+                    <Badge variant="pending" className="mt-1">
+                      Pendente de justificativa
+                    </Badge>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{a.reason}</p>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-sm font-semibold">Relatório de ocorrências</h2>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Relatório de ocorrências</h2>
           {reportLoading && <Skeleton className="h-24 w-full" />}
           {!reportLoading && occurrences.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma ocorrência na semana.</p>
@@ -253,7 +265,7 @@ export default function ReunioesPage() {
               <div key={o.id} className="rounded-md border border-border p-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 break-words font-medium">{o.studentName}</span>
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatarData(o.createdAt)}</span>
+                  <span className="shrink-0 font-numeric text-xs text-muted-foreground">{formatarData(o.createdAt)}</span>
                 </div>
                 {o.description && <p className="mt-0.5 text-xs text-muted-foreground">{o.description}</p>}
                 {/* Correção (2026-09, feedback do cliente) — "na reunião em ocorrência
@@ -271,8 +283,8 @@ export default function ReunioesPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-sm font-semibold">Observação semanal</h2>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Observação semanal</h2>
           {reportLoading && <Skeleton className="h-24 w-full" />}
           {!reportLoading && weeklyReports.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma observação enviada.</p>
@@ -281,8 +293,10 @@ export default function ReunioesPage() {
             {weeklyReports.map((w) => (
               <div key={w.id} className="rounded-md border border-border p-2 text-sm">
                 <div className="mb-0.5 flex items-center justify-between">
-                  <span className="font-mono text-xs text-muted-foreground">Semana {w.weekOfMonth}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    Semana <span className="font-numeric">{w.weekOfMonth}</span>
+                  </span>
+                  <span className="font-numeric text-xs text-muted-foreground">{formatarData(w.createdAt)}</span>
                 </div>
                 <p>{w.weeklyObservation}</p>
               </div>
@@ -292,8 +306,8 @@ export default function ReunioesPage() {
 
         {/* Novo (2026-09, feedback do cliente) — "na reunião pode trazer o
             planejamento das professoras pra saber o que foi trabalhado". */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-sm font-semibold">Planejamento da semana</h2>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Planejamento da semana</h2>
           {plansLoading && <Skeleton className="h-24 w-full" />}
           {!plansLoading && (weeklyPlans?.length ?? 0) === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Nenhum planejamento registrado.</p>
@@ -318,11 +332,11 @@ export default function ReunioesPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h2 className="mb-3 font-heading text-sm font-semibold">Como foi a reunião</h2>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Como foi a reunião</h2>
         <div className="flex flex-col gap-3">
           <div>
-            <span className="mb-1 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+            <span className="mb-1 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
               Discussão
             </span>
             <Textarea
@@ -333,7 +347,7 @@ export default function ReunioesPage() {
             />
           </div>
           <div>
-            <span className="mb-1 block font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+            <span className="mb-1 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
               Resumo (aparece no relatório de gestão)
             </span>
             <Textarea
@@ -347,7 +361,13 @@ export default function ReunioesPage() {
             <Button variant="outline" onClick={() => handleSave("Aberto")} disabled={saveMeeting.isPending}>
               Salvar rascunho
             </Button>
-            <Button onClick={() => handleSave("Finalizado")} disabled={saveMeeting.isPending || !discussion.trim()}>
+            {/* Único botão laranja da tela: é a decisão a tomar aqui (o rascunho
+                fica secundário, em outline). */}
+            <Button
+              variant="action"
+              onClick={() => handleSave("Finalizado")}
+              disabled={saveMeeting.isPending || !discussion.trim()}
+            >
               Finalizar reunião
             </Button>
           </div>
@@ -387,12 +407,14 @@ function MeetingHistory({ classId, meetings }: { classId: number | null; meeting
   if (classId === null) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <h2 className="mb-1 font-heading text-sm font-semibold">Histórico de reuniões</h2>
-      <p className="mb-3 text-xs text-muted-foreground">Relatório de gestão — indicadores resumidos por semana.</p>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <h2 className="font-heading text-[15.5px] font-semibold">Histórico de reuniões</h2>
+      <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
+        Relatório de gestão — indicadores resumidos por semana.
+      </p>
 
       {sorted.length === 0 && (
-        <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma reunião registrada ainda.</p>
+        <EstadoVazio icone={<CalendarDays />} titulo="Nenhuma reunião registrada ainda." />
       )}
 
       <div className="flex flex-col gap-2">
@@ -407,18 +429,18 @@ function MeetingHistory({ classId, meetings }: { classId: number | null; meeting
                 onClick={() => setExpandedId(isExpanded ? null : m.id)}
                 className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left"
               >
-                <span className="text-sm font-medium">
+                <span className="font-numeric text-sm font-medium">
                   {formatShort(weekStart)} – {formatShort(weekEnd)}
                 </span>
                 <div className="flex items-center gap-2">
-                  <Badge className={STATUS_BADGE[m.status]}>{m.status}</Badge>
+                  <Badge variant={statusVariant(m.status)}>{m.status}</Badge>
                   <span className="text-xs text-muted-foreground">{isExpanded ? "Recolher" : "Expandir"}</span>
                 </div>
               </button>
 
               {isExpanded && (
                 <div className="flex flex-col gap-3 border-t border-border p-3">
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 font-numeric text-xs text-muted-foreground">
                     <span>{(expandedReport?.students ?? []).flatMap((s) => s.absences).length} faltas</span>
                     <span>{(expandedReport?.students ?? []).flatMap((s) => s.occurrences).length} ocorrências</span>
                     <span>{(expandedReport?.weeklyReports ?? []).length} observações</span>

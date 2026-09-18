@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, LayoutList, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { cn } from "@/lib/utils";
 import {
   useWeeklyPlanTemplates,
@@ -97,21 +99,17 @@ export default function PlanejamentoSemanalConfigPage() {
     <div className="flex flex-col gap-4">
       <RotinaNav />
 
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-bold">Configurar planejamento semanal</h1>
-          <p className="text-sm text-muted-foreground">
-            Modelos e campos livres — cada escola define o que quiser preencher.
-          </p>
-        </div>
-        <Link
-          href="/planejamento-semanal"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Voltar para o preenchimento
-        </Link>
-      </div>
+      <CabecalhoDaPagina
+        eyebrow="Rotina · Planejamento"
+        titulo="Configurar planejamento semanal"
+        apoio="Modelos e campos livres — cada escola define o que quiser preencher."
+        acoes={
+          <Link href="/planejamento-semanal" className={buttonVariants({ variant: "outline" })}>
+            <ArrowLeft className="size-3.5" />
+            Voltar para o preenchimento
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
         <div className="flex flex-col gap-2">
@@ -128,7 +126,7 @@ export default function PlanejamentoSemanalConfigPage() {
               )}
             >
               <span className="truncate">{t.name}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">{t.fields.length}</span>
+              <span className="font-numeric text-[10px] text-muted-foreground">{t.fields.length}</span>
             </button>
           ))}
 
@@ -146,13 +144,13 @@ export default function PlanejamentoSemanalConfigPage() {
         </div>
 
         {!selected ? (
-          <div className="rounded-lg border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
-            Selecione ou crie um modelo.
-          </div>
+          <EstadoVazio icone={<LayoutList />} titulo="Selecione ou crie um modelo." />
         ) : (
-          <div className="flex flex-col gap-5 rounded-lg border border-border bg-card p-4">
+          <div className="flex flex-col gap-5 rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="min-w-0 break-words font-heading text-base font-semibold">{selected.name}</p>
+              <p className="min-w-0 break-words font-heading text-[15.5px] font-semibold">
+                {selected.name}
+              </p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -165,7 +163,7 @@ export default function PlanejamentoSemanalConfigPage() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="font-mono text-[9.5px] uppercase tracking-wide text-muted-foreground">
+              <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Campos
               </span>
               {orderedFields.length === 0 && (
