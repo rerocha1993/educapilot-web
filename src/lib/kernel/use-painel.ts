@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { clearSession, getToken } from "@/lib/auth/session";
+import type { ResumoDeFormularios } from "@/lib/flow/use-resumo-formularios";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
 
@@ -25,22 +26,6 @@ export interface PresencasDoDia {
   faltantes: number;
   turmasSemChamada: number;
   turmas: TurmaDoPainel[];
-}
-
-export interface RematriculaPorTurma {
-  turma: string;
-  confirmadas: number;
-  aguardando: number;
-  total: number;
-}
-
-export interface RematriculasDoPainel {
-  anoVigente: number;
-  proximoAno: number;
-  totalAlunos: number;
-  confirmadas: number;
-  aguardando: number;
-  porTurma: RematriculaPorTurma[];
 }
 
 export interface ContratosDoPainel {
@@ -71,7 +56,8 @@ export interface PainelInicio {
   modulosAtivos: number;
   geradoEm: string;
   presencas: PresencasDoDia;
-  rematriculas: RematriculasDoPainel;
+  /** Um resumo por formulário escolhido — ver useResumoDeFormularios. */
+  formularios: ResumoDeFormularios;
   contratos: ContratosDoPainel;
   financeiro: FinanceiroDoPainel;
   faltas: FaltasDoPainel;

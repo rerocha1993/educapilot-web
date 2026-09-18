@@ -21,6 +21,11 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { Estatistica, EtiquetaDoCartao } from "@/components/padroes/estatistica";
+import {
+  CarrosselDeFormularios,
+  ordenarPelaEscolha,
+} from "@/components/flow/carrossel-de-formularios";
+import { usePainelDeFormularios } from "@/lib/flow/use-resumo-formularios";
 import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { usePainelInicio, type PainelInicio } from "@/lib/kernel/use-painel";
@@ -38,7 +43,7 @@ interface Atalho {
 const ATALHOS: Atalho[] = [
   { href: "/", label: "Chamada", icon: CalendarCheck },
   { href: "/ocorrencias", label: "Ocorrências", icon: MessageSquareWarning },
-  { href: "/flow/respostas", label: "Rematrícula", icon: Inbox },
+  { href: "/flow/respostas", label: "Envios", icon: Inbox },
   { href: "/flow/contratos", label: "Contratos", icon: FileSignature },
   { href: "/finance/mensalidades", label: "Mensalidades", icon: Wallet },
   { href: "/portaria", label: "Portaria", icon: DoorOpen },
@@ -68,9 +73,10 @@ export default function InicioPage() {
   const session = useRequireSession();
   const { rotaVisivel } = useVisibilidade();
   const { data, isLoading, isError } = usePainelInicio();
+  const { data: formulariosEscolhidos } = usePainelDeFormularios();
   // Resposta fora do formato (API antiga ainda no ar, por exemplo) não derruba a tela: os
   // atalhos continuam valendo e o aviso de falha aparece.
-  const painel = data?.presencas && data?.rematriculas && data?.contratos ? data : undefined;
+  const painel = data?.presencas && data?.formularios && data?.contratos ? data : undefined;
 
   const primeiroNome = session?.name.split(" ").find(Boolean) ?? "";
   const hoje = new Date();
@@ -127,19 +133,22 @@ export default function InicioPage() {
           <>
             {/* No celular os quatro números ficam dois por linha: é o que faz a tela parecer um
                 painel, e não uma pilha de cartões. */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-3">
               {rotaVisivel("/") && <CartaoPresencas painel={painel} />}
-              {rotaVisivel("/flow/respostas") && <CartaoRematriculas painel={painel} />}
               {rotaVisivel("/finance/inadimplencia") && <CartaoEmAtraso painel={painel} />}
               {rotaVisivel("/flow/contratos") && <CartaoContratos painel={painel} />}
             </div>
 
-            <div className="grid items-start gap-4 lg:grid-cols-2">
-              {tarefas.length > 0 && <PrecisaDeVoce tarefas={tarefas} />}
-              {rotaVisivel("/flow/respostas") && painel.rematriculas.porTurma.length > 0 && (
-                <RematriculaPorTurma painel={painel} />
-              )}
-            </div>
+            {/* Um cartão por formulário escolhido, e não um cartão fixo de rematrícula: o que
+                aparece em cada um depende dos campos que aquele formulário tem. */}
+            {rotaVisivel("/flow/respostas") && (
+              <CarrosselDeFormularios
+                resumos={ordenarPelaEscolha(painel.formularios.formularios, formulariosEscolhidos)}
+                podeEscolher={rotaVisivel("/flow")}
+              />
+            )}
+
+            {tarefas.length > 0 && <PrecisaDeVoce tarefas={tarefas} />}
           </>
         )
       )}
@@ -203,35 +212,6 @@ function CartaoPresencas({ painel }: { painel: PainelInicio }) {
         ) : (
           "chamada fechada em todas as turmas"
         )}
-        </>
-      }
-    />
-  );
-}
-
-function CartaoRematriculas({ painel }: { painel: PainelInicio }) {
-  const { confirmadas, aguardando, totalAlunos, proximoAno } = painel.rematriculas;
-  const semEnvio = Math.max(totalAlunos - confirmadas - aguardando, 0);
-  const pct = totalAlunos > 0 ? Math.round((confirmadas / totalAlunos) * 100) : 0;
-
-  return (
-    <Estatistica
-      rotulo={`Rematrículas ${proximoAno}`}
-      etiqueta={<EtiquetaDoCartao tom="action">{pct}%</EtiquetaDoCartao>}
-      valor={confirmadas}
-      total={totalAlunos}
-      /* Três faixas: confirmada, aguardando aprovação e quem ainda não enviou. */
-      barra={
-        <div className="flex h-1.5 gap-[3px]">
-          <span className="rounded-l-[4px] bg-action-brand" style={{ flex: confirmadas || 0.0001 }} />
-          <span className="bg-[#FFC894]" style={{ flex: aguardando || 0.0001 }} />
-          <span className="rounded-r-[4px] bg-muted" style={{ flex: semEnvio || 0.0001 }} />
-        </div>
-      }
-      rodape={
-        <>
-          <span className="font-mono tabular-nums">{aguardando}</span> aguardando aprovação ·{" "}
-          <span className="font-mono tabular-nums">{semEnvio}</span> sem envio
         </>
       }
     />
@@ -308,7 +288,7 @@ interface Tarefa {
 /** As pendências reais do dia, na ordem em que valem a pena. Só entra o que a pessoa pode abrir. */
 function tarefasDoDia(painel: PainelInicio, rotaVisivel: (href: string) => boolean): Tarefa[] {
   const t: Tarefa[] = [];
-  const { presencas, rematriculas, contratos, financeiro, faltas } = painel;
+  const { presencas, formularios, contratos, financeiro, faltas } = painel;
 
   if (contratos.aguardandoConferencia > 0 && rotaVisivel("/flow/contratos")) {
     t.push({
@@ -351,12 +331,19 @@ function tarefasDoDia(painel: PainelInicio, rotaVisivel: (href: string) => boole
     });
   }
 
-  if (rematriculas.aguardando > 0 && rotaVisivel("/flow/respostas")) {
+  const aguardando = formularios.combinado.aguardando;
+  if (aguardando > 0 && rotaVisivel("/flow/respostas")) {
+    // Quais formulários estão esperando, para a linha dizer de onde vêm os envios.
+    const nomes = formularios.formularios
+      .filter((f) => f.aguardando > 0)
+      .map((f) => f.nome)
+      .slice(0, 2)
+      .join(", ");
     t.push({
       href: "/flow/respostas",
       icon: Inbox,
-      titulo: `${rematriculas.aguardando} ${rematriculas.aguardando === 1 ? "rematrícula aguardando" : "rematrículas aguardando"} aprovação`,
-      sub: `Enviadas pelas famílias para ${rematriculas.proximoAno}`,
+      titulo: `${aguardando} ${aguardando === 1 ? "envio aguardando" : "envios aguardando"} aprovação`,
+      sub: nomes || "Enviados pelas famílias",
       acao: "Revisar",
     });
   }
@@ -396,47 +383,3 @@ function PrecisaDeVoce({ tarefas }: { tarefas: Tarefa[] }) {
   );
 }
 
-function RematriculaPorTurma({ painel }: { painel: PainelInicio }) {
-  const { porTurma, proximoAno } = painel.rematriculas;
-
-  return (
-    <section className="rounded-xl border border-border bg-card px-4.5 pb-4.5 pt-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-heading text-[17px] font-semibold md:text-[15.5px]">Rematrícula por turma</span>
-        <span className="font-mono text-xs tabular-nums text-muted-foreground">{proximoAno}</span>
-      </div>
-
-      <div className="mt-4 flex flex-col gap-3.5">
-        {porTurma.map((t) => {
-          const pctConfirmadas = t.total > 0 ? (t.confirmadas / t.total) * 100 : 0;
-          const pctAguardando = t.total > 0 ? (t.aguardando / t.total) * 100 : 0;
-          return (
-            <div key={t.turma}>
-              <div className="flex items-baseline justify-between gap-2.5 text-[14px] md:text-[13px]">
-                <span className="truncate font-medium text-secondary-foreground">{t.turma}</span>
-                <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                  {t.confirmadas} / {t.total}
-                </span>
-              </div>
-              <div className="mt-1.5 flex h-[7px] overflow-hidden rounded-[4px] bg-muted">
-                <span className="bg-primary transition-[width] duration-700" style={{ width: `${pctConfirmadas}%` }} />
-                <span className="bg-action-brand transition-[width] duration-700" style={{ width: `${pctAguardando}%` }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 flex items-center gap-3.5 border-t border-muted pt-3.5 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-[2px] bg-primary" />
-          Confirmadas
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-[2px] bg-action-brand" />
-          Aguardando
-        </span>
-      </div>
-    </section>
-  );
-}

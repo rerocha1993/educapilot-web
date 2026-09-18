@@ -291,11 +291,49 @@ function Historico({ contratos }: { contratos: Contract[] }) {
     );
   };
 
-  const motivo = (c: Contract) => (
-    <p className="font-mono text-xs whitespace-pre-wrap text-muted-foreground">
-      {c.ultimoErroEnvio ?? "Sem detalhe registrado."}
-    </p>
-  );
+  // Recusado e falha de envio são coisas diferentes, e antes as duas caíam no mesmo texto de erro:
+  // quem recusou some da tela e a escola não via o motivo que a família escreveu no Autentique.
+  const motivo = (c: Contract) => {
+    const recusou = c.signatarios.find((s) => !!s.recusadoEm);
+
+    if (recusou) {
+      const quando = recusou.recusadoEm
+        ? new Date(recusou.recusadoEm).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : null;
+
+      return (
+        <div className="flex flex-col gap-1 text-xs">
+          <p className="text-foreground">
+            Recusado por <span className="font-semibold">{recusou.nome}</span>
+            {quando && (
+              <>
+                {" "}
+                em <span className="font-mono tabular-nums">{quando}</span>
+              </>
+            )}
+            .
+          </p>
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {recusou.motivoRecusa?.trim()
+              ? `Motivo informado: ${recusou.motivoRecusa.trim()}`
+              : "A família não escreveu um motivo ao recusar."}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <p className="font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+        {c.ultimoErroEnvio ?? "Sem detalhe registrado."}
+      </p>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
