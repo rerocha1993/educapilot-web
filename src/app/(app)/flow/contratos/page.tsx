@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileCheck, Link2, MessageCircle, RefreshCw, Settings, Trash2, TriangleAlert } from "lucide-react";
+import { AtSign, FileCheck, Link2, MessageCircle, RefreshCw, Settings, Trash2, TriangleAlert } from "lucide-react";
 
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
@@ -19,8 +19,11 @@ import {
   useRejectContract,
   useDeleteContract,
   useReissueContract,
+  useTrocarEmailDoContrato,
   type Contract,
 } from "@/lib/contracts/use-contracts";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { formatarData, formatarDataHora } from "@/lib/format/date";
 
 /**
@@ -200,6 +203,9 @@ function Historico({ contratos }: { contratos: Contract[] }) {
   // é sempre longo demais para caber numa coluna.
   const [detalhando, setDetalhando] = useState<string | null>(null);
 
+  // Contrato cujo e-mail de assinatura está sendo trocado.
+  const [trocandoEmail, setTrocandoEmail] = useState<Contract | null>(null);
+
   // Só contrato que não chegou ao provedor. O backend recusa o resto de qualquer forma; aqui a
   // regra existe para não oferecer um botão que vai falhar.
   // Qualquer contrato que ninguém assinou. O caso real: uma mãe preencheu duas vezes, assinou um
@@ -209,6 +215,13 @@ function Historico({ contratos }: { contratos: Contract[] }) {
     (c.status === 3 || c.status === 5) && !c.signatarios.some((s) => !!s.assinadoEm);
 
   const podeExcluir = (c: Contract) =>
+    !c.signatarios.some((s) => !!s.assinadoEm) &&
+    !c.statusDescricao?.toLowerCase().includes("assinado");
+
+  // Enquanto ninguém assinou, o documento pode ser derrubado e emitido de novo para outro
+  // endereço. Depois de assinado não: aquele documento é a prova, e o que a escola quer nesse
+  // ponto é só encaminhar o PDF, que já está na lista.
+  const podeTrocarEmail = (c: Contract) =>
     !c.signatarios.some((s) => !!s.assinadoEm) &&
     !c.statusDescricao?.toLowerCase().includes("assinado");
 
@@ -295,6 +308,18 @@ function Historico({ contratos }: { contratos: Contract[] }) {
           >
             <RefreshCw className="size-4 text-primary" />
             Gerar novo
+          </Button>
+        )}
+
+        {podeTrocarEmail(c) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setTrocandoEmail(c)}
+            title="A família não consegue abrir o link no e-mail que informou? Emite o contrato de novo para outro endereço."
+          >
+            <AtSign className="size-4 text-primary" />
+            Trocar e-mail
           </Button>
         )}
 
@@ -435,7 +460,88 @@ function Historico({ contratos }: { contratos: Contract[] }) {
           </tbody>
         </table>
       </div>
+
+      {trocandoEmail && (
+        <TrocarEmailDeAssinatura contrato={trocandoEmail} onFechar={() => setTrocandoEmail(null)} />
+      )}
     </div>
+  );
+}
+
+/**
+ * Emite o contrato de novo para outro e-mail.
+ *
+ * O caso que abriu isto: a mãe informou na ficha uma caixa de e-mail a que não tem mais acesso, e
+ * o Autentique exige aquele endereço para liberar a assinatura. O e-mail está gravado dentro do
+ * documento de lá e não pode ser editado — então o sistema derruba aquele documento e emite outro
+ * com as mesmas respostas.
+ *
+ * A tela diz isso com todas as letras antes de confirmar: o link antigo para de funcionar, e é
+ * comum a escola já ter mandado ele para a família.
+ */
+function TrocarEmailDeAssinatura({ contrato, onFechar }: { contrato: Contract; onFechar: () => void }) {
+  const trocar = useTrocarEmailDoContrato();
+  const responsavel = contrato.signatarios.find((s) => s.papel === 0);
+  const [email, setEmail] = useState("");
+
+  async function confirmar() {
+    try {
+      await trocar.mutateAsync({ id: contrato.id, email: email.trim() });
+      toast.success("Contrato novo gerado. Em instantes o link de assinatura aparece na lista.");
+      onFechar();
+    } catch (err) {
+      // A mensagem vem do backend e diz exatamente o que impede a troca.
+      toast.error(err instanceof Error ? err.message : "Não foi possível trocar o e-mail.");
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(aberto) => !aberto && onFechar()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Trocar o e-mail de assinatura</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-3 text-sm">
+          <p className="text-muted-foreground">
+            O contrato <strong className="text-foreground">{contrato.titulo}</strong> vai ser emitido de
+            novo, com as mesmas respostas que a família enviou, para outro endereço.
+          </p>
+
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Assina hoje</p>
+            <p className="font-medium">{responsavel?.nome}</p>
+            <p className="text-xs break-words text-muted-foreground">{responsavel?.email}</p>
+          </div>
+
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Novo e-mail</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nome@exemplo.com"
+              autoFocus
+            />
+          </div>
+
+          <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+            O link de assinatura atual para de funcionar. Se você já mandou ele para a família, avise
+            que vai chegar um link novo. Quem assina continua sendo{" "}
+            <strong>{responsavel?.nome}</strong> — muda só para onde o contrato é enviado.
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>
+            Cancelar
+          </Button>
+          <Button onClick={confirmar} disabled={trocar.isPending || !email.trim()}>
+            {trocar.isPending ? "Emitindo..." : "Trocar e emitir de novo"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

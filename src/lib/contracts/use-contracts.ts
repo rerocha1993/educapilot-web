@@ -128,6 +128,47 @@ export function useReissueContract() {
   });
 }
 
+/**
+ * Emite o contrato de novo para outro e-mail.
+ *
+ * O caso real: a família informou na ficha uma caixa de e-mail a que não tem mais acesso, e o
+ * provedor exige aquele endereço para liberar a assinatura. O e-mail vive dentro do documento de
+ * lá e não pode ser editado — o backend derruba aquele documento e emite outro com as mesmas
+ * respostas. Quem assina continua sendo a mesma pessoa; muda só para onde vai o convite.
+ */
+export function useTrocarEmailDoContrato() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, email }: { id: string; email: string }) => {
+      const token = getToken();
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141"}/api/Contracts/${id}/trocar-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      if (!res.ok) {
+        const corpo = await res.json().catch(() => null);
+        throw new Error(
+          (corpo as { message?: string } | null)?.message ??
+            "Não foi possível trocar o e-mail de assinatura."
+        );
+      }
+
+      return (await res.json()) as { contratoId: string };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
+  });
+}
+
 export function useDeleteContract() {
   const queryClient = useQueryClient();
   return useMutation({
