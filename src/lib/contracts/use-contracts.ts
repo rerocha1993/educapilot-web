@@ -169,15 +169,26 @@ export function useTrocarEmailDoContrato() {
   });
 }
 
+/**
+ * Exclui o contrato e, com ele, o envio correspondente na caixa de envios.
+ *
+ * Contrato e envio são a mesma matrícula para quem usa: antes a escola apagava o contrato, a
+ * ficha continuava na caixa, e a secretaria tinha que apagar a mesma coisa de novo em outra tela.
+ * O backend responde `fichaExcluida` porque nem sempre ela sai — ficha aprovada fica, e ficha com
+ * outro contrato vivo também.
+ */
 export function useDeleteContract() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
       const result = await flowApi.DELETE("/api/Contracts/{id}", { params: { path: { id } } });
-      unwrapApiResponse(result, "Não foi possível excluir o contrato.");
+      const corpo = unwrapApiResponse(result, "Não foi possível excluir o contrato.");
+      return (corpo ?? {}) as { fichaExcluida?: boolean };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      // A caixa de envios acabou de perder uma linha: sem isto ela só mudaria no próximo F5.
+      queryClient.invalidateQueries({ queryKey: ["form-responses"] });
     },
   });
 }

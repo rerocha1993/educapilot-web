@@ -239,8 +239,12 @@ function Historico({ contratos }: { contratos: Contract[] }) {
 
   async function handleExcluir(c: Contract) {
     try {
-      await excluir.mutateAsync(c.id);
-      toast.success("Contrato excluído.");
+      const { fichaExcluida } = await excluir.mutateAsync(c.id);
+      toast.success(
+        fichaExcluida
+          ? "Contrato excluído, e o envio saiu da caixa de envios junto."
+          : "Contrato excluído. O envio continua na caixa de envios."
+      );
       setDetalhando(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao excluir.");
