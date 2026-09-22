@@ -187,7 +187,10 @@ export function AppShell({
   );
 
   return (
-    <div className="flex min-h-full">
+    // min-h-dvh + flex-1: o `min-h-full` daqui dependia de uma altura definida no body, que não
+    // existe (ele só tem min-height). Sem isso o shell ficava do tamanho do conteúdo e a barra
+    // escura terminava no meio da tela em página curta.
+    <div className="flex min-h-dvh flex-1">
       {/* Navegação escura da entrega de design: a barra é a tinta da interface, e o laranja marca
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
