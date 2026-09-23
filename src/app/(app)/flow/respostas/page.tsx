@@ -20,6 +20,7 @@ import {
   SeletorDeFormularios,
   rotuloDaSelecao,
 } from "@/components/flow/seletor-de-formularios";
+import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { BadgeDeSituacao } from "@/components/flow/badge-de-situacao";
@@ -404,6 +405,8 @@ export default function CaixaDeEnviosPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <AbasDeFormularios />
+
       <CabecalhoDaPagina
         titulo="Caixa de envios"
         apoio="Escolha os formulários que quer acompanhar juntos. Clique para ver a ficha inteira."

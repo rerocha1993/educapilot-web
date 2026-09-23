@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { EditorDeRelatorio } from "@/components/flow/editor-de-relatorio";
+import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useForms } from "@/lib/flow/use-forms";
@@ -50,9 +51,9 @@ export default function RelatoriosFormulariosPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AbasDeFormularios />
+
       <CabecalhoDaPagina
-        eyebrow="← Formulários"
-        eyebrowHref="/flow"
         titulo="Relatórios"
         apoio="Monte relatórios sobre qualquer formulário, escolhendo as perguntas e os envios que entram."
         acoes={

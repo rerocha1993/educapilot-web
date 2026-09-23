@@ -57,9 +57,11 @@ export default function LoginPage() {
     try {
       const resultado = await login.mutateAsync(values);
       // Responsável não usa o sistema da equipe: tem o site dele, feito para o celular.
-      // No celular a equipe começa pela tela de atalhos; no computador, direto na Chamada.
-      const celular = window.matchMedia("(max-width: 767px)").matches;
-      router.push(resultado.role === "Responsavel" ? "/responsavel" : celular ? "/inicio" : "/");
+      // A equipe sempre começa pelo Início, no celular e no computador: quem entra de manhã não
+      // vem necessariamente fazer chamada, e a tela de atalhos mostra o que tem para hoje em cada
+      // módulo. Antes o computador caía direto na Chamada, e as outras telas ficavam escondidas
+      // atrás do menu.
+      router.push(resultado.role === "Responsavel" ? "/responsavel" : "/inicio");
     } catch {
       // erro exibido via login.error abaixo, como faixa acima do formulário (ver L1)
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { REFERENCE_TABLES, useReferenceOptions } from "@/lib/flow/use-reference-data";
 
@@ -26,9 +27,9 @@ function ReferenceTableRow({ value, label }: { value: string; label: string }) {
 export default function ReferenceDataPage() {
   return (
     <div className="flex flex-col gap-4">
+      <AbasDeFormularios />
+
       <CabecalhoDaPagina
-        eyebrow="← Formulários"
-        eyebrowHref="/flow"
         titulo="Dados de referência"
         apoio="Tabelas que podem ser usadas como fonte de dados em campos do tipo Seleção ou Dado de referência."
       />

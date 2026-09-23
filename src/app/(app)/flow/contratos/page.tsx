@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
@@ -39,6 +40,8 @@ export default function ContratosPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AbasDeFormularios />
+
       <CabecalhoDaPagina
         titulo="Contratos"
         apoio="Contratos assinados pelas famílias aguardando conferência. Aprovar envia a via assinada por e-mail; o contrato em si já foi assinado e não muda."

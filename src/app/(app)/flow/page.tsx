@@ -26,12 +26,11 @@ import {
 } from "@/lib/flow/use-forms";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { SeletorDeTipo } from "@/components/flow/seletor-de-tipo";
-import { AbasDePilulas, CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { decodeFormConfig, encodeFormConfig, type TipoDeFormulario } from "@/lib/flow/form-config";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
-import { useMeuAcesso } from "@/lib/access/use-acessos";
-import { podeVerRota } from "@/lib/access/pode-ver";
 
 // Situação do formulário nas cores do guia: ativo é dado concluído, rascunho ainda aguarda.
 const STATUS_VARIANTE = {
@@ -42,7 +41,6 @@ const STATUS_VARIANTE = {
 
 export default function FormulariosPage() {
   const { data: forms, isLoading, isError } = useForms();
-  const { data: meuAcesso } = useMeuAcesso();
   const createForm = useCreateForm();
   const duplicateForm = useDuplicateForm();
 
@@ -127,24 +125,7 @@ export default function FormulariosPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Cada pílula é uma área da permissão: quem não tem "Caixa de envios" não vê a pílula. */}
-      <AbasDePilulas
-        itens={[
-          { rotulo: "Formulários", ativo: true },
-          ...(podeVerRota(meuAcesso, "/flow/respostas")
-            ? [{ rotulo: "Caixa de envios", href: "/flow/respostas" }]
-            : []),
-          ...(podeVerRota(meuAcesso, "/flow/contratos")
-            ? [{ rotulo: "Contratos", href: "/flow/contratos" }]
-            : []),
-          ...(podeVerRota(meuAcesso, "/flow/relatorios")
-            ? [{ rotulo: "Relatórios", href: "/flow/relatorios" }]
-            : []),
-          ...(podeVerRota(meuAcesso, "/flow/referencias")
-            ? [{ rotulo: "Dados de referência", href: "/flow/referencias" }]
-            : []),
-        ]}
-      />
+      <AbasDeFormularios />
 
       <CabecalhoDaPagina
         titulo="Formulários"
