@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ClassificacaoDoLancamento } from "@/components/finance/classificacao-do-lancamento";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
@@ -63,6 +64,9 @@ const EMPTY_FORM = {
   costCenter: "",
   expectedAmount: "",
   dueDate: hojeIsoBrasilia(),
+  bancoContaId: "",
+  categoriaFinanceiraId: "",
+  centroDeCustoId: "",
 };
 
 export default function ReceitasPage() {
@@ -92,6 +96,9 @@ export default function ReceitasPage() {
         // Pela string: new Date("yyyy-MM-dd") é UTC e cai no mês anterior no dia 1º.
         competencyMonth: competenciaDeIso(form.dueDate).mes,
         competencyYear: competenciaDeIso(form.dueDate).ano,
+        bancoContaId: form.bancoContaId || null,
+        categoriaFinanceiraId: form.categoriaFinanceiraId || null,
+        centroDeCustoId: form.centroDeCustoId || null,
       });
       toast.success("Receita criada.");
       setDialogOpen(false);
@@ -292,13 +299,15 @@ export default function ReceitasPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Centro de custo</Label>
-              <Input
-                value={form.costCenter}
-                onChange={(e) => setForm((f) => ({ ...f, costCenter: e.target.value }))}
-              />
-            </div>
+            <ClassificacaoDoLancamento
+              tipo="Receita"
+              contaId={form.bancoContaId}
+              categoriaId={form.categoriaFinanceiraId}
+              centroId={form.centroDeCustoId}
+              onContaId={(v) => setForm((f) => ({ ...f, bancoContaId: v }))}
+              onCategoriaId={(v) => setForm((f) => ({ ...f, categoriaFinanceiraId: v }))}
+              onCentroId={(v) => setForm((f) => ({ ...f, centroDeCustoId: v }))}
+            />
           </div>
 
           <DialogFooter>
