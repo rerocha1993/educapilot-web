@@ -145,6 +145,17 @@
   --chart-4: #2E6B4F;
   --chart-5: #B5AEBF;
 
+  /* Colunas do funil de Matrículas: roxos da estrutura no começo, laranja onde há decisão
+     (reagendar, reserva), verde só na matrícula. */
+  --etapa-novo: #8C82AE;
+  --etapa-conversou: #5C4B8C;
+  --etapa-visita: #3F7CC4;
+  --etapa-reagendar: #C96A05;
+  --etapa-visitou: #7A5AC8;
+  --etapa-reserva: #E8730F;
+  --etapa-matriculado: #2E6B4F;
+  --etapa-perdido: #B5AEBF;
+
   --radius: 0.625rem;
 
   /* Navegação escura: a sidebar é tinta da interface, não o fundo da página. */
@@ -188,6 +199,16 @@
   --accent: #35304A;
   --accent-foreground: #D9D4E6;
 
+  /* Faltavam no tema escuro: tudo que usava action-soft (pendências, a faixa de espera do funil)
+     aparecia com o fundo creme do tema claro sobre a tela escura. */
+  --action: #F5943F;
+  --action-hover: #F7A65F;
+  --action-foreground: #2B1705;
+  --action-brand: #F5851F;
+  --action-soft: #3A2A1C;
+  --action-soft-foreground: #F5B57A;
+  --action-border: #6B4A2A;
+
   --success: #5FBF92;
   --success-foreground: #12331F;
   --success-soft: #1E3328;
@@ -211,6 +232,15 @@
   --chart-3: #8C82AE;
   --chart-4: #77776F;
   --chart-5: #9C9C95;
+
+  --etapa-novo: #A69DC6;
+  --etapa-conversou: #B9AEDD;
+  --etapa-visita: #7FB0E8;
+  --etapa-reagendar: #E8B44A;
+  --etapa-visitou: #A58BE6;
+  --etapa-reserva: #F5A45C;
+  --etapa-matriculado: #5FBF92;
+  --etapa-perdido: #77776F;
 
   --sidebar: #1D1D1B;
   --sidebar-foreground: #F5F5F3;

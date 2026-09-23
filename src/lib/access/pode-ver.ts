@@ -53,6 +53,11 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/portaria\/configuracao/, modulo: "reception", area: "configuracao" },
   { padrao: /^\/portaria/, modulo: "reception", area: null },
 
+  // Matrículas. A entrada do módulo é o funil, mas fica aberta a qualquer área: quem só tem
+  // Configuração é levado para lá pela própria página.
+  { padrao: /^\/matriculas\/configuracao/, modulo: "matriculas", area: "configuracao" },
+  { padrao: /^\/matriculas/, modulo: "matriculas", area: null },
+
   // Rotina
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },

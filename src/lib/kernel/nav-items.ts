@@ -1,6 +1,7 @@
 import {
   CalendarCheck,
   DoorOpen,
+  SquareKanban,
   ShoppingBag,
   FileStack,
   Wallet,
@@ -37,6 +38,7 @@ export function slugDeAcesso(href: string): string | null {
   if (href.startsWith("/finance")) return "finance";
   if (href.startsWith("/events")) return "events";
   if (href.startsWith("/portaria")) return "reception";
+  if (href.startsWith("/matriculas")) return "matriculas";
   return null;
 }
 
@@ -46,6 +48,7 @@ export const INICIO_HREF = "/inicio";
 export const NAV_ITEMS = [
   { href: "/", label: "Rotina", icon: CalendarCheck, moduleSlug: "tasks" },
   { href: "/portaria", label: "Portaria", icon: DoorOpen, moduleSlug: "reception" },
+  { href: "/matriculas", label: "Matrículas", icon: SquareKanban, moduleSlug: "matriculas" },
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
   { href: "/flow", label: "Formulários", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
@@ -57,7 +60,7 @@ export const NAV_ITEMS = [
  * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.
  */
 export const GRUPOS_DO_MENU = [
-  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/flow", "/finance"] },
+  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/matriculas", "/flow", "/finance"] },
   { titulo: "Escola", hrefs: [ADMIN_HREF, "/events"] },
 ] as const;
 
