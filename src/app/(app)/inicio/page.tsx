@@ -6,6 +6,7 @@ import {
   BarChart3,
   CalendarCheck,
   ClipboardList,
+  SquareKanban,
   DoorOpen,
   FileSignature,
   FileStack,
@@ -41,6 +42,9 @@ interface Atalho {
 }
 
 const ATALHOS: Atalho[] = [
+  // O quadro vem primeiro: é a tela que responde "o que eu tenho para hoje", que é a pergunta de
+  // quem abre o sistema de manhã.
+  { href: "/flow/tarefas", label: "Meu quadro", icon: SquareKanban },
   { href: "/", label: "Chamada", icon: CalendarCheck },
   { href: "/ocorrencias", label: "Ocorrências", icon: MessageSquareWarning },
   { href: "/flow/respostas", label: "Envios", icon: Inbox },

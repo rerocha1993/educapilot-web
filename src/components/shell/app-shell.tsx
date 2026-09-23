@@ -49,7 +49,7 @@ const ROTULO_CURTO: Record<string, string> = { "/events": "Vendas" };
 const TITULO_DO_MODULO: Record<string, string> = {
   tasks: "Rotina",
   reception: "Portaria",
-  flow: "Formulários",
+  flow: "Fluxos",
   finance: "Financeiro",
   events: "Eventos & vendas",
   admin: "Administração",

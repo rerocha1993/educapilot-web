@@ -15,7 +15,12 @@ import { useMeuAcesso } from "@/lib/access/use-acessos";
  *
  * Cada pílula é uma área da permissão: quem não tem "Caixa de envios" não vê a pílula.
  */
+// Tarefas primeiro: é a tela que a equipe abre todo dia. Formulários e contratos são o trabalho
+// de quem cuida de matrícula, e acontecem em janelas do ano.
 const ABAS = [
+  { rotulo: "Meu quadro", href: "/flow/tarefas" },
+  { rotulo: "Equipe", href: "/flow/tarefas/equipe" },
+  { rotulo: "Automações", href: "/flow/tarefas/automacoes" },
   { rotulo: "Formulários", href: "/flow" },
   { rotulo: "Caixa de envios", href: "/flow/respostas" },
   { rotulo: "Contratos", href: "/flow/contratos" },
@@ -30,10 +35,17 @@ export function AbasDeFormularios() {
   // A aba fica marcada também nas telas de dentro dela (o relatório aberto continua em
   // "Relatórios"). "/flow" é o caso à parte: como é prefixo de todas, só marca na rota exata e no
   // formulário aberto.
-  const ativa = (href: string) =>
-    href === "/flow"
-      ? pathname === "/flow" || /^\/flow\/[0-9a-f-]{36}(\/|$)/i.test(pathname)
-      : pathname === href || pathname.startsWith(`${href}/`);
+  const ativa = (href: string) => {
+    // "/flow" é prefixo de todas: só marca na rota exata e no formulário aberto.
+    if (href === "/flow")
+      return pathname === "/flow" || /^\/flow\/[0-9a-f-]{36}(\/|$)/i.test(pathname);
+
+    // "Meu quadro" não pode acender quando a pessoa está em Equipe ou Automações, que moram
+    // dentro de /flow/tarefas.
+    if (href === "/flow/tarefas") return pathname === "/flow/tarefas";
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <AbasDePilulas

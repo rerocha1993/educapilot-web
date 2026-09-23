@@ -47,7 +47,7 @@ export const NAV_ITEMS = [
   { href: "/", label: "Rotina", icon: CalendarCheck, moduleSlug: "tasks" },
   { href: "/portaria", label: "Portaria", icon: DoorOpen, moduleSlug: "reception" },
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
-  { href: "/flow", label: "Formulários", icon: FileStack, moduleSlug: "flow" },
+  { href: "/flow", label: "Fluxos", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
 ] as const;
 
