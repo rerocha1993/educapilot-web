@@ -59,11 +59,28 @@ export function CartaoDoQuadro({
         }
       }}
       className={cn(
-        "flex cursor-grab flex-col gap-1.5 rounded-lg border border-border bg-card p-2.5 text-left shadow-[0_1px_2px_rgba(42,37,48,.06)] transition-colors hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing",
+        // Peça sólida sobre o vidro da coluna: fundo do cartão + um gradiente vertical de ~3%,
+        // no limite do perceptível. É ele que dá a "solidez" sem transformar o cartão em botão —
+        // no escuro o gradiente inverte, porque lá é o topo que recebe a luz.
+        "flex cursor-grab flex-col gap-1.5 rounded-lg border border-foreground/10 bg-card bg-linear-to-b from-transparent to-foreground/[0.035] p-2.5 text-left dark:border-foreground/15 dark:from-foreground/[0.055] dark:to-transparent",
+        // Sombra de contato curta parada; ao passar o mouse entra a segunda camada, difusa, e o
+        // cartão sobe 1px. Um pixel é de propósito: o suficiente para a mão sentir, pouco o
+        // bastante para a coluna não "tremer" enquanto o ponteiro corre a lista.
+        "shadow-[0_1px_2px_var(--kanban-tinta-contato),inset_0_1px_0_var(--kanban-brilho)]",
+        "hover:shadow-[0_1px_2px_var(--kanban-tinta-contato),0_6px_18px_-8px_var(--kanban-tinta-difusa),inset_0_1px_0_var(--kanban-brilho)]",
+        "motion-safe:transition-[box-shadow,translate,scale,rotate] motion-safe:duration-150 motion-safe:ease-out motion-safe:hover:-translate-y-px",
+        // Anel de foco com folga: o cartão tem fundo claro e um anel colado na borda sumiria
+        // dentro do próprio contorno.
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        // Alvo de toque no celular: no desktop a altura vem do conteúdo.
+        "max-md:min-h-11 active:cursor-grabbing",
         // Cartão concluído continua no quadro (a lista que conclui é o histórico da semana), mas
         // esmaecido: ele não é mais trabalho a fazer e não pode competir pela atenção.
         concluido && "opacity-55",
-        arrastando && "opacity-40"
+        // Arrastando: o cartão "sai da mesa" — gira, cresce um tico e ganha a sombra alta. A
+        // rotação é o que mais vende o gesto, e some inteira em prefers-reduced-motion.
+        arrastando &&
+          "opacity-70 shadow-[0_16px_34px_-10px_var(--kanban-tinta-alta),inset_0_1px_0_var(--kanban-brilho)] motion-safe:rotate-[1.5deg] motion-safe:scale-[1.02]"
       )}
     >
       {cartao.etiquetas.length > 0 && (
@@ -71,9 +88,11 @@ export function CartaoDoQuadro({
           {cartao.etiquetas.map((e) => (
             // A cor da etiqueta é escolhida pela escola e não tem contraste garantido contra o
             // fundo (nem no tema escuro): só o ponto usa a cor, o texto fica no tom do sistema.
+            // Chip menor e com contorno de 1px em vez de bloco de fundo: encolhido, o preenchimento
+            // sozinho virava mancha; o fio define a forma e devolve o ar entre as etiquetas.
             <span
               key={e.id}
-              className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-px text-[10.5px] text-muted-foreground"
+              className="inline-flex items-center gap-1 rounded-full border border-foreground/[0.08] bg-foreground/[0.04] px-1.5 py-[1.5px] text-[10px] leading-[14px] font-medium text-muted-foreground"
             >
               <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: e.cor }} />
               {e.nome}
@@ -82,29 +101,46 @@ export function CartaoDoQuadro({
         </div>
       )}
 
-      <p className={cn("text-sm leading-snug break-words", concluido && "line-through")}>
+      <p
+        className={cn(
+          // Tracking levemente negativo: no corpo curto do cartão o texto default fica frouxo e
+          // o título perde a cara de "uma coisa só".
+          "text-sm leading-snug tracking-[-0.006em] break-words",
+          concluido && "line-through"
+        )}
+      >
         {cartao.titulo}
       </p>
 
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground">
         {cartao.prazo && prazo && (
           <span
             className={cn(
               "inline-flex items-center gap-1",
               // Concluído não tem prazo vencido: a cor de alerta some junto com a pendência.
               !concluido && prazo.atrasado && "font-semibold text-destructive",
-              !concluido && prazo.hoje && "font-semibold text-action-soft-foreground"
+              // "Hoje" é laranja nos dois temas, mas o laranja escuro de --action-soft-foreground
+              // não é redefinido no tema escuro e ficaria em ~2.9:1 sobre o cartão. No escuro
+              // troca pelo laranja claro do par semântico (mesma cor de pendência do guia), que
+              // passa em AA com folga.
+              !concluido &&
+                prazo.hoje &&
+                "font-semibold text-action-soft-foreground dark:text-warning-soft-foreground"
             )}
           >
             <CalendarClock className="size-3.5" />
-            <span className="font-mono tabular-nums">{formatarData(cartao.prazo)}</span>
+            {/* Data e contagem em tabular com tracking negativo: número monoespaçado abre demais
+                e some no meio da linha de ícones. */}
+            <span className="font-mono tracking-[-0.02em] tabular-nums">
+              {formatarData(cartao.prazo)}
+            </span>
           </span>
         )}
 
         {cartao.checklist.length > 0 && (
           <span className="inline-flex items-center gap-1">
             <ListChecks className="size-3.5" />
-            <span className="font-mono tabular-nums">
+            <span className="font-mono tracking-[-0.02em] tabular-nums">
               {feitos}/{cartao.checklist.length}
             </span>
           </span>
@@ -120,18 +156,20 @@ export function CartaoDoQuadro({
         )}
 
         {cartao.integrantes.length > 0 && (
+          // Anel de 1.5px no tom do cartão para recortar as iniciais que se sobrepõem: com 1px a
+          // pilha embola e as duas letras de trás viram mancha.
           <span className="ml-auto flex items-center -space-x-1">
             {cartao.integrantes.slice(0, 3).map((i) => (
               <span
                 key={i.userId}
                 title={i.nome}
-                className="grid size-5 place-items-center rounded-full bg-secondary text-[9.5px] font-semibold text-secondary-foreground ring-1 ring-card"
+                className="grid size-5 place-items-center rounded-full bg-secondary text-[9.5px] font-semibold tracking-[-0.02em] text-secondary-foreground ring-[1.5px] ring-card"
               >
                 {iniciais(i.nome)}
               </span>
             ))}
             {cartao.integrantes.length > 3 && (
-              <span className="grid size-5 place-items-center rounded-full bg-muted text-[9.5px] font-semibold ring-1 ring-card">
+              <span className="grid size-5 place-items-center rounded-full bg-muted text-[9.5px] font-semibold tracking-[-0.02em] ring-[1.5px] ring-card">
                 +{cartao.integrantes.length - 3}
               </span>
             )}

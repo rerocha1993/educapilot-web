@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PERFIS } from "@/lib/access/perfis";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import {
   Select,
@@ -45,8 +46,7 @@ const PILULA_ATIVA = "bg-card font-semibold text-foreground shadow-[0_1px_3px_rg
 const PILULA_INATIVA = "font-medium text-muted-foreground hover:text-foreground";
 
 const ROLE_LABELS: Record<string, string> = {
-  Admin: "Administrador",
-  Teacher: "Professor",
+  ...Object.fromEntries(PERFIS.map((p) => [p.slug, p.rotulo])),
   Master: "Master",
 };
 
@@ -378,8 +378,11 @@ export default function UsuariosPage() {
                   <SelectValue>{(v: string) => ROLE_LABELS[v] ?? v}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Administrador</SelectItem>
-                  <SelectItem value="Teacher">Professor</SelectItem>
+                  {PERFIS.map((p) => (
+                    <SelectItem key={p.slug} value={p.slug}>
+                      {p.rotulo}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

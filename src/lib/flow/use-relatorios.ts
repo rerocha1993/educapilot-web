@@ -69,6 +69,9 @@ export interface RelatorioDeFormulario {
   /** Vazio = todas as perguntas do formulário. */
   camposIds: string[];
   statusFiltro?: string | null;
+
+  /** Só a gestão vê este relatório (ele mostra valor). */
+  somenteGestao: boolean;
   criadoEm: string;
 }
 
@@ -78,6 +81,7 @@ export interface SalvarRelatorio {
   formId: string;
   camposIds: string[];
   statusFiltro?: string | null;
+  somenteGestao: boolean;
 }
 
 export interface ResultadoDoRelatorio {

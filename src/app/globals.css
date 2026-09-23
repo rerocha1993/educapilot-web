@@ -248,3 +248,51 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Acabamento do quadro Kanban — "vidro sóbrio" (acréscimo 2026-09).
+
+   Só acréscimo: nenhum token acima foi alterado ou removido.
+
+   A leitura é a do macOS: a COLUNA é um painel translúcido que pega cor do que
+   está atrás, e o CARTÃO é uma peça sólida apoiada nela. Três decisões que não
+   são óbvias:
+
+   1. Sombra sempre em DUAS camadas. Uma curta e quase opaca, que ancora a peça
+      na superfície (é o contato), e uma larga e muito diluída, que dá o ar de
+      flutuar. Uma sombra só nunca faz as duas coisas: se fecha, gruda; se
+      abre, a peça descola e vira adesivo.
+   2. O brilho interno fica SÓ no topo (inset 0 1px 0). A luz vem de cima, então
+      é a quina de cima que reflete. Repetir o brilho embaixo leria como
+      contorno duplo e desmancharia justamente a ilusão de vidro — esse fio de
+      luz é o "reflexo" inteiro do efeito.
+   3. Nada de branco nem preto fixo: tudo é alpha ou color-mix sobre as
+      variáveis do tema, e é só por isso que o mesmo conjunto de classes serve
+      no claro e no escuro.
+
+   Os tokens abaixo carregam apenas a COR de cada camada. O desenho da sombra
+   (deslocamento, borrão, espalhamento) fica escrito na classe do componente,
+   para o Tailwind compor certo com o anel de foco em vez de brigar com ele.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Sombra tingida do roxo da marca (o #2A2530 do --foreground) e não preto
+     puro: sobre o fundo quente do sistema (#F7F6F3), sombra neutra sai
+     acinzentada e suja o papel. */
+  --kanban-tinta-contato: rgb(42 37 48 / 0.08);
+  --kanban-tinta-difusa: rgb(42 37 48 / 0.2);
+  --kanban-tinta-alta: rgb(42 37 48 / 0.28);
+  /* O fio de luz da quina de cima. */
+  --kanban-brilho: rgb(255 255 255 / 0.6);
+}
+
+.dark {
+  /* No escuro a sombra precisa de preto de verdade — o --foreground é claro e
+     clarearia a sombra em vez de escurecê-la — e em alpha bem maior, porque
+     sombra sobre fundo escuro quase não aparece. */
+  --kanban-tinta-contato: rgb(0 0 0 / 0.4);
+  --kanban-tinta-difusa: rgb(0 0 0 / 0.6);
+  --kanban-tinta-alta: rgb(0 0 0 / 0.72);
+  /* Reflexo reduzido a um fio: no escuro, 60% de branco viraria uma risca. */
+  --kanban-brilho: rgb(255 255 255 / 0.08);
+}

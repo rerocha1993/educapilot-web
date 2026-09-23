@@ -3,6 +3,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AREAS_SUGERIDAS, PERFIS } from "@/lib/access/perfis";
 import { cn } from "@/lib/utils";
 import { useCatalogoDeAcesso, type AcessoDoUsuario } from "@/lib/access/use-acessos";
 import { useClasses } from "@/lib/kernel/use-classes";
@@ -71,28 +72,45 @@ export function SeletorDeAcesso({
     });
   }
 
+  /**
+   * Troca o perfil e, num acesso ainda em branco, já marca o que aquele perfil costuma precisar.
+   *
+   * Só quando está em branco: sobrescrever o que alguém marcou a mão seria apagar trabalho — e é
+   * justamente ao editar o acesso de quem já existe que isso doeria.
+   */
+  function escolherPerfil(perfil: string) {
+    const emBranco = valor.modulos.length === 0;
+    const sugestao = AREAS_SUGERIDAS[perfil] ?? [];
+
+    onChange({
+      ...valor,
+      userType: perfil,
+      modulos: emBranco && sugestao.length > 0 ? sugestao.map((m) => ({ ...m })) : valor.modulos,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-[5px]">
         <Label className="text-sm">Tipo de acesso</Label>
-        <div className="flex gap-2">
-          {[
-            { valor: "Teacher", rotulo: "Professor(a)", ajuda: "Trabalha por turma" },
-            { valor: "Admin", rotulo: "Gestão", ajuda: "Administra a escola" },
-          ].map((opcao) => (
+        {/* Quatro perfis não cabem lado a lado em 375px: duas colunas no celular, quatro no
+            computador. O perfil não decide o que a pessoa abre — isso são as áreas abaixo —, ele
+            decide quem é da gestão, e portanto quem vê relatório com valor. */}
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          {PERFIS.map((opcao) => (
             <button
-              key={opcao.valor}
+              key={opcao.slug}
               type="button"
-              onClick={() => onChange({ ...valor, userType: opcao.valor })}
+              onClick={() => escolherPerfil(opcao.slug)}
               className={cn(
-                "flex-1 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
-                valor.userType === opcao.valor
+                "rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                valor.userType === opcao.slug
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-input bg-card hover:border-primary"
               )}
             >
               <span className="block font-medium">{opcao.rotulo}</span>
-              <span className="block text-xs opacity-80">{opcao.ajuda}</span>
+              <span className="block text-xs opacity-80">{opcao.descricao}</span>
             </button>
           ))}
         </div>

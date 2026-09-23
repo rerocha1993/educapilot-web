@@ -42,6 +42,7 @@ export function EditorDeRelatorio({
   const [descricao, setDescricao] = useState(relatorio?.descricao ?? "");
   const [formId, setFormId] = useState(relatorio?.formId ?? "");
   const [situacao, setSituacao] = useState(relatorio?.statusFiltro ?? TODAS);
+  const [somenteGestao, setSomenteGestao] = useState(relatorio?.somenteGestao ?? false);
   // Nulo = todas as perguntas (é como o relatório grava "todas"). Vira lista na primeira mudança.
   const [campos, setCampos] = useState<Set<string> | null>(() =>
     relatorio && relatorio.camposIds.length > 0 ? new Set(relatorio.camposIds) : relatorio ? null : new Set()
@@ -86,6 +87,7 @@ export function EditorDeRelatorio({
           // Todas marcadas grava vazio: pergunta nova no formulário entra sozinha no relatório.
           camposIds: escolhidas.length === perguntas.length ? [] : escolhidas,
           statusFiltro: situacao === TODAS ? null : situacao,
+          somenteGestao,
         },
       });
       toast.success(relatorio ? "Relatório atualizado." : "Relatório criado.");
@@ -180,6 +182,19 @@ export function EditorDeRelatorio({
           </div>
         )}
       </div>
+
+      {/* A ficha de matrícula traz mensalidade e desconto negociado. Quem atende no balcão precisa
+          da ficha, não do valor — e a coluna não some sozinha, porque a resposta é uma só. */}
+      <label className="flex min-h-10 cursor-pointer items-start gap-2 rounded-md border border-border p-3 text-sm md:min-h-0">
+        <Checkbox checked={somenteGestao} onCheckedChange={(v) => setSomenteGestao(!!v)} />
+        <span>
+          Somente a gestão vê este relatório
+          <span className="block text-xs text-muted-foreground">
+            Marque quando o relatório mostrar valores. Secretaria, coordenação e professores não
+            veem nem o relatório nem o download dele.
+          </span>
+        </span>
+      </label>
 
       <DialogFooter>
         <Button variant="outline" onClick={onFechar}>

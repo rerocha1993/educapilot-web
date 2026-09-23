@@ -14,6 +14,8 @@ import { EditorDeRelatorio } from "@/components/flow/editor-de-relatorio";
 import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { ehGestao } from "@/lib/access/perfis";
+import { useSession } from "@/lib/auth/use-session";
 import { useForms } from "@/lib/flow/use-forms";
 import { useBaixarExcel } from "@/lib/flow/use-form-responses";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
@@ -31,6 +33,9 @@ import {
  * pronto, porque junta formulários e cadastro de alunos — coisa que um relatório montado não faz.
  */
 export default function RelatoriosFormulariosPage() {
+  // Relatório com valor é da gestão. O backend já esconde os marcados e recusa o download; aqui a
+  // tela deixa de oferecer o que ia voltar negado, que é pior do que não aparecer.
+  const gestao = ehGestao(useSession()?.role);
   const router = useRouter();
   const { data: relatorios, isLoading } = useRelatoriosDeFormulario();
   const excluir = useExcluirRelatorio();
@@ -64,6 +69,8 @@ export default function RelatoriosFormulariosPage() {
       />
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {/* Traz a mensalidade acordada de cada aluno: mesma regra dos relatórios marcados. */}
+        {gestao && (
         <Link
           href="/flow/relatorios/matriculas"
           className="flex flex-col gap-1 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/60"
@@ -77,6 +84,7 @@ export default function RelatoriosFormulariosPage() {
             Alunos ativos no ano e quem já está rematriculado para o próximo, mais as matrículas novas.
           </p>
         </Link>
+        )}
 
         {isLoading && <Skeleton className="h-24 w-full rounded-lg" />}
 
@@ -86,6 +94,7 @@ export default function RelatoriosFormulariosPage() {
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" />
                 <p className="truncate font-medium">{r.nome}</p>
+                {r.somenteGestao && <Badge variant="secondary">Só gestão</Badge>}
               </div>
               <p className="truncate text-sm text-muted-foreground">
                 {r.formNome ?? "Formulário excluído"}
@@ -134,7 +143,8 @@ export default function RelatoriosFormulariosPage() {
         />
       )}
 
-      <PlanilhasDosFormularios />
+      {/* A planilha sai com TODAS as respostas da ficha, mensalidade inclusive. */}
+      {gestao && <PlanilhasDosFormularios />}
 
       <Dialog open={editando !== null} onOpenChange={(aberto) => !aberto && setEditando(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">

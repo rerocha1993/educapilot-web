@@ -25,7 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
 import { clearSession } from "@/lib/auth/session";
-import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS } from "@/lib/kernel/nav-items";
+import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS, SUBITENS_DO_MENU } from "@/lib/kernel/nav-items";
 import { acessoDaRota } from "@/lib/access/pode-ver";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
@@ -86,7 +86,7 @@ export function AppShell({
   const menuAberto = menuAbertoEm === pathname;
   const abrirMenu = () => setMenuAbertoEm(pathname);
   const fecharMenu = () => setMenuAbertoEm(null);
-  const { moduloVisivel } = useVisibilidade();
+  const { moduloVisivel, rotaVisivel } = useVisibilidade();
   const { data: modulosAtivos } = useActiveModules();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -136,6 +136,27 @@ export function AppShell({
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
     .slice(0, 3);
+
+  /**
+   * Subitens que aparecem embaixo do módulo aberto.
+   *
+   * Só do módulo em que a pessoa está: a barra não vira uma árvore com tudo aberto ao mesmo
+   * tempo. Cada subitem passa pela permissão de área — quem não tem Formulários vê só o Quadro.
+   */
+  function subitensVisiveis(href: string) {
+    if (!itemAtivo(href)) return [];
+    return (SUBITENS_DO_MENU[href] ?? []).filter((sub) => rotaVisivel(sub.href));
+  }
+
+  // O subitem acende na rota dele e nas telas de dentro. "/flow" é prefixo de todas as outras, e
+  // por isso é o último a ser testado: só acende quando nenhum irmão mais específico casou.
+  function subitemAtivo(href: string, irmaos: { href: string }[]) {
+    const maisEspecifico = irmaos
+      .filter((s) => pathname === s.href || pathname.startsWith(`${s.href}/`))
+      .sort((a, b) => b.href.length - a.href.length)[0];
+
+    return maisEspecifico?.href === href;
+  }
 
   function itemAtivo(href: string) {
     if (href === INICIO_HREF) return pathname === INICIO_HREF;
@@ -236,14 +257,21 @@ export function AppShell({
                 </div>
               )}
               {grupo.itens.map((item) => (
-                <ItemDaSidebar
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  ativo={itemAtivo(item.href)}
-                  recolhido={collapsed}
-                />
+                <div key={item.href}>
+                  <ItemDaSidebar
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    ativo={itemAtivo(item.href)}
+                    recolhido={collapsed}
+                  />
+                  {!collapsed && subitensVisiveis(item.href).length > 1 && (
+                    <SubitensDaSidebar
+                      itens={subitensVisiveis(item.href)}
+                      ativo={(href) => subitemAtivo(href, subitensVisiveis(item.href))}
+                    />
+                  )}
+                </div>
               ))}
             </div>
           ))}
@@ -403,15 +431,23 @@ export function AppShell({
                     {grupo.titulo}
                   </div>
                   {grupo.itens.map((item) => (
-                    <ItemDaSidebar
-                      key={item.href}
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                      ativo={itemAtivo(item.href)}
-                      recolhido={false}
-                      grande
-                    />
+                    <div key={item.href}>
+                      <ItemDaSidebar
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        ativo={itemAtivo(item.href)}
+                        recolhido={false}
+                        grande
+                      />
+                      {subitensVisiveis(item.href).length > 1 && (
+                        <SubitensDaSidebar
+                          itens={subitensVisiveis(item.href)}
+                          ativo={(href) => subitemAtivo(href, subitensVisiveis(item.href))}
+                          grande
+                        />
+                      )}
+                    </div>
                   ))}
                 </div>
               ))}
@@ -501,6 +537,47 @@ function ItemDaSidebar({
       </span>
       {!recolhido && <span className="truncate">{label}</span>}
     </Link>
+  );
+}
+
+/**
+ * As duas metades de um módulo, listadas embaixo dele na barra.
+ *
+ * Entra recuada, com um fio à esquerda ligando os itens ao pai: sem a linha, os subitens parecem
+ * módulos soltos de menos importância, e não partes do que está aberto.
+ */
+function SubitensDaSidebar({
+  itens,
+  ativo,
+  grande,
+}: {
+  itens: { href: string; label: string }[];
+  ativo: (href: string) => boolean;
+  grande?: boolean;
+}) {
+  return (
+    <div className="relative my-0.5 ml-[26px] flex flex-col border-l border-sidebar-border pl-2.5">
+      {itens.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          aria-current={ativo(item.href) ? "page" : undefined}
+          className={cn(
+            "relative rounded-md px-2.5 text-[13px] transition-colors",
+            grande ? "py-2.5" : "py-1.5",
+            ativo(item.href)
+              ? "font-semibold text-white"
+              : "font-medium text-sidebar-foreground hover:bg-white/5 hover:text-white"
+          )}
+        >
+          {/* O fio da esquerda acende no item aberto: é o que diz em qual metade a pessoa está. */}
+          {ativo(item.href) && (
+            <span className="absolute -left-[11px] top-1.5 bottom-1.5 w-[2px] rounded-full bg-action-brand" />
+          )}
+          {item.label}
+        </Link>
+      ))}
+    </div>
   );
 }
 

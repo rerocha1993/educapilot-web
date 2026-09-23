@@ -203,7 +203,10 @@ export function DialogDoCartao({
 
   return (
     <Dialog open onOpenChange={(aberto) => !aberto && onFechar()}>
-      <DialogContent className="sm:max-w-lg">
+      {/* Mesma gramática do quadro: raio maior, contorno um pouco mais presente que o padrão e a
+          sombra em duas camadas (contato curto + difusa larga), com o fio de luz no topo. Sem
+          translucidez: aqui é tela de edição, o fundo tem que ser firme. */}
+      <DialogContent className="rounded-2xl ring-foreground/15 shadow-[0_1px_2px_var(--kanban-tinta-contato),0_24px_48px_-16px_var(--kanban-tinta-alta),inset_0_1px_0_var(--kanban-brilho)] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="pr-8">Cartão</DialogTitle>
         </DialogHeader>
@@ -313,10 +316,12 @@ export function DialogDoCartao({
                     type="button"
                     onClick={() => alternarEtiqueta(e.id)}
                     className={cn(
-                      "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors",
+                      // max-md:min-h-10: chip é alvo de toque, e 32px não dá conta no celular.
+                      "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors max-md:min-h-10 max-md:px-3",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover",
                       marcada
-                        ? "border-primary bg-primary/10 font-medium text-foreground"
-                        : "border-border text-muted-foreground hover:bg-muted"
+                        ? "border-primary/60 bg-primary/10 font-medium text-foreground"
+                        : "border-foreground/12 text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     <span className="size-2 rounded-full" style={{ backgroundColor: e.cor }} />
@@ -342,6 +347,8 @@ export function DialogDoCartao({
                 placeholder="Nova etiqueta"
                 className="w-40 flex-1"
               />
+              {/* A bolinha cresce no celular em vez de ganhar área invisível: com 6 opções lado a
+                  lado, alvos de 40px invisíveis se sobreporiam e a pessoa erraria a cor. */}
               <div className="flex gap-1">
                 {CORES.map((cor) => (
                   <button
@@ -351,9 +358,12 @@ export function DialogDoCartao({
                     onClick={() => setCorNova(cor)}
                     style={{ backgroundColor: cor }}
                     className={cn(
-                      "size-6 rounded-full transition-transform",
+                      // Contorno escuro por cima da própria cor: sem ele as cores claras somem
+                      // contra o fundo do diálogo.
+                      "size-6 rounded-full ring-1 ring-foreground/15 max-md:size-10 motion-safe:transition-transform",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover",
                       corNova === cor &&
-                        "scale-110 ring-2 ring-foreground/40 ring-offset-1 ring-offset-popover"
+                        "scale-110 ring-2 ring-foreground/40 ring-offset-2 ring-offset-popover"
                     )}
                   />
                 ))}
@@ -379,10 +389,11 @@ export function DialogDoCartao({
                     type="button"
                     onClick={() => alternarIntegrante(p.userId)}
                     className={cn(
-                      "inline-flex min-h-8 items-center rounded-full border px-2.5 text-xs transition-colors",
+                      "inline-flex min-h-8 items-center rounded-full border px-2.5 text-xs transition-colors max-md:min-h-10 max-md:px-3",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover",
                       marcado
-                        ? "border-primary bg-primary/10 font-medium text-foreground"
-                        : "border-border text-muted-foreground hover:bg-muted"
+                        ? "border-primary/60 bg-primary/10 font-medium text-foreground"
+                        : "border-foreground/12 text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     {p.nome}
@@ -402,7 +413,8 @@ export function DialogDoCartao({
 
             <div className="flex flex-col">
               {cartao.checklist.map((item) => (
-                <div key={item.id} className="flex min-h-9 items-center gap-2">
+                // Linha do checklist é alvo de toque (a caixa é pequena): 44px no celular.
+                <div key={item.id} className="flex min-h-9 items-center gap-2 max-md:min-h-11">
                   <Checkbox
                     checked={item.feito}
                     onCheckedChange={(v) => marcarItem(item.id, v === true)}
@@ -453,13 +465,13 @@ export function DialogDoCartao({
           {cartao.formResponseId && (
             <Link
               href="/flow/respostas"
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 rounded-md text-sm text-primary max-md:min-h-10 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover"
             >
               <ExternalLink className="size-4" /> Ver o envio que originou
             </Link>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <div className="flex flex-wrap items-center gap-2 border-t border-foreground/10 pt-3">
             {confirmandoExclusao ? (
               <>
                 <span className="text-sm text-muted-foreground">Excluir este cartão?</span>

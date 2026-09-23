@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import { CartaoDoQuadro } from "@/components/flow/cartao-do-quadro";
 import { DialogDoCartao } from "@/components/flow/dialog-do-cartao";
 import {
@@ -119,17 +120,31 @@ export function QuadroKanban({ quadro }: { quadro: Quadro }) {
     <>
       {/* Rolagem horizontal: no celular cabe uma lista por vez, e empilhar as listas uma embaixo da
           outra acabaria com a leitura de "em que etapa está cada coisa". */}
-      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-3 md:mx-0 md:px-0">
+      {/* pb-5: a sombra difusa da coluna precisa de folga embaixo, senão o contêiner de rolagem
+          corta justamente a parte que faz o painel parecer apoiado. */}
+      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-5 md:mx-0 md:px-0">
         {quadro.listas.map((lista) => (
           <div
             key={lista.id}
-            className="flex w-72 shrink-0 snap-start flex-col gap-2 rounded-xl bg-muted/50 p-2"
+            className={cn(
+              "flex w-72 shrink-0 snap-start flex-col gap-2 rounded-xl p-2",
+              // Vidro: fundo com alpha + desfoque. O saturate é o que dá a "cor reflexiva" — ele
+              // puxa a cor do que está atrás do painel, que é o truque de vibrância do macOS;
+              // só borrar deixaria o painel cinza e morto.
+              "border border-foreground/10 bg-muted/55 backdrop-blur-xl backdrop-saturate-150 dark:border-foreground/15 dark:bg-muted/65",
+              // Contato + difusa + o fio de luz no topo (ver globals.css).
+              "shadow-[0_1px_2px_var(--kanban-tinta-contato),0_10px_28px_-14px_var(--kanban-tinta-difusa),inset_0_1px_0_var(--kanban-brilho)]"
+            )}
           >
-            <div className="flex items-center gap-1 px-1">
-              <h2 className="min-w-0 flex-1 truncate font-heading text-[13.5px] font-semibold">
+            {/* Cabeçalho grudado no topo com o mesmo vidro: as margens negativas fazem a faixa
+                encostar nas bordas internas da coluna, para o desfoque cobrir a largura toda em
+                vez de deixar dois cantos de cartão aparecendo por baixo. */}
+            <div className="sticky top-0 z-10 -mx-2 -mt-2 flex items-center gap-1 rounded-t-xl bg-muted/80 px-3 pt-2.5 pb-2 shadow-[inset_0_1px_0_var(--kanban-brilho)] backdrop-blur-md backdrop-saturate-150 dark:bg-muted/85">
+              <h2 className="min-w-0 flex-1 truncate font-heading text-[13.5px] font-semibold tracking-[-0.01em]">
                 {lista.nome}
               </h2>
-              <span className="font-mono text-xs tabular-nums text-muted-foreground">
+              {/* A contagem vira um selo: solta, ela competia com o nome da lista. */}
+              <span className="rounded-full bg-foreground/[0.06] px-1.5 py-px font-mono text-[11px] tracking-[-0.02em] tabular-nums text-muted-foreground">
                 {lista.cartoes.length}
               </span>
               <MenuDaLista lista={lista} onRenomear={() => setListaEmEdicao(lista)} />
@@ -194,7 +209,11 @@ export function QuadroKanban({ quadro }: { quadro: Quadro }) {
 }
 
 function LinhaDeDestino() {
-  return <div className="pointer-events-none mb-2 h-0.5 rounded-full bg-primary" />;
+  // Halo de 3px em volta da linha: sobre o vidro da coluna um traço chapado de 2px some; o halo
+  // dá volume sem precisar engrossar a linha e empurrar os cartões.
+  return (
+    <div className="pointer-events-none mb-2 h-0.5 rounded-full bg-primary shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent)]" />
+  );
 }
 
 /** Ações da coluna. Discreto de propósito: renomear e excluir lista é coisa de vez em quando. */
@@ -215,7 +234,9 @@ function MenuDaLista({ lista, onRenomear }: { lista: Lista; onRenomear: () => vo
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Ações da lista ${lista.nome}`}
-        className="grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+        // max-md:size-10: no celular o alvo de toque tem que chegar aos 40px; no desktop o ícone
+        // discreto continua discreto.
+        className="grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors max-md:size-10 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -260,7 +281,9 @@ function NovoCartao({ listaId }: { listaId: string }) {
       <Button
         variant="ghost"
         size="sm"
-        className="justify-start text-muted-foreground"
+        // O hover padrão do ghost é bg-muted, que é justamente a cor da coluna: aqui o realce
+        // precisa vir do cartão, senão o botão não acende.
+        className="justify-start text-muted-foreground max-md:h-10 hover:bg-card hover:text-foreground"
         onClick={() => setAbrindo(true)}
       >
         <Plus className="size-4" /> Cartão
@@ -329,7 +352,10 @@ export function DialogDeLista({ lista, onFechar }: { lista?: Lista; onFechar: ()
 
   return (
     <Dialog open onOpenChange={(aberto) => !aberto && onFechar()}>
-      <DialogContent>
+      {/* Mesma gramática do quadro: raio maior, contorno um pouco mais presente que o padrão e a
+          sombra em duas camadas. Translucidez de propósito não: campo de formulário precisa de
+          fundo firme para o texto não brigar com o que passa atrás. */}
+      <DialogContent className="rounded-2xl ring-foreground/15 shadow-[0_1px_2px_var(--kanban-tinta-contato),0_24px_48px_-16px_var(--kanban-tinta-alta),inset_0_1px_0_var(--kanban-brilho)]">
         <DialogHeader>
           <DialogTitle>{lista ? "Renomear lista" : "Nova lista"}</DialogTitle>
         </DialogHeader>
