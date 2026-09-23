@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -15,25 +16,32 @@ import {
   NotebookPen,
   Package,
   ShoppingBag,
+  SlidersHorizontal,
   UsersRound,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { Estatistica, EtiquetaDoCartao } from "@/components/padroes/estatistica";
 import {
   CarrosselDeFormularios,
   ordenarPelaEscolha,
 } from "@/components/flow/carrossel-de-formularios";
+import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
+import { DialogPersonalizarInicio } from "@/components/inicio/dialog-personalizar";
 import { usePainelDeFormularios } from "@/lib/flow/use-resumo-formularios";
 import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { usePainelInicio, type PainelInicio } from "@/lib/kernel/use-painel";
+import { arranjarBlocos, usePainelDeBlocos } from "@/lib/kernel/use-painel-blocos";
 
 // Tela Início da direção visual nova (ver docs/direcao-visual.md): o dia da escola em quatro
 // números, o que pede decisão agora e os atalhos. Cada bloco só aparece se a pessoa tem acesso à
 // tela que ele abre — número que não se pode investigar não ajuda ninguém.
+//
+// A ordem e a visibilidade dos blocos são da pessoa (ver use-painel-blocos), mas a permissão vem
+// antes da preferência: quem não pode abrir a tela não vê o bloco nem marcado como visível.
 
 interface Atalho {
   href: string;
@@ -73,11 +81,23 @@ function saudacao(hora: number) {
   return "Boa noite";
 }
 
+/** Um pedaço da tela Início que a pessoa pode esconder ou mover. */
+interface BlocoDoInicio {
+  id: string;
+  /** Rótulo curto, só para a lista de personalização. */
+  rotulo: string;
+  /** Falso quando a permissão tira o bloco da tela — e da lista de personalização junto. */
+  permitido: boolean;
+  renderizar: () => ReactNode;
+}
+
 export default function InicioPage() {
   const session = useRequireSession();
   const { rotaVisivel } = useVisibilidade();
   const { data, isLoading, isError } = usePainelInicio();
   const { data: formulariosEscolhidos } = usePainelDeFormularios();
+  const { data: blocosSalvos } = usePainelDeBlocos();
+  const [personalizando, setPersonalizando] = useState(false);
   // Resposta fora do formato (API antiga ainda no ar, por exemplo) não derruba a tela: os
   // atalhos continuam valendo e o aviso de falha aparece.
   const painel = data?.presencas && data?.formularios && data?.contratos ? data : undefined;
@@ -90,74 +110,70 @@ export default function InicioPage() {
   const tarefas = painel ? tarefasDoDia(painel, rotaVisivel) : [];
   const atalhos = ATALHOS.filter((a) => rotaVisivel(a.href));
 
-  return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <CabecalhoDaPagina
-        eyebrow={dataLonga}
-        titulo={
-          <>
-            {saudacao(hoje.getHours())}
-            {primeiroNome && `, ${primeiroNome}`}
-            <span className="text-action-brand">.</span>
-          </>
-        }
-        apoio={
-          isLoading
-            ? "Carregando o dia da escola…"
-            : tarefas.length > 0
-              ? `${tarefas.length} ${tarefas.length === 1 ? "coisa pede" : "coisas pedem"} sua atenção hoje — comece por elas.`
-              : "Nada pendente por aqui. Bom dia de trabalho."
-        }
-        acoes={
-          rotaVisivel("/ocorrencias") && (
-            <Link
-              href="/ocorrencias"
-              className={buttonVariants({ variant: "action", className: "w-full md:w-auto" })}
-            >
-              + Registrar ocorrência
-            </Link>
-          )
-        }
-      />
+  const numerosVisiveis =
+    rotaVisivel("/") || rotaVisivel("/finance/inadimplencia") || rotaVisivel("/flow/contratos");
 
-      {(isError || (!isLoading && !painel)) && (
-        <p className="rounded-xl border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
-          Não foi possível carregar os números do dia. Os atalhos abaixo continuam funcionando.
-        </p>
-      )}
-
-      {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-[136px] animate-pulse rounded-xl border border-border bg-card sm:h-[148px]" />
-          ))}
-        </div>
-      ) : (
-        painel && (
-          <>
-            {/* No celular os quatro números ficam dois por linha: é o que faz a tela parecer um
-                painel, e não uma pilha de cartões. */}
+  // Catálogo na ordem de fábrica. A ordem deste array é o que decide onde um bloco novo entra
+  // para quem já personalizou a tela — ver arranjarBlocos.
+  const catalogo: BlocoDoInicio[] = [
+    {
+      id: "numeros",
+      rotulo: "Números do dia",
+      permitido: numerosVisiveis,
+      renderizar: () =>
+        isLoading ? (
+          <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[136px] animate-pulse rounded-xl border border-border bg-card sm:h-[148px]"
+              />
+            ))}
+          </div>
+        ) : (
+          painel && (
+            /* No celular os quatro números ficam dois por linha: é o que faz a tela parecer um
+               painel, e não uma pilha de cartões. */
             <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-3">
               {rotaVisivel("/") && <CartaoPresencas painel={painel} />}
               {rotaVisivel("/finance/inadimplencia") && <CartaoEmAtraso painel={painel} />}
               {rotaVisivel("/flow/contratos") && <CartaoContratos painel={painel} />}
             </div>
-
-            {/* Um cartão por formulário escolhido, e não um cartão fixo de rematrícula: o que
-                aparece em cada um depende dos campos que aquele formulário tem. */}
-            {rotaVisivel("/flow/respostas") && (
-              <CarrosselDeFormularios
-                resumos={ordenarPelaEscolha(painel.formularios.formularios, formulariosEscolhidos)}
-                podeEscolher={rotaVisivel("/flow")}
-              />
-            )}
-
-            {tarefas.length > 0 && <PrecisaDeVoce tarefas={tarefas} />}
-          </>
-        )
-      )}
-
-      {atalhos.length > 0 && (
+          )
+        ),
+    },
+    {
+      id: "tarefas",
+      rotulo: "Minhas tarefas",
+      permitido: rotaVisivel("/flow/tarefas"),
+      renderizar: () => <CartaoDeTarefas />,
+    },
+    {
+      id: "formularios",
+      rotulo: "Formulários",
+      permitido: rotaVisivel("/flow/respostas"),
+      // Um cartão por formulário escolhido, e não um cartão fixo de rematrícula: o que aparece em
+      // cada um depende dos campos que aquele formulário tem.
+      renderizar: () =>
+        painel && (
+          <CarrosselDeFormularios
+            resumos={ordenarPelaEscolha(painel.formularios.formularios, formulariosEscolhidos)}
+            podeEscolher={rotaVisivel("/flow")}
+          />
+        ),
+    },
+    {
+      id: "precisa",
+      rotulo: "Precisa de você",
+      // As pendências já vêm filtradas por permissão uma a uma; o bloco em si não tem tela própria.
+      permitido: true,
+      renderizar: () => tarefas.length > 0 && <PrecisaDeVoce tarefas={tarefas} />,
+    },
+    {
+      id: "atalhos",
+      rotulo: "Atalhos",
+      permitido: atalhos.length > 0,
+      renderizar: () => (
         <section>
           <div className="mb-3 text-[12px] font-bold uppercase tracking-[.16em] text-muted-foreground">
             Atalhos
@@ -179,6 +195,77 @@ export default function InicioPage() {
             ))}
           </div>
         </section>
+      ),
+    },
+  ];
+
+  const porId = new Map(catalogo.map((b) => [b.id, b]));
+  const arranjo = arranjarBlocos(catalogo, blocosSalvos);
+  const permitidos = arranjo.filter((p) => porId.get(p.id)?.permitido);
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <CabecalhoDaPagina
+        eyebrow={dataLonga}
+        titulo={
+          <>
+            {saudacao(hoje.getHours())}
+            {primeiroNome && `, ${primeiroNome}`}
+            <span className="text-action-brand">.</span>
+          </>
+        }
+        apoio={
+          isLoading
+            ? "Carregando o dia da escola…"
+            : tarefas.length > 0
+              ? `${tarefas.length} ${tarefas.length === 1 ? "coisa pede" : "coisas pedem"} sua atenção hoje — comece por elas.`
+              : "Nada pendente por aqui. Bom dia de trabalho."
+        }
+        acoesClassName="w-full md:w-auto"
+        acoes={
+          <>
+            <Button
+              variant="outline"
+              className="flex-1 md:flex-none"
+              onClick={() => setPersonalizando(true)}
+            >
+              <SlidersHorizontal className="size-4" />
+              Personalizar
+            </Button>
+            {rotaVisivel("/ocorrencias") && (
+              <Link
+                href="/ocorrencias"
+                className={buttonVariants({ variant: "action", className: "flex-1 md:flex-none" })}
+              >
+                + Registrar ocorrência
+              </Link>
+            )}
+          </>
+        }
+      />
+
+      {(isError || (!isLoading && !painel)) && (
+        <p className="rounded-xl border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+          Não foi possível carregar os números do dia. Os atalhos continuam funcionando.
+        </p>
+      )}
+
+      {permitidos
+        .filter((p) => p.visivel)
+        .map((p) => (
+          <Fragment key={p.id}>{porId.get(p.id)?.renderizar()}</Fragment>
+        ))}
+
+      {personalizando && (
+        <DialogPersonalizarInicio
+          // Só os blocos que esta pessoa pode ver entram na lista. Os demais saem do que é salvo e,
+          // se a permissão voltar um dia, reaparecem na posição de fábrica como qualquer bloco novo.
+          blocos={permitidos.map((p) => ({
+            ...p,
+            rotulo: porId.get(p.id)?.rotulo ?? p.id,
+          }))}
+          onFechar={() => setPersonalizando(false)}
+        />
       )}
     </div>
   );

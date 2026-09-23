@@ -115,8 +115,10 @@ export function EditorDeRelatorio({
           <Label className="text-xs text-muted-foreground">Descrição (opcional)</Label>
           <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
         </div>
+        {/* min-w-0 nos dois: item de grid tem largura mínima automática, e o nome comprido do
+            formulário empurrava a caixa para fora do diálogo, com barra de rolagem horizontal. */}
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-[5px]">
+          <div className="flex min-w-0 flex-col gap-[5px]">
             <Label className="text-xs text-muted-foreground">Formulário</Label>
             <Select value={formId || undefined} onValueChange={(v) => v && escolherFormulario(String(v))}>
               <SelectTrigger className="w-full">
@@ -131,7 +133,7 @@ export function EditorDeRelatorio({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-[5px]">
+          <div className="flex min-w-0 flex-col gap-[5px]">
             <Label className="text-xs text-muted-foreground">Envios</Label>
             <Select value={situacao} onValueChange={(v) => v && setSituacao(String(v))}>
               <SelectTrigger className="w-full">
@@ -163,14 +165,23 @@ export function EditorDeRelatorio({
                 </Button>
               </div>
             </div>
-            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-lg border border-border p-2">
+            <div className="flex max-h-64 flex-col overflow-y-auto rounded-lg border border-border p-1.5">
               {perguntas.length === 0 && (
-                <p className="px-1 py-2 text-xs text-muted-foreground">Este formulário ainda não tem perguntas.</p>
+                <p className="px-2 py-2 text-xs text-muted-foreground">Este formulário ainda não tem perguntas.</p>
               )}
+              {/* Pergunta longa quebra em vez de ser cortada: são 42 numa ficha de matrícula, e
+                  metade delas começa igual ("Nome do...", "Data de nascimento do..."). */}
               {perguntas.map((p) => (
-                <label key={p.id} className="flex min-h-10 cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted md:min-h-0">
-                  <Checkbox checked={marcada(p.id)} onCheckedChange={(v) => alternar(p.id, !!v)} />
-                  <span className="truncate">{p.label}</span>
+                <label
+                  key={p.id}
+                  className="flex min-h-9 cursor-pointer items-start gap-2.5 rounded-md px-2 py-1.5 text-sm leading-snug hover:bg-muted"
+                >
+                  <Checkbox
+                    className="mt-0.5 shrink-0"
+                    checked={marcada(p.id)}
+                    onCheckedChange={(v) => alternar(p.id, !!v)}
+                  />
+                  <span className="min-w-0 break-words">{p.label}</span>
                 </label>
               ))}
             </div>
@@ -181,20 +192,25 @@ export function EditorDeRelatorio({
             </p>
           </div>
         )}
-      </div>
 
-      {/* A ficha de matrícula traz mensalidade e desconto negociado. Quem atende no balcão precisa
-          da ficha, não do valor — e a coluna não some sozinha, porque a resposta é uma só. */}
-      <label className="flex min-h-10 cursor-pointer items-start gap-2 rounded-md border border-border p-3 text-sm md:min-h-0">
-        <Checkbox checked={somenteGestao} onCheckedChange={(v) => setSomenteGestao(!!v)} />
-        <span>
-          Somente a gestão vê este relatório
-          <span className="block text-xs text-muted-foreground">
-            Marque quando o relatório mostrar valores. Secretaria, coordenação e professores não
-            veem nem o relatório nem o download dele.
+        {/* A ficha de matrícula traz mensalidade e desconto negociado. Quem atende no balcão
+            precisa da ficha, não do valor — e a coluna não some sozinha, porque a resposta é uma
+            só, então o que se esconde é o relatório inteiro. */}
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+          <Checkbox
+            className="mt-0.5 shrink-0"
+            checked={somenteGestao}
+            onCheckedChange={(v) => setSomenteGestao(!!v)}
+          />
+          <span className="min-w-0">
+            <span className="block font-medium">Somente a gestão vê este relatório</span>
+            <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+              Marque quando o relatório mostrar valores. Secretaria, coordenação e professores não
+              veem o relatório nem o download dele.
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
+      </div>
 
       <DialogFooter>
         <Button variant="outline" onClick={onFechar}>

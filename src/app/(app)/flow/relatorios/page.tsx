@@ -147,7 +147,7 @@ export default function RelatoriosFormulariosPage() {
       {gestao && <PlanilhasDosFormularios />}
 
       <Dialog open={editando !== null} onOpenChange={(aberto) => !aberto && setEditando(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] overflow-x-hidden overflow-y-auto sm:max-w-xl">
           {editando !== null && (
             <EditorDeRelatorio
               relatorio={editando === "novo" ? undefined : editando}

@@ -10,7 +10,7 @@ import { getToken } from "@/lib/auth/session";
  */
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
 
-export type OrigemDoCartao = "manual" | "formulario" | "recorrencia";
+export type OrigemDoCartao = "manual" | "formulario" | "recorrencia" | "reuniao";
 
 export interface Etiqueta {
   id: string;
@@ -41,6 +41,8 @@ export interface Cartao {
   concluidoEm?: string | null;
   origem: OrigemDoCartao;
   formResponseId?: string | null;
+  /** Preenchido quando o cartão nasceu de uma demanda combinada numa reunião (módulo Rotina). */
+  reuniaoId?: number | null;
   responsavelUserId: string;
   responsavelNome: string;
   etiquetas: Etiqueta[];
@@ -113,6 +115,8 @@ export interface PessoaDaEquipe {
   userId: string;
   nome: string;
   email: string;
+  /** Turmas em que a pessoa é professora — é o que permite sugerir responsável pela turma da reunião. */
+  turmaIds: number[];
 }
 
 async function chamar<T>(caminho: string, init?: RequestInit): Promise<T> {
@@ -171,6 +175,20 @@ export function useRecorrencias() {
 
 export function useRegrasDeCartao() {
   return useQuery({ queryKey: ["tarefas", "regras"], queryFn: () => chamar<RegraDeCartao[]>("/regras") });
+}
+
+/**
+ * Cartões que nasceram das demandas combinadas numa reunião (módulo Rotina).
+ *
+ * A reunião só existe depois de salva, então enquanto a diretora está montando a semana o id é
+ * nulo e não há o que buscar — `enabled` evita a chamada em `/da-reuniao/null`.
+ */
+export function useCartoesDaReuniao(reuniaoId: number | null | undefined) {
+  return useQuery({
+    queryKey: ["tarefas", "da-reuniao", reuniaoId],
+    enabled: typeof reuniaoId === "number" && reuniaoId > 0,
+    queryFn: () => chamar<Cartao[]>(`/da-reuniao/${reuniaoId}`),
+  });
 }
 
 // ---------------------------------------------------------------- mudanças
@@ -321,4 +339,26 @@ export function useSalvarRegraDeCartao() {
 
 export function useExcluirRegraDeCartao() {
   return useMutacaoDeTarefas((id: string) => chamar<void>(`/regras/${id}`, { method: "DELETE" }));
+}
+
+export interface DemandaDaReuniao {
+  titulo: string;
+  descricao?: string | null;
+  prazo?: string | null;
+  responsavelUserId: string;
+  etiquetaId?: string | null;
+}
+
+/**
+ * As demandas combinadas na reunião viram cartão no quadro de quem vai fazer.
+ *
+ * Vai o lote inteiro numa requisição: a reunião é um momento só, e meia dúzia de POSTs soltos
+ * deixaria metade das demandas no quadro se a conexão caísse no meio. O backend recusa o lote
+ * quando `reuniaoId` é 0 (reunião ainda não salva) ou quando falta responsável, e a mensagem dele
+ * é a que a tela mostra.
+ */
+export function useCriarCartoesDaReuniao() {
+  return useMutacaoDeTarefas((dados: { reuniaoId: number; demandas: DemandaDaReuniao[] }) =>
+    chamar<Cartao[]>("/da-reuniao", { method: "POST", body: JSON.stringify(dados) })
+  );
 }

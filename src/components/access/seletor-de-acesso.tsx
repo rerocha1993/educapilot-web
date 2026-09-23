@@ -29,7 +29,9 @@ export function SeletorDeAcesso({
   const { data: catalogo, isLoading } = useCatalogoDeAcesso();
   const { data: turmas } = useClasses();
 
-  const ehProfessor = valor.userType !== "Admin";
+  // Só o professor trabalha por turma: é dele a lista que limita quais alunos aparecem. Secretaria
+  // e coordenação atendem a escola inteira, e a pergunta "quais turmas?" só confundia ali.
+  const ehProfessor = valor.userType === "Teacher";
 
   function moduloMarcado(slug: string) {
     return valor.modulos.some((m) => m.moduloSlug === slug);
@@ -93,26 +95,44 @@ export function SeletorDeAcesso({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-[5px]">
         <Label className="text-sm">Tipo de acesso</Label>
-        {/* Quatro perfis não cabem lado a lado em 375px: duas colunas no celular, quatro no
-            computador. O perfil não decide o que a pessoa abre — isso são as áreas abaixo —, ele
-            decide quem é da gestão, e portanto quem vê relatório com valor. */}
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-          {PERFIS.map((opcao) => (
-            <button
-              key={opcao.slug}
-              type="button"
-              onClick={() => escolherPerfil(opcao.slug)}
-              className={cn(
-                "rounded-lg border px-3 py-2 text-left text-sm transition-colors",
-                valor.userType === opcao.slug
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-card hover:border-primary"
-              )}
-            >
-              <span className="block font-medium">{opcao.rotulo}</span>
-              <span className="block text-xs opacity-80">{opcao.descricao}</span>
-            </button>
-          ))}
+        {/* Lista, e não cartões lado a lado: com quatro perfis as colunas ficavam com duas
+            palavras por linha e o nome do perfil cortado no meio. Em lista, o nome fica numa linha
+            e a explicação embaixo, que é como a pessoa lê antes de escolher.
+
+            O escolhido marca com a borda e um fundo fraco: pintar o cartão inteiro de roxo, como
+            antes, apagava a explicação justamente do perfil selecionado. */}
+        <div className="flex flex-col gap-2">
+          {PERFIS.map((opcao) => {
+            const escolhido = valor.userType === opcao.slug;
+            return (
+              <button
+                key={opcao.slug}
+                type="button"
+                aria-pressed={escolhido}
+                onClick={() => escolherPerfil(opcao.slug)}
+                className={cn(
+                  "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  escolhido
+                    ? "border-primary bg-primary/5"
+                    : "border-input bg-card hover:border-primary/60"
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
+                    escolhido ? "border-primary" : "border-input"
+                  )}
+                >
+                  {escolhido && <span className="size-2 rounded-full bg-primary" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{opcao.rotulo}</span>
+                  <span className="block text-xs text-muted-foreground">{opcao.descricao}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
