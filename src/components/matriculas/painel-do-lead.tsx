@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ROTULOS_DO_PERIODO } from "@/components/reception/periodo-do-aluno-campos";
@@ -138,7 +139,7 @@ function Conteudo({
       </div>
 
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-4">
-        {lead.atendimento === "Equipe" && (
+        {lead.aguardandoEquipeDesde && (
           <div className="rounded-2xl bg-action-soft px-3.5 py-3 text-sm text-action-soft-foreground">
             <p className="font-semibold">
               Aguardando a equipe
@@ -274,6 +275,10 @@ function Conteudo({
           </>
         ) : (
           <div className="flex gap-2">
+            <Link href={`/matriculas/conversas?lead=${lead.id}`} className={buttonVariants({ variant: "action", className: "flex-1" })}>
+              <MessageCircle data-icon="inline-start" />
+              Conversa
+            </Link>
             <Button variant="outline" className="flex-1" onClick={() => onEditar(lead)}>
               <Pencil data-icon="inline-start" />
               Editar dados

@@ -108,7 +108,7 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
 
       <EstadoDoAtendimento lead={lead} assistenteAtiva={assistenteAtiva} />
 
-      {lead.atendimento === "Equipe" && lead.motivoRepasse && (
+      {lead.aguardandoEquipeDesde && lead.motivoRepasse && (
         <p className="line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">
           <span className="font-semibold text-foreground">Motivo: </span>
           {lead.motivoRepasse}
@@ -170,7 +170,8 @@ function Chip({ children, tom }: { children: React.ReactNode; tom?: "marca" | "f
 }
 
 function EstadoDoAtendimento({ lead, assistenteAtiva }: { lead: LeadResumo; assistenteAtiva: boolean }) {
-  if (lead.atendimento === "Equipe") {
+  // Espera é o que tem hora de início. A equipe pode estar com a conversa e já ter respondido.
+  if (lead.aguardandoEquipeDesde) {
     const estourado = lead.nivelDaEspera === "Estourado";
     return (
       <div
@@ -186,6 +187,15 @@ function EstadoDoAtendimento({ lead, assistenteAtiva }: { lead: LeadResumo; assi
         {lead.minutosEsperando != null && (
           <span className="ml-auto font-mono font-medium tabular-nums">{esperaEmTexto(lead.minutosEsperando)}</span>
         )}
+      </div>
+    );
+  }
+
+  if (lead.atendimento === "Equipe") {
+    return (
+      <div className="flex items-center gap-2 rounded-[11px] bg-success-soft px-2.5 py-1.5 text-xs font-semibold text-success-soft-foreground">
+        <Headset className="size-3.5" aria-hidden />
+        Equipe no atendimento
       </div>
     );
   }

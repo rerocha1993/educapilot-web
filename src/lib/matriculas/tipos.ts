@@ -81,6 +81,8 @@ export interface Quadro {
   esteira: LeadResumo[];
   esperaAlertaMinutos: number;
   esperaPrazoMinutos: number;
+  /** A assistente de IA responde nesta escola. Desligada, o card não diz "assistente respondendo". */
+  assistenteLigada: boolean;
   truncado: boolean;
 }
 
@@ -152,4 +154,112 @@ export interface ConfiguracaoMatriculas {
 export interface SalvarConfiguracaoMatriculas
   extends Omit<ConfiguracaoMatriculas, "etapas" | "atualizadoEm"> {
   titulosDasEtapas: Partial<Record<EtapaDoFunil, string | null>>;
+}
+
+// ---------------------------------------------------------------- WhatsApp (fase 2)
+// Espelha EducaPilot.Domain/Modules/Admissions/DTOs/WhatsAppDtos.cs.
+
+export type DirecaoDaMensagem = "Recebida" | "Enviada";
+export type AutorDaMensagem = "Familia" | "Equipe" | "Assistente" | "Automacao";
+export type TipoDaMensagem =
+  | "Texto"
+  | "Imagem"
+  | "Audio"
+  | "Video"
+  | "Documento"
+  | "Localizacao"
+  | "Figurinha"
+  | "Modelo"
+  | "Outro";
+export type SituacaoDaMensagem = "Recebida" | "Enviada" | "Entregue" | "Lida" | "Falhou";
+export type CategoriaDoModelo = "Utilidade" | "Marketing";
+export type SituacaoDoModelo = "NaoEnviado" | "EmAnalise" | "Aprovado" | "Recusado" | "Pausado" | "Desativado";
+
+export interface ContaWhatsApp {
+  conectada: boolean;
+  numeroExibido?: string | null;
+  nomeVerificado?: string | null;
+  phoneNumberId?: string | null;
+  wabaId?: string | null;
+  usaAppProprio: boolean;
+  conectadaEm?: string | null;
+  ultimoErro?: string | null;
+  ultimoErroEm?: string | null;
+}
+
+export interface ConectarWhatsApp {
+  phoneNumberId: string;
+  wabaId: string;
+  token: string;
+  segredoDoApp?: string | null;
+}
+
+export interface ModeloDeMensagem {
+  id: string;
+  nome: string;
+  idioma: string;
+  categoria: CategoriaDoModelo;
+  corpo: string;
+  variaveis: string[];
+  previa: string;
+  situacao: SituacaoDoModelo;
+  motivoDaMeta?: string | null;
+  daBiblioteca: boolean;
+  mapeado: boolean;
+  prontoParaEnviar: boolean;
+  uso?: string | null;
+}
+
+export interface SalvarModelo {
+  corpo: string;
+  categoria: CategoriaDoModelo;
+  variaveis: string[];
+}
+
+export interface SincronizacaoDeModelos {
+  jaExistiamNaMeta: number;
+  enviadosParaAprovacao: number;
+  falhas: string[];
+  modelos: ModeloDeMensagem[];
+}
+
+export interface ConversaResumo {
+  leadId: string;
+  nomeResponsavel: string;
+  nomeCrianca?: string | null;
+  telefoneFormatado: string;
+  etapa: EtapaDoFunil;
+  atendimento: QuemAtende;
+  minutosEsperando?: number | null;
+  nivelDaEspera?: NivelDaEspera | null;
+  ultimaMensagem?: string | null;
+  ultimaDirecao: DirecaoDaMensagem;
+  ultimaMensagemEm: string;
+  janelaFechaEm?: string | null;
+}
+
+export interface Mensagem {
+  id: string;
+  direcao: DirecaoDaMensagem;
+  autor: AutorDaMensagem;
+  tipo: TipoDaMensagem;
+  texto?: string | null;
+  situacao: SituacaoDaMensagem;
+  erro?: string | null;
+  modeloNome?: string | null;
+  temArquivo: boolean;
+  arquivoIndisponivel: boolean;
+  midiaTipo?: string | null;
+  midiaNomeArquivo?: string | null;
+  enviadaPor?: string | null;
+  ocorridaEm: string;
+}
+
+export interface Conversa {
+  lead: LeadResumo;
+  whatsAppConectado: boolean;
+  janelaAberta: boolean;
+  janelaFechaEm?: string | null;
+  mensagens: Mensagem[];
+  modelos: ModeloDeMensagem[];
 }

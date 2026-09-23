@@ -8,10 +8,12 @@ import { podeVerArea } from "@/lib/access/pode-ver";
 
 /**
  * Abas de Matrículas. Cada uma é uma área da permissão, com o mesmo slug do catálogo do backend
- * (RecursoDoModulo). Conversas, materiais e métricas entram aqui quando as fases deles chegarem.
+ * (RecursoDoModulo). Materiais e métricas entram aqui quando as fases deles chegarem.
  */
 export const ABAS_DE_MATRICULAS = [
   { href: "/matriculas", label: "Funil", area: "funil" },
+  { href: "/matriculas/conversas", label: "Conversas", area: "conversas" },
+  { href: "/matriculas/whatsapp", label: "WhatsApp", area: "configuracao" },
   { href: "/matriculas/configuracao", label: "Configuração", area: "configuracao" },
 ] as const;
 

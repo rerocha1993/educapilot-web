@@ -17,12 +17,6 @@ import type { EtapaDoFunil, LeadDetalhe, LeadResumo, Quadro } from "@/lib/matric
 import { ETAPAS_FINAIS, TITULO_PADRAO_DA_ETAPA, esperaEmTexto } from "@/lib/matriculas/rotulos";
 import { useMoverLead, useQuadro } from "@/lib/matriculas/use-funil";
 
-/**
- * A assistente de IA entra na fase 3 (docs/matriculas/PLANO.md). Até lá o card não diz "Assistente
- * respondendo", porque ninguém está respondendo.
- */
-const ASSISTENTE_ATIVA = false;
-
 function useBuscaAtrasada(valor: string, ms = 300) {
   const [atrasado, setAtrasado] = useState(valor);
   useEffect(() => {
@@ -142,7 +136,7 @@ export function Funil() {
         <QuadroDoFunil
           quadro={quadro}
           agora={agora}
-          assistenteAtiva={ASSISTENTE_ATIVA}
+          assistenteAtiva={quadro.assistenteLigada}
           onAbrir={setAberto}
           onMover={pedirMudanca}
           onArrastandoChange={setArrastando}
