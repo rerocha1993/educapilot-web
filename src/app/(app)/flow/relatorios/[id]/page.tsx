@@ -14,7 +14,11 @@ import { EditorDeRelatorio } from "@/components/flow/editor-de-relatorio";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { BadgeDeSituacao } from "@/components/flow/badge-de-situacao";
 import {
+  BASE_FORMULARIO,
+  FILTRO_COM_ENVIO,
+  FILTRO_SEM_ENVIO,
   useBaixarRelatorio,
+  useBasesDeRelatorio,
   useDadosDoRelatorio,
   useRelatorioDeFormulario,
 } from "@/lib/flow/use-relatorios";
@@ -26,6 +30,7 @@ const CABECALHO_DE_COLUNA = "text-[11px] font-bold uppercase tracking-[.1em] tex
 export default function RelatorioPage() {
   const { id } = useParams<{ id: string }>();
   const { data: definicao } = useRelatorioDeFormulario(id);
+  const { data: bases } = useBasesDeRelatorio();
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
   const [busca, setBusca] = useState("");
@@ -38,6 +43,27 @@ export default function RelatorioPage() {
   const linhas = (data?.linhas ?? []).filter(
     (l) => !termo || l.valores.some((v) => v.toLowerCase().includes(termo))
   );
+
+  // Com base de cadastro a linha é uma pessoa, não um envio — e quem não enviou é justamente o que
+  // a escola veio procurar. O apoio do cabeçalho precisa dizer de onde a lista saiu.
+  const baseDeCadastro = definicao?.baseDados && definicao.baseDados !== BASE_FORMULARIO
+    ? definicao.baseDados
+    : null;
+  const rotuloDaBase = (bases ?? []).find((b) => b.slug === baseDeCadastro)?.rotulo ?? baseDeCadastro;
+  const apoioDoCruzamento = baseDeCadastro
+    ? [
+        definicao?.cruzamentoFormNome
+          ? `${rotuloDaBase} × ${definicao.cruzamentoFormNome}`
+          : `${rotuloDaBase} · só o cadastro`,
+        definicao?.filtroDoCruzamento === FILTRO_SEM_ENVIO
+          ? "só quem não enviou"
+          : definicao?.filtroDoCruzamento === FILTRO_COM_ENVIO
+            ? "só quem enviou"
+            : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : null;
 
   async function handleBaixar() {
     try {
@@ -62,7 +88,7 @@ export default function RelatorioPage() {
         }
         apoio={
           <>
-            {data?.formNome ?? definicao?.formNome}
+            {apoioDoCruzamento ?? data?.formNome ?? definicao?.formNome}
             {data?.statusFiltro ? ` · só envios ${data.statusFiltro}` : ""}
             {(data?.descricao ?? definicao?.descricao) && (
               <span className="block break-words">{data?.descricao ?? definicao?.descricao}</span>
@@ -91,7 +117,8 @@ export default function RelatorioPage() {
           <Input className="pl-8" placeholder="Buscar em qualquer coluna" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
         <span className="text-sm text-muted-foreground">
-          <span className="font-mono tabular-nums">{linhas.length}</span> envio(s)
+          <span className="font-mono tabular-nums">{linhas.length}</span>{" "}
+          {baseDeCadastro ? "linha(s)" : "envio(s)"}
         </span>
       </div>
 
@@ -121,14 +148,20 @@ export default function RelatorioPage() {
               {linhas.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={data.colunas.length + 2} className="py-10 text-center text-sm text-muted-foreground">
-                    Nenhum envio neste período.
+                    {baseDeCadastro ? "Nenhuma linha com esses filtros." : "Nenhum envio neste período."}
                   </TableCell>
                 </TableRow>
               )}
-              {linhas.map((l) => (
-                <TableRow key={l.respostaId}>
+              {/* A chave leva o índice: linha de cadastro sem envio vem com respostaId zerado, e
+                  todas elas seriam a mesma chave. */}
+              {linhas.map((l, indice) => (
+                <TableRow key={`${l.respostaId}-${indice}`}>
                   <TableCell className="font-mono text-sm whitespace-nowrap tabular-nums">
-                    {formatarDataHora(l.enviadoEm)}
+                    {l.enviadoEm ? (
+                      formatarDataHora(l.enviadoEm)
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <BadgeDeSituacao situacao={l.status} />

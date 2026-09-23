@@ -60,6 +60,28 @@ function periodo(de: string, ate: string) {
 
 // ------------------------------------------------------------------ relatórios montados
 
+/** Base de cadastro em que cada linha é uma pessoa, e não um envio. */
+export const BASE_FORMULARIO = "formulario";
+
+/** Filtros do cruzamento, como o backend os grava. */
+export const FILTRO_TODOS = "todos";
+export const FILTRO_COM_ENVIO = "com-envio";
+export const FILTRO_SEM_ENVIO = "sem-envio";
+
+export interface ColunaDaBase {
+  slug: string;
+  rotulo: string;
+}
+
+export interface BaseDeRelatorio {
+  slug: string;
+  rotulo: string;
+  descricao: string;
+  colunas: ColunaDaBase[];
+  /** Formas de ligar um envio a uma linha desta base (ex.: "responsavel-cpf"). */
+  chaves: string[];
+}
+
 export interface RelatorioDeFormulario {
   id: string;
   nome: string;
@@ -72,6 +94,16 @@ export interface RelatorioDeFormulario {
 
   /** Só a gestão vê este relatório (ele mostra valor). */
   somenteGestao: boolean;
+
+  /** "formulario" (cada linha é um envio) ou o slug da base de cadastro das linhas. */
+  baseDados: string;
+  /** Colunas da base de cadastro que viram coluna. Vazio = todas. */
+  colunasBase: string[];
+  cruzamentoFormId?: string | null;
+  cruzamentoFormNome?: string | null;
+  chaveDeLigacao?: string | null;
+  filtroDoCruzamento?: string | null;
+
   criadoEm: string;
 }
 
@@ -82,6 +114,11 @@ export interface SalvarRelatorio {
   camposIds: string[];
   statusFiltro?: string | null;
   somenteGestao: boolean;
+  baseDados: string;
+  colunasBase: string[];
+  cruzamentoFormId?: string | null;
+  chaveDeLigacao?: string | null;
+  filtroDoCruzamento?: string | null;
 }
 
 export interface ResultadoDoRelatorio {
@@ -92,10 +129,23 @@ export interface ResultadoDoRelatorio {
   formNome: string;
   statusFiltro?: string | null;
   colunas: string[];
-  linhas: { respostaId: string; enviadoEm: string; status: string; valores: string[] }[];
+  /** `enviadoEm` é nulo na linha de cadastro de quem não enviou — que é o caso que a escola procura. */
+  linhas: { respostaId: string; enviadoEm: string | null; status: string; valores: string[] }[];
 }
 
 const CHAVE = ["relatorios-de-formulario"];
+
+/**
+ * De onde um relatório pode partir. Catálogo: só muda com deploy, e é lido toda vez que o editor
+ * abre — fora da chave dos relatórios para não ser recarregado a cada salvamento.
+ */
+export function useBasesDeRelatorio() {
+  return useQuery({
+    queryKey: ["relatorios-bases"],
+    staleTime: Infinity,
+    queryFn: () => json<BaseDeRelatorio[]>("/bases", {}, "Não foi possível carregar as bases de dados."),
+  });
+}
 
 export function useRelatoriosDeFormulario() {
   return useQuery({

@@ -33,6 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CampoDeDinheiro, emReais } from "@/components/finance/campo-de-dinheiro";
+import { SeletorDeAluno } from "@/components/finance/seletor-de-aluno";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
@@ -83,7 +85,8 @@ function ReajusteInput({
 const EMPTY_FORM = {
   studentId: "",
   guardianId: "",
-  valorMensal: "",
+  // Centavos, e não texto: é o campo de dinheiro em real que monta a vírgula (ver CampoDeDinheiro).
+  valorMensal: null as number | null,
   diaVencimento: "10",
   dataInicio: hojeIsoBrasilia(),
   gerarCobrancaAsaas: false,
@@ -104,6 +107,19 @@ export default function MensalidadesPage() {
   const [busca, setBusca] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+
+  // Quem já está vinculado à criança no cadastro. Um só vinculado é o caso comum, e ele entra
+  // escolhido sozinho — a secretaria não precisa decidir nada.
+  const responsaveisDoAluno = (guardians ?? []).filter((g) =>
+    (g.vinculos ?? []).some((v) => String(v.studentId) === form.studentId)
+  );
+
+  const unicoResponsavel = responsaveisDoAluno.length === 1 ? responsaveisDoAluno[0].id : null;
+  if (unicoResponsavel && form.guardianId !== unicoResponsavel && form.studentId) {
+    // Ajuste durante o render, e não num efeito: o valor derivado da escolha do aluno precisa
+    // valer já na mesma renderização, senão o botão de salvar pisca desabilitado.
+    setForm((f) => ({ ...f, guardianId: unicoResponsavel }));
+  }
 
   const now = new Date();
   const [mes] = useState(now.getMonth() + 1);
@@ -177,7 +193,7 @@ export default function MensalidadesPage() {
   }
 
   async function handleCreate() {
-    const valor = Number(form.valorMensal.replace(",", "."));
+    const valor = emReais(form.valorMensal);
     if (!form.studentId || !form.guardianId || !valor || !form.dataInicio) return;
     try {
       await savePlan.mutateAsync({
@@ -434,57 +450,81 @@ export default function MensalidadesPage() {
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Aluno</Label>
-              <Select
-                value={form.studentId || undefined}
-                onValueChange={(v) => v && setForm((f) => ({ ...f, studentId: String(v) }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {() => students?.find((s) => String(s.id) === form.studentId)?.fullName ?? "Selecione"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {students?.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SeletorDeAluno
+                valor={form.studentId}
+                onChange={(studentId) =>
+                  setForm((f) => ({
+                    ...f,
+                    studentId,
+                    // Trocar de aluno limpa o responsável: o de antes é de outra família.
+                    guardianId: "",
+                  }))
+                }
+              />
             </div>
+
             <div className="flex flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Responsável (quem paga)</Label>
-              <Select
-                value={form.guardianId || undefined}
-                onValueChange={(v) => v && setForm((f) => ({ ...f, guardianId: String(v) }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {() => guardians?.find((g) => g.id === form.guardianId)?.fullName ?? "Selecione"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {guardians?.map((g) => (
-                    <SelectItem key={g.id} value={g.id}>
-                      {g.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {guardians?.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Nenhum responsável cadastrado — crie um na aba Responsáveis primeiro.
-                </p>
+
+              {/* A criança já tem responsável vinculado no cadastro: procurar de novo numa lista
+                  de centenas era pedir duas vezes a mesma informação — e abria espaço para
+                  vincular a mensalidade ao pai de outra família. Com um único vinculado, ele já
+                  vem escolhido; com dois, escolhe-se entre os dois. */}
+              {responsaveisDoAluno.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  {responsaveisDoAluno.map((g) => {
+                    const escolhido = form.guardianId === g.id;
+                    const vinculo = (g.vinculos ?? []).find((v) => String(v.studentId) === form.studentId);
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, guardianId: g.id }))}
+                        className={`flex min-h-10 items-center justify-between gap-2 rounded-lg border px-3 text-left text-sm transition-colors ${
+                          escolhido ? "border-primary bg-primary/5 font-medium" : "border-input hover:border-primary/60"
+                        }`}
+                      >
+                        <span className="min-w-0 break-words">{g.fullName}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {vinculo?.responsavelFinanceiro ? "Financeiro" : (vinculo?.parentesco ?? "")}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <>
+                  <Select
+                    value={form.guardianId || undefined}
+                    onValueChange={(v) => v && setForm((f) => ({ ...f, guardianId: String(v) }))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue>
+                        {() => guardians?.find((g) => g.id === form.guardianId)?.fullName ?? "Selecione"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {guardians?.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>
+                          {g.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {form.studentId
+                      ? "Este aluno ainda não tem responsável vinculado. Escolha na lista ou faça o vínculo na aba Responsáveis."
+                      : "Escolha o aluno primeiro: o responsável vinculado a ele já vem selecionado."}
+                  </p>
+                </>
               )}
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Valor mensal</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.valorMensal}
-                  onChange={(e) => setForm((f) => ({ ...f, valorMensal: e.target.value }))}
+                <CampoDeDinheiro
+                  valorEmCentavos={form.valorMensal}
+                  onChange={(centavos) => setForm((f) => ({ ...f, valorMensal: centavos }))}
                 />
               </div>
               <div className="flex flex-col gap-[5px]">
