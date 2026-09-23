@@ -13,7 +13,13 @@ import type { AcessoDoUsuario } from "./use-acessos";
  * A ordem importa: vale o primeiro prefixo que casa, então o mais específico vem antes.
  */
 const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
-  // Formulários
+  // Fluxos (Kanban de tarefas + formulários)
+  { padrao: /^\/flow\/tarefas\/equipe/, modulo: "flow", area: "equipe" },
+  { padrao: /^\/flow\/tarefas\/automacoes/, modulo: "flow", area: "recorrencias" },
+  // O quadro da propria pessoa nao e area vendida a parte: quem tem qualquer area de Fluxos
+  // tem o proprio quadro. Sem isso, quem ja usava o sistema com areas marcadas abriria o
+  // modulo sem enxergar a tela nova ate alguem editar a permissao dele.
+  { padrao: /^\/flow\/tarefas/, modulo: "flow", area: null },
   { padrao: /^\/flow\/respostas/, modulo: "flow", area: "respostas" },
   { padrao: /^\/flow\/[^/]+\/respostas/, modulo: "flow", area: "respostas" },
   { padrao: /^\/flow\/contratos/, modulo: "flow", area: "contratos" },

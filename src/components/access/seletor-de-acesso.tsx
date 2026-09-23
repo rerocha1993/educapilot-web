@@ -3,6 +3,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AREAS_SUGERIDAS, PERFIS } from "@/lib/access/perfis";
 import { cn } from "@/lib/utils";
 import { useCatalogoDeAcesso, type AcessoDoUsuario } from "@/lib/access/use-acessos";
 import { useClasses } from "@/lib/kernel/use-classes";
@@ -28,7 +29,9 @@ export function SeletorDeAcesso({
   const { data: catalogo, isLoading } = useCatalogoDeAcesso();
   const { data: turmas } = useClasses();
 
-  const ehProfessor = valor.userType !== "Admin";
+  // Só o professor trabalha por turma: é dele a lista que limita quais alunos aparecem. Secretaria
+  // e coordenação atendem a escola inteira, e a pergunta "quais turmas?" só confundia ali.
+  const ehProfessor = valor.userType === "Teacher";
 
   function moduloMarcado(slug: string) {
     return valor.modulos.some((m) => m.moduloSlug === slug);
@@ -71,30 +74,65 @@ export function SeletorDeAcesso({
     });
   }
 
+  /**
+   * Troca o perfil e, num acesso ainda em branco, já marca o que aquele perfil costuma precisar.
+   *
+   * Só quando está em branco: sobrescrever o que alguém marcou a mão seria apagar trabalho — e é
+   * justamente ao editar o acesso de quem já existe que isso doeria.
+   */
+  function escolherPerfil(perfil: string) {
+    const emBranco = valor.modulos.length === 0;
+    const sugestao = AREAS_SUGERIDAS[perfil] ?? [];
+
+    onChange({
+      ...valor,
+      userType: perfil,
+      modulos: emBranco && sugestao.length > 0 ? sugestao.map((m) => ({ ...m })) : valor.modulos,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-[5px]">
         <Label className="text-sm">Tipo de acesso</Label>
-        <div className="flex gap-2">
-          {[
-            { valor: "Teacher", rotulo: "Professor(a)", ajuda: "Trabalha por turma" },
-            { valor: "Admin", rotulo: "Gestão", ajuda: "Administra a escola" },
-          ].map((opcao) => (
-            <button
-              key={opcao.valor}
-              type="button"
-              onClick={() => onChange({ ...valor, userType: opcao.valor })}
-              className={cn(
-                "flex-1 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
-                valor.userType === opcao.valor
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-card hover:border-primary"
-              )}
-            >
-              <span className="block font-medium">{opcao.rotulo}</span>
-              <span className="block text-xs opacity-80">{opcao.ajuda}</span>
-            </button>
-          ))}
+        {/* Lista, e não cartões lado a lado: com quatro perfis as colunas ficavam com duas
+            palavras por linha e o nome do perfil cortado no meio. Em lista, o nome fica numa linha
+            e a explicação embaixo, que é como a pessoa lê antes de escolher.
+
+            O escolhido marca com a borda e um fundo fraco: pintar o cartão inteiro de roxo, como
+            antes, apagava a explicação justamente do perfil selecionado. */}
+        <div className="flex flex-col gap-2">
+          {PERFIS.map((opcao) => {
+            const escolhido = valor.userType === opcao.slug;
+            return (
+              <button
+                key={opcao.slug}
+                type="button"
+                aria-pressed={escolhido}
+                onClick={() => escolherPerfil(opcao.slug)}
+                className={cn(
+                  "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  escolhido
+                    ? "border-primary bg-primary/5"
+                    : "border-input bg-card hover:border-primary/60"
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
+                    escolhido ? "border-primary" : "border-input"
+                  )}
+                >
+                  {escolhido && <span className="size-2 rounded-full bg-primary" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{opcao.rotulo}</span>
+                  <span className="block text-xs text-muted-foreground">{opcao.descricao}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -36,6 +36,29 @@ export function getSession(): StoredSession | null {
   }
 }
 
+/**
+ * A sessão como texto cru, do jeito que está guardada.
+ *
+ * Existe para o useSession poder ler a sessão por useSyncExternalStore: ele exige um valor
+ * ESTÁVEL a cada leitura, e getSession devolve um objeto novo toda vez — o que faria o React
+ * renderizar em laço.
+ */
+export function lerSessaoBruta(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(SESSION_KEY) ?? window.sessionStorage.getItem(SESSION_KEY);
+  } catch {
+    // Navegador com storage bloqueado: para o sistema, é o mesmo que não ter sessão.
+    return null;
+  }
+}
+
+/** Avisa quando OUTRA aba entra ou sai. Na mesma aba, quem troca a sessão navega logo depois. */
+export function assinarSessao(aoMudar: () => void): () => void {
+  window.addEventListener("storage", aoMudar);
+  return () => window.removeEventListener("storage", aoMudar);
+}
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(STORAGE_KEY) ?? window.sessionStorage.getItem(STORAGE_KEY);

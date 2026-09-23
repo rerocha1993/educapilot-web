@@ -50,9 +50,23 @@ export const NAV_ITEMS = [
   { href: "/portaria", label: "Portaria", icon: DoorOpen, moduleSlug: "reception" },
   { href: "/matriculas", label: "Matrículas", icon: SquareKanban, moduleSlug: "matriculas" },
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
-  { href: "/flow", label: "Formulários", icon: FileStack, moduleSlug: "flow" },
+  { href: "/flow", label: "Fluxos", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
 ] as const;
+
+/**
+ * Subitens que abrem embaixo do módulo quando a pessoa está dentro dele.
+ *
+ * Fluxos virou dois produtos na mesma caixa: o quadro de tarefas da equipe e os formulários da
+ * família. Oito pílulas numa faixa só era uma lista, não uma navegação — aqui a barra separa as
+ * duas metades, e as pílulas de dentro da tela passam a mostrar só as funções da metade aberta.
+ */
+export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]> = {
+  "/flow": [
+    { href: "/flow/tarefas", label: "Quadro" },
+    { href: "/flow", label: "Formulários" },
+  ],
+};
 
 /**
  * Os dois grupos do menu, na ordem da entrega de design: Operação é o dia a dia, Escola é o que

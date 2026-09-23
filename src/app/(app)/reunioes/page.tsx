@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
+import { DemandasDaReuniao } from "@/components/tasks/demandas-da-reuniao";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { cn } from "@/lib/utils";
@@ -91,6 +93,7 @@ export default function ReunioesPage() {
 
   const { data: report, isLoading: reportLoading } = useMeetingReport(classId, week.start, week.end);
   const saveMeeting = useSaveMeeting();
+  const queryClient = useQueryClient();
 
   // Novo (2026-09, feedback do cliente) — "na reunião pode trazer o planejamento das
   // professoras pra saber o que foi trabalhado": mesmo endpoint já usado em
@@ -126,8 +129,10 @@ export default function ReunioesPage() {
     .map((s) => ({ studentName: s.fullName, count: s.absences.length }))
     .sort((a, b) => b.count - a.count);
 
-  async function handleSave(status: "Aberto" | "Finalizado") {
-    if (classId === null) return;
+  // Devolve o id da reunião salva: as demandas só viram cartão penduradas nela, e na primeira
+  // vez da semana a reunião nasce dentro do próprio "Salvar demandas".
+  async function handleSave(status: "Aberto" | "Finalizado"): Promise<number | null> {
+    if (classId === null) return null;
     try {
       await saveMeeting.mutateAsync({
         id: currentMeeting?.id,
@@ -138,8 +143,21 @@ export default function ReunioesPage() {
         summary: summary || null,
       });
       toast.success(status === "Finalizado" ? "Reunião finalizada." : "Reunião salva.");
+
+      // O POST/PUT de Meeting só confirma, não devolve a entidade — então relê a lista (a
+      // mutação já a invalidou) e procura a reunião desta turma nesta semana. `currentMeeting`
+      // ainda é o de antes do salvamento neste render, e seria nulo justamente na criação.
+      await queryClient.refetchQueries({ queryKey: ["meetings"] });
+      const todas = queryClient.getQueryData<MeetingDto[]>(["meetings"]) ?? [];
+      const salva = todas.find(
+        (m) =>
+          m.classId === classId &&
+          new Date(m.createdAt).toDateString() === week.start.toDateString()
+      );
+      return salva?.id ?? currentMeeting?.id ?? null;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar reunião.");
+      return null;
     }
   }
 
@@ -372,6 +390,21 @@ export default function ReunioesPage() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Novo (2026-09, feedback do cliente) — "a diretora registra as demandas combinadas na
+          reunião e, ao salvar, elas viram cartões no quadro de quem vai fazer". Vem depois de
+          "Como foi a reunião" porque é o desfecho da conversa, não o começo dela. */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Demandas desta reunião</h2>
+        {/* `key` por turma+semana: o rascunho é do encontro que está aberto na tela, e trocar de
+            semana com demandas digitadas as mandaria para a reunião errada. */}
+        <DemandasDaReuniao
+          key={`${classId}-${weekIndex}`}
+          reuniaoId={currentMeeting?.id ?? null}
+          turmaId={classId}
+          onSalvarReuniao={() => handleSave("Aberto")}
+        />
       </div>
 
       <MeetingHistory classId={classId} meetings={meetings ?? []} />
