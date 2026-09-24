@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import type { EtapaDoFunil, LeadDetalhe, LeadResumo, Quadro } from "@/lib/matriculas/tipos";
 import { ETAPAS_FINAIS, TITULO_PADRAO_DA_ETAPA, esperaEmTexto } from "@/lib/matriculas/rotulos";
 import { useMoverLead, useQuadro } from "@/lib/matriculas/use-funil";
+import { usePrimeirosPassos } from "@/lib/matriculas/use-assistente";
+import Link from "next/link";
 
 function useBuscaAtrasada(valor: string, ms = 300) {
   const [atrasado, setAtrasado] = useState(valor);
@@ -77,6 +79,7 @@ export function Funil() {
     <div className="flex flex-col gap-4">
       <div className={cn("flex flex-col gap-4 transition-[filter,opacity] duration-300", arrastando && "opacity-50 blur-[2px]")}>
         <MatriculasNav />
+        <AvisoDePrimeirosPassos />
 
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -205,5 +208,22 @@ function Numeros({ quadro, carregando, agora }: { quadro?: Quadro; carregando: b
         </div>
       ))}
     </div>
+  );
+}
+
+/** Enquanto a escola não termina a configuração, o funil lembra onde ela parou. */
+function AvisoDePrimeirosPassos() {
+  const { data } = usePrimeirosPassos();
+  if (!data || data.pronta) return null;
+  return (
+    <Link
+      href="/matriculas/comecar"
+      className="flex items-center justify-between gap-3 rounded-2xl bg-action-soft px-4 py-3 text-[13.5px] transition-colors hover:bg-action-soft/70"
+    >
+      <span>
+        <b>Primeiros passos:</b> {data.feitos} de {data.obrigatorios} prontos. Termine a configuração para a assistente atender as famílias.
+      </span>
+      <span className="shrink-0 font-semibold text-action">Continuar</span>
+    </Link>
   );
 }

@@ -4,6 +4,7 @@ import type {
   Assistente,
   FichaDaEscola,
   PerguntaSemResposta,
+  PrimeirosPassos,
   RespostaDeTeste,
   SalvarAjustesDaAssistente,
   TelaDaFicha,
@@ -92,5 +93,13 @@ export function useTestarAssistente() {
   return useMutation({
     mutationFn: (dto: { mensagens: TurnoDeTeste[]; nomeDoContato?: string | null }) =>
       matriculasJson<RespostaDeTeste>("/assistente/teste", { method: "POST", body: JSON.stringify(dto) }, "A assistente não respondeu."),
+  });
+}
+
+/** O cadastro guiado: cada passo se marca sozinho pelo que a escola já salvou. */
+export function usePrimeirosPassos() {
+  return useQuery({
+    queryKey: ["matriculas", "primeiros-passos"],
+    queryFn: () => matriculasJson<PrimeirosPassos>("/primeiros-passos", {}, "Não foi possível carregar os primeiros passos."),
   });
 }

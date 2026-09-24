@@ -502,3 +502,23 @@ export interface ResultadosDosAnuncios {
   anuncios: ResultadoDoAnuncio[];
   aviso?: string | null;
 }
+
+// ------------------------------------------------------------------ cadastro guiado (fase 7)
+
+export interface PassoDoCadastro {
+  chave: string;
+  titulo: string;
+  descricao: string;
+  situacao: "feito" | "pendente" | "opcional";
+  detalhe?: string | null;
+  caminho: string;
+  obrigatorio: boolean;
+}
+
+export interface PrimeirosPassos {
+  passos: PassoDoCadastro[];
+  feitos: number;
+  obrigatorios: number;
+  pronta: boolean;
+  assistenteLigada: boolean;
+}

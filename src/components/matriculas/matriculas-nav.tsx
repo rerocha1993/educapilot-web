@@ -19,6 +19,7 @@ export const ABAS_DE_MATRICULAS = [
   { href: "/matriculas/anuncios", label: "Anúncios", area: "configuracao" },
   { href: "/matriculas/whatsapp", label: "WhatsApp", area: "configuracao" },
   { href: "/matriculas/configuracao", label: "Configuração", area: "configuracao" },
+  { href: "/matriculas/comecar", label: "Primeiros passos", area: "configuracao" },
 ] as const;
 
 export function MatriculasNav() {
