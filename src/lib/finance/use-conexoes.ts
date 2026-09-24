@@ -100,3 +100,113 @@ export function useSincronizarAgora() {
     },
   });
 }
+
+/* ------------------------------------------------------------ credenciais */
+
+export interface BancoComApi {
+  codigo: string;
+  nome: string;
+  exigeCertificado: boolean;
+  portal: string;
+  comoLiberar: string;
+}
+
+export interface CredencialDoBanco {
+  id: string;
+  contaId: string;
+  contaNome: string;
+  banco: string;
+  bancoNome: string;
+  ambiente: "homologacao" | "producao";
+  clientId: string;
+  agencia?: string | null;
+  numero?: string | null;
+  escoposExtras?: string | null;
+  ativa: boolean;
+  temCertificado: boolean;
+  ultimoTesteEm?: string | null;
+  ultimoTesteOk?: boolean | null;
+  ultimoTesteMensagem?: string | null;
+  faltando: string[];
+}
+
+export interface SalvarCredencial {
+  contaId: string;
+  banco: string;
+  ambiente: "homologacao" | "producao";
+  clientId: string;
+  /** Em branco mantém o que já está gravado — a tela nunca reexibe o segredo. */
+  clientSecret?: string | null;
+  certificadoPfx?: string | null;
+  senhaDoCertificado?: string | null;
+  agencia?: string | null;
+  numero?: string | null;
+  escoposExtras?: string | null;
+  ativa: boolean;
+}
+
+export interface TesteDaCredencial {
+  ok: boolean;
+  mensagem: string;
+  linhas: number;
+  saldoDoBanco?: number | null;
+  amostra: string[];
+}
+
+export function useBancosComApi() {
+  return useQuery({
+    queryKey: ["finance", "bancos-com-api"],
+    queryFn: () => chamar<BancoComApi[]>("/bancos"),
+    // O catálogo é código, não dado da escola: não muda entre dois cliques.
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useCredenciaisDeBanco() {
+  return useQuery({
+    queryKey: ["finance", "credenciais-banco"],
+    queryFn: () => chamar<CredencialDoBanco[]>("/credenciais"),
+  });
+}
+
+export function useSalvarCredencial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dados }: { id?: string; dados: SalvarCredencial }) =>
+      chamar<CredencialDoBanco>(id ? `/credenciais/${id}` : "/credenciais", {
+        method: id ? "PUT" : "POST",
+        body: JSON.stringify(dados),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["finance"] }),
+  });
+}
+
+export function useExcluirCredencial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => chamar<void>(`/credenciais/${id}`, { method: "DELETE" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["finance"] }),
+  });
+}
+
+export function useTestarCredencial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => chamar<TesteDaCredencial>(`/credenciais/${id}/testar`, { method: "POST" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["finance", "credenciais-banco"] }),
+  });
+}
+
+/** Lê o .pfx como base64 para mandar no corpo — o arquivo nunca é gravado no disco do navegador. */
+export function lerArquivoComoBase64(arquivo: File): Promise<string> {
+  return new Promise((resolver, rejeitar) => {
+    const leitor = new FileReader();
+    leitor.onerror = () => rejeitar(new Error("Não consegui ler o arquivo do certificado."));
+    leitor.onload = () => {
+      const resultado = String(leitor.result ?? "");
+      // O FileReader devolve "data:...;base64,XXXX" — o servidor só quer o depois da vírgula.
+      resolver(resultado.slice(resultado.indexOf(",") + 1));
+    };
+    leitor.readAsDataURL(arquivo);
+  });
+}

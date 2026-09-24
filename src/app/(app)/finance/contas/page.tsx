@@ -29,6 +29,7 @@ import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { CampoDeDinheiro, emCentavos, emReais } from "@/components/finance/campo-de-dinheiro";
 import { ConexoesDasContas } from "@/components/finance/conexoes-das-contas";
+import { CredenciaisDeBanco } from "@/components/finance/credenciais-de-banco";
 import { BANCOS, banco } from "@/lib/finance/bancos";
 import {
   TIPOS_DE_CONTA,
@@ -255,6 +256,7 @@ export default function ContasPage() {
       )}
 
       {ativas.length > 0 && <ConexoesDasContas contas={contas ?? []} />}
+      {ativas.length > 0 && <CredenciaisDeBanco contas={contas ?? []} />}
 
       {(transferencias ?? []).length > 0 && (
         <div className="rounded-xl border border-border bg-card p-[18px]">
