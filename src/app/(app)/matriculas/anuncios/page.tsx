@@ -27,13 +27,13 @@ export default function AnunciosPage() {
         </p>
       </div>
 
-      <div className="grid max-w-6xl gap-4">
+      <div className="grid min-w-0 max-w-6xl grid-cols-1 gap-4">
         <section className="rounded-[24px] border border-border bg-card p-5">
           <h2 className="mb-3 font-heading text-base font-semibold">Facebook</h2>
           {isLoading || !conta ? <Skeleton className="h-16 rounded-2xl" /> : <ConexaoFacebook conta={conta} />}
         </section>
 
-        <section className="rounded-[24px] border border-border bg-card p-5">
+        <section className="min-w-0 rounded-[24px] border border-border bg-card p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-heading text-base font-semibold">Resultado</h2>
             <div role="radiogroup" aria-label="Período" className="flex rounded-lg bg-muted p-[3px]">

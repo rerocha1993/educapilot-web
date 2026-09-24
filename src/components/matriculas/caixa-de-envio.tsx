@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowUp, Clock3 } from "lucide-react";
@@ -50,14 +50,21 @@ function TextoLivre({ conversa, agora }: { conversa: Conversa; agora: number }) 
   // minutos de sobra e a conversa do dia seguinte já não pôde acontecer.
   const acabando = fecha ? fecha.getTime() - agora < 2 * 60 * 60_000 : false;
 
+  // Trava na hora, e não pelo isPending: o estado da mutação só muda na próxima renderização, e dois Enter
+  // rápidos mandavam a mesma mensagem duas vezes para a família.
+  const enviando = useRef(false);
+
   async function mandar() {
     const t = texto.trim();
-    if (!t || enviar.isPending) return;
+    if (!t || enviando.current) return;
+    enviando.current = true;
     try {
       await enviar.mutateAsync(t);
       setTexto("");
     } catch (erro) {
       toast.error(mensagem(erro, "Não foi possível enviar."));
+    } finally {
+      enviando.current = false;
     }
   }
 

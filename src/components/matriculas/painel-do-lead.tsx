@@ -348,6 +348,19 @@ const DESCRICAO_DO_EVENTO: Record<string, string> = {
   alerta_de_espera_enviado: "Equipe avisada da espera",
   briefing_gerado: "Briefing da visita pronto",
   estilo_ajustado: "Resposta da assistente ajustada",
+  visita_agendada: "Visita marcada pela assistente",
+  material_enviado: "Material enviado",
+  material_falhou: "Material não saiu",
+  lembrete_da_vespera_falhou: "Lembrete da véspera não saiu",
+  lembrete_do_dia_falhou: "Lembrete de uma hora antes não saiu",
+  pedido_de_remarcacao_falhou: "Pedido de remarcação não saiu",
+  retomada_falhou: "Retomada não saiu",
+  reengajamento_falhou: "Resposta pendente não saiu",
+  reengajamento_dispensado: "Nada pendente para responder",
+  formulario_do_anuncio: "Preencheu o formulário do anúncio",
+  conversao_enviada: "A Meta foi avisada do resultado do anúncio",
+  clique_em_anuncio: "Clicou num anúncio",
+  briefing_falhou: "Briefing da visita não saiu",
 };
 
 function Briefing({ json, deOutraVisita }: { json: string; deOutraVisita: boolean }) {

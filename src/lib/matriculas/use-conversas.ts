@@ -78,8 +78,9 @@ export function useAssumirConversa(leadId: string) {
  * pôr o endereço da API direto num &lt;img&gt;: o navegador não manda o token.
  */
 export function useArquivoDaMensagem(mensagemId: string | null) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [falhou, setFalhou] = useState(false);
+  // O resultado guarda de qual mensagem é: se o balão passar a mostrar outra mensagem, o arquivo da anterior
+  // não aparece no lugar (nem o endereço já revogado).
+  const [estado, setEstado] = useState<{ id: string; url: string | null; falhou: boolean } | null>(null);
 
   useEffect(() => {
     if (!mensagemId) return;
@@ -91,16 +92,16 @@ export function useArquivoDaMensagem(mensagemId: string | null) {
         const blob = await res.blob();
         if (cancelado) return;
         criado = URL.createObjectURL(blob);
-        setUrl(criado);
+        setEstado({ id: mensagemId, url: criado, falhou: false });
       })
-      .catch(() => !cancelado && setFalhou(true));
+      .catch(() => !cancelado && setEstado({ id: mensagemId, url: null, falhou: true }));
     return () => {
       cancelado = true;
       if (criado) URL.revokeObjectURL(criado);
     };
   }, [mensagemId]);
 
-  return { url, falhou };
+  return estado && estado.id === mensagemId ? { url: estado.url, falhou: estado.falhou } : { url: null, falhou: false };
 }
 
 // ------------------------------------------------------------------ número e modelos
