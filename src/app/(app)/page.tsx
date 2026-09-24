@@ -19,6 +19,7 @@ import { RotinaNav } from "@/components/tasks/rotina-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useClasses } from "@/lib/kernel/use-classes";
+import { useStudentsByClass } from "@/lib/kernel/use-students";
 import {
   useAttendanceByClass,
   useSaveAttendance,
@@ -73,12 +74,16 @@ export default function ChamadaPage() {
   }, [classes, selectedClassId]);
 
   const selectedClass = classes?.find((c) => c.id === selectedClassId);
+
+  // Os alunos vêm da própria turma, não de dentro da lista de turmas: para professor a lista vem
+  // de /api/User/classes, que traz só id e nome — a chamada abria vazia para quem mais a usa.
+  const { data: students, isLoading: studentsLoading } = useStudentsByClass(selectedClassId);
   const roster = useMemo(() => {
-    const students = (selectedClass?.students ?? []).filter(
+    const validos = (students ?? []).filter(
       (s): s is typeof s & { id: number; fullName: string } => s.id != null && !!s.fullName
     );
-    return [...students].sort((a, b) => a.fullName.localeCompare(b.fullName));
-  }, [selectedClass]);
+    return [...validos].sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }, [students]);
 
   const date = useMemo(() => new Date(dateStr + "T00:00:00"), [dateStr]);
   const { data: existingAttendance, isLoading: attendanceLoading, isError } =
@@ -98,7 +103,7 @@ export default function ChamadaPage() {
     }
     setMarks(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClassId, dateStr, existingAttendance]);
+  }, [selectedClassId, dateStr, existingAttendance, roster]);
 
   const presentCount = Object.values(marks).filter((m) => m.status === "P").length;
 
@@ -245,7 +250,7 @@ export default function ChamadaPage() {
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        {!classesLoading && !attendanceLoading && roster.length === 0 ? (
+        {!classesLoading && !studentsLoading && !attendanceLoading && roster.length === 0 ? (
           // Sem botão: a ação (escolher turma) já está no cabeçalho.
           <EstadoVazio
             icone={<Users />}
@@ -268,7 +273,7 @@ export default function ChamadaPage() {
                 </tr>
               </thead>
               <tbody>
-                {(classesLoading || attendanceLoading) &&
+                {(classesLoading || studentsLoading || attendanceLoading) &&
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="border-b border-border last:border-0">
                       <td className="px-4 py-3" colSpan={2}>

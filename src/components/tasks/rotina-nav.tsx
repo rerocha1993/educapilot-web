@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { podeVerRota } from "@/lib/access/pode-ver";
 
 // Sub-navegação do módulo Rotina (mais telas do design/handoff (R5-R13) entram
 // aqui conforme forem construídas). Rotina não tem uma rota de índice própria
@@ -20,6 +22,12 @@ const ITEMS = [
 
 export function RotinaNav() {
   const pathname = usePathname();
+  const { data: meuAcesso, isLoading, isError } = useMeuAcesso();
+
+  // Só as abas que a pessoa pode abrir. Mostrar a aba e responder "Sem acesso" no clique era o
+  // defeito: a professora via Materiais e Reuniões e caía num beco. Enquanto o acesso carrega
+  // não mostra nenhuma — podeVerRota trata acesso ausente como "vê tudo", e as abas piscariam.
+  const itens = isLoading || isError ? [] : ITEMS.filter((item) => podeVerRota(meuAcesso, item.href));
 
   return (
     // Guia: pílulas numa faixa bg-muted; o ativo é branco com sombra leve. A faixa
@@ -27,7 +35,7 @@ export function RotinaNav() {
     // rolando na horizontal no celular.
     <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
       <div className="flex w-max max-w-full gap-1 rounded-lg bg-muted p-1">
-        {ITEMS.map((item) => {
+        {itens.map((item) => {
           const active =
             pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
           return (

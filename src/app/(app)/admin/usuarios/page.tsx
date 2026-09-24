@@ -36,7 +36,8 @@ import { toast } from "sonner";
 import { useUsers, useSaveUser, useDeleteUser, useSendInvite, type UserDto } from "@/lib/kernel/use-users";
 import { cn } from "@/lib/utils";
 import { AcessoDialog } from "@/components/access/acesso-dialog";
-import { SeletorDeAcesso } from "@/components/access/seletor-de-acesso";
+import { SeletorDeAcesso, acessoSemModulo } from "@/components/access/seletor-de-acesso";
+import { AREAS_SUGERIDAS } from "@/lib/access/perfis";
 import { type AcessoDoUsuario } from "@/lib/access/use-acessos";
 
 // Pilulas do guia: a ativa e um cartao branco com sombra leve dentro da faixa bg-muted.
@@ -110,11 +111,11 @@ export default function UsuariosPage() {
   const [inviteNome, setInviteNome] = useState("");
   const [linkConvite, setLinkConvite] = useState<string | null>(null);
 
-  // Professor sem módulo é o padrão seguro: quem convida marca o que a pessoa precisa, em vez
-  // de tirar o que ela não deveria ter.
+  // Começa como professor com as áreas que professor costuma usar. "Sem módulo" parecia o padrão
+  // seguro, mas nenhuma permissão gravada é a regra de legado que libera o sistema inteiro.
   const [inviteAcesso, setInviteAcesso] = useState<AcessoDoUsuario>({
     userType: "Teacher",
-    modulos: [],
+    modulos: (AREAS_SUGERIDAS.Teacher ?? []).map((m) => ({ ...m, areas: [...m.areas] })),
     classIds: [],
   });
 
@@ -441,13 +442,14 @@ export default function UsuariosPage() {
             )}
 
             <SeletorDeAcesso valor={inviteAcesso} onChange={setInviteAcesso} />
+            {acessoSemModulo(inviteAcesso) && <p className="text-sm text-destructive">Marque ao menos um módulo para este acesso.</p>}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setInviteOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleInvite} disabled={sendInvite.isPending || !inviteEmail.trim()}>
+            <Button onClick={handleInvite} disabled={sendInvite.isPending || !inviteEmail.trim() || acessoSemModulo(inviteAcesso)}>
               {sendInvite.isPending ? "Enviando..." : "Enviar convite"}
             </Button>
           </DialogFooter>

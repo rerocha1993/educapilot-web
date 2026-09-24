@@ -86,7 +86,7 @@ export function AppShell({
   const menuAberto = menuAbertoEm === pathname;
   const abrirMenu = () => setMenuAbertoEm(pathname);
   const fecharMenu = () => setMenuAbertoEm(null);
-  const { moduloVisivel, rotaVisivel } = useVisibilidade();
+  const { moduloVisivel, rotaVisivel, entradaDo } = useVisibilidade();
   const { data: modulosAtivos } = useActiveModules();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -259,7 +259,7 @@ export function AppShell({
               {grupo.itens.map((item) => (
                 <div key={item.href}>
                   <ItemDaSidebar
-                    href={item.href}
+                    href={entradaDo(item.href)}
                     label={item.label}
                     icon={item.icon}
                     ativo={itemAtivo(item.href)}
@@ -375,7 +375,7 @@ export function AppShell({
           {abas.map((item) => (
             <AbaDoCelular
               key={item.href}
-              href={item.href}
+              href={entradaDo(item.href)}
               label={ROTULO_CURTO[item.href] ?? item.label}
               icon={item.icon}
               ativa={itemAtivo(item.href)}
@@ -433,7 +433,7 @@ export function AppShell({
                   {grupo.itens.map((item) => (
                     <div key={item.href}>
                       <ItemDaSidebar
-                        href={item.href}
+                        href={entradaDo(item.href)}
                         label={item.label}
                         icon={item.icon}
                         ativo={itemAtivo(item.href)}

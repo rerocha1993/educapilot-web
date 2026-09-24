@@ -281,7 +281,7 @@ function CartaoPresencas({ painel }: { painel: PainelInicio }) {
 
   return (
     <Estatistica
-      rotulo="Presenças de hoje"
+      rotulo="Chamada de hoje"
       etiqueta={<EtiquetaDoCartao tom={pct >= 90 ? "success" : "neutro"}>{pct}%</EtiquetaDoCartao>}
       valor={naEscola}
       total={alunosAtivos}

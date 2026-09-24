@@ -66,6 +66,18 @@ export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]>
 };
 
 /**
+ * Por onde entrar em cada módulo, na ordem de preferência.
+ *
+ * O item do menu aponta para a tela âncora do módulo, e ela tem área própria: "/" é a Chamada e
+ * "/flow" são os Formulários. Quem não tem essa área clicava no módulo e caía em "Sem acesso" — a
+ * professora com só o Quadro, em Fluxos. O menu leva para a primeira destas que a pessoa pode abrir.
+ */
+export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
+  "/": ["/", "/ocorrencias", "/checklist", "/planejamento-semanal", "/materiais", "/reunioes", "/relatorios"],
+  "/flow": ["/flow", "/flow/tarefas", "/flow/respostas", "/flow/contratos", "/flow/relatorios", "/flow/referencias"],
+};
+
+/**
  * Os dois grupos do menu, na ordem da entrega de design: Operação é o dia a dia, Escola é o que
  * se ajusta de vez em quando. Cada href vem de NAV_ITEMS ou é Início/Administração, que não são
  * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.

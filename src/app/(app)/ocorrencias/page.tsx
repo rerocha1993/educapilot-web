@@ -27,6 +27,7 @@ import { RotinaNav } from "@/components/tasks/rotina-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
+import { getSession } from "@/lib/auth/session";
 import { useStudentsByClass } from "@/lib/kernel/use-students";
 import {
   useCreateOccurrences,
@@ -88,11 +89,21 @@ const EMPTY_FORM = {
 export default function OcorrenciasPage() {
   const { data: classes } = useClasses();
   const [{ start, end }, setRange] = useState(defaultRange());
-  const [reportClassId, setReportClassId] = useState<number | null>(null);
+  const [turmaEscolhida, setReportClassId] = useState<number | null>(null);
   const startDate = useMemo(() => new Date(start + "T00:00:00"), [start]);
   const endDate = useMemo(() => new Date(end + "T00:00:00"), [end]);
 
-  const { data, isLoading, isError } = useOccurrencesReport(startDate, endDate, reportClassId);
+  // Professor não tem "Todas as turmas": o relatório sem turma é o da escola inteira, com alunos e
+  // ocorrências das turmas das colegas. Começa na primeira turma dele e só busca com turma escolhida.
+  const ehProfessor = getSession()?.role === "Teacher";
+  const reportClassId = turmaEscolhida ?? (ehProfessor ? (classes?.[0]?.id ?? null) : null);
+
+  const { data, isLoading, isError } = useOccurrencesReport(
+    startDate,
+    endDate,
+    reportClassId,
+    !ehProfessor || reportClassId !== null
+  );
 
   const [week, setWeek] = useState(currentWeekOfMonth());
   const [weeklyText, setWeeklyText] = useState("");
@@ -219,7 +230,7 @@ export default function OcorrenciasPage() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">Todas as turmas</SelectItem>
+                {!ehProfessor && <SelectItem value="__all__">Todas as turmas</SelectItem>}
                 {classes?.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
                     {c.className}
