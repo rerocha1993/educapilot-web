@@ -398,3 +398,53 @@ export type RespostaDeTeste = {
   efeitos: string[];
   ajustesDeEstilo: string[];
 };
+
+// ------------------------------------------------------------------ agenda e materiais (fase 5)
+
+export interface JanelaDeVisita {
+  nome: string;
+  inicio: number;
+  fim: number;
+  vagas: number;
+}
+
+export interface DiaSemVisita {
+  /** "MM-dd" repete todo ano; "yyyy-MM-dd" é um dia só. */
+  data: string;
+  nome: string;
+}
+
+export interface AgendaDeVisitas {
+  configurada: boolean;
+  /** 0 = domingo. */
+  dias: number[];
+  janelas: JanelaDeVisita[];
+  diasSemVisita: DiaSemVisita[];
+  antecedenciaHoras: number;
+  horizonteDias: number;
+  proximasVisitas: { leadId: string; nomeResponsavel: string; nomeCrianca?: string | null; turmaNome?: string | null; visitaEm: string }[];
+  horariosLivres: string[];
+}
+
+export type SalvarAgendaDeVisitas = Pick<AgendaDeVisitas, "dias" | "janelas" | "diasSemVisita" | "antecedenciaHoras" | "horizonteDias">;
+
+export type TipoDeMaterial = "TabelaDePreco" | "Apresentacao" | "Video" | "Fotos" | "Atividades" | "Adaptacao" | "Outro";
+export type GatilhoDoMaterial = "Inseguranca" | "PediuPrecos" | "DuvidaDeRotina" | "DuvidaDeAdaptacao" | "Sempre";
+
+export interface Material {
+  id: string;
+  tipo: TipoDeMaterial;
+  titulo: string;
+  legenda?: string | null;
+  turmas: string[];
+  pasta?: string | null;
+  gatilho?: GatilhoDoMaterial | null;
+  ano?: number | null;
+  url?: string | null;
+  nomeOriginal?: string | null;
+  tipoDoArquivo?: string | null;
+  tamanhoBytes?: number | null;
+  ativo: boolean;
+  enviosFeitos: number;
+  criadoEm: string;
+}
