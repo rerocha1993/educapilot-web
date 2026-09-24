@@ -15,11 +15,12 @@ import {
 } from "@/components/ui/dialog";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useForms } from "@/lib/flow/use-forms";
+import type { ResumoDeFormulario } from "@/lib/flow/use-resumo-formularios";
 import {
-  usePainelDeFormularios,
-  useSalvarPainelDeFormularios,
-  type ResumoDeFormulario,
-} from "@/lib/flow/use-resumo-formularios";
+  PREFERENCIAS_VAZIAS,
+  usePreferenciasDoInicio,
+  useSalvarPreferenciasDoInicio,
+} from "@/lib/kernel/use-painel-preferencias";
 
 const dinheiro = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -190,20 +191,22 @@ function CartaoDoFormulario({ resumo }: { resumo: ResumoDeFormulario }) {
 /** Quais formulários ficam no painel, e em que ordem. Fica salvo na conta de quem escolheu. */
 function EscolherFormularios({ onFechar }: { onFechar: () => void }) {
   const { data: forms } = useForms();
-  const { data: escolhidos } = usePainelDeFormularios();
-  const salvar = useSalvarPainelDeFormularios();
+  const { data: preferencias } = usePreferenciasDoInicio();
+  const salvar = useSalvarPreferenciasDoInicio();
   const [marcados, setMarcados] = useState<string[] | null>(null);
 
   const lista = forms ?? [];
   // Enquanto a pessoa não mexe, vale o que está salvo.
-  const atual = marcados ?? escolhidos ?? [];
+  const atual = marcados ?? preferencias?.formularios ?? [];
 
   function alternar(id: string) {
     setMarcados(atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]);
   }
 
   async function confirmar() {
-    await salvar.mutateAsync(atual);
+    // O documento é um só: mexer nos formulários não pode apagar os números e os atalhos que a
+    // pessoa escolheu no diálogo de personalizar.
+    await salvar.mutateAsync({ ...(preferencias ?? PREFERENCIAS_VAZIAS), formularios: atual });
     onFechar();
   }
 

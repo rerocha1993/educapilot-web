@@ -24,10 +24,11 @@ const QUADRO = [
   { rotulo: "Automações", href: "/flow/tarefas/automacoes" },
 ];
 
+// Contratos saiu daqui (2026-09): a tela foi para Administração. O formulário continua sendo
+// quem gera o contrato — o que mudou é onde os contratos gerados são conferidos.
 const FORMULARIOS = [
   { rotulo: "Formulários", href: "/flow" },
   { rotulo: "Caixa de envios", href: "/flow/respostas" },
-  { rotulo: "Contratos", href: "/flow/contratos" },
   { rotulo: "Relatórios", href: "/flow/relatorios" },
   { rotulo: "Dados de referência", href: "/flow/referencias" },
 ];

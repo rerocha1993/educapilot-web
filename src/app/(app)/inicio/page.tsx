@@ -2,78 +2,46 @@
 
 import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  BarChart3,
-  CalendarCheck,
-  ClipboardList,
-  SquareKanban,
-  DoorOpen,
-  FileSignature,
-  FileStack,
-  Inbox,
-  MessageSquareWarning,
-  NotebookPen,
-  Package,
-  ShoppingBag,
-  SlidersHorizontal,
-  UsersRound,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+
 import { Button, buttonVariants } from "@/components/ui/button";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
-import { Estatistica, EtiquetaDoCartao } from "@/components/padroes/estatistica";
 import {
   CarrosselDeFormularios,
   ordenarPelaEscolha,
 } from "@/components/flow/carrossel-de-formularios";
+import { AtalhosDoInicio } from "@/components/inicio/atalhos-do-inicio";
 import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
-import { DialogPersonalizarInicio } from "@/components/inicio/dialog-personalizar";
-import { usePainelDeFormularios } from "@/lib/flow/use-resumo-formularios";
+import {
+  DialogPersonalizarInicio,
+  type SecaoComItens,
+  type SecaoParaPersonalizar,
+} from "@/components/inicio/dialog-personalizar";
+import { EsqueletoDosNumeros, NumerosDoDia } from "@/components/inicio/numeros-do-dia";
+import { PrecisaDeVoce, montarPendencias } from "@/components/inicio/precisa-de-voce";
 import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
-import { usePainelInicio, type PainelInicio } from "@/lib/kernel/use-painel";
-import { arranjarBlocos, usePainelDeBlocos } from "@/lib/kernel/use-painel-blocos";
+import { useMeuQuadro } from "@/lib/flow/use-tarefas";
+import {
+  ATALHOS,
+  BLOCOS,
+  NUMEROS,
+  PENDENCIAS,
+  escolherItens,
+  padraoDoPapel,
+  type IdDeBloco,
+  type ItemDoInicio,
+} from "@/lib/inicio/catalogo";
+import { usePainelInicio } from "@/lib/kernel/use-painel";
+import { arranjarBlocos, usePreferenciasDoInicio } from "@/lib/kernel/use-painel-preferencias";
 
-// Tela Início da direção visual nova (ver docs/direcao-visual.md): o dia da escola em quatro
-// números, o que pede decisão agora e os atalhos. Cada bloco só aparece se a pessoa tem acesso à
-// tela que ele abre — número que não se pode investigar não ajuda ninguém.
+// Tela Início da direção visual nova (ver docs/direcao-visual.md): o dia da escola em números, o
+// que pede decisão agora e os atalhos.
 //
-// A ordem e a visibilidade dos blocos são da pessoa (ver use-painel-blocos), mas a permissão vem
-// antes da preferência: quem não pode abrir a tela não vê o bloco nem marcado como visível.
-
-interface Atalho {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-const ATALHOS: Atalho[] = [
-  // O quadro vem primeiro: é a tela que responde "o que eu tenho para hoje", que é a pergunta de
-  // quem abre o sistema de manhã.
-  { href: "/flow/tarefas", label: "Meu quadro", icon: SquareKanban },
-  { href: "/", label: "Chamada", icon: CalendarCheck },
-  { href: "/ocorrencias", label: "Ocorrências", icon: MessageSquareWarning },
-  { href: "/flow/respostas", label: "Envios", icon: Inbox },
-  { href: "/flow/contratos", label: "Contratos", icon: FileSignature },
-  { href: "/finance/mensalidades", label: "Mensalidades", icon: Wallet },
-  { href: "/portaria", label: "Portaria", icon: DoorOpen },
-  { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
-  { href: "/planejamento-semanal", label: "Planejamento", icon: NotebookPen },
-  { href: "/checklist", label: "Checklist", icon: ClipboardList },
-  { href: "/materiais", label: "Materiais", icon: Package },
-  { href: "/admin/alunos", label: "Alunos", icon: UsersRound },
-  { href: "/events", label: "Vendas", icon: ShoppingBag },
-  { href: "/flow", label: "Formulários", icon: FileStack },
-];
-
-const dinheiro = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-
-const MESES = [
-  "jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez",
-];
+// Tudo aqui é escolhido item a item pela pessoa e guardado na conta dela (ver
+// use-painel-preferencias); enquanto ela não escolhe, vale o padrão do papel dela (ver
+// lib/inicio/catalogo). A permissão vem antes da preferência em qualquer caso: item que a pessoa
+// não pode abrir não aparece na tela nem na lista de personalização, mesmo que esteja salvo.
 
 function saudacao(hora: number) {
   if (hora < 12) return "Bom dia";
@@ -81,127 +49,130 @@ function saudacao(hora: number) {
   return "Boa noite";
 }
 
-/** Um pedaço da tela Início que a pessoa pode esconder ou mover. */
-interface BlocoDoInicio {
-  id: string;
-  /** Rótulo curto, só para a lista de personalização. */
-  rotulo: string;
-  /** Falso quando a permissão tira o bloco da tela — e da lista de personalização junto. */
-  permitido: boolean;
-  renderizar: () => ReactNode;
-}
+/** Qual lista de itens cada bloco escolhe. Bloco fora daqui só liga e desliga. */
+const SECAO_DO_BLOCO: Partial<Record<IdDeBloco, SecaoComItens>> = {
+  numeros: "numeros",
+  precisa: "pendencias",
+  atalhos: "atalhos",
+};
 
 export default function InicioPage() {
   const session = useRequireSession();
   const { rotaVisivel } = useVisibilidade();
   const { data, isLoading, isError } = usePainelInicio();
-  const { data: formulariosEscolhidos } = usePainelDeFormularios();
-  const { data: blocosSalvos } = usePainelDeBlocos();
+  const { data: preferencias } = usePreferenciasDoInicio();
   const [personalizando, setPersonalizando] = useState(false);
   // Resposta fora do formato (API antiga ainda no ar, por exemplo) não derruba a tela: os
   // atalhos continuam valendo e o aviso de falha aparece.
   const painel = data?.presencas && data?.formularios && data?.contratos ? data : undefined;
+
+  const padrao = padraoDoPapel(session?.role);
+
+  // Permissão primeiro, depois o que o financeiro consegue responder: sem o módulo, os valores
+  // vêm ausentes, e ausente não é R$ 0,00 — o item some em vez de mentir um zero.
+  const financeiroResponde = painel === undefined || painel.financeiro.disponivel === true;
+  const podeVer = (itens: ItemDoInicio[]) =>
+    itens.filter((i) => rotaVisivel(i.rota) && (!i.exigeFinanceiro || financeiroResponde));
+
+  const catalogoDeNumeros = podeVer(NUMEROS);
+  const catalogoDeAtalhos = podeVer(ATALHOS);
+  const catalogoDePendencias = podeVer(PENDENCIAS);
+
+  const numeros = escolherItens(catalogoDeNumeros, preferencias?.numeros, padrao.numeros);
+  const atalhos = escolherItens(catalogoDeAtalhos, preferencias?.atalhos, padrao.atalhos);
+  const tiposDePendencia = escolherItens(
+    catalogoDePendencias,
+    preferencias?.pendencias,
+    padrao.pendencias
+  );
+
+  // O quadro só é pedido quando alguma pendência escolhida depende dele.
+  const { data: quadro } = useMeuQuadro({
+    enabled: tiposDePendencia.some((t) => t.id === "tarefas-atrasadas"),
+  });
+  const pendencias = montarPendencias(tiposDePendencia, painel, quadro);
 
   const primeiroNome = session?.name.split(" ").find(Boolean) ?? "";
   const hoje = new Date();
   const semana = hoje.toLocaleDateString("pt-BR", { weekday: "long" });
   const dataLonga = `${semana.charAt(0).toUpperCase()}${semana.slice(1)} · ${hoje.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}`;
 
-  const tarefas = painel ? tarefasDoDia(painel, rotaVisivel) : [];
-  const atalhos = ATALHOS.filter((a) => rotaVisivel(a.href));
-
-  const numerosVisiveis =
-    rotaVisivel("/") || rotaVisivel("/finance/inadimplencia") || rotaVisivel("/flow/contratos");
-
-  // Catálogo na ordem de fábrica. A ordem deste array é o que decide onde um bloco novo entra
-  // para quem já personalizou a tela — ver arranjarBlocos.
-  const catalogo: BlocoDoInicio[] = [
-    {
-      id: "numeros",
-      rotulo: "Números do dia",
-      permitido: numerosVisiveis,
-      renderizar: () =>
-        isLoading ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[136px] animate-pulse rounded-xl border border-border bg-card sm:h-[148px]"
-              />
-            ))}
-          </div>
-        ) : (
-          painel && (
-            /* No celular os quatro números ficam dois por linha: é o que faz a tela parecer um
-               painel, e não uma pilha de cartões. */
-            <div className="grid grid-cols-2 gap-3 sm:gap-3.5 xl:grid-cols-3">
-              {rotaVisivel("/") && <CartaoPresencas painel={painel} />}
-              {rotaVisivel("/finance/inadimplencia") && <CartaoEmAtraso painel={painel} />}
-              {rotaVisivel("/flow/contratos") && <CartaoContratos painel={painel} />}
-            </div>
-          )
-        ),
-    },
-    {
-      id: "tarefas",
-      rotulo: "Minhas tarefas",
-      permitido: rotaVisivel("/flow/tarefas"),
-      renderizar: () => <CartaoDeTarefas />,
-    },
-    {
-      id: "formularios",
-      rotulo: "Formulários",
-      permitido: rotaVisivel("/flow/respostas"),
-      // Um cartão por formulário escolhido, e não um cartão fixo de rematrícula: o que aparece em
-      // cada um depende dos campos que aquele formulário tem.
-      renderizar: () =>
-        painel && (
-          <CarrosselDeFormularios
-            resumos={ordenarPelaEscolha(painel.formularios.formularios, formulariosEscolhidos)}
-            podeEscolher={rotaVisivel("/flow")}
-          />
-        ),
-    },
-    {
-      id: "precisa",
-      rotulo: "Precisa de você",
-      // As pendências já vêm filtradas por permissão uma a uma; o bloco em si não tem tela própria.
-      permitido: true,
-      renderizar: () => tarefas.length > 0 && <PrecisaDeVoce tarefas={tarefas} />,
-    },
-    {
-      id: "atalhos",
-      rotulo: "Atalhos",
-      permitido: atalhos.length > 0,
-      renderizar: () => (
-        <section>
-          <div className="mb-3 text-[12px] font-bold uppercase tracking-[.16em] text-muted-foreground">
-            Atalhos
-          </div>
-          {/* Celular: quadrados com ícone grande, que se acerta com o dedo. Computador: a linha
-              de pílulas do modelo, que ocupa menos altura. */}
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:flex md:flex-wrap md:gap-2.5">
-            {atalhos.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card px-2 py-4 text-center text-[13px] font-medium text-secondary-foreground transition-colors hover:border-action-brand hover:text-action active:bg-accent md:flex-row md:justify-start md:rounded-lg md:py-2.5 md:pl-2.5 md:pr-3.5 md:text-[13.5px]"
-              >
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-primary md:size-7 md:rounded-md">
-                  <Icon className="size-5.5 md:size-4" />
-                </span>
-                <span className="leading-tight">{label}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
+  const conteudo: Record<IdDeBloco, () => ReactNode> = {
+    numeros: () =>
+      isLoading ? (
+        <EsqueletoDosNumeros quantidade={numeros.length} />
+      ) : (
+        painel && <NumerosDoDia itens={numeros} painel={painel} />
       ),
-    },
-  ];
+    precisa: () => <PrecisaDeVoce pendencias={pendencias} />,
+    tarefas: () => <CartaoDeTarefas />,
+    formularios: () =>
+      painel && (
+        // Um cartão por formulário escolhido, e não um cartão fixo de rematrícula: o que aparece
+        // em cada um depende dos campos que aquele formulário tem.
+        <CarrosselDeFormularios
+          resumos={ordenarPelaEscolha(painel.formularios.formularios, preferencias?.formularios)}
+          podeEscolher={rotaVisivel("/flow")}
+        />
+      ),
+    atalhos: () => <AtalhosDoInicio itens={atalhos} />,
+  };
 
-  const porId = new Map(catalogo.map((b) => [b.id, b]));
-  const arranjo = arranjarBlocos(catalogo, blocosSalvos);
-  const permitidos = arranjo.filter((p) => porId.get(p.id)?.permitido);
+  const permitido: Record<IdDeBloco, boolean> = {
+    numeros: catalogoDeNumeros.length > 0,
+    precisa: catalogoDePendencias.length > 0,
+    tarefas: rotaVisivel("/flow/tarefas"),
+    formularios: rotaVisivel("/flow/respostas"),
+    atalhos: catalogoDeAtalhos.length > 0,
+  };
+
+  // A ordem de fábrica é a do papel da pessoa: é ela que decide onde um bloco novo entra para
+  // quem já personalizou a tela — ver arranjarBlocos.
+  const catalogoDeBlocos = [
+    ...padrao.blocos,
+    ...BLOCOS.map((b) => b.id).filter((id) => !padrao.blocos.includes(id)),
+  ].map((id) => ({ id, rotulo: BLOCOS.find((b) => b.id === id)?.rotulo ?? id }));
+
+  // Blocos que a permissão tira saem do arranjo salvo e, se a permissão voltar um dia,
+  // reaparecem na posição de fábrica como qualquer bloco novo.
+  const arranjo = arranjarBlocos(catalogoDeBlocos, preferencias?.blocos).filter(
+    (p) => permitido[p.id as IdDeBloco]
+  );
+
+  const secoes: SecaoParaPersonalizar[] = arranjo.map((p) => {
+    const chave = SECAO_DO_BLOCO[p.id as IdDeBloco];
+    const catalogo =
+      chave === "numeros"
+        ? catalogoDeNumeros
+        : chave === "atalhos"
+          ? catalogoDeAtalhos
+          : chave === "pendencias"
+            ? catalogoDePendencias
+            : [];
+    const escolhidos =
+      chave === "numeros"
+        ? numeros
+        : chave === "atalhos"
+          ? atalhos
+          : chave === "pendencias"
+            ? tiposDePendencia
+            : [];
+
+    return {
+      id: p.id,
+      rotulo: catalogoDeBlocos.find((b) => b.id === p.id)?.rotulo ?? p.id,
+      visivel: p.visivel,
+      chave,
+      catalogo,
+      escolhidos: escolhidos.map((i) => i.id),
+    };
+  });
+
+  // O botão laranja do cabeçalho vem do padrão do papel, não da tela: a gestão não quer
+  // "Registrar ocorrência" fixo aqui — se quiser, escolhe o atalho.
+  const acao = padrao.acaoPrincipal
+    ? catalogoDeAtalhos.find((a) => a.id === padrao.acaoPrincipal)
+    : undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -217,8 +188,8 @@ export default function InicioPage() {
         apoio={
           isLoading
             ? "Carregando o dia da escola…"
-            : tarefas.length > 0
-              ? `${tarefas.length} ${tarefas.length === 1 ? "coisa pede" : "coisas pedem"} sua atenção hoje — comece por elas.`
+            : pendencias.length > 0
+              ? `${pendencias.length} ${pendencias.length === 1 ? "coisa pede" : "coisas pedem"} sua atenção hoje — comece por elas.`
               : "Nada pendente por aqui. Bom dia de trabalho."
         }
         acoesClassName="w-full md:w-auto"
@@ -232,12 +203,12 @@ export default function InicioPage() {
               <SlidersHorizontal className="size-4" />
               Personalizar
             </Button>
-            {rotaVisivel("/ocorrencias") && (
+            {acao && (
               <Link
-                href="/ocorrencias"
+                href={acao.rota}
                 className={buttonVariants({ variant: "action", className: "flex-1 md:flex-none" })}
               >
-                + Registrar ocorrência
+                {acao.rotulo}
               </Link>
             )}
           </>
@@ -250,227 +221,19 @@ export default function InicioPage() {
         </p>
       )}
 
-      {permitidos
+      {arranjo
         .filter((p) => p.visivel)
         .map((p) => (
-          <Fragment key={p.id}>{porId.get(p.id)?.renderizar()}</Fragment>
+          <Fragment key={p.id}>{conteudo[p.id as IdDeBloco]()}</Fragment>
         ))}
 
       {personalizando && (
         <DialogPersonalizarInicio
-          // Só os blocos que esta pessoa pode ver entram na lista. Os demais saem do que é salvo e,
-          // se a permissão voltar um dia, reaparecem na posição de fábrica como qualquer bloco novo.
-          blocos={permitidos.map((p) => ({
-            ...p,
-            rotulo: porId.get(p.id)?.rotulo ?? p.id,
-          }))}
+          secoes={secoes}
+          formularios={preferencias?.formularios ?? []}
           onFechar={() => setPersonalizando(false)}
         />
       )}
     </div>
   );
 }
-
-// ------------------------------------------------------------------ cartões
-
-function CartaoPresencas({ painel }: { painel: PainelInicio }) {
-  const { presentes, atrasados, alunosAtivos, turmasSemChamada, turmas } = painel.presencas;
-  // Atrasado esteve na escola: conta como presente na barra, e aparece separado no rodapé.
-  const naEscola = presentes + atrasados;
-  const pct = alunosAtivos > 0 ? Math.round((naEscola / alunosAtivos) * 100) : 0;
-
-  return (
-    <Estatistica
-      rotulo="Chamada de hoje"
-      etiqueta={<EtiquetaDoCartao tom={pct >= 90 ? "success" : "neutro"}>{pct}%</EtiquetaDoCartao>}
-      valor={naEscola}
-      total={alunosAtivos}
-      proporcao={pct}
-      alertarAbaixoDe={75}
-      rodape={
-        <>
-        {atrasados > 0 && (
-          <>
-            <span className="font-mono tabular-nums">{atrasados}</span> com atraso ·{" "}
-          </>
-        )}
-        {turmasSemChamada > 0 ? (
-          <>
-            <span className="font-mono tabular-nums">{turmasSemChamada}</span>{" "}
-            {turmasSemChamada === 1 ? "turma sem chamada" : "turmas sem chamada"}
-            {turmas.length > 0 && `: ${turmas.map((t) => t.turma).join(", ")}`}
-          </>
-        ) : (
-          "chamada fechada em todas as turmas"
-        )}
-        </>
-      }
-    />
-  );
-}
-
-function CartaoEmAtraso({ painel }: { painel: PainelInicio }) {
-  const { totalEmAberto, cobrancasVencidas, origem, erro, atualizadoEm } = painel.financeiro;
-  const hora = atualizadoEm
-    ? new Date(atualizadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-    : null;
-
-  return (
-    <Estatistica
-      rotulo="Em atraso"
-      etiqueta={
-        <EtiquetaDoCartao tom={cobrancasVencidas > 0 ? "danger" : "neutro"}>
-          {cobrancasVencidas} {cobrancasVencidas === 1 ? "título" : "títulos"}
-        </EtiquetaDoCartao>
-      }
-      valor={dinheiro(totalEmAberto)}
-      tom={totalEmAberto > 0 ? "danger" : undefined}
-      rodape={
-        // Erro na leitura vai para a tela: zero com falha não é "ninguém deve".
-        erro ? (
-          <span className="text-destructive">Leitura falhou: {erro}</span>
-        ) : origem === "agendaedu" ? (
-          <>Sincronizado com o EduPay{hora && ` · ${hora}`}</>
-        ) : (
-          <>Mensalidades do sistema{hora && ` · ${hora}`}</>
-        )
-      }
-    />
-  );
-}
-
-function CartaoContratos({ painel }: { painel: PainelInicio }) {
-  const { assinadosNoMes, aguardandoConferencia, mes, ano } = painel.contratos;
-
-  return (
-    <Estatistica
-      rotulo="Contratos assinados"
-      etiqueta={
-        <EtiquetaDoCartao tom="neutro">
-          {MESES[mes - 1]}/{ano}
-        </EtiquetaDoCartao>
-      }
-      valor={assinadosNoMes}
-      rodape={
-        aguardandoConferencia > 0 ? (
-          <>
-            <span className="font-mono tabular-nums">{aguardandoConferencia}</span> aguardando
-            conferência da gestão
-          </>
-        ) : (
-          "nada aguardando conferência"
-        )
-      }
-    />
-  );
-}
-
-// ------------------------------------------------------------------ precisa de você
-
-interface Tarefa {
-  href: string;
-  icon: LucideIcon;
-  titulo: string;
-  sub: string;
-  acao: string;
-  urgente?: boolean;
-}
-
-/** As pendências reais do dia, na ordem em que valem a pena. Só entra o que a pessoa pode abrir. */
-function tarefasDoDia(painel: PainelInicio, rotaVisivel: (href: string) => boolean): Tarefa[] {
-  const t: Tarefa[] = [];
-  const { presencas, formularios, contratos, financeiro, faltas } = painel;
-
-  if (contratos.aguardandoConferencia > 0 && rotaVisivel("/flow/contratos")) {
-    t.push({
-      href: "/flow/contratos",
-      icon: FileSignature,
-      titulo: `${contratos.aguardandoConferencia} ${contratos.aguardandoConferencia === 1 ? "contrato assinado aguardando" : "contratos assinados aguardando"} conferência`,
-      sub: "Assinados pelas famílias, ainda sem aprovação da gestão",
-      acao: "Conferir",
-    });
-  }
-
-  if (presencas.turmasSemChamada > 0 && rotaVisivel("/")) {
-    t.push({
-      href: "/",
-      icon: CalendarCheck,
-      titulo: `${presencas.turmasSemChamada === 1 ? "Chamada em aberto" : `${presencas.turmasSemChamada} chamadas em aberto`}`,
-      sub: presencas.turmas.map((x) => x.turma).join(", ") || "Ninguém marcou presença hoje",
-      acao: "Fazer agora",
-      urgente: true,
-    });
-  }
-
-  if (faltas.semJustificativa > 0 && rotaVisivel("/")) {
-    t.push({
-      href: "/",
-      icon: AlertTriangle,
-      titulo: `${faltas.semJustificativa} ${faltas.semJustificativa === 1 ? "falta sem justificativa" : "faltas sem justificativa"}`,
-      sub: `${faltas.turmas.map((x) => x.turma).join(", ") || "Últimos dias"} · ${faltas.dias} dias`,
-      acao: "Justificar",
-    });
-  }
-
-  if (financeiro.cobrancasVencidas > 0 && rotaVisivel("/finance/inadimplencia")) {
-    t.push({
-      href: "/finance/inadimplencia",
-      icon: Wallet,
-      titulo: `${financeiro.cobrancasVencidas} ${financeiro.cobrancasVencidas === 1 ? "mensalidade vencida" : "mensalidades vencidas"}`,
-      sub: `${dinheiro(financeiro.totalEmAberto)} · contatos prontos para cobrança`,
-      acao: "Abrir lista",
-    });
-  }
-
-  const aguardando = formularios.combinado.aguardando;
-  if (aguardando > 0 && rotaVisivel("/flow/respostas")) {
-    // Quais formulários estão esperando, para a linha dizer de onde vêm os envios.
-    const nomes = formularios.formularios
-      .filter((f) => f.aguardando > 0)
-      .map((f) => f.nome)
-      .slice(0, 2)
-      .join(", ");
-    t.push({
-      href: "/flow/respostas",
-      icon: Inbox,
-      titulo: `${aguardando} ${aguardando === 1 ? "envio aguardando" : "envios aguardando"} aprovação`,
-      sub: nomes || "Enviados pelas famílias",
-      acao: "Revisar",
-    });
-  }
-
-  return t;
-}
-
-function PrecisaDeVoce({ tarefas }: { tarefas: Tarefa[] }) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-muted px-4.5 py-4">
-        <span className="font-heading text-[17px] font-semibold md:text-[15.5px]">Precisa de você</span>
-        <EtiquetaDoCartao tom="action">{tarefas.length}</EtiquetaDoCartao>
-      </div>
-      <ul>
-        {tarefas.map(({ href, icon: Icon, titulo, sub, acao, urgente }) => (
-          <li key={`${href}-${titulo}`} className="border-b border-muted last:border-0">
-            <Link
-              href={href}
-              className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3.5 px-4.5 py-3.5 transition-colors hover:bg-muted/60"
-            >
-              <span
-                className={`grid size-[34px] place-items-center rounded-lg ${urgente ? "bg-action-soft text-action" : "bg-accent text-primary"}`}
-              >
-                <Icon className="size-4" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[15px] font-semibold leading-snug md:text-sm">{titulo}</span>
-                <span className="mt-0.5 block truncate text-[13px] text-muted-foreground md:text-[12.5px]">{sub}</span>
-              </span>
-              <span className="whitespace-nowrap text-[13px] font-semibold text-primary md:text-[12.5px]">{acao}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-

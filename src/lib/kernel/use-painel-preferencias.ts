@@ -4,11 +4,15 @@ import { clearSession, getToken } from "@/lib/auth/session";
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
 
 /**
- * Arranjo dos blocos da tela Início — GET/PUT /api/Flow/painel/blocos.
+ * A escolha de tela desta pessoa — GET/PUT /api/Flow/painel/preferencias.
  *
- * Guarda só o que a pessoa decidiu (ordem e visibilidade), nunca o catálogo: quem sabe quais
- * blocos existem é a tela, que muda a cada versão. Lista vazia = arranjo de fábrica, e é também o
- * que o "Restaurar padrão" manda de volta.
+ * Um documento só, gravado na conta de quem escolheu: quais blocos aparecem e em que ordem, quais
+ * números, quais atalhos, quais pendências e quais formulários. Substituiu os dois endpoints
+ * antigos (`painel/blocos` e `painel/formularios`), que mexiam em pedaços do mesmo documento e
+ * obrigavam a tela a salvar duas vezes para uma decisão só.
+ *
+ * Seção vazia não é "escolhi nada": é "ainda não escolhi", e a tela aplica o padrão do papel da
+ * pessoa (ver lib/inicio/catalogo). O PUT troca o documento inteiro.
  *
  * Tipado à mão como os demais hooks do painel; depois do deploy dá para regenerar pelo Swagger.
  */
@@ -17,6 +21,23 @@ export interface BlocoDoPainel {
   id: string;
   visivel: boolean;
 }
+
+export interface PreferenciasDoInicio {
+  blocos: BlocoDoPainel[];
+  numeros: string[];
+  atalhos: string[];
+  pendencias: string[];
+  /** Ids (guid) dos formulários resumidos na tela, na ordem escolhida. */
+  formularios: string[];
+}
+
+export const PREFERENCIAS_VAZIAS: PreferenciasDoInicio = {
+  blocos: [],
+  numeros: [],
+  atalhos: [],
+  pendencias: [],
+  formularios: [],
+};
 
 async function chamar<T>(caminho: string, init: RequestInit, falha: string): Promise<T> {
   const token = getToken();
@@ -41,36 +62,54 @@ async function chamar<T>(caminho: string, init: RequestInit, falha: string): Pro
   return (await res.json()) as T;
 }
 
-/** Ordem e visibilidade escolhidas por esta pessoa. Vazio = nada escolhido, vale o de fábrica. */
-export function usePainelDeBlocos() {
+/** Documento cru → documento completo. Seção ausente vira lista vazia, que é "não escolhi". */
+function normalizar(bruto: Partial<PreferenciasDoInicio> | null): PreferenciasDoInicio {
+  return {
+    blocos: (bruto?.blocos ?? []).filter((b) => b && typeof b.id === "string"),
+    numeros: bruto?.numeros ?? [],
+    atalhos: bruto?.atalhos ?? [],
+    pendencias: bruto?.pendencias ?? [],
+    formularios: bruto?.formularios ?? [],
+  };
+}
+
+export function usePreferenciasDoInicio() {
   return useQuery({
-    queryKey: ["painel", "blocos"],
+    queryKey: ["painel", "preferencias"],
     staleTime: 5 * 60_000,
-    queryFn: () =>
-      chamar<BlocoDoPainel[]>(
-        "/api/Flow/painel/blocos",
-        {},
-        "Não foi possível carregar o arranjo do Início."
+    queryFn: async () =>
+      normalizar(
+        await chamar<Partial<PreferenciasDoInicio>>(
+          "/api/Flow/painel/preferencias",
+          {},
+          "Não foi possível carregar a sua escolha de tela."
+        )
       ),
   });
 }
 
-export function useSalvarPainelDeBlocos() {
+export function useSalvarPreferenciasDoInicio() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (blocos: BlocoDoPainel[]) =>
-      chamar<BlocoDoPainel[]>(
-        "/api/Flow/painel/blocos",
-        { method: "PUT", body: JSON.stringify(blocos) },
-        "Não foi possível salvar o arranjo do Início."
+    mutationFn: async (preferencias: PreferenciasDoInicio) =>
+      normalizar(
+        await chamar<Partial<PreferenciasDoInicio>>(
+          "/api/Flow/painel/preferencias",
+          { method: "PUT", body: JSON.stringify(preferencias) },
+          "Não foi possível salvar a sua escolha de tela."
+        )
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["painel", "blocos"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["painel", "preferencias"] });
+      // A escolha de formulários muda o que /api/Painel/inicio devolve.
+      queryClient.invalidateQueries({ queryKey: ["painel", "inicio"] });
+    },
   });
 }
 
 /**
- * Junta o catálogo de fábrica com o que está salvo.
+ * Junta o catálogo de blocos com o que está salvo.
  *
  * Bloco que a pessoa nunca viu (porque entrou numa versão depois da última vez que ela
  * personalizou a tela) entra na posição de fábrica dele, e não no fim: ir para o fim esconderia

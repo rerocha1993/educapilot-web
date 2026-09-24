@@ -141,8 +141,14 @@ async function chamar<T>(caminho: string, init?: RequestInit): Promise<T> {
 
 // ---------------------------------------------------------------- consultas
 
-export function useMeuQuadro() {
-  return useQuery({ queryKey: ["tarefas", "meu-quadro"], queryFn: () => chamar<Quadro>("/meu-quadro") });
+/** `enabled` existe para quem só quer o quadro às vezes — o Início, quando a pessoa escolheu ver
+ *  as tarefas atrasadas. Sem isso a tela pediria o quadro de quem nem tem Fluxos. */
+export function useMeuQuadro(opcoes?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["tarefas", "meu-quadro"],
+    enabled: opcoes?.enabled ?? true,
+    queryFn: () => chamar<Quadro>("/meu-quadro"),
+  });
 }
 
 export function useQuadroDe(userId: string | null) {

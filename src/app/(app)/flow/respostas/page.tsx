@@ -415,7 +415,7 @@ export default function CaixaDeEnviosPage() {
             <Link href="/flow/relatorios" className={buttonVariants({ variant: "outline" })}>
               Baixar Excel em Relatórios
             </Link>
-            <Link href="/flow/contratos" className={buttonVariants({ variant: "action" })}>
+            <Link href="/admin/contratos" className={buttonVariants({ variant: "action" })}>
               Ir para Contratos
             </Link>
           </>

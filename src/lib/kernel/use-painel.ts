@@ -35,9 +35,29 @@ export interface ContratosDoPainel {
   aguardandoConferencia: number;
 }
 
+/** Quanto e quantas cobranças de um recorte. */
+export interface ValorDoPainel {
+  total: number;
+  cobrancas: number;
+}
+
 export interface FinanceiroDoPainel {
   totalEmAberto: number;
   cobrancasVencidas: number;
+  /**
+   * A escola tem o financeiro e esta pessoa pode ver estes números.
+   *
+   * Falso não é zero: é "não dá para responder". Uma escola sem o módulo não tem R$ 0,00 a
+   * receber — ela não tem cobrança nenhuma lançada. Com falso os valores vêm ausentes, e a tela
+   * não mostra cartão de dinheiro nenhum.
+   */
+  disponivel?: boolean;
+  /** Cobranças em aberto que vencem hoje. Ausente quando não há financeiro. */
+  venceHoje?: ValorDoPainel | null;
+  /** Cobranças em aberto de hoje até o fim do mês. O que já venceu não entra: aquilo é atraso. */
+  aReceber?: ValorDoPainel | null;
+  /** Último dia da janela do "a receber" (fim do mês). */
+  aReceberAte?: string | null;
   /** De onde veio o número: o EduPay do Agenda Edu ou as mensalidades do próprio sistema. */
   origem: "agendaedu" | "mensalidades";
   /** Falha na leitura. Com erro, um zero não significa "ninguém deve". */

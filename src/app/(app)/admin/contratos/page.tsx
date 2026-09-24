@@ -1,0 +1,678 @@
+"use client";
+
+import Link from "next/link";
+import { AtSign, FileCheck, Link2, MessageCircle, RefreshCw, Settings, Trash2, TriangleAlert } from "lucide-react";
+
+import { Fragment, useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
+import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { useVisibilidade } from "@/lib/access/use-visibilidade";
+import {
+  useApproveContract,
+  useContracts,
+  useContractsAwaitingApproval,
+  useRejectContract,
+  useDeleteContract,
+  useReissueContract,
+  useTrocarEmailDoContrato,
+  type Contract,
+} from "@/lib/contracts/use-contracts";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { formatarData, formatarDataHora } from "@/lib/format/date";
+
+/**
+ * Fila de conferência da gestão e acompanhamento dos contratos.
+ *
+ * O responsável assina na mesma sessão em que preenche o formulário. A gestão confere depois, e a
+ * aprovação libera o envio da via assinada para a família — não altera o contrato, que já foi
+ * assinado.
+ *
+ * Mora em Administração (2026-09): o contrato é documento da escola, e não uma função do
+ * construtor de formulários. Quem gera contrato continua sendo o formulário — ver o campo do
+ * tipo "contrato" em /flow/[id].
+ */
+export default function ContratosPage() {
+  const { data: fila, isLoading, isError, error } = useContractsAwaitingApproval();
+  const { data: todos } = useContracts();
+  const { rotaVisivel } = useVisibilidade();
+
+  // Quem tem só a área de contratos chega aqui pelo menu de Fluxos e não abre o índice de
+  // Administração. O caminho de volta só aparece para quem consegue segui-lo.
+  const voltaParaAdmin = rotaVisivel("/admin");
+
+  return (
+    <div className="flex flex-col gap-6">
+      <CabecalhoDaPagina
+        eyebrow={voltaParaAdmin ? "← Administração" : undefined}
+        eyebrowHref={voltaParaAdmin ? "/admin" : undefined}
+        titulo="Contratos"
+        apoio="Contratos assinados pelas famílias aguardando conferência. Aprovar envia a via assinada por e-mail; o contrato em si já foi assinado e não muda."
+        acoes={
+          <Link
+            href="/admin/contratos/configuracao"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <Settings className="size-4" />
+            Configuração
+          </Link>
+        }
+      />
+
+      {isLoading && <Skeleton className="h-40 w-full rounded-xl" />}
+
+      {isError && (
+        <div className="rounded-xl border border-destructive-border bg-destructive-soft p-4 text-sm text-destructive-soft-foreground">
+          {error instanceof Error ? error.message : "Não foi possível carregar a fila."}
+        </div>
+      )}
+
+      {!isLoading && !isError && (fila?.length ?? 0) === 0 && (
+        <EstadoVazio icone={<FileCheck />} titulo="Nenhum contrato aguardando conferência." />
+      )}
+
+      {/* Dois por linha a partir de telas medias: a fila de aprovacao chega em rajada na janela
+          de matricula, e um por linha obrigava a rolar a pagina inteira para ver quantos faltam. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {(fila ?? []).map((c) => (
+          <CartaoAprovacao key={c.id} contrato={c} />
+        ))}
+      </div>
+
+      {(todos?.length ?? 0) > 0 && <Historico contratos={todos!} />}
+    </div>
+  );
+}
+
+function CartaoAprovacao({ contrato }: { contrato: Contract }) {
+  const aprovar = useApproveContract();
+  const reprovar = useRejectContract();
+
+  const [descontoPercentual, setDescontoPercentual] = useState("");
+  const [vigenciaDesconto, setVigenciaDesconto] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [reprovando, setReprovando] = useState(false);
+
+  const responsavel = contrato.signatarios.find((s) => s.papel === 0);
+
+  async function handleAprovar() {
+    try {
+      await aprovar.mutateAsync({
+        id: contrato.id,
+        valores: {
+          // Em branco vira "não se aplica" no contrato: é uma decisão consciente da escola,
+          // diferente de um marcador que o formulário nunca preencheu.
+          percentual_desconto: descontoPercentual.trim() || "não se aplica",
+          vigencia_desconto: vigenciaDesconto.trim() || "não se aplica",
+        },
+      });
+      toast.success("Contrato aprovado. A via assinada será enviada à família.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao aprovar.");
+    }
+  }
+
+  async function handleReprovar() {
+    if (!motivo.trim()) {
+      toast.error("Informe o motivo da reprovação.");
+      return;
+    }
+    try {
+      await reprovar.mutateAsync({ id: contrato.id, motivo });
+      toast.success("Contrato reprovado.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao reprovar.");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="font-heading text-[15.5px] font-semibold break-words">{contrato.titulo}</h2>
+          <p className="text-sm break-words text-muted-foreground">
+            {responsavel?.nome} · {responsavel?.email}
+          </p>
+          {responsavel?.assinadoEm && (
+            <p className="text-xs text-muted-foreground">
+              Assinado em{" "}
+              <span className="font-mono tabular-nums">{formatarDataHora(responsavel.assinadoEm)}</span>
+            </p>
+          )}
+        </div>
+
+        {contrato.temArquivoAssinado && (
+          <BotaoDownload contratoId={contrato.id} tipo="assinado" rotulo="Ver contrato assinado" />
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-xs text-muted-foreground">Desconto para 2027 (%)</label>
+          <Input
+            value={descontoPercentual}
+            onChange={(e) => setDescontoPercentual(e.target.value)}
+            placeholder="Em branco = sem desconto"
+          />
+        </div>
+        <div className="flex flex-col gap-[5px]">
+          <label className="text-xs text-muted-foreground">Vigência do desconto</label>
+          <Input
+            value={vigenciaDesconto}
+            onChange={(e) => setVigenciaDesconto(e.target.value)}
+            placeholder="Ex.: até dezembro/2027"
+          />
+        </div>
+      </div>
+
+      {reprovando ? (
+        <div className="flex flex-col gap-2">
+          <Textarea
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Motivo da reprovação (fica registrado)"
+            rows={2}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={handleReprovar} disabled={reprovar.isPending}>
+              {reprovar.isPending ? "Reprovando..." : "Confirmar reprovação"}
+            </Button>
+            <Button variant="ghost" onClick={() => setReprovando(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleAprovar} disabled={aprovar.isPending}>
+            {aprovar.isPending ? "Aprovando..." : "Aprovar e enviar à família"}
+          </Button>
+          <Button variant="outline" onClick={() => setReprovando(true)}>
+            Reprovar
+          </Button>
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        A família já assinou este contrato. Aprovar libera o envio da via com a assinatura da
+        escola; reprovar impede o envio, mas o cancelamento com a família é uma conversa à parte.
+      </p>
+    </div>
+  );
+}
+
+function Historico({ contratos }: { contratos: Contract[] }) {
+  const excluir = useDeleteContract();
+  const reemitir = useReissueContract();
+
+  // Contrato aberto para ver o motivo da falha. Um por vez: a lista fica legível, e o motivo
+  // é sempre longo demais para caber numa coluna.
+  const [detalhando, setDetalhando] = useState<string | null>(null);
+
+  // Contrato cujo e-mail de assinatura está sendo trocado.
+  const [trocandoEmail, setTrocandoEmail] = useState<Contract | null>(null);
+
+  // Só contrato que não chegou ao provedor. O backend recusa o resto de qualquer forma; aqui a
+  // regra existe para não oferecer um botão que vai falhar.
+  // Qualquer contrato que ninguém assinou. O caso real: uma mãe preencheu duas vezes, assinou um
+  // e o outro ficou aberto — duplicidade a limpar, e que não é falha de envio.
+  // Recusado (3) e cancelado (5) sao finais e sem assinatura: sao os unicos que valem reemitir.
+  const podeReemitir = (c: Contract) =>
+    (c.status === 3 || c.status === 5) && !c.signatarios.some((s) => !!s.assinadoEm);
+
+  const podeExcluir = (c: Contract) =>
+    !c.signatarios.some((s) => !!s.assinadoEm) &&
+    !c.statusDescricao?.toLowerCase().includes("assinado");
+
+  // Enquanto ninguém assinou, o documento pode ser derrubado e emitido de novo para outro
+  // endereço. Depois de assinado não: aquele documento é a prova, e o que a escola quer nesse
+  // ponto é só encaminhar o PDF, que já está na lista.
+  const podeTrocarEmail = (c: Contract) =>
+    !c.signatarios.some((s) => !!s.assinadoEm) &&
+    !c.statusDescricao?.toLowerCase().includes("assinado");
+
+  // Recusa no Autentique encerra o documento: aquele link nao assina mais. Reemitir monta um
+  // contrato novo com a ficha que a familia ja enviou, para ela so precisar assinar de novo.
+  async function handleReemitir(c: Contract) {
+    try {
+      await reemitir.mutateAsync(c.id);
+      toast.success("Contrato novo gerado. Envie o novo link de assinatura para a família.");
+    } catch (err) {
+      // A mensagem vem do backend e diz o que a escola precisa ajustar.
+      toast.error(err instanceof Error ? err.message : "Não foi possível gerar um contrato novo.");
+    }
+  }
+
+  async function handleExcluir(c: Contract) {
+    try {
+      const { fichaExcluida } = await excluir.mutateAsync(c.id);
+      toast.success(
+        fichaExcluida
+          ? "Contrato excluído, e o envio saiu da caixa de envios junto."
+          : "Contrato excluído. O envio continua na caixa de envios."
+      );
+      setDetalhando(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir.");
+    }
+  }
+
+  // Conteúdo de cada contrato montado uma vez só: a tabela (tela larga) e os cartões (celular)
+  // mostram as mesmas informações e as mesmas ações.
+  const titulo = (c: Contract) => (
+    <>
+      {c.titulo}
+      {c.sandbox && (
+        // Contrato de teste não tem valor jurídico nenhum e some do provedor em
+        // poucos dias — precisa ser impossível confundir com um real.
+        <Badge variant="pending" className="ml-2 h-5">
+          teste
+        </Badge>
+      )}
+    </>
+  );
+
+  const situacao = (c: Contract) => (
+    <>
+      {c.statusDescricao}
+      {/* Só quando a via realmente saiu: assinado não quer dizer entregue, e a
+          secretaria precisa saber a diferença antes de responder à família. */}
+      {c.copiaEnviadaEm && (
+        <Badge variant="success" className="ml-2 h-5">
+          via enviada
+        </Badge>
+      )}
+    </>
+  );
+
+  const acoes = (c: Contract) => {
+    const resp = c.signatarios.find((s) => s.papel === 0);
+    return (
+      <>
+        {resp?.linkAssinatura && !resp.assinadoEm && (
+          <LinkDeAssinatura link={resp.linkAssinatura} nome={resp.nome} titulo={c.titulo} />
+        )}
+        {c.temArquivoAssinado && (
+          <>
+            <BotaoDownload contratoId={c.id} tipo="assinado" rotulo="Baixar" />
+            <BotaoDownload
+              contratoId={c.id}
+              tipo="original"
+              rotulo="Original"
+              discreto
+              titulo="PDF do Autentique, sem a assinatura da escola. É a prova, com a trilha de auditoria."
+            />
+          </>
+        )}
+
+        {/* Falhou: mostra o motivo e deixa excluir. Antes a linha só dizia
+            "Falha no envio" e não havia o que clicar — nem para entender, nem
+            para limpar. */}
+        {podeReemitir(c) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={reemitir.isPending}
+            onClick={() => handleReemitir(c)}
+            title="Monta um contrato novo com a mesma ficha, com link de assinatura novo."
+          >
+            <RefreshCw className="size-4 text-primary" />
+            Gerar novo
+          </Button>
+        )}
+
+        {podeTrocarEmail(c) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setTrocandoEmail(c)}
+            title="A família não consegue abrir o link no e-mail que informou? Emite o contrato de novo para outro endereço."
+          >
+            <AtSign className="size-4 text-primary" />
+            Trocar e-mail
+          </Button>
+        )}
+
+        {podeExcluir(c) && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDetalhando(detalhando === c.id ? null : c.id)}
+            >
+              <TriangleAlert className="size-4 text-warning-soft-foreground" />
+              Motivo
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={excluir.isPending}
+              onClick={() => handleExcluir(c)}
+            >
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          </>
+        )}
+      </>
+    );
+  };
+
+  // Recusado e falha de envio são coisas diferentes, e antes as duas caíam no mesmo texto de erro:
+  // quem recusou some da tela e a escola não via o motivo que a família escreveu no Autentique.
+  const motivo = (c: Contract) => {
+    const recusou = c.signatarios.find((s) => !!s.recusadoEm);
+
+    if (recusou) {
+      const quando = recusou.recusadoEm
+        ? new Date(recusou.recusadoEm).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : null;
+
+      return (
+        <div className="flex flex-col gap-1 text-xs">
+          <p className="text-foreground">
+            Recusado por <span className="font-semibold">{recusou.nome}</span>
+            {quando && (
+              <>
+                {" "}
+                em <span className="font-mono tabular-nums">{quando}</span>
+              </>
+            )}
+            .
+          </p>
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {recusou.motivoRecusa?.trim()
+              ? `Motivo informado: ${recusou.motivoRecusa.trim()}`
+              : "A família não escreveu um motivo ao recusar."}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <p className="font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+        {c.ultimoErroEnvio ?? "Sem detalhe registrado."}
+      </p>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+      <h2 className="font-heading text-[15.5px] font-semibold">Todos os contratos</h2>
+
+      <div className="flex flex-col gap-2 md:hidden">
+        {contratos.map((c) => {
+          const resp = c.signatarios.find((s) => s.papel === 0);
+          return (
+            <div key={c.id} className="flex flex-col gap-1.5 rounded-lg border border-border p-3 text-sm">
+              <p className="font-medium break-words">{titulo(c)}</p>
+              {(resp?.nome || resp?.email) && (
+                <p className="break-words">
+                  {resp?.nome}
+                  {resp?.email && <span className="block text-xs text-muted-foreground">{resp.email}</span>}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {situacao(c)} · Criado{" "}
+                <span className="font-mono tabular-nums">{formatarData(c.criadoEm)}</span>
+              </p>
+              <div className="flex flex-wrap items-center gap-1">{acoes(c)}</div>
+              {detalhando === c.id && <div className="rounded-md bg-muted/30 p-2">{motivo(c)}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-sm">
+          <thead className="text-left text-[11px] font-bold tracking-[.1em] uppercase text-muted-foreground">
+            <tr>
+              <th className="py-2">Contrato</th>
+              <th className="py-2">Responsável</th>
+              <th className="py-2">Situação</th>
+              <th className="py-2">Criado</th>
+              <th className="py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {contratos.map((c) => {
+              const resp = c.signatarios.find((s) => s.papel === 0);
+              return (
+                <Fragment key={c.id}>
+                <tr className="border-t border-border">
+                  <td className="py-2">{titulo(c)}</td>
+                  <td className="py-2">
+                    {resp?.nome}
+                    {resp?.email && <span className="block text-xs text-muted-foreground">{resp.email}</span>}
+                  </td>
+                  <td className="py-2">{situacao(c)}</td>
+                  <td className="py-2 font-mono tabular-nums">{formatarData(c.criadoEm)}</td>
+                  <td className="py-2 text-right">
+                    <div className="flex items-center justify-end gap-1">{acoes(c)}</div>
+                  </td>
+                </tr>
+
+                {detalhando === c.id && (
+                  <tr className="border-t border-border bg-muted/30">
+                    <td colSpan={5} className="px-2 py-3">
+                      {motivo(c)}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {trocandoEmail && (
+        <TrocarEmailDeAssinatura contrato={trocandoEmail} onFechar={() => setTrocandoEmail(null)} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Emite o contrato de novo para outro e-mail.
+ *
+ * O caso que abriu isto: a mãe informou na ficha uma caixa de e-mail a que não tem mais acesso, e
+ * o Autentique exige aquele endereço para liberar a assinatura. O e-mail está gravado dentro do
+ * documento de lá e não pode ser editado — então o sistema derruba aquele documento e emite outro
+ * com as mesmas respostas.
+ *
+ * A tela diz isso com todas as letras antes de confirmar: o link antigo para de funcionar, e é
+ * comum a escola já ter mandado ele para a família.
+ */
+function TrocarEmailDeAssinatura({ contrato, onFechar }: { contrato: Contract; onFechar: () => void }) {
+  const trocar = useTrocarEmailDoContrato();
+  const responsavel = contrato.signatarios.find((s) => s.papel === 0);
+  const [email, setEmail] = useState("");
+
+  async function confirmar() {
+    try {
+      await trocar.mutateAsync({ id: contrato.id, email: email.trim() });
+      toast.success("Contrato novo gerado. Em instantes o link de assinatura aparece na lista.");
+      onFechar();
+    } catch (err) {
+      // A mensagem vem do backend e diz exatamente o que impede a troca.
+      toast.error(err instanceof Error ? err.message : "Não foi possível trocar o e-mail.");
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(aberto) => !aberto && onFechar()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Trocar o e-mail de assinatura</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-3 text-sm">
+          <p className="text-muted-foreground">
+            O contrato <strong className="text-foreground">{contrato.titulo}</strong> vai ser emitido de
+            novo, com as mesmas respostas que a família enviou, para outro endereço.
+          </p>
+
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Assina hoje</p>
+            <p className="font-medium">{responsavel?.nome}</p>
+            <p className="text-xs break-words text-muted-foreground">{responsavel?.email}</p>
+          </div>
+
+          <div className="flex flex-col gap-[5px]">
+            <Label className="text-xs text-muted-foreground">Novo e-mail</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nome@exemplo.com"
+              autoFocus
+            />
+          </div>
+
+          <div className="rounded-md border border-warning-border bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+            O link de assinatura atual para de funcionar. Se você já mandou ele para a família, avise
+            que vai chegar um link novo. Quem assina continua sendo{" "}
+            <strong>{responsavel?.nome}</strong> — muda só para onde o contrato é enviado.
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>
+            Cancelar
+          </Button>
+          <Button onClick={confirmar} disabled={trocar.isPending || !email.trim()}>
+            {trocar.isPending ? "Emitindo..." : "Trocar e emitir de novo"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Link de assinatura do responsável, para mandar por outro caminho.
+ *
+ * O contrato vai ao Autentique com entrega por link, não por e-mail: quem abre o link assina, sem
+ * precisar entrar no e-mail cadastrado (se o CPF foi informado, o Autentique pede o CPF). É o que
+ * resolve a família que perdeu acesso ao e-mail — a escola copia o link e manda pelo WhatsApp.
+ */
+function LinkDeAssinatura({ link, nome, titulo }: { link: string; nome: string; titulo: string }) {
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link de assinatura copiado.");
+    } catch {
+      toast.message("Copie o link:", { description: link });
+    }
+  }
+
+  const mensagem = `Olá, ${nome}! Segue o link para assinar o contrato "${titulo}": ${link}`;
+
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={copiar} title="Copiar o link de assinatura">
+        <Link2 className="size-4" /> Link
+      </Button>
+      <a
+        href={`https://wa.me/?text=${encodeURIComponent(mensagem)}`}
+        target="_blank"
+        rel="noreferrer"
+        title="Enviar o link pelo WhatsApp"
+        className="inline-flex h-9 items-center gap-1 rounded-lg md:h-7 px-2.5 text-[0.8rem] font-medium hover:bg-muted"
+      >
+        <MessageCircle className="size-4" /> WhatsApp
+      </a>
+    </>
+  );
+}
+
+/**
+ * Baixa um arquivo do contrato.
+ *
+ * Passa por fetch autenticado em vez de link direto porque são documentos com nome, CPF e
+ * assinatura — o endpoint exige token, e um `<a href>` não mandaria o cabeçalho.
+ */
+/** Nome do arquivo salvo, por tipo. */
+const NOME_DO_ARQUIVO: Record<"assinado" | "original" | "auditoria", string> = {
+  assinado: "contrato.pdf",
+  original: "contrato-original-autentique.pdf",
+  auditoria: "contrato-auditoria.pdf",
+};
+
+/**
+ * Baixa um arquivo do contrato.
+ *
+ * "assinado" é o contrato com a assinatura da escola, quando já aprovado — o mesmo que a família
+ * recebeu. "original" é o PDF do Autentique sem alteração: a prova, com a trilha de auditoria.
+ */
+function BotaoDownload({
+  contratoId,
+  tipo,
+  rotulo,
+  discreto = false,
+  titulo,
+}: {
+  contratoId: string;
+  tipo: "assinado" | "original" | "auditoria";
+  rotulo: string;
+  discreto?: boolean;
+  titulo?: string;
+}) {
+  const [baixando, setBaixando] = useState(false);
+
+  async function baixar() {
+    setBaixando(true);
+    try {
+      const { getToken } = await import("@/lib/auth/session");
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
+      const token = getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+      let res = await fetch(`${base}/api/Contracts/${contratoId}/arquivo/${tipo}`, { headers });
+
+      // Backend anterior não conhece "original": nele, "assinado" é exatamente o PDF do Autentique.
+      if (res.status === 404 && tipo === "original") {
+        res = await fetch(`${base}/api/Contracts/${contratoId}/arquivo/assinado`, { headers });
+      }
+
+      if (!res.ok) throw new Error("Arquivo não disponível.");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = NOME_DO_ARQUIVO[tipo];
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao baixar.");
+    } finally {
+      setBaixando(false);
+    }
+  }
+
+  return (
+    <Button
+      variant={discreto ? "ghost" : "outline"}
+      size="sm"
+      onClick={baixar}
+      disabled={baixando}
+      title={titulo}
+      className={discreto ? "text-muted-foreground" : undefined}
+    >
+      {baixando ? "Baixando..." : rotulo}
+    </Button>
+  );
+}

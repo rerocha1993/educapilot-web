@@ -15,7 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Copy, FileText, Trash2 } from "lucide-react";
+import { Copy, FileSignature, FileText, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import {
   useForms,
   useCreateForm,
@@ -27,6 +28,7 @@ import {
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { SeletorDeTipo } from "@/components/flow/seletor-de-tipo";
 import { AbasDeFormularios } from "@/components/flow/abas-de-formularios";
+import { HASH_LIGAR_CONTRATO } from "@/components/flow/interruptor-de-contrato";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { decodeFormConfig, encodeFormConfig, type TipoDeFormulario } from "@/lib/flow/form-config";
@@ -50,6 +52,7 @@ export default function FormulariosPage() {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [tipoNovo, setTipoNovo] = useState<TipoDeFormulario | "">("");
+  const [geraContrato, setGeraContrato] = useState(false);
   const [tipoCopia, setTipoCopia] = useState<TipoDeFormulario | "">("");
 
   const deleteForm = useDeleteForm();
@@ -95,7 +98,10 @@ export default function FormulariosPage() {
       setNome("");
       setDescricao("");
       setTipoNovo("");
-      window.location.href = `/flow/${created.id}`;
+      setGeraContrato(false);
+      // O campo de contrato não pode ser criado daqui — ele precisa do formulário já salvo. A
+      // marca no endereço leva a decisão junto, e o construtor liga o contrato ao abrir.
+      window.location.href = `/flow/${created.id}${geraContrato ? HASH_LIGAR_CONTRATO : ""}`;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao criar formulário.");
     }
@@ -170,6 +176,14 @@ export default function FormulariosPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium break-words">{form.nome}</p>
                 <TagDoTipo tipo={tipoDoFormulario(form)} />
+                {/* Dado neutro, não situação: só diz de que espécie é o formulário. Quem decide
+                    é o campo de contrato — ver InterruptorDeContrato. */}
+                {form.campos?.some((c) => c.tipo === "contrato") && (
+                  <Badge variant="outline">
+                    <FileSignature />
+                    Gera contrato
+                  </Badge>
+                )}
               </div>
               {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
             </div>
@@ -300,6 +314,26 @@ export default function FormulariosPage() {
               <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} />
             </div>
             <SeletorDeTipo valor={tipoNovo} onChange={setTipoNovo} />
+
+            {/* A pergunta que a escola faz ao criar: é contrato ou não? Marcada, o construtor abre
+                já com o campo de contrato criado e a configuração dele na tela. */}
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
+              <div className="min-w-0">
+                <Label htmlFor="novo-gera-contrato" className="text-sm font-medium">
+                  Este formulário gera contrato
+                </Label>
+                <p className="mt-1 text-xs leading-[1.55] text-muted-foreground">
+                  A família lê e assina o contrato ao enviar. Os contratos gerados ficam em
+                  Administração · Contratos.
+                </p>
+              </div>
+              <Switch
+                id="novo-gera-contrato"
+                checked={geraContrato}
+                onCheckedChange={setGeraContrato}
+                className="mt-0.5 shrink-0"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>

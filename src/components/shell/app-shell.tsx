@@ -176,8 +176,14 @@ export function AppShell({
     .map((p) => p[0]?.toUpperCase())
     .join("");
 
+  // Contratos vive em /admin mas pertence ao módulo Fluxos (ver pode-ver.ts): pelo caminho, o
+  // cabeçalho diria "Fluxos" enquanto a sidebar acende Administração. Manda o endereço.
   const tituloDaTela =
-    pathname === INICIO_HREF ? "Início" : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
+    pathname === INICIO_HREF
+      ? "Início"
+      : pathname === ADMIN_HREF || pathname.startsWith(`${ADMIN_HREF}/`)
+        ? TITULO_DO_MODULO.admin
+        : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
 
   const menuDoUsuario = (tamanho: "sm" | "lg") => (
     <DropdownMenu>

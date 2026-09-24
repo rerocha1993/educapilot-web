@@ -217,7 +217,10 @@ export function useCreateFormField(formId: string) {
           opcoes: input.opcoes ?? null,
         },
       });
-      unwrapApiResponse(result, "Não foi possível criar o campo.");
+      // Devolve o campo criado: quem liga "este formulário gera contrato" precisa do id para
+      // abrir a configuração do campo na sequência, sem esperar a lista recarregar.
+      const data = unwrapApiResponse(result, "Não foi possível criar o campo.");
+      return data as unknown as FormFieldDto;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forms", formId] }),
   });

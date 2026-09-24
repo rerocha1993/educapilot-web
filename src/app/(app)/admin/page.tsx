@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Users, GraduationCap, UserRound, UploadCloud, ArrowRightLeft, Contact, Mail } from "lucide-react";
+import { Users, GraduationCap, UserRound, UploadCloud, ArrowRightLeft, Contact, Mail, FileSignature } from "lucide-react";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
+import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useClasses } from "@/lib/kernel/use-classes";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 
@@ -11,6 +12,15 @@ import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 // pra uma rota sem page.tsx (404). Lista as áreas já construídas; conforme o
 // design/handoff/README.md (A1-A10) tiver mais telas prontas, entram aqui.
 const SECTIONS = [
+  {
+    href: "/admin/contratos",
+    label: "Contratos",
+    description: "Conferir e aprovar os contratos assinados pelas famílias.",
+    icon: FileSignature,
+    // Única área daqui que pertence a outro módulo (Fluxos): além da permissão, depende de a
+    // escola ter Fluxos contratado — ver o filtro abaixo.
+    moduloDeFora: true,
+  },
   {
     href: "/admin/turmas",
     label: "Turmas",
@@ -60,10 +70,14 @@ const SECTIONS = [
 export default function AdminPage() {
   const { data: meuAcesso } = useMeuAcesso();
   const { data: turmas } = useClasses();
+  const { rotaVisivel } = useVisibilidade();
 
   // Cada cartão é uma área da permissão: quem não tem "Usuários e convites" não vê o
-  // cartão, e a rota também fica bloqueada (ver ModuleGate).
-  const secoes = SECTIONS.filter((s) => podeVerRota(meuAcesso, s.href));
+  // cartão, e a rota também fica bloqueada (ver ModuleGate). Cartão de área hospedada pergunta
+  // também se a escola contratou o módulo dono dela — é o que rotaVisivel faz a mais.
+  const secoes = SECTIONS.filter((s) =>
+    s.moduloDeFora ? rotaVisivel(s.href) : podeVerRota(meuAcesso, s.href)
+  );
 
   const listaDeTurmas = turmas ?? [];
   // Só contagens que vêm de dado real: o resto dos cartões fica sem número.

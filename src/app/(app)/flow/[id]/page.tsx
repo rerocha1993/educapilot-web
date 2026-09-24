@@ -78,6 +78,7 @@ import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import { CEP_PARTE_OPTIONS } from "@/lib/flow/cep";
 import { CAMPO_CADASTRO_OPTIONS, rotuloDoDestino } from "@/lib/registry/campos-do-cadastro";
 import { ContractRulesPanel } from "@/components/flow/contract-rules-panel";
+import { InterruptorDeContrato } from "@/components/flow/interruptor-de-contrato";
 import { IdentificationRulePanel } from "@/components/flow/identification-rule-panel";
 import { CepRulePanel } from "@/components/flow/cep-rule-panel";
 import { RegistryRulePanel } from "@/components/flow/registry-rule-panel";
@@ -526,6 +527,10 @@ export default function FormBuilderPage() {
           publicado (&quot;Ativo&quot;).
         </p>
       )}
+
+      {/* A declaração de que o formulário gera contrato fica fora das abas: é uma decisão sobre o
+          formulário inteiro, não sobre um campo. Por baixo ela liga e desliga o campo de contrato. */}
+      <InterruptorDeContrato formId={formId} campos={campos} onConfigurar={abrirEdicao} />
 
       <Dialog open={editandoDados} onOpenChange={setEditandoDados}>
         <DialogContent>
