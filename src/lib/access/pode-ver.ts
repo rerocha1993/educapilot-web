@@ -63,6 +63,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   // Configuração é levado para lá pela própria página.
   { padrao: /^\/matriculas\/conversas/, modulo: "matriculas", area: "conversas" },
   { padrao: /^\/matriculas\/whatsapp/, modulo: "matriculas", area: "configuracao" },
+  { padrao: /^\/matriculas\/assistente/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas\/configuracao/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas/, modulo: "matriculas", area: null },
 

@@ -263,3 +263,99 @@ export interface Conversa {
   mensagens: Mensagem[];
   modelos: ModeloDeMensagem[];
 }
+
+// ------------------------------------------------------------------ assistente (fase 3)
+
+export type UsoDoMes = {
+  respostas: number;
+  paraAEquipe: number;
+  tokensDeEntrada: number;
+  tokensDeSaida: number;
+  tokensDeCacheLidos: number;
+  tokensDeCacheEscritos: number;
+};
+
+export type Assistente = {
+  ligada: boolean;
+  atendimentoInicio: number;
+  atendimentoFim: number;
+  esperaParaJuntarSegundos: number;
+  limiteMensalDeRespostas: number | null;
+  /** O que impede de ligar. Vazio: pode ligar. */
+  pendencias: string[];
+  whatsAppConectado: boolean;
+  fichaPreenchida: boolean;
+  servicoDisponivel: boolean;
+  perguntasEmAberto: number;
+  usoDoMes: UsoDoMes;
+};
+
+export type SalvarAjustesDaAssistente = {
+  ligada: boolean;
+  atendimentoInicio: number;
+  atendimentoFim: number;
+  esperaParaJuntarSegundos: number;
+};
+
+export type CriterioDaTurma = "idade_em_meses" | "corte";
+
+export type TurmaDaFicha = {
+  nome: string;
+  criterio: CriterioDaTurma;
+  mesesMinimo: number | null;
+  mesesMaximo: number | null;
+  idadeNoCorte: number | null;
+  grupo: string | null;
+  comoApresentar: string | null;
+  classId: number | null;
+};
+
+export type BlocoDaFicha = { titulo: string; texto: string };
+
+export type FichaDaEscola = {
+  nomeDaAssistente: string;
+  nomeDaEscola: string;
+  nomeCurto: string | null;
+  descricao: string;
+  endereco: string | null;
+  quemRecebeNaVisita: string | null;
+  comoEAVisita: string | null;
+  emailParaAssuntosDeFora: string | null;
+  sobreAEscola: string | null;
+  provaSocial: string | null;
+  diaDoCorte: number;
+  mesDoCorte: number;
+  turmas: TurmaDaFicha[];
+  fatos: BlocoDaFicha[];
+  respostas: BlocoDaFicha[];
+  naoSabe: string[];
+  atualizadoEm: string | null;
+};
+
+export type TelaDaFicha = {
+  ficha: FichaDaEscola | null;
+  sugestao: FichaDaEscola;
+  turmasDoCadastro: { id: number; nome: string }[];
+};
+
+export type PerguntaSemResposta = {
+  id: string;
+  leadId: string | null;
+  nomeDaFamilia: string | null;
+  pergunta: string;
+  resposta: string | null;
+  respondidaEm: string | null;
+  descartada: boolean;
+  criadaEm: string;
+};
+
+export type TurnoDeTeste = { daFamilia: boolean; texto: string };
+
+export type RespostaDeTeste = {
+  ok: boolean;
+  baloes: string[];
+  erro: string | null;
+  ferramentas: string[];
+  efeitos: string[];
+  ajustesDeEstilo: string[];
+};
