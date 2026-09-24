@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -74,16 +74,13 @@ const FILTROS: { valor: SituacaoDoMovimento | undefined; rotulo: string }[] = [
 export default function ConciliacaoPage() {
   const router = useRouter();
   const { data: contas } = useContas();
-  const [contaId, setContaId] = useState<string | null>(null);
+  const [contaDoUsuario, setContaDoUsuario] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<SituacaoDoMovimento | undefined>(SITUACAO.pendente);
   const [mostrarRegras, setMostrarRegras] = useState(false);
 
-  // Abre já na conta principal: é nela que o extrato quase sempre entra.
-  useEffect(() => {
-    if (!contaId && contas && contas.length > 0) {
-      setContaId((contas.find((c) => c.padraoParaRecebimento) ?? contas[0]).id);
-    }
-  }, [contaId, contas]);
+  // Abre já na conta principal, derivando em vez de guardar num efeito: a escolha só vira estado
+  // quando a pessoa troca de conta, e assim a tela não renderiza uma vez vazia antes de decidir.
+  const contaId = contaDoUsuario ?? (contas?.find((c) => c.padraoParaRecebimento) ?? contas?.[0])?.id ?? null;
 
   const { data: painel, isLoading } = usePainelDaConciliacao(contaId, filtro);
   const importar = useImportarExtrato();
@@ -160,7 +157,7 @@ export default function ConciliacaoPage() {
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex min-w-[220px] flex-col gap-[5px]">
               <Label className="text-xs text-muted-foreground">Conta</Label>
-              <Select value={contaId ?? undefined} onValueChange={(v) => v && setContaId(String(v))}>
+              <Select value={contaId ?? undefined} onValueChange={(v) => v && setContaDoUsuario(String(v))}>
                 <SelectTrigger className="w-full">
                   <SelectValue>{() => contaEscolhida?.nome ?? "Selecione"}</SelectValue>
                 </SelectTrigger>

@@ -7,7 +7,7 @@ import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
 
 const ITEMS = [
-  { href: "/finance", label: "Fluxo de caixa" },
+  { href: "/finance", label: "Painel" },
   { href: "/finance/despesas", label: "Despesas" },
   { href: "/finance/receitas", label: "Receitas" },
   { href: "/finance/mensalidades", label: "Mensalidades" },
