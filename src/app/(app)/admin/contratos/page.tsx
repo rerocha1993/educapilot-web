@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AtSign, FileCheck, Link2, MessageCircle, RefreshCw, Settings, Trash2, TriangleAlert } from "lucide-react";
+import { Archive, ArchiveRestore, AtSign, FileCheck, Link2, MessageCircle, RefreshCw, Settings, Trash2, TriangleAlert } from "lucide-react";
 
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import {
   useApproveContract,
+  useArchiveContract,
+  useUnarchiveContract,
   useContracts,
   useContractsAwaitingApproval,
   useRejectContract,
@@ -218,6 +220,27 @@ function Historico({ contratos }: { contratos: Contract[] }) {
   // Contrato cujo e-mail de assinatura está sendo trocado.
   const [trocandoEmail, setTrocandoEmail] = useState<Contract | null>(null);
 
+  // Arquivados saem da lista: são contratos assinados que a escola substituiu, e misturados aos
+  // válidos parecem matrícula em dobro. Continuam a um clique, com o motivo.
+  const [arquivando, setArquivando] = useState<Contract | null>(null);
+  const [mostrarArquivados, setMostrarArquivados] = useState(false);
+  const desarquivar = useUnarchiveContract();
+  const arquivados = contratos.filter((c) => !!c.arquivadoEm).length;
+  const visiveis = mostrarArquivados ? contratos : contratos.filter((c) => !c.arquivadoEm);
+
+  // Assinado não se exclui (é prova); o que a escola faz com um assinado que não vale é arquivar.
+  const podeArquivar = (c: Contract) =>
+    !c.arquivadoEm && (c.status === 2 || c.signatarios.some((s) => !!s.assinadoEm));
+
+  async function handleDesarquivar(c: Contract) {
+    try {
+      await desarquivar.mutateAsync(c.id);
+      toast.success("Contrato de volta à lista.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao desarquivar.");
+    }
+  }
+
   // Só contrato que não chegou ao provedor. O backend recusa o resto de qualquer forma; aqui a
   // regra existe para não oferecer um botão que vai falhar.
   // Qualquer contrato que ninguém assinou. O caso real: uma mãe preencheu duas vezes, assinou um
@@ -288,6 +311,16 @@ function Historico({ contratos }: { contratos: Contract[] }) {
           via enviada
         </Badge>
       )}
+      {c.arquivadoEm && (
+        <>
+          <Badge variant="pending" className="ml-2 h-5">
+            arquivado
+          </Badge>
+          {c.motivoArquivamento && (
+            <span className="block text-xs text-muted-foreground">{c.motivoArquivamento}</span>
+          )}
+        </>
+      )}
     </>
   );
 
@@ -324,6 +357,30 @@ function Historico({ contratos }: { contratos: Contract[] }) {
           >
             <RefreshCw className="size-4 text-primary" />
             Gerar novo
+          </Button>
+        )}
+
+        {podeArquivar(c) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setArquivando(c)}
+            title="Assinado, mas não vale mais (a família refez). Sai da lista sem apagar o documento."
+          >
+            <Archive className="size-4 text-muted-foreground" />
+            Arquivar
+          </Button>
+        )}
+
+        {c.arquivadoEm && (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={desarquivar.isPending}
+            onClick={() => handleDesarquivar(c)}
+          >
+            <ArchiveRestore className="size-4 text-primary" />
+            Desarquivar
           </Button>
         )}
 
@@ -409,10 +466,19 @@ function Historico({ contratos }: { contratos: Contract[] }) {
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-      <h2 className="font-heading text-[15.5px] font-semibold">Todos os contratos</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-heading text-[15.5px] font-semibold">Todos os contratos</h2>
+        {arquivados > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setMostrarArquivados((v) => !v)}>
+            {mostrarArquivados
+              ? "Esconder arquivados"
+              : `Mostrar arquivados (${arquivados})`}
+          </Button>
+        )}
+      </div>
 
       <div className="flex flex-col gap-2 md:hidden">
-        {contratos.map((c) => {
+        {visiveis.map((c) => {
           const resp = c.signatarios.find((s) => s.papel === 0);
           return (
             <div key={c.id} className="flex flex-col gap-1.5 rounded-lg border border-border p-3 text-sm">
@@ -446,7 +512,7 @@ function Historico({ contratos }: { contratos: Contract[] }) {
             </tr>
           </thead>
           <tbody>
-            {contratos.map((c) => {
+            {visiveis.map((c) => {
               const resp = c.signatarios.find((s) => s.papel === 0);
               return (
                 <Fragment key={c.id}>
@@ -480,7 +546,80 @@ function Historico({ contratos }: { contratos: Contract[] }) {
       {trocandoEmail && (
         <TrocarEmailDeAssinatura contrato={trocandoEmail} onFechar={() => setTrocandoEmail(null)} />
       )}
+
+      {arquivando && <ArquivarContrato contrato={arquivando} onFechar={() => setArquivando(null)} />}
     </div>
+  );
+}
+
+/**
+ * Arquiva um contrato assinado que não vale mais.
+ *
+ * O caso que abriu isto: a mãe preencheu a ficha com erro, assinou, e refez o certo — que já foi
+ * aprovado. O errado ficava na lista para sempre, porque contrato assinado não se exclui: é prova,
+ * e a assinatura continua no Autentique de qualquer forma. Arquivar tira da lista e da fila de
+ * aprovação e guarda o motivo, sem apagar o PDF.
+ */
+function ArquivarContrato({ contrato, onFechar }: { contrato: Contract; onFechar: () => void }) {
+  const arquivar = useArchiveContract();
+  const [motivo, setMotivo] = useState("");
+  const responsavel = contrato.signatarios.find((s) => s.papel === 0);
+
+  async function handleArquivar() {
+    if (!motivo.trim()) {
+      toast.error("Escreva por que este contrato não vale mais.");
+      return;
+    }
+    try {
+      await arquivar.mutateAsync({ id: contrato.id, motivo: motivo.trim() });
+      toast.success("Contrato arquivado. Ele continua em \"Mostrar arquivados\".");
+      onFechar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao arquivar.");
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onFechar()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Arquivar contrato</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-3 text-sm">
+          <p>
+            {contrato.titulo}
+            {responsavel && (
+              <span className="block text-muted-foreground">
+                {responsavel.nome} · {responsavel.email}
+              </span>
+            )}
+          </p>
+          <p className="text-muted-foreground">
+            O contrato sai da lista e da fila de aprovação, mas não é apagado: a assinatura continua
+            valendo como registro, o PDF fica disponível e dá para desarquivar depois.
+          </p>
+          <div className="flex flex-col gap-[5px]">
+            <Label htmlFor="motivo-arquivamento">Por que ele não vale mais?</Label>
+            <Textarea
+              id="motivo-arquivamento"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ex.: ficha preenchida com erro; a família refez e o contrato corrigido já foi aprovado."
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>
+            Cancelar
+          </Button>
+          <Button onClick={handleArquivar} disabled={arquivar.isPending || !motivo.trim()}>
+            {arquivar.isPending ? "Arquivando..." : "Arquivar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
