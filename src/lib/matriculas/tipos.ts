@@ -164,9 +164,18 @@ export interface AutomacoesLigadas {
   retomada: boolean;
   reengajamento: boolean;
   briefing: boolean;
+  conversoes: boolean;
 }
 
-export type ChaveDaAutomacao = "toques" | "lembretes" | "reagendamento" | "retomada" | "reengajamento" | "briefing" | "alerta_de_espera";
+export type ChaveDaAutomacao =
+  | "toques"
+  | "lembretes"
+  | "reagendamento"
+  | "retomada"
+  | "reengajamento"
+  | "briefing"
+  | "alerta_de_espera"
+  | "conversoes";
 
 export interface EstadoDaAutomacao {
   chave: ChaveDaAutomacao;
@@ -447,4 +456,49 @@ export interface Material {
   ativo: boolean;
   enviosFeitos: number;
   criadoEm: string;
+}
+
+// ------------------------------------------------------------------ Meta Ads (fase 6)
+
+export interface OpcaoDaMeta {
+  id: string;
+  nome: string;
+}
+
+export interface ContaMetaAds {
+  disponivel: boolean;
+  conectada: boolean;
+  paginaId?: string | null;
+  paginaNome?: string | null;
+  contaDeAnunciosId?: string | null;
+  contaDeAnunciosNome?: string | null;
+  leadAdsInscrito: boolean;
+  conectadaEm?: string | null;
+  ultimoErro?: string | null;
+  paginas: OpcaoDaMeta[];
+  contasDeAnuncios: OpcaoDaMeta[];
+}
+
+export interface ResultadoDoAnuncio {
+  anuncioId: string;
+  anuncio?: string | null;
+  conjunto?: string | null;
+  campanha?: string | null;
+  gasto: number;
+  familias: number;
+  visitas: number;
+  matriculas: number;
+  custoPorFamilia?: number | null;
+  custoPorMatricula?: number | null;
+}
+
+export interface ResultadosDosAnuncios {
+  dias: number;
+  gasto: number;
+  familias: number;
+  visitas: number;
+  matriculas: number;
+  custoPorMatricula?: number | null;
+  anuncios: ResultadoDoAnuncio[];
+  aviso?: string | null;
 }

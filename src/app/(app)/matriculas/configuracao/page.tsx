@@ -215,6 +215,7 @@ const AUTOMACOES: { chave: ChaveDaAutomacao; campo?: keyof AutomacoesLigadas; ti
   { chave: "retomada", campo: "retomada", titulo: "Retomar quem parou de responder", texto: "A assistente volta a procurar, nos prazos abaixo. Quando a família dá uma data, ela volta nessa data." },
   { chave: "reengajamento", campo: "reengajamento", titulo: "Resposta pendente", texto: "Passadas 24 horas sem a equipe responder, a assistente responde o que ficou pendente e retoma a conversa." },
   { chave: "briefing", campo: "briefing", titulo: "Briefing da visita", texto: "Quando a visita é marcada, um resumo da conversa para quem vai receber a família." },
+  { chave: "conversoes", campo: "conversoes", titulo: "Conversões para a Meta", texto: "Família que veio de anúncio marcou visita ou matriculou: a Meta fica sabendo, e aprende a mostrar o anúncio para quem matricula." },
   { chave: "alerta_de_espera", titulo: "Aviso de espera", texto: "Família esperando a equipe além do prazo recebe atenção: vai um e-mail para a equipe." },
 ];
 
