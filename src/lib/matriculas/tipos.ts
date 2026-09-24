@@ -112,6 +112,10 @@ export interface LeadDetalhe extends LeadResumo {
   retomadasEnviadas: number;
   primeiraRespostaEm?: string | null;
   consentimentoEm?: string | null;
+  /** JSON do briefing da visita; o formato está em BriefingDaVisita. */
+  briefingVisita?: string | null;
+  briefingGeradoEm?: string | null;
+  briefingDeOutraVisita: boolean;
   toques: Toque[];
   eventos: EventoDoLead[];
 }
@@ -147,8 +151,43 @@ export interface ConfiguracaoMatriculas {
   cicloSeteDiasLigado: boolean;
   horasParaFrio: number;
   metaMensalMatriculas?: number | null;
+  automacoes: AutomacoesLigadas;
+  emailsDaEquipe?: string | null;
   etapas: TituloDaEtapa[];
   atualizadoEm?: string | null;
+}
+
+export interface AutomacoesLigadas {
+  toquesPosVisita: boolean;
+  lembretesDeVisita: boolean;
+  reagendamento: boolean;
+  retomada: boolean;
+  reengajamento: boolean;
+  briefing: boolean;
+}
+
+export type ChaveDaAutomacao = "toques" | "lembretes" | "reagendamento" | "retomada" | "reengajamento" | "briefing" | "alerta_de_espera";
+
+export interface EstadoDaAutomacao {
+  chave: ChaveDaAutomacao;
+  ligada: boolean;
+  modelos: { nome: string; aprovado: boolean }[];
+  /** O que falta para funcionar. Vazio: funcionando. */
+  pendencias: string[];
+  ultimoEnvioEm?: string | null;
+}
+
+export interface BriefingDaVisita {
+  crianca?: { nome?: string; idade?: string; turma?: string; comoE?: string[]; saude?: string[]; historico?: string[]; gostos?: string[] };
+  familia?: { responsavel?: string; quemDecide?: string; trabalho?: string; outrosFilhos?: string; localizacao?: string };
+  prioridades?: string[];
+  preocupacoes?: string[];
+  objecoes?: string[];
+  orcamentoDeclarado?: string;
+  sinaisDeInseguranca?: string[];
+  logistica?: { periodo?: string; prazo?: string; observacoes?: string };
+  frasesLiterais?: { quem?: string; texto?: string }[];
+  sugestoesParaVisita?: string[];
 }
 
 export interface SalvarConfiguracaoMatriculas

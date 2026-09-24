@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ROTULOS_DO_PERIODO } from "@/components/reception/periodo-do-aluno-campos";
 import { getSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import type { EtapaDoFunil, EventoDoLead, LeadDetalhe, SinalDaFamilia } from "@/lib/matriculas/tipos";
+import type { BriefingDaVisita, EtapaDoFunil, EventoDoLead, LeadDetalhe, SinalDaFamilia } from "@/lib/matriculas/tipos";
 import {
   COR_DA_ETAPA,
   ORDEM_DAS_ETAPAS,
@@ -216,6 +216,8 @@ function Conteudo({
           <Dado rotulo="Entrou no funil">{dataHoraCurta(lead.criadoEm)}</Dado>
         </div>
 
+        {lead.briefingVisita && <Briefing json={lead.briefingVisita} deOutraVisita={lead.briefingDeOutraVisita} />}
+
         {lead.notas && (
           <Secao titulo="Notas">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{lead.notas}</p>
@@ -321,8 +323,72 @@ function descreverEvento(evento: EventoDoLead, titulo: (e: EtapaDoFunil) => stri
     case "dados_alterados":
       return "Dados editados";
     default:
-      return evento.tipo.replaceAll("_", " ");
+      return DESCRICAO_DO_EVENTO[evento.tipo] ?? evento.tipo.replaceAll("_", " ");
   }
+}
+
+/** Os eventos da assistente e das automações, em palavras de escola. */
+const DESCRICAO_DO_EVENTO: Record<string, string> = {
+  turma_determinada: "A assistente calculou a turma",
+  dados_registrados: "A assistente anotou dados da família",
+  retomada_combinada: "Combinado de retomar depois",
+  conversa_encerrada: "Conversa encerrada: não é matrícula",
+  repasse_para_equipe: "Passada para a equipe",
+  equipe_assumiu: "A equipe assumiu a conversa",
+  devolvida_a_assistente: "Devolvida para a assistente",
+  toque_enviado: "Contato pós-visita enviado",
+  toque_falhou: "Contato pós-visita não saiu",
+  lembrete_da_vespera_enviado: "Lembrete da véspera enviado",
+  lembrete_do_dia_enviado: "Lembrete de uma hora antes enviado",
+  pedido_de_remarcacao_enviado: "Pedido de remarcação enviado",
+  retomada_enviada: "A assistente voltou a procurar",
+  ciclo_encerrado: "Retomadas encerradas",
+  reengajado_pos_equipe: "A assistente respondeu o que ficou pendente",
+  reengajamento_precisa_da_equipe: "Pendente precisa da equipe",
+  alerta_de_espera_enviado: "Equipe avisada da espera",
+  briefing_gerado: "Briefing da visita pronto",
+  estilo_ajustado: "Resposta da assistente ajustada",
+};
+
+function Briefing({ json, deOutraVisita }: { json: string; deOutraVisita: boolean }) {
+  let b: BriefingDaVisita | null = null;
+  try {
+    b = JSON.parse(json) as BriefingDaVisita;
+  } catch {
+    return null;
+  }
+  const itens = (titulo: string, lista?: (string | undefined)[]) => {
+    const l = (lista ?? []).filter((x): x is string => !!x && x.trim().length > 0);
+    return l.length === 0 ? null : (
+      <div>
+        <p className="text-[11.5px] font-semibold text-muted-foreground">{titulo}</p>
+        <ul className="mt-0.5 list-disc pl-4 text-[13.5px] leading-relaxed">
+          {l.map((x) => (
+            <li key={x}>{x}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  return (
+    <Secao titulo="Briefing da visita">
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-3.5">
+        {deOutraVisita && <p className="text-[12.5px] text-muted-foreground">Este é da visita anterior; o da nova sai em alguns minutos.</p>}
+        {b.orcamentoDeclarado && (
+          <p className="rounded-xl bg-warning-soft px-3 py-2 text-[13.5px] text-warning-soft-foreground">
+            <b>O que ela disse que pode pagar:</b> {b.orcamentoDeclarado}
+          </p>
+        )}
+        {itens("A criança", [...(b.crianca?.comoE ?? []), ...(b.crianca?.saude ?? []), ...(b.crianca?.historico ?? []), ...(b.crianca?.gostos ?? [])])}
+        {itens("A família", [b.familia?.quemDecide && `Quem decide: ${b.familia.quemDecide}`, b.familia?.trabalho, b.familia?.outrosFilhos, b.familia?.localizacao])}
+        {itens("O que valoriza", b.prioridades)}
+        {itens("Preocupações", [...(b.preocupacoes ?? []), ...(b.objecoes ?? [])])}
+        {itens("Nas palavras dela", b.frasesLiterais?.map((f) => f.texto && `“${f.texto}”`))}
+        {itens("Como conduzir", b.sugestoesParaVisita)}
+      </div>
+    </Secao>
+  );
 }
 
 function Seletor({ rotulo, children }: { rotulo: string; children: ReactNode }) {

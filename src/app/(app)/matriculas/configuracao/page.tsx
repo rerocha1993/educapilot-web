@@ -2,16 +2,19 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import { CheckCircle2, CircleDashed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { MatriculasNav } from "@/components/matriculas/matriculas-nav";
 import { getSession } from "@/lib/auth/session";
-import type { ConfiguracaoMatriculas, EtapaDoFunil } from "@/lib/matriculas/tipos";
-import { COR_DA_ETAPA } from "@/lib/matriculas/rotulos";
-import { useConfiguracaoMatriculas, useSalvarConfiguracaoMatriculas } from "@/lib/matriculas/use-funil";
+import { cn } from "@/lib/utils";
+import type { AutomacoesLigadas, ChaveDaAutomacao, ConfiguracaoMatriculas, EstadoDaAutomacao, EtapaDoFunil } from "@/lib/matriculas/tipos";
+import { COR_DA_ETAPA, dataHoraCurta } from "@/lib/matriculas/rotulos";
+import { useConfiguracaoMatriculas, useEstadoDasAutomacoes, useSalvarConfiguracaoMatriculas } from "@/lib/matriculas/use-funil";
 
 export default function ConfiguracaoMatriculasPage() {
   const { data, isLoading, isError } = useConfiguracaoMatriculas();
@@ -54,6 +57,8 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
     horasParaFrio: String(config.horasParaFrio),
     metaMensalMatriculas: config.metaMensalMatriculas != null ? String(config.metaMensalMatriculas) : "",
     cicloSeteDiasLigado: config.cicloSeteDiasLigado,
+    automacoes: config.automacoes,
+    emailsDaEquipe: config.emailsDaEquipe ?? "",
     titulos: Object.fromEntries(config.etapas.map((e) => [e.etapa, e.titulo === e.tituloPadrao ? "" : e.titulo])) as Record<
       EtapaDoFunil,
       string
@@ -75,6 +80,8 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
         horasParaFrio: numero(v.horasParaFrio),
         metaMensalMatriculas: v.metaMensalMatriculas ? numero(v.metaMensalMatriculas) : null,
         cicloSeteDiasLigado: v.cicloSeteDiasLigado,
+        automacoes: v.automacoes,
+        emailsDaEquipe: v.emailsDaEquipe,
         titulosDasEtapas: v.titulos,
       });
       toast.success("Configuração salva.");
@@ -86,6 +93,13 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
   return (
     <form onSubmit={enviar} className="flex max-w-3xl flex-col gap-4">
       <fieldset disabled={!ehGestao || salvar.isPending} className="flex flex-col gap-4">
+        <Automacoes
+          ligadas={v.automacoes}
+          mudar={(automacoes) => setV({ ...v, automacoes })}
+          emails={v.emailsDaEquipe}
+          mudarEmails={(emailsDaEquipe) => setV({ ...v, emailsDaEquipe })}
+        />
+
         <Bloco
           titulo="Espera pela equipe"
           apoio="Quando a assistente passa a conversa para alguém da escola, a família aparece na faixa laranja do funil. Depois do prazo, a direção é avisada."
@@ -190,5 +204,97 @@ function CampoNumero({
         <span className="text-sm text-muted-foreground">{unidade}</span>
       </div>
     </div>
+  );
+}
+
+/** O que cada automação faz, em palavras de escola, e qual chave liga ela. */
+const AUTOMACOES: { chave: ChaveDaAutomacao; campo?: keyof AutomacoesLigadas; titulo: string; texto: string }[] = [
+  { chave: "lembretes", campo: "lembretesDeVisita", titulo: "Lembrete da visita", texto: "Na véspera, às 9h, e uma hora antes. Visita remarcada ganha lembrete de novo." },
+  { chave: "toques", campo: "toquesPosVisita", titulo: "Contatos depois da visita", texto: "24 horas, 3 dias e 7 dias depois. Se a família estiver conversando, o contato espera." },
+  { chave: "reagendamento", campo: "reagendamento", titulo: "Remarcar quem faltou", texto: "Quando alguém arrasta o card para Reagendar, sai o convite para marcar outro dia." },
+  { chave: "retomada", campo: "retomada", titulo: "Retomar quem parou de responder", texto: "A assistente volta a procurar, nos prazos abaixo. Quando a família dá uma data, ela volta nessa data." },
+  { chave: "reengajamento", campo: "reengajamento", titulo: "Resposta pendente", texto: "Passadas 24 horas sem a equipe responder, a assistente responde o que ficou pendente e retoma a conversa." },
+  { chave: "briefing", campo: "briefing", titulo: "Briefing da visita", texto: "Quando a visita é marcada, um resumo da conversa para quem vai receber a família." },
+  { chave: "alerta_de_espera", titulo: "Aviso de espera", texto: "Família esperando a equipe além do prazo recebe atenção: vai um e-mail para a equipe." },
+];
+
+function Automacoes({
+  ligadas,
+  mudar,
+  emails,
+  mudarEmails,
+}: {
+  ligadas: AutomacoesLigadas;
+  mudar: (a: AutomacoesLigadas) => void;
+  emails: string;
+  mudarEmails: (e: string) => void;
+}) {
+  const { data: estados } = useEstadoDasAutomacoes();
+  const porChave = new Map<ChaveDaAutomacao, EstadoDaAutomacao>((estados ?? []).map((e) => [e.chave, e]));
+
+  return (
+    <section className="rounded-[24px] border border-border bg-card p-5">
+      <h2 className="font-heading text-base font-semibold">Automações</h2>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        O que a escola faz sozinha. Nada sai fora das 9h às 20h, e nada é dado por enviado antes de o WhatsApp confirmar. As que
+        usam modelo só funcionam com o modelo aprovado pela Meta (Matrículas › WhatsApp).
+      </p>
+
+      <ul className="mt-4 flex flex-col divide-y divide-border">
+        {AUTOMACOES.map((a) => {
+          const estado = porChave.get(a.chave);
+          const ligada = a.campo ? ligadas[a.campo] : true;
+          const pronta = estado && estado.pendencias.length === 0;
+          return (
+            <li key={a.chave} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
+              {a.campo ? (
+                <Switch
+                  id={`auto-${a.chave}`}
+                  className="mt-0.5"
+                  checked={ligada}
+                  onCheckedChange={(x) => mudar({ ...ligadas, [a.campo!]: x })}
+                />
+              ) : (
+                <span className="mt-0.5 w-8 shrink-0" aria-hidden />
+              )}
+              <div className="min-w-0 flex-1">
+                <Label htmlFor={`auto-${a.chave}`} className="font-semibold">
+                  {a.titulo}
+                </Label>
+                <p className="text-[13px] text-muted-foreground">{a.texto}</p>
+                {ligada && estado && (
+                  <p className={cn("mt-1 flex items-start gap-1.5 text-[12.5px]", pronta ? "text-success" : "text-warning-soft-foreground")}>
+                    {pronta ? <CheckCircle2 className="mt-px size-3.5 shrink-0" aria-hidden /> : <CircleDashed className="mt-px size-3.5 shrink-0" aria-hidden />}
+                    <span className="first-letter:uppercase">
+                      {pronta
+                        ? estado.ultimoEnvioEm
+                          ? `Funcionando. Última vez em ${dataHoraCurta(estado.ultimoEnvioEm)}.`
+                          : "Pronta. Ainda não precisou agir."
+                        : `Falta: ${estado.pendencias.join("; ")}.`}
+                    </span>
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="mt-5 flex flex-col gap-[5px]">
+        <Label htmlFor="cfg-emails" className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+          E-mails da equipe
+        </Label>
+        <Textarea
+          id="cfg-emails"
+          rows={2}
+          placeholder="coordenacao@escola.com.br, secretaria@escola.com.br"
+          value={emails}
+          onChange={(e) => mudarEmails(e.target.value)}
+        />
+        <p className="text-[12px] text-muted-foreground">
+          Recebem o aviso de espera, o briefing da visita, as famílias paradas (todo dia às 8h30) e o resumo da semana (segunda às 8h).
+        </p>
+      </div>
+    </section>
   );
 }

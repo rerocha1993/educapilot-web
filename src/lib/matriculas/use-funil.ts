@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/
 import { matriculasJson } from "./api";
 import type {
   ConfiguracaoMatriculas,
+  EstadoDaAutomacao,
   EtapaDoFunil,
   LeadDetalhe,
   LeadResumo,
@@ -137,5 +138,13 @@ export function useSalvarConfiguracaoMatriculas() {
     mutationFn: (dto: SalvarConfiguracaoMatriculas) =>
       matriculasJson<ConfiguracaoMatriculas>("/configuracao", { method: "PUT", body: JSON.stringify(dto) }, "Não foi possível salvar a configuração."),
     onSuccess: invalidar,
+  });
+}
+
+/** O que cada automação precisa para funcionar, e quando agiu pela última vez. */
+export function useEstadoDasAutomacoes() {
+  return useQuery({
+    queryKey: ["matriculas", "automacoes"],
+    queryFn: () => matriculasJson<EstadoDaAutomacao[]>("/automacoes", {}, "Não foi possível carregar as automações."),
   });
 }
