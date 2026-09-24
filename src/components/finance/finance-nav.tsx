@@ -14,6 +14,7 @@ const ITEMS = [
   { href: "/finance/inadimplencia", label: "Inadimplência" },
   { href: "/finance/orcamento", label: "Orçamento" },
   { href: "/finance/contas", label: "Contas" },
+  { href: "/finance/conciliacao", label: "Conciliação" },
   { href: "/finance/plano-de-contas", label: "Plano de contas" },
   { href: "/finance/fechamento", label: "Fechamento" },
 ];

@@ -44,6 +44,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/finance\/orcamento/, modulo: "finance", area: "orcamento" },
   { padrao: /^\/finance\/inadimplencia/, modulo: "finance", area: "inadimplencia" },
   { padrao: /^\/finance\/contas/, modulo: "finance", area: "contas" },
+  { padrao: /^\/finance\/conciliacao/, modulo: "finance", area: "conciliacao" },
   { padrao: /^\/finance\/plano-de-contas/, modulo: "finance", area: "plano-de-contas" },
   { padrao: /^\/finance\/fechamento/, modulo: "finance", area: "fechamento" },
   { padrao: /^\/finance/, modulo: "finance", area: null },
