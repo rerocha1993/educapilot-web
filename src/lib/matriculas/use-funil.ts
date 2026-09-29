@@ -73,10 +73,10 @@ export function useAtualizarLead() {
 export function useMoverLead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, etapa, motivoPerda }: { id: string; etapa: EtapaDoFunil; motivoPerda?: string }) =>
+    mutationFn: ({ id, etapa, motivoPerda, retomarEm }: { id: string; etapa: EtapaDoFunil; motivoPerda?: string; retomarEm?: string }) =>
       matriculasJson<LeadResumo>(
         `/leads/${id}/etapa`,
-        { method: "POST", body: JSON.stringify({ etapa, motivoPerda }) },
+        { method: "POST", body: JSON.stringify({ etapa, motivoPerda, retomarEm }) },
         "Não foi possível mover a família."
       ),
     onMutate: async ({ id, etapa }) => {
@@ -105,6 +105,16 @@ export function useMoverLead() {
       }
     },
     onSettled: () => qc.invalidateQueries({ queryKey: RAIZ }),
+  });
+}
+
+/** O botão Reativar: manda o modelo reativacao. Não muda quem atende. */
+export function useReativar() {
+  const invalidar = useInvalidarFunil();
+  return useMutation({
+    mutationFn: (id: string) =>
+      matriculasJson<unknown>(`/conversas/${id}/reativar`, { method: "POST" }, "Não foi possível reativar a conversa."),
+    onSuccess: invalidar,
   });
 }
 

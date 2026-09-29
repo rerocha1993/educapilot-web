@@ -59,6 +59,13 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
     cicloSeteDiasLigado: config.cicloSeteDiasLigado,
     automacoes: config.automacoes,
     emailsDaEquipe: config.emailsDaEquipe ?? "",
+    resumoLigado: config.resumoDoDia?.ligado ?? false,
+    // Dois campos para começar, como no CRM do Colégio; dá para chegar a cinco.
+    resumoNumeros: (() => {
+      const n = [...(config.resumoDoDia?.numeros ?? [])];
+      while (n.length < 2) n.push("");
+      return n;
+    })(),
     titulos: Object.fromEntries(config.etapas.map((e) => [e.etapa, e.titulo === e.tituloPadrao ? "" : e.titulo])) as Record<
       EtapaDoFunil,
       string
@@ -82,6 +89,7 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
         cicloSeteDiasLigado: v.cicloSeteDiasLigado,
         automacoes: v.automacoes,
         emailsDaEquipe: v.emailsDaEquipe,
+        resumoDoDia: { ligado: v.resumoLigado, numeros: v.resumoNumeros.map((n) => n.trim()).filter(Boolean) },
         titulosDasEtapas: v.titulos,
       });
       toast.success("Configuração salva.");
@@ -99,6 +107,53 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
           emails={v.emailsDaEquipe}
           mudarEmails={(emailsDaEquipe) => setV({ ...v, emailsDaEquipe })}
         />
+
+        <section className="rounded-[24px] border border-border bg-card p-5">
+          <div className="flex items-start gap-3">
+            <Switch
+              id="cfg-resumo"
+              className="mt-0.5"
+              checked={v.resumoLigado}
+              onCheckedChange={(ligado) => setV({ ...v, resumoLigado: ligado })}
+            />
+            <Label htmlFor="cfg-resumo" className="flex flex-col items-start gap-0.5 font-normal">
+              <span className="font-heading text-base font-semibold">Resumo do dia no WhatsApp</span>
+              <span className="max-w-2xl text-sm text-muted-foreground">
+                Às 19h: conversas novas, famílias esperando resposta, visitas marcadas e as que aconteceram, e matrículas. De segunda a
+                sexta sai sempre; no fim de semana, só se houve movimento. Precisa do modelo resumo_do_dia aprovado (Matrículas ›
+                WhatsApp).
+              </span>
+            </Label>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {v.resumoNumeros.map((numero, i) => (
+              <div key={i} className="flex min-w-0 flex-col gap-[5px]">
+                <Label htmlFor={`cfg-resumo-${i}`} className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                  Número {i + 1}
+                </Label>
+                <Input
+                  id={`cfg-resumo-${i}`}
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="DDD e número"
+                  value={numero}
+                  onChange={(e) => setV({ ...v, resumoNumeros: v.resumoNumeros.map((n, j) => (j === i ? e.target.value : n)) })}
+                />
+              </div>
+            ))}
+          </div>
+          {v.resumoNumeros.length < 5 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => setV({ ...v, resumoNumeros: [...v.resumoNumeros, ""] })}
+            >
+              Adicionar número
+            </Button>
+          )}
+        </section>
 
         <Bloco
           titulo="Espera pela equipe"
@@ -125,7 +180,8 @@ function Formulario({ config }: { config: ConfiguracaoMatriculas }) {
             <Label htmlFor="cfg-ciclo" className="flex flex-col items-start gap-0.5 font-normal">
               <span className="font-semibold">Ciclo de 7 dias para quem sumiu</span>
               <span className="text-xs text-muted-foreground">
-                Três mensagens de modelo aprovado, pagas pela escola à Meta. Desligado até você decidir ligar.
+                Três mensagens de modelo aprovado (1, 3 e 7 dias), pagas pela escola à Meta. O card mostra a tentativa em Chamar
+                novamente, e quem não responde a nenhuma vai para Perdido três dias depois da última. Desligado até você decidir ligar.
               </span>
             </Label>
           </div>
@@ -212,7 +268,7 @@ const AUTOMACOES: { chave: ChaveDaAutomacao; campo?: keyof AutomacoesLigadas; ti
   { chave: "lembretes", campo: "lembretesDeVisita", titulo: "Lembrete da visita", texto: "Na véspera, às 9h, e uma hora antes. Visita remarcada ganha lembrete de novo." },
   { chave: "toques", campo: "toquesPosVisita", titulo: "Contatos depois da visita", texto: "24 horas, 3 dias e 7 dias depois. Se a família estiver conversando, o contato espera." },
   { chave: "reagendamento", campo: "reagendamento", titulo: "Remarcar quem faltou", texto: "Quando alguém arrasta o card para Reagendar, sai o convite para marcar outro dia." },
-  { chave: "retomada", campo: "retomada", titulo: "Retomar quem parou de responder", texto: "A assistente volta a procurar, nos prazos abaixo. Quando a família dá uma data, ela volta nessa data." },
+  { chave: "retomada", campo: "retomada", titulo: "Retomar quem parou de responder", texto: "A assistente volta a procurar, nos prazos abaixo. Quando a família dá uma data, ela volta nessa data, e o card espera em Chamar novamente. Quem não responde a nenhuma vai para Perdido." },
   { chave: "reengajamento", campo: "reengajamento", titulo: "Resposta pendente", texto: "Passadas 24 horas sem a equipe responder, a assistente responde o que ficou pendente e retoma a conversa." },
   { chave: "briefing", campo: "briefing", titulo: "Briefing da visita", texto: "Quando a visita é marcada, um resumo da conversa para quem vai receber a família." },
   { chave: "conversoes", campo: "conversoes", titulo: "Conversões para a Meta", texto: "Família que veio de anúncio marcou visita ou matriculou: a Meta fica sabendo, e aprende a mostrar o anúncio para quem matricula." },

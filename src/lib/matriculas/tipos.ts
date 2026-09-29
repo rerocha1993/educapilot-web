@@ -7,6 +7,7 @@ import type { TipoDePeriodo } from "@/lib/reception/use-portaria";
 export type EtapaDoFunil =
   | "Novo"
   | "Conversou"
+  | "ChamarNovamente"
   | "VisitaAgendada"
   | "Reagendar"
   | "Visitou"
@@ -70,6 +71,13 @@ export interface LeadResumo {
   nivelDaEspera?: NivelDaEspera | null;
   motivoRepasse?: string | null;
   frio: boolean;
+  /** A família já escreveu pelo WhatsApp: há conversa para reativar. */
+  temConversa?: boolean;
+  /** Em Chamar novamente: quando a família vai ser chamada (UTC). Vazio depois da última tentativa. */
+  retornoEm?: string | null;
+  /** Em Chamar novamente pelo ciclo de 7 dias: a tentativa que vem, de tentativasDoCiclo. */
+  tentativa?: number | null;
+  tentativasDoCiclo?: number | null;
   anuncioId?: string | null;
   ultimaInteracaoEm?: string | null;
   criadoEm: string;
@@ -153,8 +161,16 @@ export interface ConfiguracaoMatriculas {
   metaMensalMatriculas?: number | null;
   automacoes: AutomacoesLigadas;
   emailsDaEquipe?: string | null;
+  resumoDoDia: ResumoDoDia;
   etapas: TituloDaEtapa[];
   atualizadoEm?: string | null;
+}
+
+/** O resumo do dia no WhatsApp da equipe, às 19h. */
+export interface ResumoDoDia {
+  ligado: boolean;
+  /** Até cinco. */
+  numeros: string[];
 }
 
 export interface AutomacoesLigadas {
@@ -490,6 +506,9 @@ export interface ResultadoDoAnuncio {
   matriculas: number;
   custoPorFamilia?: number | null;
   custoPorMatricula?: number | null;
+  /** Como a Meta entrega: ACTIVE, PAUSED, CAMPAIGN_PAUSED... */
+  situacao?: string | null;
+  noAr: boolean;
 }
 
 export interface ResultadosDosAnuncios {

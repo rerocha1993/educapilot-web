@@ -4,6 +4,7 @@ import type { EtapaDoFunil, OrigemDoLead, QuemAtende, SinalDaFamilia } from "./t
 export const ORDEM_DAS_ETAPAS: EtapaDoFunil[] = [
   "Novo",
   "Conversou",
+  "ChamarNovamente",
   "VisitaAgendada",
   "Reagendar",
   "Visitou",
@@ -16,6 +17,7 @@ export const ORDEM_DAS_ETAPAS: EtapaDoFunil[] = [
 export const TITULO_PADRAO_DA_ETAPA: Record<EtapaDoFunil, string> = {
   Novo: "Novos",
   Conversou: "Em conversa",
+  ChamarNovamente: "Chamar novamente",
   VisitaAgendada: "Visita agendada",
   Reagendar: "Reagendar",
   Visitou: "Visitou",
@@ -28,6 +30,7 @@ export const TITULO_PADRAO_DA_ETAPA: Record<EtapaDoFunil, string> = {
 export const COR_DA_ETAPA: Record<EtapaDoFunil, string> = {
   Novo: "var(--etapa-novo)",
   Conversou: "var(--etapa-conversou)",
+  ChamarNovamente: "var(--etapa-chamar)",
   VisitaAgendada: "var(--etapa-visita)",
   Reagendar: "var(--etapa-reagendar)",
   Visitou: "var(--etapa-visitou)",

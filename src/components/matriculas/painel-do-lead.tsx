@@ -343,6 +343,8 @@ const DESCRICAO_DO_EVENTO: Record<string, string> = {
   pedido_de_remarcacao_enviado: "Pedido de remarcação enviado",
   retomada_enviada: "A assistente voltou a procurar",
   ciclo_encerrado: "Retomadas encerradas",
+  reativacao_enviada: "Reativação enviada pela equipe",
+  reativacao_falhou: "Reativação não saiu",
   reengajado_pos_equipe: "A assistente respondeu o que ficou pendente",
   reengajamento_precisa_da_equipe: "Pendente precisa da equipe",
   alerta_de_espera_enviado: "Equipe avisada da espera",

@@ -149,6 +149,7 @@
      (reagendar, reserva), verde só na matrícula. */
   --etapa-novo: #8C82AE;
   --etapa-conversou: #5C4B8C;
+  --etapa-chamar: #2F8A86;
   --etapa-visita: #3F7CC4;
   --etapa-reagendar: #C96A05;
   --etapa-visitou: #7A5AC8;
@@ -235,6 +236,7 @@
 
   --etapa-novo: #A69DC6;
   --etapa-conversou: #B9AEDD;
+  --etapa-chamar: #6CC4BF;
   --etapa-visita: #7FB0E8;
   --etapa-reagendar: #E8B44A;
   --etapa-visitou: #A58BE6;

@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, type HTMLAttributes } from "react";
-import { Bot, Headset, Snowflake } from "lucide-react";
+import { Bot, CalendarClock, Headset, RotateCw, Snowflake } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LeadResumo } from "@/lib/matriculas/tipos";
 import {
@@ -37,7 +37,12 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
    * estado padrão do lead é Assistente, mas ninguém está respondendo.
    */
   assistenteAtiva?: boolean;
+  /** Mostra o botão Reativar (Em conversa e Chamar novamente, com conversa no WhatsApp). */
+  onReativar?: (lead: LeadResumo) => void;
+  reativado?: boolean;
 }
+
+const diaCurto = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
 
 /**
  * O card de uma família no funil.
@@ -46,13 +51,15 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
  * há quanto tempo ela espera), quando é a visita, de onde veio e se o card está parado.
  */
 export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
-  { lead, agora, levantado, vazio, assistenteAtiva = false, className, ...resto },
+  { lead, agora, levantado, vazio, assistenteAtiva = false, onReativar, reativado, className, ...resto },
   ref
 ) {
   const idade = idadeCurta(lead.idadeEmMeses);
   const visita = lead.visitaEm ? partesDaVisita(lead.visitaEm) : null;
   const visitaPassou = lead.visitaEm ? new Date(lead.visitaEm).getTime() < agora : false;
   const ultima = tempoDesde(lead.ultimaInteracaoEm ?? lead.criadoEm, agora);
+  const chamar = lead.etapa === "ChamarNovamente";
+  const podeReativar = !!onReativar && !!lead.temConversa && (lead.etapa === "Conversou" || chamar);
 
   return (
     <div
@@ -91,6 +98,22 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
           </span>
         )}
       </div>
+
+      {chamar && (lead.retornoEm || lead.tentativa) && (
+        <div className="flex flex-wrap gap-1">
+          {lead.retornoEm && (
+            <Chip tom="retorno">
+              <CalendarClock className="size-3" aria-hidden />
+              Retorna {diaCurto.format(new Date(lead.retornoEm))}
+            </Chip>
+          )}
+          {lead.tentativa && (
+            <Chip>
+              Tentativa {lead.tentativa} de {lead.tentativasDoCiclo ?? 3}
+            </Chip>
+          )}
+        </div>
+      )}
 
       {(lead.turmaNome || lead.periodo || lead.frio || lead.visitasReagendadas > 0) && (
         <div className="flex flex-wrap gap-1">
@@ -134,6 +157,25 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
 
       <div className="flex items-center gap-2 border-t border-foreground/[.06] pt-2 text-[11.5px] text-muted-foreground">
         <span className="min-w-0 flex-1 truncate">{ROTULO_DA_ORIGEM[lead.origem]}</span>
+        {podeReativar && (
+          // Fora do gesto de arrastar e do clique que abre a ficha: o botão tem o próprio clique.
+          <button
+            type="button"
+            disabled={reativado}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onReativar?.(lead);
+            }}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] font-semibold text-foreground/80 transition-colors hover:bg-foreground/[.05] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
+          >
+            <RotateCw className="size-3" aria-hidden />
+            {reativado ? "Reativada" : "Reativar"}
+          </button>
+        )}
         {lead.sinal && (
           <span
             className={cn(
@@ -154,13 +196,14 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
   );
 });
 
-function Chip({ children, tom }: { children: React.ReactNode; tom?: "marca" | "frio" }) {
+function Chip({ children, tom }: { children: React.ReactNode; tom?: "marca" | "frio" | "retorno" }) {
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
         tom === "marca" && "bg-accent text-accent-foreground",
         tom === "frio" && "bg-[#E6EEF8] text-[#3F6C9E] dark:bg-[#1E2A3A] dark:text-[#8FB5E0]",
+        tom === "retorno" && "bg-[#E2F3F2] text-[#23706C] dark:bg-[#15302E] dark:text-[#8AD6D1]",
         !tom && "bg-foreground/[.06] text-foreground/70"
       )}
     >

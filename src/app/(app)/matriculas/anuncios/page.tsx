@@ -1,11 +1,56 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MatriculasNav } from "@/components/matriculas/matriculas-nav";
 import { ConexaoFacebook } from "@/components/matriculas/conexao-facebook";
 import { cn } from "@/lib/utils";
 import { useContaMetaAds, useResultadosDosAnuncios } from "@/lib/matriculas/use-anuncios";
+import type { ResultadoDoAnuncio } from "@/lib/matriculas/tipos";
+
+/** Como a Meta chama cada situação, em palavras de escola. */
+const SITUACAO: Record<string, string> = {
+  ACTIVE: "No ar",
+  PAUSED: "Pausado",
+  CAMPAIGN_PAUSED: "Campanha pausada",
+  ADSET_PAUSED: "Conjunto pausado",
+  ARCHIVED: "Arquivado",
+  DELETED: "Apagado",
+  DISAPPROVED: "Reprovado",
+  PENDING_REVIEW: "Em análise",
+  IN_PROCESS: "Em análise",
+  WITH_ISSUES: "Com problema",
+};
+
+interface Campanha {
+  nome: string;
+  anuncios: ResultadoDoAnuncio[];
+  noAr: boolean;
+  familias: number;
+  gasto: number;
+}
+
+/**
+ * Os anúncios por campanha. A campanha no ar vem aberta e primeiro; a parada vem fechada. No CRM do
+ * Colégio a tela misturava tudo, e o que estava rodando se perdia entre os antigos.
+ */
+function porCampanha(anuncios: ResultadoDoAnuncio[]): Campanha[] {
+  const grupos = new Map<string, ResultadoDoAnuncio[]>();
+  for (const a of anuncios) {
+    const nome = a.campanha ?? "Sem campanha";
+    grupos.set(nome, [...(grupos.get(nome) ?? []), a]);
+  }
+  return [...grupos.entries()]
+    .map(([nome, lista]) => ({
+      nome,
+      anuncios: lista,
+      noAr: lista.some((a) => a.noAr),
+      familias: lista.reduce((s, a) => s + a.familias, 0),
+      gasto: lista.reduce((s, a) => s + a.gasto, 0),
+    }))
+    .sort((a, b) => Number(b.noAr) - Number(a.noAr) || b.familias - a.familias || b.gasto - a.gasto);
+}
 
 const real = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const PERIODOS = [7, 30, 90];
@@ -68,34 +113,51 @@ export default function AnunciosPage() {
               {r.anuncios.length === 0 ? (
                 <p className="mt-6 text-center text-sm text-muted-foreground">Nenhuma família veio de anúncio nesse período.</p>
               ) : (
-                <div className="mt-5 overflow-x-auto">
-                  <table className="w-full min-w-[640px] text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-left text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
-                        <th className="py-2 pr-3 font-bold">Anúncio</th>
-                        <th className="px-3 py-2 text-right font-bold">Gasto</th>
-                        <th className="px-3 py-2 text-right font-bold">Famílias</th>
-                        <th className="px-3 py-2 text-right font-bold">Visitas</th>
-                        <th className="px-3 py-2 text-right font-bold">Matrículas</th>
-                        <th className="py-2 pl-3 text-right font-bold">Por matrícula</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {r.anuncios.map((a) => (
-                        <tr key={a.anuncioId} className="border-b border-border/60 last:border-0">
-                          <td className="py-2.5 pr-3">
-                            <p className="font-medium">{a.anuncio ?? `Anúncio ${a.anuncioId}`}</p>
-                            {(a.campanha || a.conjunto) && <p className="text-[12px] text-muted-foreground">{[a.campanha, a.conjunto].filter(Boolean).join(" · ")}</p>}
-                          </td>
-                          <td className="px-3 py-2.5 text-right font-mono tabular-nums">{a.gasto > 0 ? real.format(a.gasto) : "—"}</td>
-                          <td className="px-3 py-2.5 text-right font-mono tabular-nums">{a.familias}</td>
-                          <td className="px-3 py-2.5 text-right font-mono tabular-nums">{a.visitas}</td>
-                          <td className="px-3 py-2.5 text-right font-mono tabular-nums font-semibold">{a.matriculas}</td>
-                          <td className="py-2.5 pl-3 text-right font-mono tabular-nums">{a.custoPorMatricula != null ? real.format(a.custoPorMatricula) : "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-5 flex flex-col gap-3">
+                  {porCampanha(r.anuncios).map((c) => (
+                    <details key={c.nome} open={c.noAr} className="group rounded-2xl border border-border">
+                      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" aria-hidden />
+                        <span className="min-w-0 flex-1 truncate font-medium">{c.nome}</span>
+                        <Situacao noAr={c.noAr}>{c.noAr ? "No ar" : "Parada"}</Situacao>
+                        <span className="hidden font-mono text-[12.5px] tabular-nums text-muted-foreground sm:inline">
+                          {c.familias} {c.familias === 1 ? "família" : "famílias"} · {real.format(c.gasto)}
+                        </span>
+                      </summary>
+                      <div className="overflow-x-auto border-t border-border px-4">
+                        <table className="w-full min-w-[640px] text-sm">
+                          <thead>
+                            <tr className="border-b border-border text-left text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+                              <th className="py-2 pr-3 font-bold">Anúncio</th>
+                              <th className="px-3 py-2 text-right font-bold">Gasto</th>
+                              <th className="px-3 py-2 text-right font-bold">Famílias</th>
+                              <th className="px-3 py-2 text-right font-bold">Visitas</th>
+                              <th className="px-3 py-2 text-right font-bold">Matrículas</th>
+                              <th className="py-2 pl-3 text-right font-bold">Por matrícula</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {c.anuncios.map((a) => (
+                              <tr key={a.anuncioId} className="border-b border-border/60 last:border-0">
+                                <td className="py-2.5 pr-3">
+                                  <p className="flex items-center gap-2 font-medium">
+                                    {a.anuncio ?? `Anúncio ${a.anuncioId}`}
+                                    {a.situacao && a.situacao !== "ACTIVE" && <Situacao noAr={false}>{SITUACAO[a.situacao] ?? a.situacao}</Situacao>}
+                                  </p>
+                                  {a.conjunto && <p className="text-[12px] text-muted-foreground">{a.conjunto}</p>}
+                                </td>
+                                <td className="px-3 py-2.5 text-right font-mono tabular-nums">{a.gasto > 0 ? real.format(a.gasto) : "—"}</td>
+                                <td className="px-3 py-2.5 text-right font-mono tabular-nums">{a.familias}</td>
+                                <td className="px-3 py-2.5 text-right font-mono tabular-nums">{a.visitas}</td>
+                                <td className="px-3 py-2.5 text-right font-mono tabular-nums font-semibold">{a.matriculas}</td>
+                                <td className="py-2.5 pl-3 text-right font-mono tabular-nums">{a.custoPorMatricula != null ? real.format(a.custoPorMatricula) : "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
+                  ))}
                 </div>
               )}
             </>
@@ -103,6 +165,19 @@ export default function AnunciosPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+function Situacao({ noAr, children }: { noAr: boolean; children: ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        noAr ? "bg-success-soft text-success-soft-foreground" : "bg-foreground/[.06] text-foreground/70"
+      )}
+    >
+      {children}
+    </span>
   );
 }
 

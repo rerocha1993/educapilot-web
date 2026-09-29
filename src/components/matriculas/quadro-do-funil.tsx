@@ -32,6 +32,10 @@ interface Props {
   assistenteAtiva: boolean;
   onAbrir: (id: string) => void;
   onMover: (lead: LeadResumo, para: EtapaDoFunil) => void;
+  /** O botão Reativar do card (Em conversa e Chamar novamente). */
+  onReativar?: (lead: LeadResumo) => void;
+  /** Reativados nesta tela: o botão fica "Reativada". */
+  reativados?: ReadonlySet<string>;
   /** Avisa a página, que desfoca o cabeçalho junto com as colunas. */
   onArrastandoChange?: (arrastando: boolean) => void;
 }
@@ -48,6 +52,8 @@ function ordenar(etapa: EtapaDoFunil, leads: LeadResumo[]): LeadResumo[] {
     if (esperaA !== esperaB) return esperaA - esperaB;
     if (esperaA === 0) return tempo(a.aguardandoEquipeDesde) - tempo(b.aguardandoEquipeDesde);
     if (etapa === "VisitaAgendada") return tempo(a.visitaEm) - tempo(b.visitaEm);
+    // Quem vai ser chamado primeiro no topo; quem já recebeu as três, no fim.
+    if (etapa === "ChamarNovamente") return (tempo(a.retornoEm) || Number.MAX_SAFE_INTEGER) - (tempo(b.retornoEm) || Number.MAX_SAFE_INTEGER);
     return tempo(b.ultimaInteracaoEm ?? b.criadoEm) - tempo(a.ultimaInteracaoEm ?? a.criadoEm);
   });
 }
@@ -93,7 +99,7 @@ const animacaoDeSoltar: DropAnimation = {
   easing: "cubic-bezier(.2,.9,.25,1.05)",
 };
 
-export function QuadroDoFunil({ quadro, agora, assistenteAtiva, onAbrir, onMover, onArrastandoChange }: Props) {
+export function QuadroDoFunil({ quadro, agora, assistenteAtiva, onAbrir, onMover, onReativar, reativados, onArrastandoChange }: Props) {
   const [ativo, setAtivo] = useState<LeadResumo | null>(null);
   const [alvo, setAlvo] = useState<EtapaDoFunil | null>(null);
   // Um clique que chega logo depois de soltar é o fim do gesto de arrastar, não um pedido para abrir.
@@ -216,6 +222,8 @@ export function QuadroDoFunil({ quadro, agora, assistenteAtiva, onAbrir, onMover
                     agora={agora}
                     assistenteAtiva={assistenteAtiva}
                     onAbrir={abrir}
+                    onReativar={onReativar}
+                    reativado={reativados?.has(lead.id)}
                   />
                 ))
               )}
@@ -304,11 +312,15 @@ function CardArrastavel({
   agora,
   assistenteAtiva,
   onAbrir,
+  onReativar,
+  reativado,
 }: {
   lead: LeadResumo;
   agora: number;
   assistenteAtiva: boolean;
   onAbrir: (id: string) => void;
+  onReativar?: (lead: LeadResumo) => void;
+  reativado?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: lead.id });
 
@@ -318,6 +330,8 @@ function CardArrastavel({
       lead={lead}
       agora={agora}
       assistenteAtiva={assistenteAtiva}
+      onReativar={onReativar}
+      reativado={reativado}
       vazio={isDragging}
       {...attributes}
       {...listeners}

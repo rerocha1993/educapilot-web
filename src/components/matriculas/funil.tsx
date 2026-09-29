@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,14 @@ import { MatriculasNav } from "@/components/matriculas/matriculas-nav";
 import { QuadroDoFunil } from "@/components/matriculas/quadro-do-funil";
 import { Esteira } from "@/components/matriculas/esteira";
 import { FolhaDePerda } from "@/components/matriculas/folha-de-perda";
+import { FolhaDeRetorno, diaPorExtenso } from "@/components/matriculas/folha-de-retorno";
+import { FolhaDeReativacao } from "@/components/matriculas/folha-de-reativacao";
 import { PainelDoLead } from "@/components/matriculas/painel-do-lead";
 import { FormularioDoLead } from "@/components/matriculas/formulario-do-lead";
 import { cn } from "@/lib/utils";
 import type { EtapaDoFunil, LeadDetalhe, LeadResumo, Quadro } from "@/lib/matriculas/tipos";
 import { ETAPAS_FINAIS, TITULO_PADRAO_DA_ETAPA, esperaEmTexto } from "@/lib/matriculas/rotulos";
-import { useMoverLead, useQuadro } from "@/lib/matriculas/use-funil";
+import { useMoverLead, useQuadro, useReativar } from "@/lib/matriculas/use-funil";
 import { usePrimeirosPassos } from "@/lib/matriculas/use-assistente";
 import Link from "next/link";
 
@@ -34,10 +36,16 @@ export function Funil() {
   const buscaAtrasada = useBuscaAtrasada(busca);
   const { data: quadro, isLoading, isError, dataUpdatedAt } = useQuadro(buscaAtrasada);
   const mover = useMoverLead();
+  const reativar = useReativar();
 
   const [arrastando, setArrastando] = useState(false);
   const [aberto, setAberto] = useState<string | null>(null);
   const [perdendo, setPerdendo] = useState<LeadResumo | null>(null);
+  const [marcandoRetorno, setMarcandoRetorno] = useState<LeadResumo | null>(null);
+  const [reativando, setReativando] = useState<LeadResumo | null>(null);
+  // Um clique só: o modelo é pago, e o estado da mutação só muda na próxima renderização.
+  const enviandoReativacao = useRef(false);
+  const [reativados, setReativados] = useState<Set<string>>(() => new Set());
   const [formulario, setFormulario] = useState<{ lead?: LeadDetalhe | null } | null>(null);
 
   // Um "agora" por leitura do quadro: todos os cards dizem "há X" contando do mesmo instante.
@@ -53,25 +61,50 @@ export function Funil() {
       setPerdendo(lead);
       return;
     }
+    // Chamar novamente pede o dia: sem data, ninguém sabe quando a família vai ser procurada.
+    if (para === "ChamarNovamente") {
+      setMarcandoRetorno(lead);
+      return;
+    }
     executarMudanca(lead, para);
   }
 
-  async function executarMudanca(lead: LeadResumo, para: EtapaDoFunil, motivoPerda?: string) {
+  async function executarMudanca(lead: LeadResumo, para: EtapaDoFunil, motivoPerda?: string, retomarEm?: string) {
     try {
-      await mover.mutateAsync({ id: lead.id, etapa: para, motivoPerda });
+      await mover.mutateAsync({ id: lead.id, etapa: para, motivoPerda, retomarEm });
       const nome = lead.nomeResponsavel.split(" ")[0];
       const destino = titulos[para] ?? TITULO_PADRAO_DA_ETAPA[para];
-      toast.success(`${nome} agora em ${destino}`, {
+      toast.success(retomarEm ? `${nome} vai ser chamada ${diaPorExtenso(retomarEm)}` : `${nome} agora em ${destino}`, {
         description:
           para === "Visitou"
             ? "3 contatos agendados: 24 horas, 3 dias e 7 dias depois da visita."
             : para === "Reagendar"
               ? "A visita antiga saiu da agenda da família."
-              : undefined,
+              : retomarEm
+                ? "A mensagem sai às 9h, pela assistente."
+                : undefined,
       });
       setPerdendo(null);
+      setMarcandoRetorno(null);
     } catch (erro) {
       toast.error(erro instanceof Error ? erro.message : "Não foi possível mover a família.");
+    }
+  }
+
+  async function executarReativacao(lead: LeadResumo) {
+    if (enviandoReativacao.current) return;
+    enviandoReativacao.current = true;
+    try {
+      await reativar.mutateAsync(lead.id);
+      setReativados((antes) => new Set(antes).add(lead.id));
+      toast.success(`Reativação enviada para ${lead.nomeResponsavel.split(" ")[0]}`, {
+        description: "A conversa reabre quando a família responder.",
+      });
+      setReativando(null);
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : "Não foi possível reativar a conversa.");
+    } finally {
+      enviandoReativacao.current = false;
     }
   }
 
@@ -142,6 +175,8 @@ export function Funil() {
           assistenteAtiva={quadro.assistenteLigada}
           onAbrir={setAberto}
           onMover={pedirMudanca}
+          onReativar={setReativando}
+          reativados={reativados}
           onArrastandoChange={setArrastando}
         />
       )}
@@ -159,6 +194,20 @@ export function Funil() {
         enviando={mover.isPending}
         onConfirmar={(motivo) => perdendo && executarMudanca(perdendo, "Perdido", motivo)}
         onCancelar={() => setPerdendo(null)}
+      />
+
+      <FolhaDeRetorno
+        lead={marcandoRetorno}
+        enviando={mover.isPending}
+        onConfirmar={(dia) => marcandoRetorno && executarMudanca(marcandoRetorno, "ChamarNovamente", undefined, dia)}
+        onCancelar={() => setMarcandoRetorno(null)}
+      />
+
+      <FolhaDeReativacao
+        lead={reativando}
+        enviando={reativar.isPending}
+        onConfirmar={() => reativando && executarReativacao(reativando)}
+        onCancelar={() => setReativando(null)}
       />
 
       <FormularioDoLead
