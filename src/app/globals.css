@@ -147,17 +147,19 @@
 
   --radius: 0.625rem;
 
-  /* Navegação escura: a sidebar é tinta da interface, não o fundo da página. */
-  --sidebar: #17141B;
-  --sidebar-foreground: #A9A2B8;
+  /* Navegação em roxo profundo (#2D095D, cor da marca): a sidebar é tinta da interface, não o
+     fundo da página. Todos os tons dela saem do mesmo roxo — quadrado dos ícones, hover, cartão
+     da conta e divisórias —, senão os botões viram manchas cinza sobre o roxo. */
+  --sidebar: #2D095D;
+  --sidebar-foreground: #D4C9EC;
   --sidebar-primary: #F5851F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #231F2C;
+  --sidebar-accent: #3E1A72;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #2B2633;
+  --sidebar-border: #45227A;
   --sidebar-ring: #F5851F;
-  --sidebar-muted: #6A6377;
-  --sidebar-surface: #1F1B26;
+  --sidebar-muted: #A797CF;
+  --sidebar-surface: #36106A;
 
   --kernel: #17141B;
   --kernel-foreground: #E9E5EF;
@@ -212,13 +214,13 @@
   --chart-4: #77776F;
   --chart-5: #9C9C95;
 
-  --sidebar: #1D1D1B;
-  --sidebar-foreground: #F5F5F3;
+  --sidebar: #22074A;
+  --sidebar-foreground: #E4DCF3;
   --sidebar-primary: #B9AEDD;
   --sidebar-primary-foreground: #1D1D1B;
-  --sidebar-accent: #35304A;
-  --sidebar-accent-foreground: #D9D4E6;
-  --sidebar-border: #35352F;
+  --sidebar-accent: #351565;
+  --sidebar-accent-foreground: #E4DCF3;
+  --sidebar-border: #3B1C6B;
   --sidebar-ring: #B9AEDD;
 
   --kernel: #1D1D1B;

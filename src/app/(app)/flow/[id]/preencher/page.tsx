@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { useForm, type FormFieldDto } from "@/lib/flow/use-forms";
 import { decodeFieldConfig, decodeOpcoes, encodeOpcoes } from "@/lib/flow/use-form-fields";
 import { ContractField } from "@/components/flow/contract-field";
+import { CampoTabela } from "@/components/flow/campo-tabela";
+import { condicaoAtendida } from "@/lib/flow/condicao";
 import { CepInput } from "@/components/flow/cep-input";
 import { valorDaParte, type EnderecoCep } from "@/lib/flow/cep";
 import { useReferenceOptions } from "@/lib/flow/use-reference-data";
@@ -37,22 +39,7 @@ import { useSubmitForm, useUploadFormFile } from "@/lib/flow/use-form-fill";
 const rotulo = "text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground";
 
 function isVisible(field: FormFieldDto, answers: Record<string, string>): boolean {
-  const config = decodeFieldConfig(field.config);
-  if (!config.visibleIf) return true;
-  const target = answers[config.visibleIf.fieldId];
-  const preenchido = !!target && target.trim() !== "";
-  switch (config.visibleIf.operator) {
-    case "filled":
-      return preenchido;
-    case "not_filled":
-      return !preenchido;
-    case "equals":
-      return target === config.visibleIf.value;
-    case "not_equals":
-      return target !== config.visibleIf.value;
-    default:
-      return true;
-  }
+  return condicaoAtendida(decodeFieldConfig(field.config).visibleIf, answers);
 }
 
 function FieldInput({
@@ -166,6 +153,16 @@ function FieldInput({
         </div>
       );
     }
+
+    case "tabela":
+      return (
+        <CampoTabela
+          linhas={config.linhas ?? []}
+          colunas={config.colunas ?? []}
+          value={value}
+          onChange={onChange}
+        />
+      );
 
     case "checkbox": {
       const opcoes = decodeOpcoes(field.opcoes);

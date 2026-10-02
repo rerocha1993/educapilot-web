@@ -21,6 +21,7 @@ import {
   Plus,
   Search,
   Star,
+  Table2,
   ToggleLeft,
   Trash2,
   Type,
@@ -52,6 +53,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useForm, useUpdateForm, type FormFieldDto } from "@/lib/flow/use-forms";
+import { valoresDaCondicao } from "@/lib/flow/condicao";
 import {
   FIELD_TYPES,
   CHOICE_FIELD_TYPES,
@@ -101,6 +103,8 @@ const EMPTY_FIELD_FORM = {
   obrigatorio: false,
   tabelaReferencia: "",
   opcoes: [] as string[],
+  linhas: [] as string[],
+  colunas: [] as string[],
   min: "",
   max: "",
   minLength: "",
@@ -141,7 +145,26 @@ const ICONE_DO_TIPO: Record<string, LucideIcon> = {
   referencia: Search,
   contrato: FileSignature,
   cep: MapPin,
+  tabela: Table2,
 };
+
+/** Escala que a anamnese mais usa: um clique em vez de digitar as três colunas. */
+const COLUNAS_SUGERIDAS = ["Pouco", "Médio", "Muito"];
+
+/**
+ * Opções que a condição pode comparar, conforme o campo de referência.
+ *
+ * Com opções, a condição é marcada numa lista — o valor digitado à mão era o que falhava: quem
+ * escrevia "item1, item2, item3, item4" ou errava um acento criava uma condição que nunca batia.
+ * Campo sem opções (texto, número) continua com o valor digitado.
+ */
+function opcoesDaCondicao(campo: FormFieldDto | undefined): string[] {
+  if (!campo) return [];
+  if ((CHOICE_FIELD_TYPES as readonly string[]).includes(campo.tipo)) return decodeOpcoes(campo.opcoes);
+  if (campo.tipo === "sim_nao") return ["Sim", "Não"];
+  if (campo.tipo === "tabela") return decodeFieldConfig(campo.config).colunas ?? [];
+  return [];
+}
 
 /**
  * Resumo do campo em três partes, como no modelo: o tipo, o "auto: ..." (quando o sistema preenche
@@ -163,6 +186,9 @@ function resumoDoCampo(field: FormFieldDto): { tipo: string; auto: string | null
   }
   if (field.tipo === "avaliacao") {
     detalhes.push(`1 a ${config.maxEstrelas ?? 5}`);
+  }
+  if (field.tipo === "tabela") {
+    detalhes.push(`${config.linhas?.length ?? 0} linhas × ${(config.colunas ?? []).join(" / ") || "sem colunas"}`);
   }
   if (config.visibleIf) {
     detalhes.push("condicional");
@@ -300,6 +326,8 @@ export default function FormBuilderPage() {
       obrigatorio: field.obrigatorio,
       tabelaReferencia: config.tabelaReferencia ?? "",
       opcoes: decodeOpcoes(field.opcoes),
+      linhas: config.linhas ?? [],
+      colunas: config.colunas ?? [],
       min: config.min === undefined ? "" : String(config.min),
       max: config.max === undefined ? "" : String(config.max),
       minLength: config.minLength === undefined ? "" : String(config.minLength),
@@ -353,6 +381,8 @@ export default function FormBuilderPage() {
             ? Number(fieldForm.maxLength)
             : undefined,
         maxEstrelas: fieldForm.tipo === "avaliacao" ? Number(fieldForm.maxEstrelas || 5) : undefined,
+        linhas: fieldForm.tipo === "tabela" ? limparLista(fieldForm.linhas) : undefined,
+        colunas: fieldForm.tipo === "tabela" ? limparLista(fieldForm.colunas) : undefined,
         contratoTexto: fieldForm.tipo === "contrato" ? fieldForm.contratoTexto || undefined : undefined,
         titulo: fieldForm.tipo === "contrato" ? fieldForm.tituloContrato || undefined : undefined,
         signatarioNomeFieldId:
@@ -455,6 +485,38 @@ export default function FormBuilderPage() {
       toast.error(err instanceof Error ? err.message : "Erro ao criar regra.");
     }
   }
+
+  // Linhas e colunas da tabela: o mesmo editor de lista das opções, um para cada eixo.
+  function limparLista(lista: string[]) {
+    const limpa = [...new Set(lista.map((v) => v.trim()).filter(Boolean))];
+    return limpa.length > 0 ? limpa : undefined;
+  }
+  function editarLista(eixo: "linhas" | "colunas", index: number, value: string) {
+    setFieldForm((f) => ({ ...f, [eixo]: f[eixo].map((v, i) => (i === index ? value : v)) }));
+  }
+  function adicionarNaLista(eixo: "linhas" | "colunas") {
+    setFieldForm((f) => ({ ...f, [eixo]: [...f[eixo], ""] }));
+  }
+  function removerDaLista(eixo: "linhas" | "colunas", index: number) {
+    setFieldForm((f) => ({ ...f, [eixo]: f[eixo].filter((_, i) => i !== index) }));
+  }
+
+  // Condição com várias opções marcadas é "qualquer uma delas": grava texto simples com uma só
+  // (o formato que as condições antigas já usam) e lista JSON com mais de uma.
+  function alternarValorDaCondicao(opcao: string) {
+    setFieldForm((f) => {
+      const atuais = valoresDaCondicao(f.condValue);
+      const proximos = atuais.includes(opcao) ? atuais.filter((v) => v !== opcao) : [...atuais, opcao];
+      return {
+        ...f,
+        condValue: proximos.length === 0 ? "" : proximos.length === 1 ? proximos[0] : JSON.stringify(proximos),
+      };
+    });
+  }
+
+  const tabelaIncompleta =
+    fieldForm.tipo === "tabela" && (!limparLista(fieldForm.linhas) || !limparLista(fieldForm.colunas));
+  const opcoesDaCondicaoAtual = opcoesDaCondicao(campos.find((c) => c.id === fieldForm.condFieldId));
 
   function updateOpcao(index: number, value: string) {
     setFieldForm((f) => ({ ...f, opcoes: f.opcoes.map((o, i) => (i === index ? value : o)) }));
@@ -827,6 +889,52 @@ export default function FormBuilderPage() {
               </div>
             )}
 
+            {fieldForm.tipo === "tabela" && (
+              <div className="flex flex-col gap-3">
+                {(["linhas", "colunas"] as const).map((eixo) => (
+                  <div key={eixo} className="flex flex-col gap-[5px]">
+                    <Label className="text-xs text-muted-foreground">
+                      {eixo === "linhas"
+                        ? "Linhas (as perguntas, ex.: Apetite, Sono, Concentração)"
+                        : "Colunas (a escala, ex.: Pouco, Médio, Muito)"}
+                    </Label>
+                    <div className="flex flex-col gap-2">
+                      {fieldForm[eixo].map((valor, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input
+                            value={valor}
+                            onChange={(e) => editarLista(eixo, i, e.target.value)}
+                            placeholder={eixo === "linhas" ? `Linha ${i + 1}` : `Coluna ${i + 1}`}
+                          />
+                          <Button variant="ghost" size="icon-sm" onClick={() => removerDaLista(eixo, i)}>
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => adicionarNaLista(eixo)}>
+                          <Plus className="size-3.5" /> {eixo === "linhas" ? "Adicionar linha" : "Adicionar coluna"}
+                        </Button>
+                        {eixo === "colunas" && fieldForm.colunas.length === 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFieldForm((f) => ({ ...f, colunas: [...COLUNAS_SUGERIDAS] }))}
+                          >
+                            Usar Pouco / Médio / Muito
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  Quem preenche marca uma coluna em cada linha. Se o campo for obrigatório, todas as
+                  linhas precisam de resposta.
+                </p>
+              </div>
+            )}
+
             {fieldForm.tipo === "numero" && (
               <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="flex flex-1 flex-col gap-[5px]">
@@ -1099,7 +1207,7 @@ export default function FormBuilderPage() {
                 <Select
                   value={fieldForm.condFieldId || "__none__"}
                   onValueChange={(v) =>
-                    setFieldForm((f) => ({ ...f, condFieldId: v === "__none__" ? "" : String(v) }))
+                    setFieldForm((f) => ({ ...f, condFieldId: v === "__none__" ? "" : String(v), condValue: "" }))
                   }
                 >
                   <SelectTrigger className="w-full">
@@ -1139,13 +1247,42 @@ export default function FormBuilderPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {(fieldForm.condOperator === "equals" || fieldForm.condOperator === "not_equals") && (
-                      <Input
-                        value={fieldForm.condValue}
-                        onChange={(e) => setFieldForm((f) => ({ ...f, condValue: e.target.value }))}
-                        placeholder="Valor de comparação"
-                      />
-                    )}
+                    {(fieldForm.condOperator === "equals" || fieldForm.condOperator === "not_equals") &&
+                      (opcoesDaCondicaoAtual.length > 0 ? (
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs text-muted-foreground">
+                            {fieldForm.condOperator === "equals"
+                              ? "Mostrar quando a resposta tiver qualquer uma destas:"
+                              : "Mostrar quando a resposta não tiver nenhuma destas:"}
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {opcoesDaCondicaoAtual.map((opcao) => {
+                              const marcada = valoresDaCondicao(fieldForm.condValue).includes(opcao);
+                              return (
+                                <button
+                                  key={opcao}
+                                  type="button"
+                                  aria-pressed={marcada}
+                                  onClick={() => alternarValorDaCondicao(opcao)}
+                                  className={
+                                    marcada
+                                      ? "rounded-lg border border-primary bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+                                      : "rounded-lg border border-input bg-card px-3 py-1.5 text-sm hover:bg-muted"
+                                  }
+                                >
+                                  {opcao}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <Input
+                          value={fieldForm.condValue}
+                          onChange={(e) => setFieldForm((f) => ({ ...f, condValue: e.target.value }))}
+                          placeholder="Valor de comparação"
+                        />
+                      ))}
                   </>
                 )}
               </div>
@@ -1157,7 +1294,7 @@ export default function FormBuilderPage() {
             </Button>
             <Button
               onClick={handleAddField}
-              disabled={createField.isPending || updateField.isPending || !fieldForm.label.trim()}
+              disabled={createField.isPending || updateField.isPending || !fieldForm.label.trim() || tabelaIncompleta}
             >
               {createField.isPending ? "Salvando..." : "Adicionar"}
             </Button>

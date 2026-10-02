@@ -35,6 +35,7 @@ import {
 import {
   CHOICE_FIELD_TYPES,
   decodeOpcoes,
+  formatarTabela,
   decodeFieldConfig,
 } from "@/lib/flow/use-form-fields";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
@@ -100,6 +101,7 @@ function ValorDoCampo({ tipo, valor }: { tipo?: string; valor: string | null }) 
   if (!valor?.trim()) return <span className="text-muted-foreground">—</span>;
   if (tipo === "anexo") return <AttachmentLink url={valor} />;
   if (tipo === "checkbox") return <>{decodeOpcoes(valor).join(", ")}</>;
+  if (tipo === "tabela") return <>{formatarTabela(valor) || "—"}</>;
   if (tipo === "contrato") return <>{valor.toLowerCase() === "aceito" ? "Aceito" : "Não aceito"}</>;
   if (tipo === "avaliacao") return <>{valor} ★</>;
   return <>{valor}</>;

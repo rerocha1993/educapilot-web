@@ -410,7 +410,7 @@ export function AppShell({
             type="button"
             aria-label="Fechar menu"
             onClick={fecharMenu}
-            className="absolute inset-0 bg-[#17141B]/60 animate-in fade-in"
+            className="absolute inset-0 bg-sidebar/60 animate-in fade-in"
           />
           <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
@@ -536,7 +536,7 @@ function ItemDaSidebar({
       <span
         className={cn(
           "grid size-6 shrink-0 place-items-center rounded-md transition-colors",
-          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-[#8F87A0]"
+          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-sidebar-muted"
         )}
       >
         <Icon className="size-3.5" />
