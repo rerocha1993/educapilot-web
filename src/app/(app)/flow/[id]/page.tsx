@@ -113,6 +113,7 @@ const EMPTY_FIELD_FORM = {
   condFieldId: "",
   condOperator: "filled" as (typeof VISIBLE_IF_OPERATORS)[number]["value"],
   condValue: "",
+  condTexto: "",
   autoPreenchimento: "",
   travado: false,
   valorPadrao: "",
@@ -336,6 +337,10 @@ export default function FormBuilderPage() {
       condFieldId: config.visibleIf?.fieldId ?? "",
       condOperator: config.visibleIf?.operator ?? "filled",
       condValue: config.visibleIf?.value ?? "",
+      // O que não está entre as opções do campo de referência foi digitado à mão e volta para a caixa.
+      condTexto: valoresDaCondicao(config.visibleIf?.value)
+        .filter((v) => !opcoesDaCondicao(campos.find((c) => c.id === config.visibleIf?.fieldId)).includes(v))
+        .join(", "),
       autoPreenchimento: config.autoPreenchimento ?? "",
       travado: !!config.travado,
       valorPadrao: config.valorPadrao ?? "",
@@ -501,17 +506,39 @@ export default function FormBuilderPage() {
     setFieldForm((f) => ({ ...f, [eixo]: f[eixo].filter((_, i) => i !== index) }));
   }
 
-  // Condição com várias opções marcadas é "qualquer uma delas": grava texto simples com uma só
-  // (o formato que as condições antigas já usam) e lista JSON com mais de uma.
+  /**
+   * O valor que a condição compara: os atalhos marcados mais o que foi digitado à mão.
+   *
+   * Os dois convivem porque a lista de opções nem sempre dá conta — a resposta pode vir junto com
+   * outras, o campo pode ter um "Outro", ou a comparação pode ser com algo que não está na lista.
+   * Valor único grava como texto simples, que é o formato das condições antigas; mais de um grava
+   * como lista, e vale "qualquer um deles".
+   */
+  function recomporValorDaCondicao(marcados: string[], digitado: string) {
+    const digitados = digitado.split(",").map((v) => v.trim()).filter(Boolean);
+    const todos = [...new Set([...marcados, ...digitados])];
+    return todos.length === 0 ? "" : todos.length === 1 ? todos[0] : JSON.stringify(todos);
+  }
+
+  /** Os valores que vieram dos atalhos — o resto é o que a pessoa digitou. */
+  function marcadosNaCondicao(condValue: string) {
+    return valoresDaCondicao(condValue).filter((v) => opcoesDaCondicaoAtual.includes(v));
+  }
+
   function alternarValorDaCondicao(opcao: string) {
     setFieldForm((f) => {
-      const atuais = valoresDaCondicao(f.condValue);
-      const proximos = atuais.includes(opcao) ? atuais.filter((v) => v !== opcao) : [...atuais, opcao];
-      return {
-        ...f,
-        condValue: proximos.length === 0 ? "" : proximos.length === 1 ? proximos[0] : JSON.stringify(proximos),
-      };
+      const marcados = marcadosNaCondicao(f.condValue);
+      const proximos = marcados.includes(opcao) ? marcados.filter((v) => v !== opcao) : [...marcados, opcao];
+      return { ...f, condValue: recomporValorDaCondicao(proximos, f.condTexto) };
     });
+  }
+
+  function digitarValorDaCondicao(texto: string) {
+    setFieldForm((f) => ({
+      ...f,
+      condTexto: texto,
+      condValue: recomporValorDaCondicao(marcadosNaCondicao(f.condValue), texto),
+    }));
   }
 
   const tabelaIncompleta =
@@ -1207,7 +1234,12 @@ export default function FormBuilderPage() {
                 <Select
                   value={fieldForm.condFieldId || "__none__"}
                   onValueChange={(v) =>
-                    setFieldForm((f) => ({ ...f, condFieldId: v === "__none__" ? "" : String(v), condValue: "" }))
+                    setFieldForm((f) => ({
+                      ...f,
+                      condFieldId: v === "__none__" ? "" : String(v),
+                      condValue: "",
+                      condTexto: "",
+                    }))
                   }
                 >
                   <SelectTrigger className="w-full">
@@ -1247,42 +1279,50 @@ export default function FormBuilderPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {(fieldForm.condOperator === "equals" || fieldForm.condOperator === "not_equals") &&
-                      (opcoesDaCondicaoAtual.length > 0 ? (
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-xs text-muted-foreground">
-                            {fieldForm.condOperator === "equals"
-                              ? "Mostrar quando a resposta tiver qualquer uma destas:"
-                              : "Mostrar quando a resposta não tiver nenhuma destas:"}
-                          </span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {opcoesDaCondicaoAtual.map((opcao) => {
-                              const marcada = valoresDaCondicao(fieldForm.condValue).includes(opcao);
-                              return (
-                                <button
-                                  key={opcao}
-                                  type="button"
-                                  aria-pressed={marcada}
-                                  onClick={() => alternarValorDaCondicao(opcao)}
-                                  className={
-                                    marcada
-                                      ? "rounded-lg border border-primary bg-primary px-3 py-1.5 text-sm text-primary-foreground"
-                                      : "rounded-lg border border-input bg-card px-3 py-1.5 text-sm hover:bg-muted"
-                                  }
-                                >
-                                  {opcao}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : (
+                    {(fieldForm.condOperator === "equals" || fieldForm.condOperator === "not_equals") && (
+                      <div className="flex flex-col gap-1.5">
+                        {opcoesDaCondicaoAtual.length > 0 && (
+                          <>
+                            <span className="text-xs text-muted-foreground">
+                              {fieldForm.condOperator === "equals"
+                                ? "Mostrar quando a resposta tiver qualquer um destes valores:"
+                                : "Esconder quando a resposta tiver qualquer um destes valores:"}
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {opcoesDaCondicaoAtual.map((opcao) => {
+                                const marcada = valoresDaCondicao(fieldForm.condValue).includes(opcao);
+                                return (
+                                  <button
+                                    key={opcao}
+                                    type="button"
+                                    aria-pressed={marcada}
+                                    onClick={() => alternarValorDaCondicao(opcao)}
+                                    className={
+                                      marcada
+                                        ? "rounded-lg border border-primary bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+                                        : "rounded-lg border border-input bg-card px-3 py-1.5 text-sm hover:bg-muted"
+                                    }
+                                  >
+                                    {opcao}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                        {/* A caixa continua aqui mesmo com atalhos: a resposta pode vir junto com
+                            outras, o campo pode ter um "Outro", e nem tudo está na lista. */}
                         <Input
-                          value={fieldForm.condValue}
-                          onChange={(e) => setFieldForm((f) => ({ ...f, condValue: e.target.value }))}
-                          placeholder="Valor de comparação"
+                          value={fieldForm.condTexto}
+                          onChange={(e) => digitarValorDaCondicao(e.target.value)}
+                          placeholder={
+                            opcoesDaCondicaoAtual.length > 0
+                              ? "Ou digite outro valor (separe por vírgula para aceitar vários)"
+                              : "Valor de comparação (separe por vírgula para aceitar vários)"
+                          }
                         />
-                      ))}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
