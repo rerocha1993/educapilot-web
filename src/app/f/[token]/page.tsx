@@ -31,7 +31,7 @@ import { ContractField } from "@/components/flow/contract-field";
 import { CampoTabela } from "@/components/flow/campo-tabela";
 import { condicaoAtendida } from "@/lib/flow/condicao";
 import { CepInput } from "@/components/flow/cep-input";
-import { AssinaturaPendente } from "@/components/flow/assinatura-pendente";
+import { AssinaturaPendente, RespostaEnviada } from "@/components/flow/assinatura-pendente";
 import { valorDaParte, type EnderecoCep } from "@/lib/flow/cep";
 import type { DadosRematricula } from "@/lib/integrations/use-rematricula";
 import {
@@ -463,11 +463,17 @@ export default function PublicFormFillPage() {
   const exigeIdentificacao = usaAutoPreenchimento && !!regras.exigirIdentificacao;
   const mostrarCampos = !exigeIdentificacao || autoPreenchido || preenchendoManualmente;
 
+  // Há contrato quando um campo de contrato foi (ou vai ser) respondido. Campo escondido por
+  // condição não é enviado e não gera contrato nenhum — por isso a conta sai dos campos visíveis,
+  // e não de todos. O mesmo valor decide a etapa no topo e a tela do fim, para a barra não
+  // prometer uma assinatura que não vem.
+  const temContrato = camposVisiveis.some((c) => c.tipo === "contrato");
+
   // Etapas mostradas no topo: só existem as que este formulário de fato tem.
   const etapas = [
     ...(usaAutoPreenchimento ? ["Identificação"] : []),
     "Preenchimento",
-    ...(campos.some((c) => c.tipo === "contrato") ? ["Assinatura"] : []),
+    ...(temContrato ? ["Assinatura"] : []),
   ];
   const etapaAtual = respostaId
     ? etapas.length - 1
@@ -567,7 +573,11 @@ export default function PublicFormFillPage() {
         )}
 
         {!isLoading && form && form.status === "Ativo" && respostaId && (
-          <AssinaturaPendente token={token} responseId={respostaId} />
+          temContrato ? (
+            <AssinaturaPendente token={token} responseId={respostaId} />
+          ) : (
+            <RespostaEnviada titulo="Resposta enviada!" texto="Obrigado por preencher." />
+          )
         )}
 
         {!isLoading && form && form.status === "Ativo" && !respostaId && (

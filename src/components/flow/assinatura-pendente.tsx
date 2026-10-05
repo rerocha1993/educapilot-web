@@ -3,8 +3,26 @@
 import { CheckCircle2, FileSignature, Loader2 } from "lucide-react";
 import { useAssinaturaPendente } from "@/lib/flow/use-assinatura-pendente";
 
+/** Confirmação simples: formulário sem contrato, ou contrato já assinado. */
+export function RespostaEnviada({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-4 py-10 text-center">
+      <span className="grid size-12 place-items-center rounded-xl bg-success-soft text-success-soft-foreground">
+        <CheckCircle2 className="size-6" />
+      </span>
+      <p className="font-heading text-lg font-semibold tracking-[-.03em]">{titulo}</p>
+      <p className="text-sm text-muted-foreground">{texto}</p>
+    </div>
+  );
+}
+
 /**
- * O que a família vê depois de enviar o formulário.
+ * O que a família vê depois de enviar o formulário, QUANDO há contrato para assinar.
+ *
+ * Quem decide se há contrato é a tela que monta isto, olhando os campos respondidos — e não este
+ * componente. Enquanto a consulta não responde ele mostra "Falta assinar", que é o certo para um
+ * contrato a caminho e era um beco sem saída para um formulário que nunca teve contrato nenhum:
+ * a anamnese terminava esperando para sempre.
  *
  * Existe porque a primeira rematrícula real revelou o buraco: a mãe marcou "li o contrato",
  * enviou, viu "Resposta enviada!" e foi embora — sem ter assinado nada. O contrato ia para o
@@ -26,30 +44,15 @@ export function AssinaturaPendente({
 
   if (estado === "assinado") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-4 py-10 text-center">
-        <span className="grid size-12 place-items-center rounded-xl bg-success-soft text-success-soft-foreground">
-          <CheckCircle2 className="size-6" />
-        </span>
-        <p className="font-heading text-lg font-semibold tracking-[-.03em]">Tudo certo!</p>
-        <p className="text-sm text-muted-foreground">
-          Formulário enviado e contrato assinado. A escola vai analisar e você receberá a via
-          assinada por e-mail.
-        </p>
-      </div>
+      <RespostaEnviada
+        titulo="Tudo certo!"
+        texto="Formulário enviado e contrato assinado. A escola vai analisar e você receberá a via assinada por e-mail."
+      />
     );
   }
 
-  // Formulário sem contrato: a confirmação simples de sempre.
   if (estado === "indisponivel" && !data?.mensagem) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-4 py-10 text-center">
-        <span className="grid size-12 place-items-center rounded-xl bg-success-soft text-success-soft-foreground">
-          <CheckCircle2 className="size-6" />
-        </span>
-        <p className="font-heading text-lg font-semibold tracking-[-.03em]">Resposta enviada!</p>
-        <p className="text-sm text-muted-foreground">Obrigado por preencher.</p>
-      </div>
-    );
+    return <RespostaEnviada titulo="Resposta enviada!" texto="Obrigado por preencher." />;
   }
 
   if (estado === "indisponivel") {
