@@ -71,6 +71,7 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     // (festa) também passa por ela, que cobra as famílias. O resto do Financeiro (despesas,
     // contas, fechamento) continua sendo da gestão.
     { moduloSlug: "finance", areas: ["recibos", "projetos"] },
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias"] },
   ],
   Coordenacao: [
     { moduloSlug: "tasks", areas: [] },
@@ -78,12 +79,15 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     { moduloSlug: "reception", areas: ["presenca", "mapa", "visitantes"] },
     { moduloSlug: "admin", areas: ["turmas", "alunos", "responsaveis"] },
     { moduloSlug: "rh", areas: ["funcionarios", "ponto", "atestados", "afastamentos", "documentos", "relatorios"] },
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias"] },
   ],
   // Em Fluxos, o professor leva só a área "quadro": ela dá o quadro de tarefas pessoal sem abrir
   // formulário, contrato nem caixa de envios. Lista vazia aqui abriria o módulo inteiro.
   Teacher: [
     { moduloSlug: "tasks", areas: ["chamada", "ocorrencias", "checklist", "planejamento", "materiais", "calendario"] },
     { moduloSlug: "flow", areas: ["quadro"] },
+    // Professor publica só para as turmas dele (o servidor recorta); famílias e configuração são da escola.
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma"] },
   ],
   // Gestão não tem sugestão: quem é gestão marca o módulo inteiro na tela.
   Admin: [],

@@ -55,6 +55,7 @@ const TITULO_DO_MODULO: Record<string, string> = {
   events: "Eventos & vendas",
   admin: "Administração",
   rh: "RH",
+  relacionamento: "Relacionamento",
 };
 
 /** Módulo dono de uma rota, para marcar a aba certa em telas internas (/checklist é da Rotina). */

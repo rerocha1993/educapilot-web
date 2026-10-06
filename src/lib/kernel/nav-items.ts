@@ -3,6 +3,7 @@ import {
   DoorOpen,
   ShoppingBag,
   FileStack,
+  HeartHandshake,
   Users,
   Wallet,
 } from "lucide-react";
@@ -39,6 +40,7 @@ export function slugDeAcesso(href: string): string | null {
   if (href.startsWith("/events")) return "events";
   if (href.startsWith("/portaria")) return "reception";
   if (href.startsWith("/rh")) return "rh";
+  if (href.startsWith("/relacionamento")) return "relacionamento";
   return null;
 }
 
@@ -52,6 +54,7 @@ export const NAV_ITEMS = [
   { href: "/flow", label: "Fluxos", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
   { href: "/rh", label: "RH", icon: Users, moduleSlug: "rh" },
+  { href: "/relacionamento", label: "Relacionamento", icon: HeartHandshake, moduleSlug: "relacionamento" },
 ] as const;
 
 /**
@@ -105,6 +108,13 @@ export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
     "/rh/relatorios",
     "/rh/configuracao",
   ],
+  // A entrada é a lista de avisos; quem só tem Cronograma ou Famílias cai na primeira que abre.
+  "/relacionamento": [
+    "/relacionamento/avisos",
+    "/relacionamento/cronograma",
+    "/relacionamento/familias",
+    "/relacionamento/configuracao",
+  ],
 };
 
 /**
@@ -125,7 +135,7 @@ const ROTAS_HOSPEDADAS: { prefixo: string; dono: string }[] = [
  */
 export const GRUPOS_DO_MENU = [
   { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/flow", "/finance"] },
-  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/events"] },
+  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/relacionamento", "/events"] },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */
