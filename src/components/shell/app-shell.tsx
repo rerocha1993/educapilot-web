@@ -54,6 +54,7 @@ const TITULO_DO_MODULO: Record<string, string> = {
   finance: "Financeiro",
   events: "Eventos & vendas",
   admin: "Administração",
+  rh: "RH",
 };
 
 /** Módulo dono de uma rota, para marcar a aba certa em telas internas (/checklist é da Rotina). */
@@ -227,7 +228,7 @@ export function AppShell({
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col bg-sidebar py-5 transition-[width] duration-150 md:flex",
+          "hidden shrink-0 flex-col bg-sidebar py-5 transition-[width] duration-150 md:flex print:hidden!",
           collapsed ? "w-16 px-2" : "w-[250px] px-3"
         )}
       >
@@ -310,7 +311,7 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
+        <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex print:hidden!">
           <div className="flex min-w-0 items-center gap-2 text-[13px] text-muted-foreground">
             <span className="truncate">{session.name}</span>
             {tituloDaTela && (
@@ -341,7 +342,7 @@ export function AppShell({
         </header>
 
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
-        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[5.75rem_1fr_5.75rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[5.75rem_1fr_5.75rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!">
           <button
             type="button"
             onClick={abrirMenu}
@@ -378,7 +379,7 @@ export function AppShell({
       {/* Barra de abas do celular. */}
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden!"
       >
         <ul className="grid grid-cols-5">
           <AbaDoCelular

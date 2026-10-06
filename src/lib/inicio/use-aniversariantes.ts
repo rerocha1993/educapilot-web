@@ -39,10 +39,14 @@ export interface ResponsavelAniversariante {
   diasRestantes: number;
 }
 
-/** Reservado para o RH; o servidor devolve vazio por enquanto e a tela ainda não o mostra. */
+/** Funcionário da escola (RH). Só chega para quem tem a área de funcionários. */
 export interface MembroDaEquipeAniversariante {
+  funcionarioId: string;
   nome: string;
+  cargo: string | null;
+  dataDeNascimento: string;
   proximoAniversario: string;
+  /** 0 = hoje. */
   diasRestantes: number;
 }
 

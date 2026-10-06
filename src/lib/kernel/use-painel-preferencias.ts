@@ -27,7 +27,7 @@ export interface PreferenciasDoInicio {
   numeros: string[];
   atalhos: string[];
   pendencias: string[];
-  /** Listas do bloco Aniversariantes ("alunos", "responsaveis"). */
+  /** Listas do bloco Aniversariantes ("alunos", "responsaveis", "equipe"). */
   aniversariantes: string[];
   /** Ids (guid) dos formulários resumidos na tela, na ordem escolhida. */
   formularios: string[];

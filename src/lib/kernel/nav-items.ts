@@ -3,6 +3,7 @@ import {
   DoorOpen,
   ShoppingBag,
   FileStack,
+  Users,
   Wallet,
 } from "lucide-react";
 
@@ -37,6 +38,7 @@ export function slugDeAcesso(href: string): string | null {
   if (href.startsWith("/finance")) return "finance";
   if (href.startsWith("/events")) return "events";
   if (href.startsWith("/portaria")) return "reception";
+  if (href.startsWith("/rh")) return "rh";
   return null;
 }
 
@@ -49,6 +51,7 @@ export const NAV_ITEMS = [
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
   { href: "/flow", label: "Fluxos", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
+  { href: "/rh", label: "RH", icon: Users, moduleSlug: "rh" },
 ] as const;
 
 /**
@@ -90,6 +93,18 @@ export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
     "/relatorios",
   ],
   "/flow": ["/flow", "/flow/tarefas", "/flow/respostas", "/admin/contratos", "/flow/relatorios", "/flow/referencias"],
+  // A visão geral do RH é aberta a qualquer área do módulo; as demais entradas são para quem tem
+  // só uma área (a secretaria que lança ponto e nada mais, por exemplo).
+  "/rh": [
+    "/rh",
+    "/rh/funcionarios",
+    "/rh/ponto",
+    "/rh/atestados",
+    "/rh/afastamentos",
+    "/rh/documentos",
+    "/rh/relatorios",
+    "/rh/configuracao",
+  ],
 };
 
 /**
@@ -110,7 +125,7 @@ const ROTAS_HOSPEDADAS: { prefixo: string; dono: string }[] = [
  */
 export const GRUPOS_DO_MENU = [
   { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/flow", "/finance"] },
-  { titulo: "Escola", hrefs: [ADMIN_HREF, "/events"] },
+  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/events"] },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */

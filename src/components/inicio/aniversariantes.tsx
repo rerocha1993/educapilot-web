@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAniversariantes,
   type AlunoAniversariante,
+  type MembroDaEquipeAniversariante,
   type ResponsavelAniversariante,
 } from "@/lib/inicio/use-aniversariantes";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ import { cn } from "@/lib/utils";
 /**
  * O bloco Aniversariantes da tela Início.
  *
- * Quais listas aparecem (alunos, mães e responsáveis) já chega decidido: é a escolha da pessoa
+ * Quais listas aparecem (alunos, mães e responsáveis, equipe) já chega decidido: é a escolha da pessoa
  * filtrada pela permissão dela (ver inicio/page.tsx). O servidor também recorta — professora só
  * recebe os alunos das turmas dela —, então lista vazia aqui quer dizer "ninguém" e não "sem acesso".
  *
@@ -58,7 +59,8 @@ export function Aniversariantes({ listas }: { listas: string[] }) {
 
   const mostraAlunos = listas.includes("alunos");
   const mostraResponsaveis = listas.includes("responsaveis");
-  if (!mostraAlunos && !mostraResponsaveis) return null;
+  const mostraEquipe = listas.includes("equipe");
+  if (!mostraAlunos && !mostraResponsaveis && !mostraEquipe) return null;
 
   const alunos = mostraAlunos
     ? (data?.alunos ?? []).filter((a) => a.diasRestantes <= limite).sort(porProximidade)
@@ -66,8 +68,11 @@ export function Aniversariantes({ listas }: { listas: string[] }) {
   const responsaveis = mostraResponsaveis
     ? (data?.responsaveis ?? []).filter((r) => r.diasRestantes <= limite).sort(porProximidade)
     : [];
-  const total = alunos.length + responsaveis.length;
-  const colunas = Number(mostraAlunos) + Number(mostraResponsaveis);
+  const equipe = mostraEquipe
+    ? (data?.equipe ?? []).filter((m) => m.diasRestantes <= limite).sort(porProximidade)
+    : [];
+  const total = alunos.length + responsaveis.length + equipe.length;
+  const colunas = Number(mostraAlunos) + Number(mostraResponsaveis) + Number(mostraEquipe);
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -105,7 +110,7 @@ export function Aniversariantes({ listas }: { listas: string[] }) {
       </div>
 
       {isLoading ? (
-        <div className={cn("grid gap-4 p-4.5", colunas > 1 && "md:grid-cols-2")}>
+        <div className={cn("grid gap-4 p-4.5", colunas > 1 && "md:grid-cols-2", colunas > 2 && "xl:grid-cols-3")}>
           {Array.from({ length: colunas }).map((_, i) => (
             <div key={i} className="flex flex-col gap-3">
               <Skeleton className="h-4 w-28" />
@@ -127,7 +132,13 @@ export function Aniversariantes({ listas }: { listas: string[] }) {
           <p className="text-[14px] text-muted-foreground">{vazio}</p>
         </div>
       ) : (
-        <div className={cn("grid gap-x-6 gap-y-5 p-4.5", colunas > 1 && "md:grid-cols-2")}>
+        <div
+          className={cn(
+            "grid gap-x-6 gap-y-5 p-4.5",
+            colunas > 1 && "md:grid-cols-2",
+            colunas > 2 && "xl:grid-cols-3"
+          )}
+        >
           {mostraAlunos && (
             <ColunaDeAniversariantes
               titulo="Alunos"
@@ -140,6 +151,13 @@ export function Aniversariantes({ listas }: { listas: string[] }) {
               titulo="Mães e responsáveis"
               vazio="Nenhum responsável neste período."
               linhas={responsaveis.map(linhaDoResponsavel)}
+            />
+          )}
+          {mostraEquipe && (
+            <ColunaDeAniversariantes
+              titulo="Equipe"
+              vazio="Nenhum funcionário neste período."
+              linhas={equipe.map(linhaDoMembro)}
             />
           )}
         </div>
@@ -181,6 +199,16 @@ function linhaDoResponsavel(r: ResponsavelAniversariante): Linha {
     sub: detalhe || "Responsável",
     data: diaEMes(r.proximoAniversario),
     dias: r.diasRestantes,
+  };
+}
+
+function linhaDoMembro(m: MembroDaEquipeAniversariante): Linha {
+  return {
+    id: `equipe-${m.funcionarioId}`,
+    nome: m.nome,
+    sub: m.cargo ?? "Equipe",
+    data: diaEMes(m.proximoAniversario),
+    dias: m.diasRestantes,
   };
 }
 

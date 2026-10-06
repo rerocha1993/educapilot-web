@@ -84,6 +84,7 @@ export default function InicioPage() {
 
   // Aniversariantes: o bloco abre para quem vê alunos ou faz a chamada (a professora não tem a
   // tela de alunos, mas tem as turmas dela); a lista de responsáveis pede a tela de responsáveis.
+  // A equipe vem do RH e pede a tela de funcionários (rotaVisivel dela, pelo `rota` do catálogo).
   // O servidor recorta por turma e por permissão de novo — isto só decide o que a tela oferece.
   const veAlunos = rotaVisivel("/admin/alunos") || rotaVisivel("/");
   const catalogoDeAniversariantes = ANIVERSARIANTES.filter((i) =>
@@ -139,7 +140,7 @@ export default function InicioPage() {
 
   const permitido: Record<IdDeBloco, boolean> = {
     numeros: catalogoDeNumeros.length > 0,
-    aniversariantes: veAlunos,
+    aniversariantes: catalogoDeAniversariantes.length > 0,
     calendario: rotaVisivel("/calendario"),
     precisa: catalogoDePendencias.length > 0,
     tarefas: rotaVisivel("/flow/tarefas"),

@@ -9,6 +9,7 @@ import {
   FileSignature,
   FileStack,
   GraduationCap,
+  Briefcase,
   Inbox,
   MessageSquareWarning,
   NotebookPen,
@@ -287,9 +288,10 @@ export const BLOCOS: { id: IdDeBloco; rotulo: string; descricao: string }[] = [
  * As listas do bloco Aniversariantes. Cada uma é uma lista dentro do cartão, e não uma tela que
  * se abre: `rota` aqui só diz qual permissão a lista exige.
  *
- * `equipe` ainda não existe — entra junto com o RH.
+ * `equipe` vem do RH: só aparece para quem abre a tela de funcionários, e o servidor também só
+ * devolve a lista para quem tem a área.
  */
-export type IdDeAniversariantes = "alunos" | "responsaveis";
+export type IdDeAniversariantes = "alunos" | "responsaveis" | "equipe";
 
 export const ANIVERSARIANTES: ItemDoInicio[] = [
   {
@@ -305,6 +307,13 @@ export const ANIVERSARIANTES: ItemDoInicio[] = [
     descricao: "Responsáveis que fazem aniversário, com o aluno de quem são.",
     rota: "/admin/responsaveis",
     icone: Contact,
+  },
+  {
+    id: "equipe",
+    rotulo: "Equipe",
+    descricao: "Funcionários da escola que fazem aniversário, com o cargo.",
+    rota: "/rh/funcionarios",
+    icone: Briefcase,
   },
 ];
 
@@ -341,7 +350,7 @@ const GESTAO: PadraoDoPapel = {
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
   pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
-  aniversariantes: ["alunos", "responsaveis"],
+  aniversariantes: ["alunos", "responsaveis", "equipe"],
 };
 
 const COORDENACAO: PadraoDoPapel = {
@@ -349,7 +358,7 @@ const COORDENACAO: PadraoDoPapel = {
   numeros: ["presencas", "envios-aguardando", "contratos-assinados"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas", "envios-aguardando"],
   atalhos: ["chamada", "planejamento", "ocorrencias", "checklist", "relatorios"],
-  aniversariantes: ["alunos", "responsaveis"],
+  aniversariantes: ["alunos", "responsaveis", "equipe"],
   acaoPrincipal: "ocorrencias",
 };
 

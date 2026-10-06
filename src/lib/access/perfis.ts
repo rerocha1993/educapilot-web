@@ -55,6 +55,9 @@ export function ehGestao(perfil: string | undefined): boolean {
  *
  * Lista vazia num módulo quer dizer "o módulo inteiro" — é como o backend grava. Financeiro não
  * aparece para ninguém além da gestão: dinheiro é da gestão, e foi o pedido da escola.
+ *
+ * RH (a equipe da escola) vai para Coordenação e Secretaria, sem a configuração da jornada;
+ * professor não leva nada dele — folha e atestado dos colegas não são da sala de aula.
  */
 export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string[] }[]> = {
   Secretaria: [
@@ -62,12 +65,14 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     { moduloSlug: "reception", areas: [] },
     { moduloSlug: "tasks", areas: [] },
     { moduloSlug: "admin", areas: ["turmas", "alunos", "responsaveis", "progressao", "importar"] },
+    { moduloSlug: "rh", areas: ["funcionarios", "ponto", "atestados", "afastamentos", "documentos", "relatorios"] },
   ],
   Coordenacao: [
     { moduloSlug: "tasks", areas: [] },
     { moduloSlug: "flow", areas: ["equipe", "recorrencias", "formularios", "respostas"] },
     { moduloSlug: "reception", areas: ["presenca", "mapa", "visitantes"] },
     { moduloSlug: "admin", areas: ["turmas", "alunos", "responsaveis"] },
+    { moduloSlug: "rh", areas: ["funcionarios", "ponto", "atestados", "afastamentos", "documentos", "relatorios"] },
   ],
   // Em Fluxos, o professor leva só a área "quadro": ela dá o quadro de tarefas pessoal sem abrir
   // formulário, contrato nem caixa de envios. Lista vazia aqui abriria o módulo inteiro.
