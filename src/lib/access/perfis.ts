@@ -54,7 +54,8 @@ export function ehGestao(perfil: string | undefined): boolean {
  * convite é o caminho curto para alguém liberar tudo "para não errar".
  *
  * Lista vazia num módulo quer dizer "o módulo inteiro" — é como o backend grava. Financeiro não
- * aparece para ninguém além da gestão: dinheiro é da gestão, e foi o pedido da escola.
+ * aparece para ninguém além da gestão — dinheiro é da gestão, e foi o pedido da escola —, com uma
+ * exceção: a área Recibos, que a Secretaria emite.
  *
  * RH (a equipe da escola) vai para Coordenação e Secretaria, sem a configuração da jornada;
  * professor não leva nada dele — folha e atestado dos colegas não são da sala de aula.
@@ -66,6 +67,9 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     { moduloSlug: "tasks", areas: [] },
     { moduloSlug: "admin", areas: ["turmas", "alunos", "responsaveis", "progressao", "importar"] },
     { moduloSlug: "rh", areas: ["funcionarios", "ponto", "atestados", "afastamentos", "documentos", "relatorios"] },
+    // Recibo é atendimento à família, e a secretaria é quem o emite. Só essa área do Financeiro:
+    // o resto do módulo (despesas, contas, fechamento) continua sendo da gestão.
+    { moduloSlug: "finance", areas: ["recibos"] },
   ],
   Coordenacao: [
     { moduloSlug: "tasks", areas: [] },

@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/finance", label: "Painel" },
   { href: "/finance/despesas", label: "Despesas" },
   { href: "/finance/receitas", label: "Receitas" },
+  { href: "/finance/recibos", label: "Recibos" },
   { href: "/finance/mensalidades", label: "Mensalidades" },
   { href: "/finance/inadimplencia", label: "Inadimplência" },
   { href: "/finance/orcamento", label: "Orçamento" },
