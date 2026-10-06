@@ -67,9 +67,10 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     { moduloSlug: "tasks", areas: [] },
     { moduloSlug: "admin", areas: ["turmas", "alunos", "responsaveis", "progressao", "importar"] },
     { moduloSlug: "rh", areas: ["funcionarios", "ponto", "atestados", "afastamentos", "documentos", "relatorios"] },
-    // Recibo é atendimento à família, e a secretaria é quem o emite. Só essa área do Financeiro:
-    // o resto do módulo (despesas, contas, fechamento) continua sendo da gestão.
-    { moduloSlug: "finance", areas: ["recibos"] },
+    // Recibo é atendimento à família, e a secretaria é quem o emite; o orçamento de projeto
+    // (festa) também passa por ela, que cobra as famílias. O resto do Financeiro (despesas,
+    // contas, fechamento) continua sendo da gestão.
+    { moduloSlug: "finance", areas: ["recibos", "projetos"] },
   ],
   Coordenacao: [
     { moduloSlug: "tasks", areas: [] },

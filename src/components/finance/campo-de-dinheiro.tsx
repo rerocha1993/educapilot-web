@@ -20,12 +20,16 @@ export function CampoDeDinheiro({
   id,
   className,
   placeholder = "0,00",
+  disabled,
+  ariaLabel,
 }: {
   valorEmCentavos: number | null;
   onChange: (centavos: number | null) => void;
   id?: string;
   className?: string;
   placeholder?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
 }) {
   const texto =
     valorEmCentavos == null
@@ -47,6 +51,8 @@ export function CampoDeDinheiro({
         inputMode="numeric"
         value={texto}
         placeholder={placeholder}
+        disabled={disabled}
+        aria-label={ariaLabel}
         onChange={(e) => {
           const digitos = e.target.value.replace(/\D/g, "");
           onChange(digitos === "" ? null : Number(digitos));
