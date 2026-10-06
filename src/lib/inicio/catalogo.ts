@@ -257,6 +257,7 @@ export const PENDENCIAS: ItemDoInicio[] = [
 
 export type IdDeBloco =
   | "numeros"
+  | "precificacao"
   | "aniversariantes"
   | "calendario"
   | "precisa"
@@ -266,6 +267,11 @@ export type IdDeBloco =
 
 export const BLOCOS: { id: IdDeBloco; rotulo: string; descricao: string }[] = [
   { id: "numeros", rotulo: "Números do dia", descricao: "Os números do dia da escola." },
+  {
+    id: "precificacao",
+    rotulo: "Mensalidades fora do alvo",
+    descricao: "Quantas mensalidades estão abaixo do alvo do estudo de precificação e o impacto no ano.",
+  },
   {
     id: "aniversariantes",
     rotulo: "Aniversariantes",
@@ -346,7 +352,7 @@ export interface PadraoDoPapel {
  * menor alcance — mesma normalização que o backend faz ao gravar.
  */
 const GESTAO: PadraoDoPapel = {
-  blocos: ["numeros", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
+  blocos: ["numeros", "precificacao", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
   pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
@@ -359,6 +365,8 @@ const COORDENACAO: PadraoDoPapel = {
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas", "envios-aguardando"],
   atalhos: ["chamada", "planejamento", "ocorrencias", "checklist", "relatorios"],
   aniversariantes: ["alunos", "responsaveis", "equipe"],
+  // Preço da mensalidade é assunto da gestão: o bloco existe na personalização, desligado.
+  desligados: ["precificacao"],
   acaoPrincipal: "ocorrencias",
 };
 
@@ -369,7 +377,7 @@ const SECRETARIA: PadraoDoPapel = {
   atalhos: ["contratos", "envios", "alunos", "formularios"],
   aniversariantes: ["alunos", "responsaveis"],
   // Calendário é opcional para a secretaria: o bloco está na lista de personalização, desligado.
-  desligados: ["calendario"],
+  desligados: ["calendario", "precificacao"],
 };
 
 const PROFESSOR: PadraoDoPapel = {
@@ -378,6 +386,7 @@ const PROFESSOR: PadraoDoPapel = {
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas"],
   atalhos: ["chamada", "ocorrencias", "planejamento", "checklist"],
   aniversariantes: ["alunos"],
+  desligados: ["precificacao"],
   acaoPrincipal: "ocorrencias",
 };
 

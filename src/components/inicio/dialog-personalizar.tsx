@@ -29,7 +29,7 @@ export interface SecaoParaPersonalizar {
   id: string;
   rotulo: string;
   visivel: boolean;
-  /** Ausente no bloco que não tem itens para escolher (o quadro de tarefas, os formulários, o calendário). */
+  /** Ausente no bloco que não tem itens para escolher (o quadro de tarefas, os formulários, o calendário, as mensalidades fora do alvo). */
   chave?: SecaoComItens;
   /** Já filtrado pela permissão: o que a pessoa não pode abrir não entra nem nesta lista. */
   catalogo: ItemDoInicio[];

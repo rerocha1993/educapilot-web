@@ -14,6 +14,7 @@ import { Aniversariantes } from "@/components/inicio/aniversariantes";
 import { AtalhosDoInicio } from "@/components/inicio/atalhos-do-inicio";
 import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
 import { EsteMes } from "@/components/inicio/este-mes";
+import { ForaDoAlvo } from "@/components/inicio/fora-do-alvo";
 import {
   DialogPersonalizarInicio,
   type SecaoComItens,
@@ -122,6 +123,7 @@ export default function InicioPage() {
       ) : (
         painel && <NumerosDoDia itens={numeros} painel={painel} />
       ),
+    precificacao: () => <ForaDoAlvo />,
     aniversariantes: () => <Aniversariantes listas={listasDeAniversariantes.map((i) => i.id)} />,
     calendario: () => <EsteMes />,
     precisa: () => <PrecisaDeVoce pendencias={pendencias} />,
@@ -140,6 +142,8 @@ export default function InicioPage() {
 
   const permitido: Record<IdDeBloco, boolean> = {
     numeros: catalogoDeNumeros.length > 0,
+    // O painel de precificação exige a área do Financeiro; sem ela o bloco nem entra na lista.
+    precificacao: rotaVisivel("/finance/precificacao"),
     aniversariantes: catalogoDeAniversariantes.length > 0,
     calendario: rotaVisivel("/calendario"),
     precisa: catalogoDePendencias.length > 0,
