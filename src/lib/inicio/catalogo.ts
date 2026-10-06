@@ -257,6 +257,7 @@ export const PENDENCIAS: ItemDoInicio[] = [
 export type IdDeBloco =
   | "numeros"
   | "aniversariantes"
+  | "calendario"
   | "precisa"
   | "tarefas"
   | "formularios"
@@ -268,6 +269,11 @@ export const BLOCOS: { id: IdDeBloco; rotulo: string; descricao: string }[] = [
     id: "aniversariantes",
     rotulo: "Aniversariantes",
     descricao: "Quem faz aniversário hoje e nos próximos dias.",
+  },
+  {
+    id: "calendario",
+    rotulo: "Este mês",
+    descricao: "Os próximos eventos do calendário escolar.",
   },
   { id: "precisa", rotulo: "Precisa de você", descricao: "O que pede decisão agora." },
   { id: "tarefas", rotulo: "Minhas tarefas", descricao: "O resumo do seu quadro de tarefas." },
@@ -313,6 +319,11 @@ export interface PadraoDoPapel {
   /** Listas do bloco Aniversariantes (ids de ANIVERSARIANTES). */
   aniversariantes: string[];
   /**
+   * Blocos que nascem desligados para este papel: continuam na lista de personalização, e a pessoa
+   * liga se quiser. Só vale para quem nunca viu o bloco — quem já escolheu mantém a escolha.
+   */
+  desligados?: IdDeBloco[];
+  /**
    * O botão laranja do cabeçalho, quando o papel tem um. É um id de atalho, e vem do papel — não
    * da tela: a gestão não quer "Registrar ocorrência" fixo ali, a professora quer.
    */
@@ -326,7 +337,7 @@ export interface PadraoDoPapel {
  * menor alcance — mesma normalização que o backend faz ao gravar.
  */
 const GESTAO: PadraoDoPapel = {
-  blocos: ["numeros", "aniversariantes", "precisa", "formularios", "atalhos", "tarefas"],
+  blocos: ["numeros", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
   pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
@@ -334,7 +345,7 @@ const GESTAO: PadraoDoPapel = {
 };
 
 const COORDENACAO: PadraoDoPapel = {
-  blocos: ["numeros", "aniversariantes", "precisa", "tarefas", "atalhos", "formularios"],
+  blocos: ["numeros", "aniversariantes", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
   numeros: ["presencas", "envios-aguardando", "contratos-assinados"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas", "envios-aguardando"],
   atalhos: ["chamada", "planejamento", "ocorrencias", "checklist", "relatorios"],
@@ -348,10 +359,12 @@ const SECRETARIA: PadraoDoPapel = {
   pendencias: ["contratos-conferencia", "envios-aguardando", "chamada-aberta", "faltas-sem-justificativa"],
   atalhos: ["contratos", "envios", "alunos", "formularios"],
   aniversariantes: ["alunos", "responsaveis"],
+  // Calendário é opcional para a secretaria: o bloco está na lista de personalização, desligado.
+  desligados: ["calendario"],
 };
 
 const PROFESSOR: PadraoDoPapel = {
-  blocos: ["numeros", "precisa", "tarefas", "atalhos", "formularios"],
+  blocos: ["numeros", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
   numeros: ["presencas"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas"],
   atalhos: ["chamada", "ocorrencias", "planejamento", "checklist"],

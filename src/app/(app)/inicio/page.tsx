@@ -13,6 +13,7 @@ import {
 import { Aniversariantes } from "@/components/inicio/aniversariantes";
 import { AtalhosDoInicio } from "@/components/inicio/atalhos-do-inicio";
 import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
+import { EsteMes } from "@/components/inicio/este-mes";
 import {
   DialogPersonalizarInicio,
   type SecaoComItens,
@@ -121,6 +122,7 @@ export default function InicioPage() {
         painel && <NumerosDoDia itens={numeros} painel={painel} />
       ),
     aniversariantes: () => <Aniversariantes listas={listasDeAniversariantes.map((i) => i.id)} />,
+    calendario: () => <EsteMes />,
     precisa: () => <PrecisaDeVoce pendencias={pendencias} />,
     tarefas: () => <CartaoDeTarefas />,
     formularios: () =>
@@ -138,6 +140,7 @@ export default function InicioPage() {
   const permitido: Record<IdDeBloco, boolean> = {
     numeros: catalogoDeNumeros.length > 0,
     aniversariantes: veAlunos,
+    calendario: rotaVisivel("/calendario"),
     precisa: catalogoDePendencias.length > 0,
     tarefas: rotaVisivel("/flow/tarefas"),
     formularios: rotaVisivel("/flow/respostas"),
@@ -153,7 +156,7 @@ export default function InicioPage() {
 
   // Blocos que a permissão tira saem do arranjo salvo e, se a permissão voltar um dia,
   // reaparecem na posição de fábrica como qualquer bloco novo.
-  const arranjo = arranjarBlocos(catalogoDeBlocos, preferencias?.blocos).filter(
+  const arranjo = arranjarBlocos(catalogoDeBlocos, preferencias?.blocos, padrao.desligados).filter(
     (p) => permitido[p.id as IdDeBloco]
   );
 

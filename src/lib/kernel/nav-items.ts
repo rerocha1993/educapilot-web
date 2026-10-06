@@ -59,6 +59,12 @@ export const NAV_ITEMS = [
  * duas metades, e as pílulas de dentro da tela passam a mostrar só as funções da metade aberta.
  */
 export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]> = {
+  // Rotina tem várias telas e a barra só lista as duas de entrada: a Chamada do dia e o
+  // Calendário. As demais continuam nas abas de dentro da tela (RotinaNav).
+  "/": [
+    { href: "/", label: "Chamada" },
+    { href: "/calendario", label: "Calendário" },
+  ],
   "/flow": [
     { href: "/flow/tarefas", label: "Quadro" },
     { href: "/flow", label: "Formulários" },
@@ -73,7 +79,16 @@ export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]>
  * professora com só o Quadro, em Fluxos. O menu leva para a primeira destas que a pessoa pode abrir.
  */
 export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
-  "/": ["/", "/ocorrencias", "/checklist", "/planejamento-semanal", "/materiais", "/reunioes", "/relatorios"],
+  "/": [
+    "/",
+    "/ocorrencias",
+    "/checklist",
+    "/planejamento-semanal",
+    "/materiais",
+    "/reunioes",
+    "/calendario",
+    "/relatorios",
+  ],
   "/flow": ["/flow", "/flow/tarefas", "/flow/respostas", "/admin/contratos", "/flow/relatorios", "/flow/referencias"],
 };
 

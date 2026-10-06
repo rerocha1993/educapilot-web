@@ -31,6 +31,7 @@ import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { cn } from "@/lib/utils";
 import { AlterarSenhaDialog } from "@/components/shell/alterar-senha-dialog";
+import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
 // espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
@@ -132,6 +133,10 @@ export function AppShell({
   })).filter((g) => g.itens.length > 0);
 
   const visibleItems = NAV_ITEMS.filter((item) => moduloVisivel(item.href));
+
+  // O sino lê /api/Notifications, que é da Rotina: só entra para quem tem o módulo. O Responsável
+  // nem chega a este shell (o layout o manda para /responsavel), mas a regra fica explícita.
+  const mostraSino = session.role !== "Responsavel" && moduloVisivel("/");
 
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
@@ -330,12 +335,13 @@ export function AppShell({
                 <Settings className="size-4" />
               </Link>
             )}
+            {mostraSino && <SinoDeAvisos tamanho="sm" />}
             {menuDoUsuario("sm")}
           </div>
         </header>
 
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
-        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[3rem_1fr_3rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[5.75rem_1fr_5.75rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
           <button
             type="button"
             onClick={abrirMenu}
@@ -352,7 +358,10 @@ export function AppShell({
             </span>
           </Link>
 
-          <div className="flex justify-end">{menuDoUsuario("lg")}</div>
+          <div className="flex items-center justify-end">
+            {mostraSino && <SinoDeAvisos tamanho="lg" />}
+            {menuDoUsuario("lg")}
+          </div>
         </header>
 
         {/* min-w-0 (2026-09): sem isso, um item flex não encolhe abaixo da largura

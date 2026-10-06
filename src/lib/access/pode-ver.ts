@@ -75,6 +75,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
   { padrao: /^\/reunioes/, modulo: "tasks", area: "reunioes" },
+  { padrao: /^\/calendario/, modulo: "tasks", area: "calendario" },
   { padrao: /^\/$/, modulo: "tasks", area: "chamada" },
 ];
 
