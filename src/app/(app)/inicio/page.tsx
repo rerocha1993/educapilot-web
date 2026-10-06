@@ -10,6 +10,7 @@ import {
   CarrosselDeFormularios,
   ordenarPelaEscolha,
 } from "@/components/flow/carrossel-de-formularios";
+import { Aniversariantes } from "@/components/inicio/aniversariantes";
 import { AtalhosDoInicio } from "@/components/inicio/atalhos-do-inicio";
 import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
 import {
@@ -23,6 +24,7 @@ import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useMeuQuadro } from "@/lib/flow/use-tarefas";
 import {
+  ANIVERSARIANTES,
   ATALHOS,
   BLOCOS,
   NUMEROS,
@@ -52,6 +54,7 @@ function saudacao(hora: number) {
 /** Qual lista de itens cada bloco escolhe. Bloco fora daqui só liga e desliga. */
 const SECAO_DO_BLOCO: Partial<Record<IdDeBloco, SecaoComItens>> = {
   numeros: "numeros",
+  aniversariantes: "aniversariantes",
   precisa: "pendencias",
   atalhos: "atalhos",
 };
@@ -78,8 +81,21 @@ export default function InicioPage() {
   const catalogoDeAtalhos = podeVer(ATALHOS);
   const catalogoDePendencias = podeVer(PENDENCIAS);
 
+  // Aniversariantes: o bloco abre para quem vê alunos ou faz a chamada (a professora não tem a
+  // tela de alunos, mas tem as turmas dela); a lista de responsáveis pede a tela de responsáveis.
+  // O servidor recorta por turma e por permissão de novo — isto só decide o que a tela oferece.
+  const veAlunos = rotaVisivel("/admin/alunos") || rotaVisivel("/");
+  const catalogoDeAniversariantes = ANIVERSARIANTES.filter((i) =>
+    i.id === "alunos" ? veAlunos : rotaVisivel(i.rota)
+  );
+
   const numeros = escolherItens(catalogoDeNumeros, preferencias?.numeros, padrao.numeros);
   const atalhos = escolherItens(catalogoDeAtalhos, preferencias?.atalhos, padrao.atalhos);
+  const listasDeAniversariantes = escolherItens(
+    catalogoDeAniversariantes,
+    preferencias?.aniversariantes,
+    padrao.aniversariantes
+  );
   const tiposDePendencia = escolherItens(
     catalogoDePendencias,
     preferencias?.pendencias,
@@ -104,6 +120,7 @@ export default function InicioPage() {
       ) : (
         painel && <NumerosDoDia itens={numeros} painel={painel} />
       ),
+    aniversariantes: () => <Aniversariantes listas={listasDeAniversariantes.map((i) => i.id)} />,
     precisa: () => <PrecisaDeVoce pendencias={pendencias} />,
     tarefas: () => <CartaoDeTarefas />,
     formularios: () =>
@@ -120,6 +137,7 @@ export default function InicioPage() {
 
   const permitido: Record<IdDeBloco, boolean> = {
     numeros: catalogoDeNumeros.length > 0,
+    aniversariantes: veAlunos,
     precisa: catalogoDePendencias.length > 0,
     tarefas: rotaVisivel("/flow/tarefas"),
     formularios: rotaVisivel("/flow/respostas"),
@@ -139,24 +157,23 @@ export default function InicioPage() {
     (p) => permitido[p.id as IdDeBloco]
   );
 
+  const catalogosPorSecao: Record<SecaoComItens, ItemDoInicio[]> = {
+    numeros: catalogoDeNumeros,
+    aniversariantes: catalogoDeAniversariantes,
+    pendencias: catalogoDePendencias,
+    atalhos: catalogoDeAtalhos,
+  };
+  const escolhidosPorSecao: Record<SecaoComItens, ItemDoInicio[]> = {
+    numeros,
+    aniversariantes: listasDeAniversariantes,
+    pendencias: tiposDePendencia,
+    atalhos,
+  };
+
   const secoes: SecaoParaPersonalizar[] = arranjo.map((p) => {
     const chave = SECAO_DO_BLOCO[p.id as IdDeBloco];
-    const catalogo =
-      chave === "numeros"
-        ? catalogoDeNumeros
-        : chave === "atalhos"
-          ? catalogoDeAtalhos
-          : chave === "pendencias"
-            ? catalogoDePendencias
-            : [];
-    const escolhidos =
-      chave === "numeros"
-        ? numeros
-        : chave === "atalhos"
-          ? atalhos
-          : chave === "pendencias"
-            ? tiposDePendencia
-            : [];
+    const catalogo = chave ? catalogosPorSecao[chave] : [];
+    const escolhidos = chave ? escolhidosPorSecao[chave] : [];
 
     return {
       id: p.id,

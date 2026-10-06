@@ -27,6 +27,8 @@ export interface PreferenciasDoInicio {
   numeros: string[];
   atalhos: string[];
   pendencias: string[];
+  /** Listas do bloco Aniversariantes ("alunos", "responsaveis"). */
+  aniversariantes: string[];
   /** Ids (guid) dos formulários resumidos na tela, na ordem escolhida. */
   formularios: string[];
 }
@@ -36,6 +38,7 @@ export const PREFERENCIAS_VAZIAS: PreferenciasDoInicio = {
   numeros: [],
   atalhos: [],
   pendencias: [],
+  aniversariantes: [],
   formularios: [],
 };
 
@@ -69,6 +72,7 @@ function normalizar(bruto: Partial<PreferenciasDoInicio> | null): PreferenciasDo
     numeros: bruto?.numeros ?? [],
     atalhos: bruto?.atalhos ?? [],
     pendencias: bruto?.pendencias ?? [],
+    aniversariantes: bruto?.aniversariantes ?? [],
     formularios: bruto?.formularios ?? [],
   };
 }

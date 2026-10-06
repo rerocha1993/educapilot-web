@@ -229,7 +229,7 @@ export function AppShell({
         <div className={cn("flex items-center gap-2.5", collapsed ? "flex-col" : "px-2")}>
           <Link href={INICIO_HREF} className="flex items-center gap-2.5 overflow-hidden">
             <Image
-              src="/icon-192.png"
+              src="/icon-192-claro.png"
               alt=""
               width={32}
               height={32}
@@ -415,7 +415,7 @@ export function AppShell({
           <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
               <span className="flex items-center gap-2.5">
-                <Image src="/icon-192.png" alt="" width={30} height={30} className="size-[30px] shrink-0" />
+                <Image src="/icon-192-claro.png" alt="" width={30} height={30} className="size-[30px] shrink-0" />
                 <span className="font-heading text-[17px] font-semibold text-white">
                   Educa<span className="text-action-brand">Pilot</span>
                 </span>
