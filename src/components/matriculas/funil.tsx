@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,15 +11,18 @@ import { QuadroDoFunil } from "@/components/matriculas/quadro-do-funil";
 import { Esteira } from "@/components/matriculas/esteira";
 import { FolhaDePerda } from "@/components/matriculas/folha-de-perda";
 import { FolhaDeRetorno, diaPorExtenso } from "@/components/matriculas/folha-de-retorno";
+import { FolhaDoRelato, type ErroDoServidor } from "@/components/matriculas/folha-do-relato";
+import { FolhaDeMatricula } from "@/components/matriculas/folha-de-matricula";
 import { FolhaDeReativacao } from "@/components/matriculas/folha-de-reativacao";
 import { PainelDoLead } from "@/components/matriculas/painel-do-lead";
 import { FormularioDoLead } from "@/components/matriculas/formulario-do-lead";
 import { cn } from "@/lib/utils";
-import type { EtapaDoFunil, LeadDetalhe, LeadResumo, Quadro } from "@/lib/matriculas/tipos";
+import type { EtapaDoFunil, LeadDetalhe, LeadResumo, Quadro, RelatoParaEnviar } from "@/lib/matriculas/tipos";
 import { ETAPAS_FINAIS, TITULO_PADRAO_DA_ETAPA, esperaEmTexto } from "@/lib/matriculas/rotulos";
 import { useMoverLead, useQuadro, useReativar } from "@/lib/matriculas/use-funil";
 import { usePrimeirosPassos } from "@/lib/matriculas/use-assistente";
 import Link from "next/link";
+import { ErroDaApi } from "@/lib/matriculas/api";
 
 function useBuscaAtrasada(valor: string, ms = 300) {
   const [atrasado, setAtrasado] = useState(valor);
@@ -42,6 +45,8 @@ export function Funil() {
   const [aberto, setAberto] = useState<string | null>(null);
   const [perdendo, setPerdendo] = useState<LeadResumo | null>(null);
   const [marcandoRetorno, setMarcandoRetorno] = useState<LeadResumo | null>(null);
+  const [relatando, setRelatando] = useState<LeadResumo | null>(null);
+  const [lancandoMatricula, setLancandoMatricula] = useState(false);
   const [reativando, setReativando] = useState<LeadResumo | null>(null);
   // Um clique só: o modelo é pago, e o estado da mutação só muda na próxima renderização.
   const enviandoReativacao = useRef(false);
@@ -66,7 +71,28 @@ export function Funil() {
       setMarcandoRetorno(lead);
       return;
     }
+    // Visitou pede o relato de quem recebeu a família; o card só sai da coluna quando o servidor aceitar.
+    if (para === "Visitou" && lead.etapa !== "Visitou") {
+      setRelatando(lead);
+      return;
+    }
     executarMudanca(lead, para);
+  }
+
+  async function executarRelato(lead: LeadResumo, relato: RelatoParaEnviar): Promise<ErroDoServidor | void> {
+    try {
+      await mover.mutateAsync({ id: lead.id, etapa: "Visitou", relato });
+    } catch (erro) {
+      return {
+        mensagem: erro instanceof Error ? erro.message : "Não foi possível mover a família.",
+        campo: erro instanceof ErroDaApi ? erro.campo : undefined,
+      };
+    }
+    const nome = lead.nomeResponsavel.split(" ")[0];
+    toast.success(`${nome} agora em ${titulos.Visitou ?? TITULO_PADRAO_DA_ETAPA.Visitou}`, {
+      description: "3 contatos agendados: 24 horas, 3 dias e 7 dias depois da visita.",
+    });
+    setRelatando(null);
   }
 
   async function executarMudanca(lead: LeadResumo, para: EtapaDoFunil, motivoPerda?: string, retomarEm?: string) {
@@ -124,7 +150,7 @@ export function Funil() {
               Arraste o card para mudar a família de etapa. Clique para abrir a ficha.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <label className="flex h-9 flex-1 items-center gap-2 rounded-full border border-input bg-card px-3.5 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/20 md:w-72 md:flex-none">
               <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               <Input
@@ -139,6 +165,15 @@ export function Funil() {
             <Button variant="action" className="h-9 rounded-full px-4" onClick={() => setFormulario({})}>
               <Plus data-icon="inline-start" />
               Nova família
+            </Button>
+            <Button
+              variant="outline"
+              className="h-9 rounded-full px-4"
+              title="Para a matrícula que veio por outro caminho — porta, telefone, indicação."
+              onClick={() => setLancandoMatricula(true)}
+            >
+              <Stamp data-icon="inline-start" />
+              Lançar matrícula
             </Button>
           </div>
         </div>
@@ -195,6 +230,10 @@ export function Funil() {
         onConfirmar={(motivo) => perdendo && executarMudanca(perdendo, "Perdido", motivo)}
         onCancelar={() => setPerdendo(null)}
       />
+
+      <FolhaDoRelato lead={relatando} onConfirmar={(r) => executarRelato(relatando!, r)} onCancelar={() => setRelatando(null)} />
+
+      <FolhaDeMatricula aberto={lancandoMatricula} titulos={titulos} onFechar={() => setLancandoMatricula(false)} />
 
       <FolhaDeRetorno
         lead={marcandoRetorno}

@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, type HTMLAttributes } from "react";
-import { Bot, CalendarClock, Headset, RotateCw, Snowflake } from "lucide-react";
+import { Bot, CalendarClock, Headset, NotebookPen, RotateCw, Snowflake } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LeadResumo } from "@/lib/matriculas/tipos";
 import {
@@ -115,7 +115,7 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
         </div>
       )}
 
-      {(lead.turmaNome || lead.periodo || lead.frio || lead.visitasReagendadas > 0) && (
+      {(lead.turmaNome || lead.periodo || lead.frio || lead.temRelato || lead.visitasReagendadas > 0) && (
         <div className="flex flex-wrap gap-1">
           {lead.turmaNome && <Chip tom="marca">{lead.turmaNome}</Chip>}
           {lead.periodo && <Chip>{PERIODO_CURTO[lead.periodo]}</Chip>}
@@ -123,6 +123,12 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
             <Chip tom="frio">
               <Snowflake className="size-3" aria-hidden />
               Frio
+            </Chip>
+          )}
+          {lead.temRelato && (
+            <Chip tom="marca">
+              <NotebookPen className="size-3" aria-hidden />
+              Relato
             </Chip>
           )}
           {lead.visitasReagendadas > 0 && <Chip>Remarcou {lead.visitasReagendadas}×</Chip>}

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ROTULOS_DO_PERIODO } from "@/components/reception/periodo-do-aluno-campos";
 import { getSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import type { BriefingDaVisita, EtapaDoFunil, EventoDoLead, LeadDetalhe, SinalDaFamilia } from "@/lib/matriculas/tipos";
+import type { BriefingDaVisita, EtapaDoFunil, EventoDoLead, LeadDetalhe, RelatoDaVisita, SinalDaFamilia } from "@/lib/matriculas/tipos";
 import {
   COR_DA_ETAPA,
   ORDEM_DAS_ETAPAS,
@@ -23,6 +23,7 @@ import {
   idadeCurta,
   iniciais,
 } from "@/lib/matriculas/rotulos";
+import { ESCALA_DE_INTERESSE, PERGUNTAS, ROTULO_DE_QUEM_VEIO, ROTULO_DO_ASSUNTO } from "@/lib/matriculas/relato";
 import { useDefinirSinal, useExcluirLead, useLead } from "@/lib/matriculas/use-funil";
 
 const SEM_SINAL = "-";
@@ -216,6 +217,8 @@ function Conteudo({
           <Dado rotulo="Entrou no funil">{dataHoraCurta(lead.criadoEm)}</Dado>
         </div>
 
+        {lead.relato && <Relato relato={lead.relato} />}
+
         {lead.briefingVisita && <Briefing json={lead.briefingVisita} deOutraVisita={lead.briefingDeOutraVisita} />}
 
         {lead.notas && (
@@ -363,7 +366,62 @@ const DESCRICAO_DO_EVENTO: Record<string, string> = {
   conversao_enviada: "A Meta foi avisada do resultado do anúncio",
   clique_em_anuncio: "Clicou num anúncio",
   briefing_falhou: "Briefing da visita não saiu",
+  relato_da_visita: "Relato da visita registrado",
+  matricula_manual: "Matrícula lançada pela equipe",
+  entrega_falhou: "O WhatsApp não entregou uma resposta",
 };
+
+function Relato({ relato }: { relato: RelatoDaVisita }) {
+  const degrau = ESCALA_DE_INTERESSE[relato.interesse];
+  const quem = relato.quemVeio.map((id) => ROTULO_DE_QUEM_VEIO[id] ?? id).join(", ");
+  const respondidas = PERGUNTAS.filter((p) => (p.id === "prometido" && relato.nadaPrometido) || !!relato.respostas[p.id]?.trim());
+
+  return (
+    <Secao titulo="Como foi a visita">
+      <div className="flex flex-col gap-3.5 rounded-2xl bg-card p-3.5">
+        <div className="rounded-xl bg-action-soft px-3 py-2.5 text-action-soft-foreground">
+          <p className="text-[13.5px] leading-snug">
+            <b className="font-mono tabular-nums">{relato.interesse}/5</b>
+            {degrau && <> — {degrau.frase}</>}
+          </p>
+        </div>
+
+        <dl className="flex flex-col gap-2.5 text-[13.5px]">
+          <div>
+            <dt className="text-[11.5px] font-semibold text-muted-foreground">Quem veio</dt>
+            <dd className="mt-0.5">{quem || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-[11.5px] font-semibold text-muted-foreground">Do que quiseram saber</dt>
+            <dd className="mt-1 flex flex-wrap gap-1">
+              {relato.assuntos.map((id) => (
+                <span key={id} className="rounded-full bg-accent px-2 py-0.5 text-[11.5px] font-semibold text-accent-foreground">
+                  {ROTULO_DO_ASSUNTO[id] ?? id}
+                </span>
+              ))}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[11.5px] font-semibold text-muted-foreground">Como saiu daqui</dt>
+            <dd className="mt-0.5">{ROTULO_DO_SINAL[relato.sinal] ?? relato.sinal}</dd>
+          </div>
+          {respondidas.map((p) => (
+            <div key={p.id}>
+              <dt className="text-[11.5px] font-semibold text-muted-foreground">{p.rotulo}</dt>
+              <dd className="mt-0.5 whitespace-pre-wrap leading-relaxed">
+                {p.id === "prometido" && relato.nadaPrometido ? "Nada ficou pendente." : relato.respostas[p.id]}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <p className="border-t border-foreground/[.06] pt-2 text-[11.5px] text-muted-foreground">
+          Registrado em {dataHoraCurta(relato.em)}
+        </p>
+      </div>
+    </Secao>
+  );
+}
 
 function Briefing({ json, deOutraVisita }: { json: string; deOutraVisita: boolean }) {
   let b: BriefingDaVisita | null = null;

@@ -5,7 +5,11 @@ import type {
   EstadoDaAutomacao,
   EtapaDoFunil,
   LeadDetalhe,
+  LancarMatricula,
   LeadResumo,
+  MetricasDosRelatos,
+  RelatoParaEnviar,
+  ResultadoDaMatricula,
   Quadro,
   SalvarConfiguracaoMatriculas,
   SalvarLead,
@@ -73,10 +77,10 @@ export function useAtualizarLead() {
 export function useMoverLead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, etapa, motivoPerda, retomarEm }: { id: string; etapa: EtapaDoFunil; motivoPerda?: string; retomarEm?: string }) =>
+    mutationFn: ({ id, etapa, motivoPerda, retomarEm, relato }: { id: string; etapa: EtapaDoFunil; motivoPerda?: string; retomarEm?: string; relato?: RelatoParaEnviar }) =>
       matriculasJson<LeadResumo>(
         `/leads/${id}/etapa`,
-        { method: "POST", body: JSON.stringify({ etapa, motivoPerda, retomarEm }) },
+        { method: "POST", body: JSON.stringify({ etapa, motivoPerda, retomarEm, relato }) },
         "Não foi possível mover a família."
       ),
     onMutate: async ({ id, etapa }) => {
@@ -156,5 +160,27 @@ export function useEstadoDasAutomacoes() {
   return useQuery({
     queryKey: ["matriculas", "automacoes"],
     queryFn: () => matriculasJson<EstadoDaAutomacao[]>("/automacoes", {}, "Não foi possível carregar as automações."),
+  });
+}
+
+/** Matrícula que veio por outro caminho: o card nasce (ou já está) em Matriculado. */
+export function useLancarMatricula() {
+  const invalidar = useInvalidarFunil();
+  return useMutation({
+    mutationFn: (dto: LancarMatricula) =>
+      matriculasJson<ResultadoDaMatricula>(
+        "/leads/matricula",
+        { method: "POST", body: JSON.stringify(dto) },
+        "Não foi possível lançar a matrícula."
+      ),
+    onSuccess: invalidar,
+  });
+}
+
+/** O que as visitas contaram: agregados dos relatos. */
+export function useMetricasDosRelatos() {
+  return useQuery({
+    queryKey: [...RAIZ, "relatos", "metricas"],
+    queryFn: () => matriculasJson<MetricasDosRelatos>("/relatos/metricas", {}, "Não foi possível carregar os relatos."),
   });
 }

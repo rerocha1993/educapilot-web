@@ -31,23 +31,36 @@ export async function matriculasFetch(caminho: string, init: RequestInit = {}): 
 /** Chamada que devolve JSON. Falha vira Error com a mensagem do backend. */
 export async function matriculasJson<T>(caminho: string, init: RequestInit, falha: string): Promise<T> {
   const res = await matriculasFetch(caminho, init);
-  if (!res.ok) throw new Error(await mensagemDeErro(res, falha));
+  if (!res.ok) {
+    const { mensagem, campo } = await lerErro(res, falha);
+    throw new ErroDaApi(mensagem, campo);
+  }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
-async function mensagemDeErro(res: Response, falha: string): Promise<string> {
-  if (res.status === 401) return "Sessão expirada. Faça login novamente.";
+/** Error que carrega o `campo` que o backend aponta (relato da visita), quando ele aponta. */
+export class ErroDaApi extends Error {
+  readonly campo?: string;
+  constructor(mensagem: string, campo?: string) {
+    super(mensagem);
+    this.name = "ErroDaApi";
+    this.campo = campo;
+  }
+}
+
+async function lerErro(res: Response, falha: string): Promise<{ mensagem: string; campo?: string }> {
+  if (res.status === 401) return { mensagem: "Sessão expirada. Faça login novamente." };
   // O ModuleAccessMiddleware responde 403 com texto puro, sem JSON.
-  if (res.status === 403) return "A escola não tem o módulo Matrículas, ou você não tem acesso a esta área.";
+  if (res.status === 403) return { mensagem: "A escola não tem o módulo Matrículas, ou você não tem acesso a esta área." };
 
   try {
-    const corpo = (await res.json()) as { message?: string; errors?: Record<string, string[]> };
-    if (corpo.message) return corpo.message;
+    const corpo = (await res.json()) as { message?: string; campo?: string; errors?: Record<string, string[]> };
+    if (corpo.message) return { mensagem: corpo.message, campo: corpo.campo };
     const primeiro = corpo.errors && Object.values(corpo.errors).flat().find((m) => !!m);
-    if (primeiro) return primeiro;
+    if (primeiro) return { mensagem: primeiro };
   } catch {
     // corpo vazio ou não-JSON: fica a mensagem padrão
   }
-  return falha;
+  return { mensagem: falha };
 }

@@ -80,6 +80,8 @@ export interface LeadResumo {
   tentativasDoCiclo?: number | null;
   anuncioId?: string | null;
   ultimaInteracaoEm?: string | null;
+  /** A visita tem o relato de quem recebeu a família. */
+  temRelato?: boolean;
   criadoEm: string;
 }
 
@@ -126,6 +128,63 @@ export interface LeadDetalhe extends LeadResumo {
   briefingDeOutraVisita: boolean;
   toques: Toque[];
   eventos: EventoDoLead[];
+  relato?: RelatoDaVisita | null;
+}
+
+/** O que a equipe escreve ao mover o card para Visitou. Espelha o contrato de /etapa. */
+export interface RelatoParaEnviar {
+  quemVeio: string[];
+  /** 0..5; vazio não é 0. */
+  interesse: number | null;
+  assuntos: string[];
+  sinal: SinalDaFamilia | null;
+  respostas: Record<string, string>;
+  nadaPrometido: boolean;
+}
+
+export interface RelatoDaVisita {
+  quemVeio: string[];
+  interesse: number;
+  assuntos: string[];
+  sinal: SinalDaFamilia;
+  respostas: Record<string, string>;
+  nadaPrometido: boolean;
+  em: string;
+  por?: string | null;
+}
+
+export interface ItemDeMetricaDeRelato {
+  id: string;
+  titulo: string;
+  total: number;
+  percentual: number;
+}
+
+export interface MetricasDosRelatos {
+  totalRelatos: number;
+  visitasQueAconteceram: number;
+  visitasSemRelato: number;
+  interesseMedio: number | null;
+  quentes: number;
+  porAssunto: ItemDeMetricaDeRelato[];
+  porQuemVeio: ItemDeMetricaDeRelato[];
+  distribuicaoDeInteresse: { nota: number; titulo: string; descricao: string; total: number; percentual: number }[];
+  vozes: { leadId: string; nome: string; quando: string; interesse: number; objecao?: string | null; medo?: string | null }[];
+}
+
+export type SituacaoDaMatricula = "Lancada" | "PrecisaConfirmar" | "JaMatriculada";
+
+export interface LancarMatricula extends SalvarLead {
+  confirmarExistente: boolean;
+}
+
+export interface ResultadoDaMatricula {
+  situacao: SituacaoDaMatricula;
+  lead?: LeadResumo | null;
+  nomeExistente?: string | null;
+  etapaExistente?: EtapaDoFunil | null;
+  atribuiAoAnuncio: boolean;
+  aproveitouCardExistente: boolean;
 }
 
 export interface SalvarLead {

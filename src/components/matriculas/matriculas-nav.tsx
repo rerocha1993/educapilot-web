@@ -13,6 +13,7 @@ import { podeVerArea } from "@/lib/access/pode-ver";
 export const ABAS_DE_MATRICULAS = [
   { href: "/matriculas", label: "Funil", area: "funil" },
   { href: "/matriculas/conversas", label: "Conversas", area: "conversas" },
+  { href: "/matriculas/visitas", label: "Visitas", area: "funil" },
   { href: "/matriculas/assistente", label: "Assistente", area: "configuracao" },
   { href: "/matriculas/agenda", label: "Agenda", area: "configuracao" },
   { href: "/matriculas/materiais", label: "Materiais", area: "configuracao" },
