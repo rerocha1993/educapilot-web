@@ -218,17 +218,34 @@ function FormularioDoRecebimento({
         </fieldset>
 
         {provedor === "asaas" ? (
-          <SecaoDoAsaas
-            carteira={carteira}
-            ambiente={ambiente}
-            onAmbiente={setAmbiente}
-            chaveDaApi={chaveDaApi}
-            onChaveDaApi={setChaveDaApi}
-            podeTestar={podeTestar}
-            testando={testar.isPending}
-            onTestar={conferirChave}
-            resultadoDoTeste={resultadoDoTeste}
-          />
+          <>
+            <SecaoDoAsaas
+              carteira={carteira}
+              ambiente={ambiente}
+              onAmbiente={setAmbiente}
+              chaveDaApi={chaveDaApi}
+              onChaveDaApi={setChaveDaApi}
+              podeTestar={podeTestar}
+              testando={testar.isPending}
+              onTestar={conferirChave}
+              resultadoDoTeste={resultadoDoTeste}
+            />
+            {/* No Asaas a chave Pix e opcional: so o QR estatico do checkout de eventos usa. */}
+            <div className="flex flex-col gap-[5px]">
+              <Label htmlFor="chave-pix-asaas" className="text-xs text-muted-foreground">
+                Chave Pix da conta (opcional)
+              </Label>
+              <Input
+                id="chave-pix-asaas"
+                value={chavePix}
+                placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                onChange={(e) => setChavePix(e.target.value)}
+              />
+              <p className="text-[11.5px] text-muted-foreground">
+                Usada só no QR Pix da venda de eventos. As cobranças das famílias já saem com o Pix do próprio Asaas.
+              </p>
+            </div>
+          </>
         ) : (
           <SecaoManual chavePix={chavePix} onChavePix={setChavePix} />
         )}

@@ -52,9 +52,9 @@ export function CarteiraDaCobranca({ cobranca: x }: { cobranca: Cobranca }) {
 /**
  * Ações de uma cobrança. No desktop são ícones; no cartão do celular, botões com texto.
  *
- * Cobrança de projeto é só de leitura aqui: dá para copiar o link e o Pix e abrir o boleto, mas
- * baixa e cancelamento são feitos no próprio projeto ("Abrir projeto"). Com `enxuta`, só o que
- * a cobrança em atraso precisa: link, Pix, boleto e marcar como paga.
+ * Cobrança de projeto tem as mesmas ações das outras (desde a Limpeza 3 é a mesma tabela) e, a mais,
+ * "Abrir projeto". Com `enxuta`, só o que a cobrança em atraso precisa: link, Pix, boleto e marcar
+ * como paga.
  */
 export function AcoesDaCobranca({
   cobranca: x,
@@ -80,7 +80,7 @@ export function AcoesDaCobranca({
     const pix = x.pixCopiaECola;
     botoes.push({ chave: "pix", rotulo: "Copiar Pix", icone: <Copy />, fazer: () => copiarTexto(pix, "Pix copia e cola copiado.") });
   }
-  if (emAberto && x.pixQrCodeBase64 && !doProjeto && !enxuta) {
+  if (emAberto && x.pixQrCodeBase64 && !enxuta) {
     botoes.push({ chave: "qr", rotulo: "Ver QR", icone: <QrCode />, fazer: () => onDialogo({ tipo: "qr", cobranca: x }) });
   }
   if (emAberto && x.boletoUrl) {
@@ -92,10 +92,11 @@ export function AcoesDaCobranca({
       fazer: () => window.open(url, "_blank", "noopener,noreferrer"),
     });
   }
-  if (doProjeto) {
+  if (doProjeto && !enxuta) {
     const rota = rotaDoProjeto(x.projetoId);
     botoes.push({ chave: "projeto", rotulo: "Abrir projeto", icone: <FolderOpen />, fazer: () => router.push(rota) });
-  } else if (emAberto) {
+  }
+  if (emAberto) {
     botoes.push({ chave: "paga", rotulo: "Marcar paga", icone: <Check />, fazer: () => onDialogo({ tipo: "paga", cobranca: x }) });
     if (!enxuta) {
       botoes.push({
