@@ -11,6 +11,7 @@ import {
   Plus,
   RotateCcw,
   Scale,
+  Search,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -35,6 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DialogDeBusca,
+  DialogDeDiferenca,
+  FraseDaDiferenca,
+  diferencaDoCasamento,
+} from "@/components/finance/conciliacao-com-diferenca";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
@@ -53,6 +60,7 @@ import {
   useSalvarRegraDeConciliacao,
   type MovimentoDoExtrato,
   type RegraDeConciliacao,
+  type SugestaoDeLancamento,
   type SituacaoDoMovimento,
 } from "@/lib/finance/use-conciliacao";
 
@@ -293,12 +301,17 @@ function LinhaDoExtrato({
   const ignorar = useIgnorarMovimento();
   const desfazer = useDesfazerConciliacao();
 
+  const [comDiferenca, setComDiferenca] = useState<SugestaoDeLancamento | null>(null);
+  const [buscando, setBuscando] = useState(false);
+
   const entrada = movimento.valor >= 0;
   const pendente = movimento.situacao === SITUACAO.pendente;
 
-  async function casar(tipo: string, lancamentoId: string) {
+  // Valor igual: casa direto. Valor diferente: antes, o passo de classificar a diferença.
+  async function casar(s: SugestaoDeLancamento) {
+    if (diferencaDoCasamento(movimento, s) !== 0) return setComDiferenca(s);
     try {
-      await conciliar.mutateAsync({ id: movimento.id, tipo, lancamentoId });
+      await conciliar.mutateAsync({ id: movimento.id, tipo: s.tipo, lancamentoId: s.id });
       toast.success("Conciliado.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível conciliar.");
@@ -353,13 +366,18 @@ function LinhaDoExtrato({
               <div className="min-w-0">
                 <p className="text-sm break-words">{s.descricao}</p>
                 <p className="text-xs text-muted-foreground">
-                  {dinheiro(s.valor)} · vence {data(s.vencimento)}
+                  {diferencaDoCasamento(movimento, s) !== 0 ? (
+                    <FraseDaDiferenca movimento={movimento} lancamento={s} />
+                  ) : (
+                    dinheiro(s.valor)
+                  )}{" "}
+                  · vence {data(s.vencimento)}
                   {s.diasDeDiferenca > 0 && ` · ${s.diasDeDiferenca} dia(s) de diferença`}
                 </p>
               </div>
-              <Button size="sm" disabled={conciliar.isPending} onClick={() => casar(s.tipo, s.id)}>
+              <Button size="sm" disabled={conciliar.isPending} onClick={() => casar(s)}>
                 <Check className="size-4" />
-                É este
+                {diferencaDoCasamento(movimento, s) !== 0 ? "É este, com diferença" : "É este"}
               </Button>
             </div>
           ))}
@@ -376,6 +394,10 @@ function LinhaDoExtrato({
       <div className="mt-3 flex flex-wrap gap-2">
         {pendente && (
           <>
+            <Button variant="outline" size="sm" onClick={() => setBuscando(true)}>
+              <Search className="size-4" />
+              Procurar outro lançamento
+            </Button>
             <Button variant="outline" size="sm" onClick={onLancar}>
               <Plus className="size-4" />
               Lançar como novo
@@ -403,6 +425,11 @@ function LinhaDoExtrato({
           </Button>
         )}
       </div>
+
+      {comDiferenca && (
+        <DialogDeDiferenca movimento={movimento} lancamento={comDiferenca} onFechar={() => setComDiferenca(null)} />
+      )}
+      {buscando && <DialogDeBusca movimento={movimento} onFechar={() => setBuscando(false)} />}
     </div>
   );
 }

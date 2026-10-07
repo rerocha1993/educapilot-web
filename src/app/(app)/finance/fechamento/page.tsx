@@ -220,6 +220,32 @@ export default function FechamentoPage() {
   );
 }
 
+/**
+ * Juros, multas e descontos que a baixa com valor real moveu no mês, em linhas pequenas. Só
+ * aparece o que é diferente de zero: na maior parte dos meses não há nada a mostrar.
+ */
+function TotaisDaBaixa({ previa }: { previa: NonNullable<ReturnType<typeof usePreviaDoFechamento>["data"]> }) {
+  const linhas = [
+    { rotulo: "Juros e multas pagos", valor: previa.jurosEMultasPagos ?? 0 },
+    { rotulo: "Juros e multas recebidos", valor: previa.jurosEMultasRecebidos ?? 0 },
+    { rotulo: "Descontos concedidos", valor: previa.descontosConcedidos ?? 0 },
+    { rotulo: "Descontos obtidos", valor: previa.descontosObtidos ?? 0 },
+  ].filter((l) => l.valor !== 0);
+
+  if (linhas.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-0.5 border-t border-border pt-2.5 text-xs">
+      {linhas.map((l) => (
+        <span key={l.rotulo} className="flex justify-between">
+          <span className="text-muted-foreground">{l.rotulo}</span>
+          <span className="font-mono tabular-nums">{dinheiro(l.valor)}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function DialogDeFechamento({
   ano,
   mes,
@@ -274,6 +300,8 @@ function DialogDeFechamento({
                 </span>
               </span>
             </div>
+
+            <TotaisDaBaixa previa={previa} />
 
             {(previa.receitasEmAberto > 0 || previa.despesasEmAberto > 0) && (
               <div className="flex gap-2.5 rounded-lg border border-border bg-muted px-3.5 py-3 text-[12.5px]">

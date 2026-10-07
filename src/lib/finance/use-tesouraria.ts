@@ -114,6 +114,11 @@ export interface PreviaDoFechamento {
   valorEmAberto: number;
   semConta: number;
   semCategoria: number;
+  // F5 (2026-10): o que a baixa com valor real moveu no mês. Só conta o que já foi baixado.
+  jurosEMultasPagos?: number;
+  jurosEMultasRecebidos?: number;
+  descontosConcedidos?: number;
+  descontosObtidos?: number;
   saldos: SaldoNoFechamento[];
 }
 

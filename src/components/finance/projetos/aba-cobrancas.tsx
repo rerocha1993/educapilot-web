@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Check, Copy, ExternalLink, Link2, Plus, QrCode, Receipt, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { CamposDoValorPago, useValorPago } from "@/components/finance/valor-pago-com-diferenca";
+import { ResumoDoPagamento } from "@/components/finance/resumo-do-pagamento";
 import { EtiquetaDaCobranca, Numero } from "@/components/finance/projetos/comum";
 import { DialogGerarCobrancas } from "@/components/finance/projetos/dialog-gerar-cobrancas";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
@@ -24,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { situacaoPelaData } from "@/lib/finance/diferenca-do-pagamento";
 import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 import {
   baseDoProjeto,
@@ -182,6 +185,7 @@ export function AbaCobrancas({ projeto }: { projeto: ProjetoDetalhe }) {
                         valor={`${formatarSoData(x.pagaEm)} · ${rotuloDaForma(x.formaDePagamento)}`}
                       />
                     )}
+                    {x.status === "Paga" && <PagamentoDaCobranca x={x} />}
                     <Linha rotulo="Origem" valor={x.origem === "Asaas" ? "Asaas" : "Manual"} />
                   </>
                 }
@@ -218,6 +222,7 @@ export function AbaCobrancas({ projeto }: { projeto: ProjetoDetalhe }) {
                             {formatarSoData(x.pagaEm)} · {rotuloDaForma(x.formaDePagamento)}
                           </span>
                         )}
+                        {x.status === "Paga" && <PagamentoDaCobranca x={x} />}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{x.origem === "Asaas" ? "Asaas" : "Manual"}</TableCell>
@@ -243,6 +248,20 @@ export function AbaCobrancas({ projeto }: { projeto: ProjetoDetalhe }) {
         <CancelarCobranca projetoId={projeto.id} cobranca={dialogo.cobranca} onFechar={() => setDialogo(null)} />
       )}
     </div>
+  );
+}
+
+/** O valor pago, a divisão da diferença e a situação (no dia, antecipado, atrasado) de uma cobrança paga. */
+function PagamentoDaCobranca({ x }: { x: CobrancaDoProjeto }) {
+  return (
+    <ResumoDoPagamento
+      valor={x.valor}
+      valorPago={x.valorPago}
+      juros={x.juros}
+      multa={x.multa}
+      desconto={x.desconto}
+      situacao={x.pagaEm ? situacaoPelaData(x.vencimento, x.pagaEm) : null}
+    />
   );
 }
 
@@ -377,14 +396,17 @@ function DialogMarcarPaga({
   onFechar: () => void;
 }) {
   const marcar = useMarcarPaga(projetoId);
+  const valorPago = useValorPago(x.valor);
   const [data, setData] = useState(hojeIsoBrasilia());
   const [forma, setForma] = useState<FormaDePagamento>("Pix");
 
   async function confirmar(e: React.FormEvent) {
     e.preventDefault();
     if (!data) return void toast.error("Informe a data do pagamento.");
+    if (data > hojeIsoBrasilia()) return void toast.error("A data não pode ser no futuro.");
+    if (valorPago.problema) return void toast.error(valorPago.problema);
     try {
-      await marcar.mutateAsync({ cobrancaId: x.id, data, formaDePagamento: forma });
+      await marcar.mutateAsync({ cobrancaId: x.id, data, formaDePagamento: forma, ...valorPago.corpo() });
       toast.success("Cobrança marcada como paga.");
       onFechar();
     } catch (err) {
@@ -394,7 +416,7 @@ function DialogMarcarPaga({
 
   return (
     <Dialog open onOpenChange={(aberto) => !aberto && !marcar.isPending && onFechar()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Marcar como paga</DialogTitle>
           <DialogDescription>
@@ -406,6 +428,7 @@ function DialogMarcarPaga({
           <Campo id="paga-data" rotulo="Data do pagamento">
             <Input id="paga-data" type="date" value={data} max={hojeIsoBrasilia()} onChange={(e) => setData(e.target.value)} />
           </Campo>
+          <CamposDoValorPago id="paga" estado={valorPago} desabilitado={marcar.isPending} />
           <Campo id="paga-forma" rotulo="Forma de pagamento">
             <Select value={forma} onValueChange={(v) => v && setForma(v as FormaDePagamento)}>
               <SelectTrigger id="paga-forma" className="w-full">

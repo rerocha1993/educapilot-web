@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { StatusDaCobranca } from "@/lib/finance/use-projetos";
+import type { StatusDaCobranca, ValorPagoDaCobranca } from "@/lib/finance/use-projetos";
+import { invalidarFinanceiro } from "@/lib/finance/invalidar-financeiro";
 import { consulta, relacionamentoJson } from "./api";
 import {
   pagamentosDaFamilia,
@@ -96,6 +97,11 @@ export interface Cobranca {
   boletoUrl: string | null;
   pagaEm: string | null;
   formaDePagamento: string | null;
+  /** F5: o que a família pagou de fato (valor + juros + multa - desconto). Nulo enquanto não paga. */
+  valorPago: number | null;
+  juros: number;
+  multa: number;
+  desconto: number;
 }
 
 export interface FiltroDeCobrancas {
@@ -274,6 +280,10 @@ function cobranca(c: CobrancaCrua): Cobranca {
     boletoUrl: c.boletoUrl ?? null,
     pagaEm: dia(c.pagaEm),
     formaDePagamento: c.formaDePagamento ?? null,
+    valorPago: c.valorPago ?? null,
+    juros: c.juros ?? 0,
+    multa: c.multa ?? 0,
+    desconto: c.desconto ?? 0,
   };
 }
 
@@ -485,29 +495,31 @@ export function useGerarCobrancasAvulsas() {
 }
 
 export function useMarcarCobrancaPaga() {
-  const invalidar = useInvalidarPagamentos();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       id,
       data,
       formaDePagamento,
       contaFinanceiraId,
+      ...encargos
     }: {
       id: string;
       data: string;
       formaDePagamento: string;
       /** Em qual conta o dinheiro caiu. Nulo = a conta da cobrança. */
       contaFinanceiraId?: string | null;
-    }) =>
+    } & ValorPagoDaCobranca) =>
       relacionamentoJson<void>(
         `/cobrancas/${id}/marcar-paga`,
         {
           method: "POST",
-          body: JSON.stringify({ data, formaDePagamento, contaFinanceiraId: contaFinanceiraId ?? null }),
+          body: JSON.stringify({ data, formaDePagamento, contaFinanceiraId: contaFinanceiraId ?? null, ...encargos }),
         },
         "Não foi possível marcar a cobrança como paga."
       ),
-    onSuccess: invalidar,
+    // Baixa a cobrança e a receita ligada: a lista, o resumo, as receitas e o caixa mudam juntos.
+    onSuccess: () => invalidarFinanceiro(queryClient),
   });
 }
 

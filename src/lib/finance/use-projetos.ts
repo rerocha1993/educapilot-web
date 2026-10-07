@@ -215,6 +215,22 @@ export interface CobrancaDoProjeto {
   boletoUrl?: string;
   pagaEm?: string;
   formaDePagamento?: string;
+  // F5: o que a família pagou de fato. Só vêm quando o servidor os manda para a cobrança de projeto.
+  valorPago?: number | null;
+  juros?: number;
+  multa?: number;
+  desconto?: number;
+}
+
+/**
+ * F5: o que a família pagou de fato ao marcar a cobrança como paga. Com diferença, a divisão em
+ * juros, multa e desconto vai explícita e precisa fechar: valorPago = valor + juros + multa - desconto.
+ */
+export interface ValorPagoDaCobranca {
+  valorPago?: number;
+  juros?: number;
+  multa?: number;
+  desconto?: number;
 }
 
 export interface ResultadoDaGeracao {
@@ -634,10 +650,15 @@ export function useGerarCobrancas(id: string) {
 export function useMarcarPaga(id: string) {
   return useEscrita(
     id,
-    ({ cobrancaId, data, formaDePagamento }: { cobrancaId: string; data: string; formaDePagamento: string }) =>
+    ({
+      cobrancaId,
+      data,
+      formaDePagamento,
+      ...encargos
+    }: { cobrancaId: string; data: string; formaDePagamento: string } & ValorPagoDaCobranca) =>
       projetosJson<CobrancaDoProjeto>(
         `/cobrancas/${cobrancaId}/marcar-paga`,
-        { method: "POST", body: JSON.stringify({ data, formaDePagamento }) },
+        { method: "POST", body: JSON.stringify({ data, formaDePagamento, ...encargos }) },
         "Não foi possível marcar a cobrança como paga."
       ),
     true

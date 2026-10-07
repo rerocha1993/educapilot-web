@@ -205,6 +205,14 @@ export interface ConfiguracaoDoRelacionamento {
   mostrarCalendarioEscolar: boolean;
   mostrarCronograma: boolean;
   emailAoPublicar: boolean;
+  /** F5: multa por atraso, em % do valor (0 a 10; padrão 2). Vale para toda cobrança nova emitida no Asaas. */
+  multaPercentual: number;
+  /** F5: juros de mora, em % ao mês (0 a 10; padrão 1). */
+  jurosAoMesPercentual: number;
+  /** F5: desconto por pagamento adiantado, em % do valor (0 a 100; padrão 0 = sem desconto). */
+  descontoPercentual: number;
+  /** F5: até quantos dias antes do vencimento o desconto vale (0 a 30; 0 = só até o dia do vencimento). */
+  descontoAteDiasAntes: number;
 }
 
 // ------------------------------------------------------------------ normalização
@@ -307,6 +315,10 @@ function configuracao(c: Partial<ConfiguracaoDoRelacionamento> | null | undefine
     mostrarCalendarioEscolar: c?.mostrarCalendarioEscolar ?? true,
     mostrarCronograma: c?.mostrarCronograma ?? true,
     emailAoPublicar: c?.emailAoPublicar ?? true,
+    multaPercentual: c?.multaPercentual ?? 2,
+    jurosAoMesPercentual: c?.jurosAoMesPercentual ?? 1,
+    descontoPercentual: c?.descontoPercentual ?? 0,
+    descontoAteDiasAntes: c?.descontoAteDiasAntes ?? 0,
   };
 }
 

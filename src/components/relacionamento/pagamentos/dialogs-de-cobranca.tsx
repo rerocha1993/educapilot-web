@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { CamposDoValorPago, useValorPago } from "@/components/finance/valor-pago-com-diferenca";
 import { SeletorDeCarteira } from "@/components/relacionamento/pagamentos/seletor-de-carteira";
 import { Campo } from "@/components/rh/campo";
 import { Confirmacao } from "@/components/rh/confirmacao";
@@ -29,6 +30,7 @@ import {
 /** Baixa manual: a família pagou fora do link (dinheiro, transferência, na secretaria). */
 export function DialogMarcarPaga({ cobranca: x, onFechar }: { cobranca: Cobranca; onFechar: () => void }) {
   const marcar = useMarcarCobrancaPaga();
+  const valorPago = useValorPago(x.valor);
   const [data, setData] = useState(hojeIsoBrasilia());
   const [forma, setForma] = useState<FormaDePagamento>("Pix");
   // Começa na conta da cobrança; a escola troca quando o dinheiro caiu em outra (dinheiro vivo no Caixa).
@@ -37,8 +39,16 @@ export function DialogMarcarPaga({ cobranca: x, onFechar }: { cobranca: Cobranca
   async function confirmar(e: React.FormEvent) {
     e.preventDefault();
     if (!data) return void toast.error("Informe a data do pagamento.");
+    if (data > hojeIsoBrasilia()) return void toast.error("A data não pode ser no futuro.");
+    if (valorPago.problema) return void toast.error(valorPago.problema);
     try {
-      await marcar.mutateAsync({ id: x.id, data, formaDePagamento: forma, contaFinanceiraId: conta });
+      await marcar.mutateAsync({
+        id: x.id,
+        data,
+        formaDePagamento: forma,
+        contaFinanceiraId: conta,
+        ...valorPago.corpo(),
+      });
       toast.success("Cobrança marcada como paga.");
       onFechar();
     } catch (err) {
@@ -60,6 +70,7 @@ export function DialogMarcarPaga({ cobranca: x, onFechar }: { cobranca: Cobranca
           <Campo id="paga-data" rotulo="Data do pagamento">
             <Input id="paga-data" type="date" value={data} max={hojeIsoBrasilia()} onChange={(e) => setData(e.target.value)} />
           </Campo>
+          <CamposDoValorPago id="paga" estado={valorPago} desabilitado={marcar.isPending} />
           <Campo id="paga-forma" rotulo="Forma de pagamento">
             <Select value={forma} onValueChange={(v) => v && setForma(v as FormaDePagamento)}>
               <SelectTrigger id="paga-forma" className="w-full">

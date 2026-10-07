@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 
+import { ResumoDoPagamento } from "@/components/finance/resumo-do-pagamento";
 import { EtiquetaDaCobranca } from "@/components/finance/projetos/comum";
 import {
   AcoesDaCobranca,
@@ -20,10 +21,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { situacaoPelaData } from "@/lib/finance/diferenca-do-pagamento";
 import { rotuloDaForma } from "@/lib/finance/use-recibos";
 import { formatarSoData } from "@/lib/format/date";
 import { formatarMoeda } from "@/lib/rh/formatar";
-import { TAMANHOS_DA_PAGINA, useCobrancasDaEscola } from "@/lib/relacionamento/use-pagamentos";
+import { TAMANHOS_DA_PAGINA, useCobrancasDaEscola, type Cobranca } from "@/lib/relacionamento/use-pagamentos";
 import { cn } from "@/lib/utils";
 
 /**
@@ -123,6 +125,7 @@ export function ListaDeCobrancas({
                 {x.status === "Paga" && (
                   <Linha rotulo="Pagamento" valor={`${formatarSoData(x.pagaEm)} · ${rotuloDaForma(x.formaDePagamento ?? undefined)}`} />
                 )}
+                {x.status === "Paga" && <PagamentoDaCobranca x={x} />}
                 <span className="flex items-center justify-between gap-2">
                   <span>Carteira</span>
                   <CarteiraDaCobranca cobranca={x} />
@@ -172,6 +175,7 @@ export function ListaDeCobrancas({
                         {formatarSoData(x.pagaEm)} · {rotuloDaForma(x.formaDePagamento ?? undefined)}
                       </span>
                     )}
+                    {x.status === "Paga" && <PagamentoDaCobranca x={x} />}
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-normal">
@@ -237,6 +241,20 @@ export function ListaDeCobrancas({
 
       <DialogosDaCobranca dialogo={dialogo} onFechar={() => setDialogo(null)} />
     </div>
+  );
+}
+
+/** O valor pago, a divisão da diferença e a situação (no dia, antecipado, atrasado) de uma cobrança paga. */
+function PagamentoDaCobranca({ x }: { x: Cobranca }) {
+  return (
+    <ResumoDoPagamento
+      valor={x.valor}
+      valorPago={x.valorPago}
+      juros={x.juros}
+      multa={x.multa}
+      desconto={x.desconto}
+      situacao={x.pagaEm ? situacaoPelaData(x.vencimento, x.pagaEm) : null}
+    />
   );
 }
 

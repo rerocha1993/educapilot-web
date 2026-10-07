@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Inbox } from "lucide-react";
+import { Inbox, RotateCcw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -32,17 +32,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ClassificacaoDoLancamento } from "@/components/finance/classificacao-do-lancamento";
+import { DialogRegistrarRecebimento } from "@/components/finance/dialogs-de-baixa";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import { ResumoDoPagamento } from "@/components/finance/resumo-do-pagamento";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { Confirmacao } from "@/components/rh/confirmacao";
 import {
   useRevenuesByMonth,
   useCreateRevenue,
-  useMarkRevenueReceived,
+  useReabrirReceita,
   REVENUE_CATEGORIES,
   revenueStatusLabel,
   revenueCategoryLabel,
+  type RevenueEntryDto,
 } from "@/lib/finance/use-revenues";
+import { situacaoDoServidor } from "@/lib/finance/diferenca-do-pagamento";
 import { competenciaDeIso, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
 function formatCurrency(v: number) {
@@ -58,6 +63,22 @@ const STATUS_BADGE: Record<number, BadgeVariant> = {
   3: "overdue", // Vencido
   4: "waiting", // Cancelado
 };
+
+/** O que foi recebido de fato, a diferença e a situação, quando a receita já foi recebida. */
+function RecebimentoDaReceita({ r }: { r: RevenueEntryDto }) {
+  if (r.status !== 2) return null;
+  return (
+    <ResumoDoPagamento
+      valor={r.expectedAmount}
+      valorPago={r.receivedAmount}
+      juros={r.juros}
+      multa={r.multa}
+      desconto={r.desconto}
+      situacao={situacaoDoServidor(r.situacaoDoPagamento, r.diasDeAtraso)}
+      sempreComValorPago
+    />
+  );
+}
 
 const EMPTY_FORM = {
   description: "",
@@ -77,10 +98,12 @@ export default function ReceitasPage() {
 
   const { data: revenues, isLoading, isError } = useRevenuesByMonth(month, year);
   const createRevenue = useCreateRevenue();
-  const markReceived = useMarkRevenueReceived();
+  const reabrir = useReabrirReceita();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [recebendo, setRecebendo] = useState<RevenueEntryDto | null>(null);
+  const [reabrindo, setReabrindo] = useState<RevenueEntryDto | null>(null);
 
   const list = revenues ?? [];
 
@@ -109,12 +132,13 @@ export default function ReceitasPage() {
     }
   }
 
-  async function handleMarkReceived(entry: (typeof list)[number]) {
+  async function handleReabrir(entry: RevenueEntryDto) {
     try {
-      await markReceived.mutateAsync(entry);
-      toast.success("Recebimento confirmado.");
+      await reabrir.mutateAsync(entry.id);
+      toast.success("Receita reaberta. Ela voltou para as contas a receber.");
+      setReabrindo(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao confirmar recebimento.");
+      toast.error(err instanceof Error ? err.message : "Não foi possível reabrir a receita.");
     }
   }
 
@@ -163,24 +187,25 @@ export default function ReceitasPage() {
               <span className="font-mono tabular-nums text-muted-foreground">{formatarSoData(r.dueDate)}</span>
               <span className="font-mono font-semibold whitespace-nowrap tabular-nums">{formatCurrency(r.expectedAmount)}</span>
             </div>
-            {r.status !== 2 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => handleMarkReceived(r)}
-                disabled={markReceived.isPending}
-              >
-                Marcar recebido
+            <RecebimentoDaReceita r={r} />
+            {r.status !== 2 && r.status !== 4 && (
+              <Button variant="outline" size="sm" className="w-full" onClick={() => setRecebendo(r)}>
+                Registrar recebimento
               </Button>
             )}
             {r.status === 2 && (
-              <Link
-                href={`/finance/recibos/novo?revenueEntryId=${r.id}`}
-                className={buttonVariants({ variant: "outline", size: "sm", className: "w-full" })}
-              >
-                Emitir recibo
-              </Link>
+              <>
+                <Link
+                  href={`/finance/recibos/novo?revenueEntryId=${r.id}`}
+                  className={buttonVariants({ variant: "outline", size: "sm", className: "w-full" })}
+                >
+                  Emitir recibo
+                </Link>
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => setReabrindo(r)}>
+                  <RotateCcw />
+                  Reabrir
+                </Button>
+              </>
             )}
           </div>
         ))}
@@ -195,7 +220,7 @@ export default function ReceitasPage() {
               <TableHead>Vence</TableHead>
               <TableHead className="text-right">Valor previsto</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-36 text-right">Ações</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -229,28 +254,34 @@ export default function ReceitasPage() {
                 <TableCell className="text-right font-mono text-sm font-semibold tabular-nums">
                   {formatCurrency(r.expectedAmount)}
                 </TableCell>
-                <TableCell>
-                  <Badge variant={STATUS_BADGE[r.status] ?? "waiting"}>{revenueStatusLabel(r.status)}</Badge>
+                <TableCell className="whitespace-normal">
+                  <div className="grid gap-1">
+                    <Badge variant={STATUS_BADGE[r.status] ?? "waiting"}>{revenueStatusLabel(r.status)}</Badge>
+                    <RecebimentoDaReceita r={r} />
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  {r.status !== 2 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleMarkReceived(r)}
-                      disabled={markReceived.isPending}
-                    >
-                      Marcar recebido
-                    </Button>
-                  )}
-                  {r.status === 2 && (
-                    <Link
-                      href={`/finance/recibos/novo?revenueEntryId=${r.id}`}
-                      className={buttonVariants({ variant: "outline", size: "sm" })}
-                    >
-                      Emitir recibo
-                    </Link>
-                  )}
+                  <div className="flex flex-wrap items-center justify-end gap-1.5">
+                    {r.status !== 2 && r.status !== 4 && (
+                      <Button variant="outline" size="sm" onClick={() => setRecebendo(r)}>
+                        Registrar recebimento
+                      </Button>
+                    )}
+                    {r.status === 2 && (
+                      <>
+                        <Link
+                          href={`/finance/recibos/novo?revenueEntryId=${r.id}`}
+                          className={buttonVariants({ variant: "outline", size: "sm" })}
+                        >
+                          Emitir recibo
+                        </Link>
+                        <Button variant="ghost" size="sm" onClick={() => setReabrindo(r)}>
+                          <RotateCcw />
+                          Reabrir
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -340,6 +371,19 @@ export default function ReceitasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {recebendo && <DialogRegistrarRecebimento receita={recebendo} onFechar={() => setRecebendo(null)} />}
+
+      {reabrindo && (
+        <Confirmacao
+          titulo="Reabrir esta receita?"
+          descricao={`${reabrindo.description ?? "A receita"} volta para as contas a receber e o recebimento registrado (data, valor, juros, multa e desconto) é apagado. Atenção: se ela veio de uma cobrança, a cobrança ligada também é reaberta, mesmo que tenha sido paga pelo Asaas. Use só se o recebimento foi registrado por engano.`}
+          rotuloConfirmar="Reabrir receita"
+          pendente={reabrir.isPending}
+          onConfirmar={() => handleReabrir(reabrindo)}
+          onFechar={() => setReabrindo(null)}
+        />
+      )}
     </div>
   );
 }
