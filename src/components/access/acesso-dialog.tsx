@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SeletorDeAcesso } from "@/components/access/seletor-de-acesso";
+import { SeletorDeAcesso, acessoSemModulo } from "@/components/access/seletor-de-acesso";
 import {
   useAcessoDoUsuario,
   useSalvarAcesso,
@@ -64,12 +64,13 @@ export function AcessoDialog({
         ) : (
           <SeletorDeAcesso valor={valor} onChange={setEditado} />
         )}
+        {!isLoading && acessoSemModulo(valor) && <p className="text-sm text-destructive">Marque ao menos um módulo para este acesso.</p>}
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={handleSalvar} disabled={salvar.isPending || isLoading}>
+          <Button onClick={handleSalvar} disabled={salvar.isPending || isLoading || acessoSemModulo(valor)}>
             {salvar.isPending ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

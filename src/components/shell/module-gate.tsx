@@ -1,7 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { INICIO_HREF } from "@/lib/kernel/nav-items";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { findNavItemForPath } from "@/lib/kernel/nav-items";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
@@ -21,13 +23,23 @@ import { podeVerRota } from "@/lib/access/pode-ver";
 export function ModuleGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: activeModules, isLoading } = useActiveModules();
-  const { data: meuAcesso, isLoading: acessoCarregando } = useMeuAcesso();
+  const { data: meuAcesso, isLoading: acessoCarregando, isError: acessoFalhou } = useMeuAcesso();
   const navItem = findNavItemForPath(pathname);
 
   // Espera as duas respostas antes de decidir: falha fechado, sem piscar conteúdo que a pessoa
   // talvez não possa ver.
   if (isLoading || acessoCarregando) {
     return null;
+  }
+
+  // Sem saber o acesso, nada abre. Antes, a falha deixava o acesso indefinido — que a regra de
+  // legado lê como "sem permissão gravada, vê tudo" — e qualquer tela passava.
+  if (acessoFalhou) {
+    return (
+      <Aviso titulo="Não foi possível conferir seu acesso">
+        Recarregue a página. Se continuar, saia e entre de novo.
+      </Aviso>
+    );
   }
 
   if (navItem && navItem.moduleSlug !== null) {
@@ -54,14 +66,27 @@ export function ModuleGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Aviso de bloqueio com saída de verdade.
+ *
+ * O link antigo levava sempre para "/" — que é a Chamada, e quem não tem a Chamada caía num
+ * segundo "Sem acesso". Voltar leva para onde a pessoa estava; Início é aberto a todo mundo.
+ */
 function Aviso({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-16 text-center">
       <p className="font-heading text-lg font-semibold">{titulo}</p>
       <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
-      <Link href="/" className="text-sm text-primary hover:underline">
-        Voltar pra Rotina
-      </Link>
+      <div className="mt-3 flex gap-2">
+        <Button variant="outline" onClick={() => router.back()}>
+          Voltar
+        </Button>
+        <Link href={INICIO_HREF} className={buttonVariants()}>
+          Ir para o Início
+        </Link>
+      </div>
     </div>
   );
 }

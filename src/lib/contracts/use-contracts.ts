@@ -33,6 +33,9 @@ export interface Contract {
   copiaEnviadaEm: string | null;
   temArquivoAssinado: boolean;
   temArquivoAuditoria: boolean;
+  /** Arquivado pela escola: assinado, mas substituído. Nulo = em uso. */
+  arquivadoEm?: string | null;
+  motivoArquivamento?: string | null;
   signatarios: ContractSigner[];
 }
 
@@ -80,6 +83,40 @@ export function useRejectContract() {
         body: { motivo: input.motivo },
       });
       unwrapApiResponse(result, "Não foi possível reprovar o contrato.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contracts"] }),
+  });
+}
+
+/**
+ * Arquiva um contrato assinado que a escola substituiu (a família preencheu com erro e refez).
+ *
+ * Contrato assinado não se exclui — é prova, e a assinatura continua no provedor. Arquivar tira da
+ * lista e da fila de aprovação, guardando o motivo.
+ */
+export function useArchiveContract() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; motivo: string }) => {
+      const result = await flowApi.POST("/api/Contracts/{id}/arquivar", {
+        params: { path: { id: input.id } },
+        body: { motivo: input.motivo },
+      });
+      unwrapApiResponse(result, "Não foi possível arquivar o contrato.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contracts"] }),
+  });
+}
+
+/** Devolve um contrato arquivado à lista. */
+export function useUnarchiveContract() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await flowApi.POST("/api/Contracts/{id}/desarquivar", {
+        params: { path: { id } },
+      });
+      unwrapApiResponse(result, "Não foi possível desarquivar o contrato.");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contracts"] }),
   });

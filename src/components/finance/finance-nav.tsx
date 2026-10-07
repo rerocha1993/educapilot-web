@@ -7,12 +7,16 @@ import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
 
 const ITEMS = [
-  { href: "/finance", label: "Fluxo de caixa" },
+  { href: "/finance", label: "Painel" },
   { href: "/finance/despesas", label: "Despesas" },
   { href: "/finance/receitas", label: "Receitas" },
   { href: "/finance/mensalidades", label: "Mensalidades" },
   { href: "/finance/inadimplencia", label: "Inadimplência" },
   { href: "/finance/orcamento", label: "Orçamento" },
+  { href: "/finance/contas", label: "Contas" },
+  { href: "/finance/conciliacao", label: "Conciliação" },
+  { href: "/finance/plano-de-contas", label: "Plano de contas" },
+  { href: "/finance/fechamento", label: "Fechamento" },
 ];
 
 export function FinanceNav() {

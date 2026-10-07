@@ -3,10 +3,20 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AREAS_SUGERIDAS, PERFIS } from "@/lib/access/perfis";
+import { AREAS_SUGERIDAS, PERFIS, ehGestao } from "@/lib/access/perfis";
 import { cn } from "@/lib/utils";
 import { useCatalogoDeAcesso, type AcessoDoUsuario } from "@/lib/access/use-acessos";
 import { useClasses } from "@/lib/kernel/use-classes";
+
+/**
+ * Acesso que não pode ser gravado: quem não é gestão sem nenhum módulo marcado.
+ *
+ * "Nenhuma permissão gravada" é a regra de legado que libera tudo (ver podeVerArea). Deixar gravar
+ * isso fazia um professor com tudo desmarcado ganhar Administração e Financeiro.
+ */
+export function acessoSemModulo(valor: AcessoDoUsuario): boolean {
+  return !ehGestao(valor.userType) && valor.modulos.length === 0;
+}
 
 /**
  * Escolhe o que uma pessoa pode ver.
@@ -70,7 +80,10 @@ export function SeletorDeAcesso({
         // Voltou a ter todas: grava vazio de novo, para que uma área nova criada amanhã já entre
         // para quem tinha o módulo completo.
         return { ...m, areas: proximas.length === todas.length ? [] : proximas };
-      }),
+      })
+        // Desmarcou a última área: o módulo sai. Ficar com a lista vazia seria "módulo inteiro" —
+        // tirar a única área liberava todas as outras.
+        .filter((m) => m.moduloSlug !== moduloSlug || marcada || m.areas.length > 0 || todas.length === 0),
     });
   }
 

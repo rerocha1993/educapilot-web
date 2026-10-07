@@ -23,6 +23,11 @@ export interface ExpenseDto {
   centroCusto: string | null;
   competenciaMes: number;
   competenciaAno: number;
+
+  // Fase 1 do financeiro: conta, plano de contas e centro de custo cadastrados.
+  bancoContaId?: string | null;
+  categoriaFinanceiraId?: string | null;
+  centroDeCustoId?: string | null;
 }
 
 export function useExpensesByMonth(month: number, year: number) {
@@ -46,6 +51,13 @@ export interface CreateExpenseInput {
   centroCusto?: string;
   competenciaMes: number;
   competenciaAno: number;
+
+  // Fase 1 do financeiro: conta, plano de contas e centro de custo cadastrados. Ainda não
+  // estão nos tipos gerados do Swagger — o corpo é montado por spread, então o TypeScript
+  // aceita a propriedade a mais, e o backend já lê os três.
+  bancoContaId?: string | null;
+  categoriaFinanceiraId?: string | null;
+  centroDeCustoId?: string | null;
 }
 
 export function useCreateExpense() {

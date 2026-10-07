@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { clearSession, getToken } from "@/lib/auth/session";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost:7141";
@@ -96,36 +96,5 @@ export function useResumoDeFormularios(formIds?: string[]) {
         {},
         "Não foi possível carregar o resumo dos formulários."
       ),
-  });
-}
-
-/** Formulários que esta pessoa escolheu ver no painel, na ordem dela. Vazio = nada escolhido. */
-export function usePainelDeFormularios() {
-  return useQuery({
-    queryKey: ["flow", "painel-formularios"],
-    staleTime: 5 * 60_000,
-    queryFn: () =>
-      chamar<string[]>(
-        "/api/Flow/painel/formularios",
-        {},
-        "Não foi possível carregar os formulários do painel."
-      ),
-  });
-}
-
-export function useSalvarPainelDeFormularios() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (formIds: string[]) =>
-      chamar<string[]>(
-        "/api/Flow/painel/formularios",
-        { method: "PUT", body: JSON.stringify({ formIds }) },
-        "Não foi possível salvar a escolha."
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["flow", "painel-formularios"] });
-      queryClient.invalidateQueries({ queryKey: ["painel", "inicio"] });
-    },
   });
 }

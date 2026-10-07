@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { podeVerRota } from "@/lib/access/pode-ver";
 
 const ITEMS = [
   { href: "/events", label: "Dashboard" },
@@ -13,13 +15,17 @@ const ITEMS = [
 
 export function EventsNav() {
   const pathname = usePathname();
+  const { data: meuAcesso, isLoading, isError } = useMeuAcesso();
+
+  // Só as abas que a pessoa pode abrir — mesma regra da Rotina.
+  const itens = isLoading || isError ? [] : ITEMS.filter((item) => podeVerRota(meuAcesso, item.href));
 
   return (
     // Pílulas do guia: faixa cinza, ativo em branco com sombra leve. A faixa tem largura de
     // conteúdo (w-max) para o rolar horizontal do celular não deixar uma sobra cinza à direita.
     <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
       <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
-        {ITEMS.map((item) => {
+        {itens.map((item) => {
           const active =
             pathname === item.href || (item.href !== "/events" && pathname.startsWith(`${item.href}/`));
           return (

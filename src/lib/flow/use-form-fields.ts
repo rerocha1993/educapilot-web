@@ -30,6 +30,10 @@ export const FIELD_TYPES = [
   // Novo (2026-09): ao digitar o CEP, busca o endereço e preenche os campos marcados com
   // Config.preenchidoPeloCep. Ver lib/flow/cep.ts.
   { value: "cep", label: "CEP (busca o endereço)" },
+  // Novo (2026-10): grade de linhas x colunas, uma escolha por linha — a anamnese pergunta
+  // "apetite", "sono", "concentração" e cada um vai de "pouco" a "muito". As linhas e as colunas
+  // ficam em Config.linhas/colunas; a resposta é um objeto JSON { linha: coluna }.
+  { value: "tabela", label: "Tabela (uma escolha por linha)" },
 ] as const;
 
 // Tipos cuja UI de edição precisa de um editor de opções estáticas (Opcoes).
@@ -60,6 +64,10 @@ export interface FieldConfig {
   maxLength?: number;
   maxEstrelas?: number;
   visibleIf?: VisibleIfConfig;
+
+  /** Campo "tabela": perguntas (linhas) e a escala que vale para todas (colunas). */
+  linhas?: string[];
+  colunas?: string[];
 
   // Rematrícula (2026-09) — preenchimento automático a partir do cadastro.
   //
@@ -193,6 +201,31 @@ export function decodeOpcoes(opcoes: string | null | undefined): string[] {
   }
 }
 
+// Resposta de um campo "tabela": objeto JSON { linha: coluna escolhida }. Linha sem escolha não
+// entra no objeto — é assim que o backend sabe quais faltam num campo obrigatório.
+export function decodeTabela(valor: string | null | undefined): Record<string, string> {
+  if (!valor) return {};
+  try {
+    const parsed = JSON.parse(valor);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, v]) => typeof v === "string" && v !== "")
+    ) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+export function encodeTabela(respostas: Record<string, string>): string {
+  return Object.keys(respostas).length === 0 ? "" : JSON.stringify(respostas);
+}
+
+/** "Apetite: Muito; Sono: Pouco" — para ler a resposta fora do formulário (listas, Excel). */
+export function formatarTabela(valor: string | null | undefined, linhas?: string[]): string {
+  const respostas = decodeTabela(valor);
+  const ordem = linhas && linhas.length > 0 ? linhas.filter((l) => l in respostas) : Object.keys(respostas);
+  return ordem.map((l) => `${l}: ${respostas[l]}`).join("; ");
+}
+
 export function useCreateFormField(formId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -217,7 +250,10 @@ export function useCreateFormField(formId: string) {
           opcoes: input.opcoes ?? null,
         },
       });
-      unwrapApiResponse(result, "Não foi possível criar o campo.");
+      // Devolve o campo criado: quem liga "este formulário gera contrato" precisa do id para
+      // abrir a configuração do campo na sequência, sem esperar a lista recarregar.
+      const data = unwrapApiResponse(result, "Não foi possível criar o campo.");
+      return data as unknown as FormFieldDto;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forms", formId] }),
   });

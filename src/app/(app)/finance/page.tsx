@@ -1,45 +1,44 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { AlertTriangle, ChevronDown, ChevronRight, Info, TriangleAlert } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
-import { cn } from "@/lib/utils";
-import { useFinancialSeries } from "@/lib/finance/use-financial-projection";
+import { GraficoDeCaixa } from "@/components/finance/grafico-de-caixa";
+import {
+  usePainelFinanceiro,
+  type AlertaDoPainel,
+  type Indicador,
+  type LinhaDoResultado,
+} from "@/lib/finance/use-painel-financeiro";
 
-function formatCurrency(v: number) {
+const MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+function dinheiro(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const MONTH_NAMES = [
-  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez",
-];
+export default function PainelFinanceiroPage() {
+  const hoje = new Date();
+  const [ano, setAno] = useState(hoje.getFullYear());
+  const [mes, setMes] = useState(hoje.getMonth() + 1);
 
-export default function FluxoDeCaixaPage() {
-  const now = useMemo(() => new Date(), []);
-  const [months] = useState(6);
+  const { data: painel, isLoading, isError, error } = usePainelFinanceiro(ano, mes);
 
-  // últimos `months` incluindo o atual, então avança 1 mês além (projeção)
-  const startMonth = now.getMonth() + 1;
-  const startYear = now.getFullYear();
-  const start = new Date(startYear, startMonth - 1 - (months - 2), 1);
+  function mover(passo: number) {
+    const referencia = new Date(ano, mes - 1 + passo, 1);
+    setAno(referencia.getFullYear());
+    setMes(referencia.getMonth() + 1);
+  }
 
-  const { data: series, isLoading, isError } = useFinancialSeries(
-    start.getMonth() + 1,
-    start.getFullYear(),
-    months
-  );
-
-  const totals = (series ?? []).reduce(
-    (acc, m) => ({
-      entradas: acc.entradas + m.totalReceitasRecebidas,
-      saidas: acc.saidas + m.totalDespesasPagas,
-    }),
-    { entradas: 0, saidas: 0 }
-  );
-  const saldoProjetado = (series ?? []).reduce((s, m) => s + m.saldo, 0);
-
-  const maxValue = Math.max(1, ...(series ?? []).flatMap((m) => [m.totalReceitas, m.totalDespesas]));
+  const noFuturo = ano > hoje.getFullYear() || (ano === hoje.getFullYear() && mes >= hoje.getMonth() + 1);
 
   return (
     <div className="flex flex-col gap-[18px]">
@@ -47,123 +46,316 @@ export default function FluxoDeCaixaPage() {
 
       <CabecalhoDaPagina
         eyebrow="Financeiro"
-        titulo="Fluxo de caixa"
-        apoio={
-          <>
-            Últimos <span className="font-mono tabular-nums">{months}</span> meses — meses futuros são projeção.
-          </>
+        titulo="Painel"
+        apoio={`${MESES[mes - 1]} de ${ano}`}
+        acoes={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" aria-label="Mês anterior" onClick={() => mover(-1)}>
+              −
+            </Button>
+            <Button variant="outline" size="icon" aria-label="Próximo mês" disabled={noFuturo} onClick={() => mover(1)}>
+              +
+            </Button>
+          </div>
         }
       />
 
       {isError && (
         <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
-          Não foi possível carregar o fluxo de caixa.
+          {error instanceof Error ? error.message : "Não foi possível carregar o painel."}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-[18px]">
-          <p className="text-[12.5px] font-medium text-muted-foreground">Entradas (recebido)</p>
-          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums text-success-soft-foreground">
-            {formatCurrency(totals.entradas)}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-[18px]">
-          <p className="text-[12.5px] font-medium text-muted-foreground">Saídas (pago)</p>
-          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
-            {formatCurrency(totals.saidas)}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-[18px]">
-          <p className="text-[12.5px] font-medium text-muted-foreground">Saldo projetado</p>
-          <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
-            {formatCurrency(saldoProjetado)}
-          </p>
-        </div>
-      </div>
+      {isLoading && (
+        <>
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </>
+      )}
 
-      <div className="rounded-xl border border-border bg-card p-[18px] pb-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-heading text-[15.5px] font-semibold">Entradas x Saídas por mês</h2>
-          <div className="flex flex-wrap gap-3.5 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="size-2 rounded-[2px] bg-chart-1" />
-              Receitas
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="size-2 rounded-[2px] bg-chart-2" />
-              Despesas
-            </span>
-          </div>
-        </div>
-
-        {isLoading && <Skeleton className="mt-5 h-48 w-full" />}
-
-        {!isLoading && (
-          <div className="mt-5 flex items-end justify-between gap-2 overflow-x-auto pb-2 md:justify-start md:gap-6">
-            {series?.map((m) => {
-              const isProjection = m.ano > now.getFullYear() || (m.ano === now.getFullYear() && m.mes > now.getMonth() + 1);
-              return (
-                <div key={`${m.ano}-${m.mes}`} className="flex flex-col items-center gap-2">
-                  <div className="flex h-[150px] items-end gap-1.5">
-                    <div
-                      className={cn("w-3 rounded-t-[5px] bg-chart-1", isProjection && "opacity-40")}
-                      style={{ height: `${(m.totalReceitas / maxValue) * 100}%` }}
-                      title={`Receitas: ${formatCurrency(m.totalReceitas)}`}
-                    />
-                    <div
-                      className={cn("w-3 rounded-t-[5px] bg-chart-2", isProjection && "opacity-40")}
-                      style={{ height: `${(m.totalDespesas / maxValue) * 100}%` }}
-                      title={`Despesas: ${formatCurrency(m.totalDespesas)}`}
-                    />
-                  </div>
-                  <span className="font-mono text-[11.5px] tabular-nums text-muted-foreground">
-                    {MONTH_NAMES[m.mes - 1]}
-                    {isProjection && "*"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <p className="mt-2 text-xs text-muted-foreground">
-          * mês atual/futuro = projeção (opacidade reduzida)
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2.5">
-        <h2 className="font-heading text-[15.5px] font-semibold">Resumo mensal</h2>
-
-        {/* md+: linhas de tabela com cabeçalho de coluna do guia. Celular: lista de cartões. */}
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="hidden grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] gap-3 border-b border-border bg-muted/40 px-[18px] py-3 text-[11px] font-bold tracking-[.1em] text-muted-foreground uppercase md:grid">
-            <span>Mês</span>
-            <span className="text-right">Entradas</span>
-            <span className="text-right">Saídas</span>
-            <span className="text-right">Saldo</span>
-          </div>
-
-          {series?.map((m) => (
-            <div
-              key={`${m.ano}-${m.mes}-resumo`}
-              className="grid grid-cols-2 gap-x-3 gap-y-1 border-b border-border px-4 py-3 text-sm last:border-b-0 md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] md:items-center md:gap-3 md:px-[18px]"
-            >
-              <span className="font-mono font-semibold tabular-nums">
-                {MONTH_NAMES[m.mes - 1]}/{m.ano}
-              </span>
-              <span className="text-right font-mono whitespace-nowrap tabular-nums text-success-soft-foreground">
-                +{formatCurrency(m.totalReceitasRecebidas)}
-              </span>
-              <span className="font-mono whitespace-nowrap tabular-nums text-destructive-soft-foreground md:text-right">
-                -{formatCurrency(m.totalDespesasPagas)}
-              </span>
-              <span className="text-right font-mono font-semibold whitespace-nowrap tabular-nums">
-                {formatCurrency(m.saldo)}
-              </span>
+      {painel && (
+        <>
+          {painel.alertas.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {painel.alertas.map((alerta) => (
+                <Alerta key={alerta.codigo} alerta={alerta} />
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+            <Cartao indicador={painel.recebido} rotulo="Entrou no mês" positivo />
+            <Cartao indicador={painel.pago} rotulo="Saiu no mês" />
+            <Cartao indicador={painel.resultado} rotulo="Sobrou" destacarSinal />
+            <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Em caixa hoje</p>
+              <p className="mt-2 font-heading font-mono text-[clamp(20px,2.2vw,28px)] leading-none font-semibold tracking-[-.03em] tabular-nums">
+                {dinheiro(painel.saldoEmCaixa)}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">Somando as contas ativas.</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-[18px]">
+            <h2 className="font-heading text-[15.5px] font-semibold">Entradas, saídas e saldo</h2>
+            <p className="mt-1 text-[12.5px] text-muted-foreground">
+              Doze meses para trás e três à frente, para a decisão de hoje caber numa tela.
+            </p>
+            <div className="mt-3.5">
+              <GraficoDeCaixa meses={painel.projecao} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+            <Resultado titulo="De onde veio o dinheiro" linhas={painel.receitas} />
+            <Resultado titulo="Para onde foi" linhas={painel.despesas} />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-3">
+            <div className="rounded-xl border border-border bg-card p-[18px] lg:col-span-2">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h2 className="font-heading text-[15.5px] font-semibold">Mensalidade em atraso</h2>
+                  <p className="mt-1 text-[12.5px] text-muted-foreground">
+                    {painel.cobrancasEmAtraso} cobrança(s), {dinheiro(painel.emAtraso)} no total.
+                  </p>
+                </div>
+                <Link
+                  href="/finance/inadimplencia"
+                  className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-medium transition-colors hover:bg-muted"
+                >
+                  Ver quem
+                </Link>
+              </div>
+
+              {painel.emAtraso === 0 ? (
+                <p className="mt-3.5 text-sm text-muted-foreground">Nenhuma mensalidade em atraso.</p>
+              ) : (
+                <>
+                  <div className="mt-3.5 flex flex-col gap-2">
+                    {painel.aging.map((faixa) => {
+                      const proporcao = painel.emAtraso === 0 ? 0 : (faixa.valor / painel.emAtraso) * 100;
+                      return (
+                        <div key={faixa.faixa} className="flex flex-col gap-1">
+                          <div className="flex flex-wrap items-baseline justify-between gap-2 text-[12.5px]">
+                            <span>
+                              {faixa.faixa}
+                              <span className="ml-1.5 text-muted-foreground">
+                                {faixa.cobrancas} cobrança(s)
+                              </span>
+                            </span>
+                            <span className="font-mono tabular-nums">{dinheiro(faixa.valor)}</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-chart-2"
+                              style={{ width: `${Math.max(proporcao, faixa.valor > 0 ? 2 : 0)}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {painel.atrasoPorTurma.length > 0 && (
+                    <div className="mt-4 border-t border-border pt-3.5">
+                      <p className="text-xs font-medium text-muted-foreground">Por turma</p>
+                      <div className="mt-2 flex flex-col divide-y divide-border">
+                        {painel.atrasoPorTurma.map((turma) => (
+                          <div
+                            key={`${turma.turmaId ?? "sem"}-${turma.turma}`}
+                            className="flex flex-wrap items-center justify-between gap-2 py-1.5 text-[12.5px]"
+                          >
+                            <span>
+                              {turma.turma}
+                              <span className="ml-1.5 text-muted-foreground">
+                                {turma.alunos} aluno(s)
+                              </span>
+                            </span>
+                            <span className="font-mono tabular-nums">{dinheiro(turma.valor)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3.5">
+              <div className="rounded-xl border border-border bg-card p-[18px]">
+                <p className="text-[12.5px] font-medium text-muted-foreground">Mensalidade média</p>
+                <p className="mt-2 font-heading font-mono text-[clamp(20px,2.2vw,26px)] leading-none font-semibold tabular-nums">
+                  {dinheiro(painel.ticketMedio)}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Entre {painel.alunosComPlano} aluno(s) com plano ativo.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-[18px]">
+                <h2 className="font-heading text-[15.5px] font-semibold">Maiores gastos do mês</h2>
+                {painel.maioresGastos.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted-foreground">Nada pago neste mês ainda.</p>
+                ) : (
+                  <div className="mt-3 flex flex-col divide-y divide-border">
+                    {painel.maioresGastos.map((gasto) => (
+                      <div key={gasto.nome} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
+                        <span className="min-w-0 text-[12.5px] break-words">{gasto.nome}</span>
+                        <span className="font-mono text-[12.5px] tabular-nums">{dinheiro(gasto.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Cartao({
+  indicador,
+  rotulo,
+  positivo,
+  destacarSinal,
+}: {
+  indicador: Indicador;
+  rotulo: string;
+  positivo?: boolean;
+  destacarSinal?: boolean;
+}) {
+  const cor = destacarSinal
+    ? indicador.valor < 0
+      ? "text-destructive-soft-foreground"
+      : "text-success-soft-foreground"
+    : positivo
+      ? "text-success-soft-foreground"
+      : "";
+
+  // A variação só vira texto quando houve base de comparação: "+∞%" contra um mês vazio não
+  // informa nada e ainda parece uma notícia boa.
+  const variacao = indicador.variacao;
+  const subiu = variacao != null && variacao > 0;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-[18px]">
+      <p className="text-[12.5px] font-medium text-muted-foreground">{rotulo}</p>
+      <p
+        className={`mt-2 font-heading font-mono text-[clamp(20px,2.2vw,28px)] leading-none font-semibold tracking-[-.03em] tabular-nums ${cor}`}
+      >
+        {dinheiro(indicador.valor)}
+      </p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {variacao == null ? (
+          "Sem mês anterior para comparar."
+        ) : (
+          <>
+            <span className={subiu ? "text-success-soft-foreground" : "text-destructive-soft-foreground"}>
+              {subiu ? "+" : ""}
+              {variacao}%
+            </span>{" "}
+            vs. mês anterior
+            {indicador.anoPassado != null && indicador.anoPassado !== 0 && (
+              <> · {dinheiro(indicador.anoPassado)} no ano passado</>
+            )}
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
+function Resultado({ titulo, linhas }: { titulo: string; linhas: LinhaDoResultado[] }) {
+  const [aberto, setAberto] = useState<string | null>(null);
+  const total = linhas.reduce((soma, l) => soma + l.valor, 0);
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-[18px]">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="font-heading text-[15.5px] font-semibold">{titulo}</h2>
+        <span className="font-mono text-sm tabular-nums">{dinheiro(total)}</span>
       </div>
+
+      {linhas.length === 0 ? (
+        <p className="mt-3.5 text-sm text-muted-foreground">Nada lançado neste mês.</p>
+      ) : (
+        <div className="mt-3.5 flex flex-col gap-2.5">
+          {linhas.map((linha) => {
+            const expandido = aberto === linha.nome;
+            return (
+              <div key={linha.nome} className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => setAberto(expandido ? null : linha.nome)}
+                  className="flex flex-wrap items-baseline justify-between gap-2 text-left text-[12.5px]"
+                >
+                  <span className="flex items-center gap-1">
+                    {expandido ? (
+                      <ChevronDown className="size-3.5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="size-3.5 text-muted-foreground" />
+                    )}
+                    {linha.nome}
+                  </span>
+                  <span className="flex items-baseline gap-2">
+                    <span className="text-muted-foreground">{linha.percentual}%</span>
+                    <span className="font-mono tabular-nums">{dinheiro(linha.valor)}</span>
+                  </span>
+                </button>
+
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={`h-full rounded-full ${linha.tipo === "Receita" ? "bg-chart-1" : "bg-chart-2"}`}
+                    style={{ width: `${Math.max(linha.percentual, 2)}%` }}
+                  />
+                </div>
+
+                {expandido && linha.contas.length > 0 && (
+                  <div className="mt-1 ml-4.5 flex flex-col divide-y divide-border border-l border-border pl-2.5">
+                    {linha.contas.map((conta) => (
+                      <span
+                        key={conta.nome}
+                        className="flex flex-wrap items-baseline justify-between gap-2 py-1 text-xs text-muted-foreground"
+                      >
+                        <span className="min-w-0 break-words">{conta.nome}</span>
+                        <span className="font-mono tabular-nums">{dinheiro(conta.valor)}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Alerta({ alerta }: { alerta: AlertaDoPainel }) {
+  const estilo =
+    alerta.gravidade === "grave"
+      ? "border-destructive-border bg-destructive-soft text-destructive-soft-foreground"
+      : alerta.gravidade === "atencao"
+        ? "border-border bg-muted"
+        : "border-border bg-card";
+
+  const Icone = alerta.gravidade === "grave" ? TriangleAlert : alerta.gravidade === "atencao" ? AlertTriangle : Info;
+
+  return (
+    <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3 text-sm ${estilo}`}>
+      <span className="flex min-w-0 items-center gap-2.5">
+        <Icone className="size-4 shrink-0" />
+        <span className="break-words">{alerta.texto}</span>
+      </span>
+      {alerta.link && (
+        <Link href={alerta.link} className="shrink-0 text-[12.5px] font-medium underline">
+          Resolver
+        </Link>
+      )}
     </div>
   );
 }

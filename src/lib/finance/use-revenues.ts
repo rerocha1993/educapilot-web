@@ -64,6 +64,13 @@ export interface CreateRevenueInput {
   dueDate: string;
   competencyMonth: number;
   competencyYear: number;
+
+  // Fase 1 do financeiro: conta, plano de contas e centro de custo cadastrados. Ainda não
+  // estão nos tipos gerados do Swagger — como o corpo é montado por spread, o TypeScript não
+  // reclama de propriedade a mais, e o backend já lê os três.
+  bancoContaId?: string | null;
+  categoriaFinanceiraId?: string | null;
+  centroDeCustoId?: string | null;
 }
 
 export function useCreateRevenue() {

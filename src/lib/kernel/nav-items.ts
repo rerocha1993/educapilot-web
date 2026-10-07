@@ -69,6 +69,29 @@ export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]>
 };
 
 /**
+ * Por onde entrar em cada módulo, na ordem de preferência.
+ *
+ * O item do menu aponta para a tela âncora do módulo, e ela tem área própria: "/" é a Chamada e
+ * "/flow" são os Formulários. Quem não tem essa área clicava no módulo e caía em "Sem acesso" — a
+ * professora com só o Quadro, em Fluxos. O menu leva para a primeira destas que a pessoa pode abrir.
+ */
+export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
+  "/": ["/", "/ocorrencias", "/checklist", "/planejamento-semanal", "/materiais", "/reunioes", "/relatorios"],
+  "/flow": ["/flow", "/flow/tarefas", "/flow/respostas", "/admin/contratos", "/flow/relatorios", "/flow/referencias"],
+};
+
+/**
+ * Telas que moram na pasta de outro módulo.
+ *
+ * Contratos foi para Administração, mas continua sendo Fluxos para efeito de contratação: sem
+ * esta linha, findNavItemForPath não acharia dono para /admin/contratos e a checagem "a escola
+ * contratou o módulo?" sumiria só nessa tela.
+ */
+const ROTAS_HOSPEDADAS: { prefixo: string; dono: string }[] = [
+  { prefixo: "/admin/contratos", dono: "/flow" },
+];
+
+/**
  * Os dois grupos do menu, na ordem da entrega de design: Operação é o dia a dia, Escola é o que
  * se ajusta de vez em quando. Cada href vem de NAV_ITEMS ou é Início/Administração, que não são
  * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.
@@ -80,6 +103,11 @@ export const GRUPOS_DO_MENU = [
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */
 export function findNavItemForPath(pathname: string) {
+  const hospedada = ROTAS_HOSPEDADAS.find(
+    (r) => pathname === r.prefixo || pathname.startsWith(`${r.prefixo}/`)
+  );
+  if (hospedada) return NAV_ITEMS.find((item) => item.href === hospedada.dono);
+
   return NAV_ITEMS.filter(
     (item) =>
       pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`))

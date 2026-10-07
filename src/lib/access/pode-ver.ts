@@ -22,6 +22,11 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/flow\/tarefas/, modulo: "flow", area: null },
   { padrao: /^\/flow\/respostas/, modulo: "flow", area: "respostas" },
   { padrao: /^\/flow\/[^/]+\/respostas/, modulo: "flow", area: "respostas" },
+  // Contratos mora em /admin (2026-09) mas continua sendo área de Fluxos: quem via contratos
+  // antes vê agora, e quem não via continua sem ver. Precisa vir antes de /^\/admin/, que é a
+  // entrada de Administração — a primeira linha que casa é a que vale.
+  { padrao: /^\/admin\/contratos/, modulo: "flow", area: "contratos" },
+  // A rota antiga continua no catálogo porque continua existindo (redireciona para a nova).
   { padrao: /^\/flow\/contratos/, modulo: "flow", area: "contratos" },
   { padrao: /^\/flow\/referencias/, modulo: "flow", area: "referencias" },
   { padrao: /^\/flow\/relatorios/, modulo: "flow", area: "relatorios" },
@@ -43,6 +48,10 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/finance\/despesas/, modulo: "finance", area: "despesas" },
   { padrao: /^\/finance\/orcamento/, modulo: "finance", area: "orcamento" },
   { padrao: /^\/finance\/inadimplencia/, modulo: "finance", area: "inadimplencia" },
+  { padrao: /^\/finance\/contas/, modulo: "finance", area: "contas" },
+  { padrao: /^\/finance\/conciliacao/, modulo: "finance", area: "conciliacao" },
+  { padrao: /^\/finance\/plano-de-contas/, modulo: "finance", area: "plano-de-contas" },
+  { padrao: /^\/finance\/fechamento/, modulo: "finance", area: "fechamento" },
   { padrao: /^\/finance/, modulo: "finance", area: null },
 
   // Eventos & Vendas

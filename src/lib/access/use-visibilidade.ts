@@ -1,7 +1,7 @@
 "use client";
 
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
-import { slugDeAcesso } from "@/lib/kernel/nav-items";
+import { ENTRADAS_DO_MODULO, slugDeAcesso } from "@/lib/kernel/nav-items";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { acessoDaRota, podeVerRota } from "@/lib/access/pode-ver";
 
@@ -18,8 +18,10 @@ import { acessoDaRota, podeVerRota } from "@/lib/access/pode-ver";
  */
 export function useVisibilidade() {
   const { data: activeModules, isLoading: modulosCarregando } = useActiveModules();
-  const { data: meuAcesso, isLoading: acessoCarregando } = useMeuAcesso();
-  const carregando = modulosCarregando || acessoCarregando;
+  const { data: meuAcesso, isLoading: acessoCarregando, isError: acessoFalhou } = useMeuAcesso();
+  // Falha conta como "ainda sem resposta": acesso indefinido cairia na regra de legado e mostraria
+  // o menu inteiro.
+  const carregando = modulosCarregando || acessoCarregando || acessoFalhou;
 
   const ativos = new Set((activeModules ?? []).map((m) => m.slug));
   const semAcessoDefinido = (meuAcesso?.modulos.length ?? 0) === 0;
@@ -33,7 +35,10 @@ export function useVisibilidade() {
   // Enquanto carrega, falha fechado: nada de piscar um item que a escola não tem.
   function contratado(href: string) {
     const modulo = moduloDe(href);
-    if (!modulo || modulo === "admin") return true;
+    // Administração não é contratada, mas também espera o acesso: sem isso o item piscava no menu
+    // de quem não tem acesso a ela até a resposta chegar.
+    if (!modulo) return true;
+    if (modulo === "admin") return !carregando;
     return !carregando && ativos.has(modulo);
   }
 
@@ -48,5 +53,12 @@ export function useVisibilidade() {
     return !carregando && contratado(href) && podeVerRota(meuAcesso, href);
   }
 
-  return { carregando, moduloVisivel, rotaVisivel };
+  /** Para onde o item do menu leva: a primeira tela do módulo que a pessoa pode abrir. */
+  function entradaDo(href: string) {
+    const candidatas = ENTRADAS_DO_MODULO[href];
+    if (!candidatas || carregando) return href;
+    return candidatas.find((c) => podeVerRota(meuAcesso, c)) ?? href;
+  }
+
+  return { carregando, moduloVisivel, rotaVisivel, entradaDo };
 }

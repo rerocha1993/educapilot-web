@@ -64,7 +64,12 @@ function toDateParam(date: Date) {
 
 // Novo (2026-08, feedback do cliente) — filtro de turma no relatório (backend já
 // aceita ?classId= opcional, ver OccurrenceController.GetReport).
-export function useOccurrencesReport(startDate: Date, endDate: Date, classId: number | null) {
+export function useOccurrencesReport(
+  startDate: Date,
+  endDate: Date,
+  classId: number | null,
+  enabled = true
+) {
   const start = toDateParam(startDate);
   const end = toDateParam(endDate);
   return useQuery({
@@ -76,6 +81,7 @@ export function useOccurrencesReport(startDate: Date, endDate: Date, classId: nu
       const data = unwrapApiResponse(result, "Não foi possível carregar o relatório.");
       return data as unknown as OccurrenceReportDto;
     },
+    enabled,
   });
 }
 

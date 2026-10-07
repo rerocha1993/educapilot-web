@@ -86,7 +86,7 @@ export function AppShell({
   const menuAberto = menuAbertoEm === pathname;
   const abrirMenu = () => setMenuAbertoEm(pathname);
   const fecharMenu = () => setMenuAbertoEm(null);
-  const { moduloVisivel, rotaVisivel } = useVisibilidade();
+  const { moduloVisivel, rotaVisivel, entradaDo } = useVisibilidade();
   const { data: modulosAtivos } = useActiveModules();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -176,8 +176,14 @@ export function AppShell({
     .map((p) => p[0]?.toUpperCase())
     .join("");
 
+  // Contratos vive em /admin mas pertence ao módulo Fluxos (ver pode-ver.ts): pelo caminho, o
+  // cabeçalho diria "Fluxos" enquanto a sidebar acende Administração. Manda o endereço.
   const tituloDaTela =
-    pathname === INICIO_HREF ? "Início" : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
+    pathname === INICIO_HREF
+      ? "Início"
+      : pathname === ADMIN_HREF || pathname.startsWith(`${ADMIN_HREF}/`)
+        ? TITULO_DO_MODULO.admin
+        : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
 
   const menuDoUsuario = (tamanho: "sm" | "lg") => (
     <DropdownMenu>
@@ -259,7 +265,7 @@ export function AppShell({
               {grupo.itens.map((item) => (
                 <div key={item.href}>
                   <ItemDaSidebar
-                    href={item.href}
+                    href={entradaDo(item.href)}
                     label={item.label}
                     icon={item.icon}
                     ativo={itemAtivo(item.href)}
@@ -375,7 +381,7 @@ export function AppShell({
           {abas.map((item) => (
             <AbaDoCelular
               key={item.href}
-              href={item.href}
+              href={entradaDo(item.href)}
               label={ROTULO_CURTO[item.href] ?? item.label}
               icon={item.icon}
               ativa={itemAtivo(item.href)}
@@ -404,7 +410,7 @@ export function AppShell({
             type="button"
             aria-label="Fechar menu"
             onClick={fecharMenu}
-            className="absolute inset-0 bg-[#17141B]/60 animate-in fade-in"
+            className="absolute inset-0 bg-sidebar/60 animate-in fade-in"
           />
           <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
@@ -433,7 +439,7 @@ export function AppShell({
                   {grupo.itens.map((item) => (
                     <div key={item.href}>
                       <ItemDaSidebar
-                        href={item.href}
+                        href={entradaDo(item.href)}
                         label={item.label}
                         icon={item.icon}
                         ativo={itemAtivo(item.href)}
@@ -530,7 +536,7 @@ function ItemDaSidebar({
       <span
         className={cn(
           "grid size-6 shrink-0 place-items-center rounded-md transition-colors",
-          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-[#8F87A0]"
+          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-sidebar-muted"
         )}
       >
         <Icon className="size-3.5" />
