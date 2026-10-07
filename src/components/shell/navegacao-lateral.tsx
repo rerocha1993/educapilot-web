@@ -4,7 +4,6 @@ import { useId, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronLeft, Circle, House, type LucideIcon } from "lucide-react";
 
-import type { GrupoDoLancador } from "@/components/shell/lancador-de-ferramentas";
 import { INICIO_HREF } from "@/lib/kernel/nav-items";
 import { secaoAtiva, type SecaoDoModulo } from "@/lib/kernel/secoes-do-modulo";
 import { cn } from "@/lib/utils";
@@ -14,13 +13,13 @@ import { cn } from "@/lib/utils";
  *
  * - Dentro de uma ferramenta: o nome e o ícone dela no topo, um "Início" discreto e, embaixo, as
  *   seções que antes eram abas na página (só as que a pessoa pode abrir).
- * - No Início (ou numa tela sem ferramenta): a lista de ferramentas, agrupada como sempre foi.
+ * - No Início (ou numa tela sem ferramenta): só o item Início. As ferramentas moram num lugar só,
+ *   o lançador do cabeçalho — a barra não repete a lista.
  *
  * Recolhida, a barra mostra só os ícones, cada um com `title`.
  */
 export function NavegacaoLateral({
   ferramenta,
-  grupos,
   secoes,
   pathname,
   entradaDo,
@@ -30,7 +29,6 @@ export function NavegacaoLateral({
 }: {
   /** A ferramenta aberta; nulo no Início e em telas sem dono. */
   ferramenta: { href: string; label: string; icon: LucideIcon } | null;
-  grupos: GrupoDoLancador[];
   /** Seções da ferramenta aberta já filtradas por permissão. */
   secoes: SecaoDoModulo[];
   pathname: string;
@@ -42,27 +40,15 @@ export function NavegacaoLateral({
 }) {
   if (!ferramenta) {
     return (
-      <nav aria-label="Ferramentas" className={cn("flex flex-col", !grande && "mt-6")}>
-        {grupos.map((grupo) => (
-          <div key={grupo.titulo} className="mb-1.5">
-            {!recolhido && (
-              <div className="px-2.5 pb-2 pt-2.5 text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted">
-                {grupo.titulo}
-              </div>
-            )}
-            {grupo.itens.map((item) => (
-              <ItemDaSidebar
-                key={item.href}
-                href={entradaDo(item.href)}
-                label={item.label}
-                icon={item.icon}
-                ativo={item.href === INICIO_HREF && pathname === INICIO_HREF}
-                recolhido={recolhido}
-                grande={grande}
-              />
-            ))}
-          </div>
-        ))}
+      <nav aria-label="Navegação" className={cn("flex flex-col", !grande && "mt-6")}>
+        <ItemDaSidebar
+          href={INICIO_HREF}
+          label="Início"
+          icon={House}
+          ativo={pathname === INICIO_HREF}
+          recolhido={recolhido}
+          grande={grande}
+        />
       </nav>
     );
   }
@@ -263,7 +249,7 @@ function SecoesDaFerramenta({
         }
 
         const temAtiva = bloco.itens.some((secao) => secao.href === ativa);
-        const aberto = temAtiva || !fechados.includes(grupo);
+        const aberto = !fechados.includes(grupo);
         const idDoPainel = `${idBase}-${indice}`;
 
         return (
@@ -273,14 +259,20 @@ function SecoesDaFerramenta({
               onClick={() => alternar(grupo)}
               aria-expanded={aberto}
               aria-controls={idDoPainel}
-              // A seção aberta mora aqui: o grupo fica aberto e o botão não tem o que fazer.
-              disabled={temAtiva}
               className={cn(
-                "flex w-full items-center justify-between gap-2 rounded-md px-2.5 pb-1.5 pt-3 text-left text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted transition-colors enabled:hover:text-white",
+                "flex w-full items-center justify-between gap-2 rounded-md px-2.5 pb-1.5 pt-3 text-left text-[10px] font-bold uppercase tracking-[.18em] transition-colors hover:text-white",
+                // Grupo fechado com a tela aberta dentro: o título acende, para a pessoa não
+                // perder de vista onde está.
+                temAtiva && !aberto ? "text-white" : "text-sidebar-muted",
                 grande && "min-h-11 pb-2"
               )}
             >
-              <span className="min-w-0 truncate">{grupo}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className="truncate">{grupo}</span>
+                {temAtiva && !aberto && (
+                  <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-action-brand" />
+                )}
+              </span>
               <ChevronDown
                 aria-hidden
                 className={cn("size-3.5 shrink-0 transition-transform", !aberto && "-rotate-90")}
@@ -329,8 +321,8 @@ export function ItemDaSidebar({
         recolhido && "justify-center px-0",
         indentado && "ml-3",
         ativo
-          ? "bg-white/[.07] text-white"
-          : "text-sidebar-foreground hover:bg-white/5 hover:text-white"
+          ? "bg-white/[.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,.08)]"
+          : "text-sidebar-foreground hover:bg-white/[.05] hover:text-white"
       )}
     >
       {/* A marca laranja à esquerda diz onde a pessoa está — some quando o item não é o atual. */}
@@ -345,7 +337,9 @@ export function ItemDaSidebar({
       <span
         className={cn(
           "relative grid size-6 shrink-0 place-items-center rounded-md transition-colors",
-          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-sidebar-muted"
+          ativo
+            ? "bg-action-brand text-white shadow-[0_1px_2px_rgba(0,0,0,.25)]"
+            : "bg-sidebar-accent text-sidebar-muted shadow-[inset_0_0_0_1px_rgba(255,255,255,.05)]"
         )}
       >
         <Icon className="size-3.5" />

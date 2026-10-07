@@ -240,7 +240,7 @@ export function AppShell({
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col bg-sidebar py-5 transition-[width] duration-150 md:flex print:hidden!",
+          "hidden shrink-0 flex-col border-r border-white/[.06] bg-sidebar bg-[linear-gradient(180deg,var(--sidebar)_0%,var(--sidebar-deep)_100%)] py-5 transition-[width] duration-150 md:flex print:hidden!",
           collapsed ? "w-16 px-2" : "w-[250px] px-3"
         )}
       >
@@ -275,7 +275,6 @@ export function AppShell({
         <div className="min-h-0 flex-1 overflow-y-auto">
           <NavegacaoLateral
             ferramenta={ferramenta}
-            grupos={grupos}
             secoes={secoes}
             pathname={pathname}
             entradaDo={entradaDo}
@@ -420,7 +419,7 @@ export function AppShell({
             onClick={fecharMenu}
             className="absolute inset-0 bg-sidebar/60 animate-in fade-in"
           />
-          <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
+          <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar bg-[linear-gradient(180deg,var(--sidebar)_0%,var(--sidebar-deep)_100%)] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
               <span className="flex items-center gap-2.5">
                 <Image src="/icon-192-claro.png" alt="" width={30} height={30} className="size-[30px] shrink-0" />
@@ -441,7 +440,6 @@ export function AppShell({
             <div className="flex-1 overflow-y-auto px-3">
               <NavegacaoLateral
                 ferramenta={ferramenta}
-                grupos={grupos}
                 secoes={secoes}
                 pathname={pathname}
                 entradaDo={entradaDo}
