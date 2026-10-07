@@ -134,7 +134,7 @@ export function podeVerArea(
   const modulos = acesso?.modulos ?? [];
   if (modulos.length === 0) return true;
 
-  const doModulo = modulos.find((m) => m.moduloSlug === modulo);
+  const doModulo = modulos.find((m) => (m.moduloSlug ?? "").trim().toLowerCase() === modulo.toLowerCase());
   if (!doModulo) return false;
 
   if (area === null) return true;
