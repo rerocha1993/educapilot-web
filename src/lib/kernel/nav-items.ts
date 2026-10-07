@@ -139,8 +139,8 @@ const ROTAS_HOSPEDADAS: { prefixo: string; dono: string }[] = [
  * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.
  */
 export const GRUPOS_DO_MENU = [
-  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/flow", "/finance"] },
-  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/relacionamento", "/events"] },
+  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/relacionamento", "/portaria", "/flow", "/finance"] },
+  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/events"] },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */
