@@ -24,6 +24,7 @@ import { EsqueletoDosNumeros, NumerosDoDia } from "@/components/inicio/numeros-d
 import { PrecisaDeVoce, montarPendencias } from "@/components/inicio/precisa-de-voce";
 import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
+import { useResumoDosComprovantes } from "@/lib/finance/use-comprovantes";
 import { useMeuQuadro } from "@/lib/flow/use-tarefas";
 import { usePendenciasDoPonto } from "@/lib/rh/use-marcacoes";
 import {
@@ -112,7 +113,11 @@ export default function InicioPage() {
   });
   // O resumo do ponto também só é pedido quando o item foi escolhido (e a pessoa tem a área).
   const { data: pontoPendente } = usePendenciasDoPonto(tiposDePendencia.some((t) => t.id === "ponto-pendente"));
-  const pendencias = montarPendencias(tiposDePendencia, painel, quadro, pontoPendente);
+  // Idem para a caixa de comprovantes do Financeiro: só é pedida quando a pendência foi escolhida.
+  const { data: comprovantesALancar } = useResumoDosComprovantes(
+    tiposDePendencia.some((t) => t.id === "comprovantes-a-lancar")
+  );
+  const pendencias = montarPendencias(tiposDePendencia, painel, quadro, pontoPendente, comprovantesALancar);
 
   const primeiroNome = session?.name.split(" ").find(Boolean) ?? "";
   const hoje = new Date();

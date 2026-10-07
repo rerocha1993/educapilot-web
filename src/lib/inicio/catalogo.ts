@@ -16,6 +16,7 @@ import {
   NotebookPen,
   Package,
   Receipt,
+  ReceiptText,
   ShoppingBag,
   SquareKanban,
   TrendingUp,
@@ -253,6 +254,14 @@ export const PENDENCIAS: ItemDoInicio[] = [
     icone: Inbox,
   },
   {
+    id: "comprovantes-a-lancar",
+    rotulo: "Comprovantes a lançar",
+    descricao: "Fotos e PDFs de comprovantes (WhatsApp ou tela) esperando virar despesa.",
+    rota: "/finance/comprovantes",
+    icone: ReceiptText,
+    exigeFinanceiro: true,
+  },
+  {
     id: "ponto-pendente",
     rotulo: "Batidas de ponto para aprovar",
     descricao: "Batidas do celular fora das regras e celulares novos esperando aprovação.",
@@ -362,7 +371,7 @@ export interface PadraoDoPapel {
 const GESTAO: PadraoDoPapel = {
   blocos: ["numeros", "precificacao", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
-  pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "ponto-pendente", "chamada-aberta"],
+  pendencias: ["mensalidades-vencidas", "comprovantes-a-lancar", "contratos-conferencia", "envios-aguardando", "ponto-pendente", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
   aniversariantes: ["alunos", "responsaveis", "equipe"],
 };
@@ -381,7 +390,7 @@ const COORDENACAO: PadraoDoPapel = {
 const SECRETARIA: PadraoDoPapel = {
   blocos: ["numeros", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["contratos-assinados", "envios-aguardando", "presencas"],
-  pendencias: ["contratos-conferencia", "envios-aguardando", "chamada-aberta", "faltas-sem-justificativa"],
+  pendencias: ["contratos-conferencia", "comprovantes-a-lancar", "envios-aguardando", "chamada-aberta", "faltas-sem-justificativa"],
   atalhos: ["contratos", "envios", "alunos", "formularios"],
   aniversariantes: ["alunos", "responsaveis"],
   // Calendário é opcional para a secretaria: o bloco está na lista de personalização, desligado.

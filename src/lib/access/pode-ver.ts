@@ -46,6 +46,10 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/finance\/receitas/, modulo: "finance", area: "receitas" },
   { padrao: /^\/finance\/recibos/, modulo: "finance", area: "recibos" },
   { padrao: /^\/finance\/despesas/, modulo: "finance", area: "despesas" },
+  // Caixa de comprovantes (WhatsApp e tela) e a configuração do Financeiro (quem pode mandar pelo
+  // WhatsApp) viram despesa paga: valem a área Despesas, que já existe no catálogo do backend.
+  { padrao: /^\/finance\/comprovantes/, modulo: "finance", area: "despesas" },
+  { padrao: /^\/finance\/configuracao/, modulo: "finance", area: "despesas" },
   { padrao: /^\/finance\/orcamento/, modulo: "finance", area: "orcamento" },
   { padrao: /^\/finance\/precificacao/, modulo: "finance", area: "precificacao" },
   { padrao: /^\/finance\/projetos/, modulo: "finance", area: "projetos" },

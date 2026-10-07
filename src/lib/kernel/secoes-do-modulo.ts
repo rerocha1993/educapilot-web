@@ -144,6 +144,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/finance", label: "Painel", icon: LayoutDashboard },
     { href: "/finance/receitas", label: "Receitas", icon: TrendingUp, grupo: GRUPO_MOVIMENTO },
     { href: "/finance/despesas", label: "Despesas", icon: TrendingDown, grupo: GRUPO_MOVIMENTO },
+    { href: "/finance/comprovantes", label: "Comprovantes", icon: Inbox, grupo: GRUPO_MOVIMENTO },
     { href: "/finance/recibos", label: "Recibos", icon: ReceiptText, grupo: GRUPO_MOVIMENTO },
     { href: "/finance/orcamento", label: "Orçamento anual", icon: PiggyBank, grupo: GRUPO_PLANEJAMENTO },
     { href: "/finance/projetos", label: "Projetos e eventos", icon: FolderKanban, grupo: GRUPO_PLANEJAMENTO },
@@ -152,6 +153,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/finance/conciliacao", label: "Conciliação", icon: ArrowLeftRight, grupo: GRUPO_TESOURARIA },
     { href: "/finance/plano-de-contas", label: "Plano de contas", icon: ListTree, grupo: GRUPO_TESOURARIA },
     { href: "/finance/fechamento", label: "Fechamento", icon: Lock, grupo: GRUPO_TESOURARIA },
+    { href: "/finance/configuracao", label: "Configuração", icon: SlidersHorizontal },
   ],
 
   // A visão geral do RH não tem área própria (`null`): abre para quem tem qualquer uma delas.

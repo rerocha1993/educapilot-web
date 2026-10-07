@@ -8,6 +8,7 @@ import { formatarData } from "@/lib/format/date";
 import type { ItemDoInicio } from "@/lib/inicio/catalogo";
 import type { PainelInicio } from "@/lib/kernel/use-painel";
 import type { Quadro } from "@/lib/flow/use-tarefas";
+import type { ResumoDosComprovantes } from "@/lib/finance/use-comprovantes";
 import type { PendenciasDoPonto } from "@/lib/rh/use-marcacoes";
 
 /**
@@ -40,15 +41,39 @@ export function montarPendencias(
   itens: ItemDoInicio[],
   painel: PainelInicio | undefined,
   quadro: Quadro | undefined,
-  ponto?: PendenciasDoPonto
+  ponto?: PendenciasDoPonto,
+  comprovantes?: ResumoDosComprovantes
 ): Pendencia[] {
   return itens
     .map((item) => {
       // O ponto vem do RH, e não do painel: um painel que falhou não esconde a fila de aprovação.
       if (item.id === "ponto-pendente") return construirDoPonto(item, ponto);
+      // Os comprovantes também vêm do próprio módulo: a caixa a lançar não depende do painel.
+      if (item.id === "comprovantes-a-lancar") return construirDosComprovantes(item, comprovantes);
       return painel ? construir(item, painel, quadro) : null;
     })
     .filter((p): p is Pendencia => p !== null);
+}
+
+function construirDosComprovantes(
+  item: ItemDoInicio,
+  resumo: ResumoDosComprovantes | undefined
+): Pendencia | null {
+  if (!resumo || resumo.aLancar === 0) return null;
+  const n = resumo.aLancar;
+  const sem = resumo.semLeitura;
+
+  return {
+    id: item.id,
+    href: item.rota,
+    icon: item.icone,
+    titulo: `${n} ${n === 1 ? "comprovante a lançar" : "comprovantes a lançar"}`,
+    sub:
+      sem > 0
+        ? `${sem} ${sem === 1 ? "não deu para ler" : "não deram para ler"}: confira à mão`
+        : "Chegaram pelo WhatsApp ou pela tela",
+    acao: "Lançar",
+  };
 }
 
 function construirDoPonto(item: ItemDoInicio, ponto: PendenciasDoPonto | undefined): Pendencia | null {

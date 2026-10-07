@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ComprovanteDaDespesa } from "@/components/finance/comprovante-da-despesa";
 import { ClassificacaoDoLancamento } from "@/components/finance/classificacao-do-lancamento";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
@@ -214,6 +216,12 @@ export default function DespesasPage() {
                 Marcar pago
               </Button>
             )}
+            <ComprovanteDaDespesa
+              despesaId={e.id}
+              nome={e.nome}
+              temComprovante={!!e.temComprovante}
+              className="flex flex-wrap items-center gap-2 [&>button]:flex-1"
+            />
           </div>
         ))}
       </div>
@@ -227,7 +235,7 @@ export default function DespesasPage() {
               <TableHead>Vence</TableHead>
               <TableHead className="text-right">Valor</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-28 text-right">Ações</TableHead>
+              <TableHead className="w-48 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -274,16 +282,25 @@ export default function DespesasPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-right">
-                  {e.statusPagamento !== "Pago" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleMarkPaid(e.id)}
-                      disabled={markPaid.isPending}
-                    >
-                      Marcar pago
-                    </Button>
-                  )}
+                  <div className="flex items-center justify-end gap-1.5">
+                    <ComprovanteDaDespesa
+                      despesaId={e.id}
+                      nome={e.nome}
+                      temComprovante={!!e.temComprovante}
+                      compacto
+                      className="flex items-center gap-1.5"
+                    />
+                    {e.statusPagamento !== "Pago" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMarkPaid(e.id)}
+                        disabled={markPaid.isPending}
+                      >
+                        Marcar pago
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -291,13 +308,15 @@ export default function DespesasPage() {
         </Table>
       </div>
 
-      {/* "Importar Excel" existe no backend, mas com layout de coluna fixo e sem
-          documentação de formato — fora do escopo desta primeira versão. Comprovante
-          (dropzone) também não tem backend de upload. */}
+      {/* "Importar Excel" existe no backend, mas com layout de coluna fixo e sem documentação de
+          formato — fora do escopo desta primeira versão. O comprovante agora se anexa em cada
+          despesa (clipe) e chega também pela Caixa de comprovantes. */}
       <p className="text-xs text-muted-foreground">
-        Importar Excel e anexo de comprovante ainda não estão nesta tela — o backend
-        tem um endpoint de importação com layout de coluna fixo, mas nenhum upload
-        de arquivo (comprovante) implementado.
+        Mandou a foto de um comprovante pelo WhatsApp?{" "}
+        <Link href="/finance/comprovantes" className="underline">
+          Ele está na Caixa de comprovantes
+        </Link>
+        , pronto para virar despesa.
       </p>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

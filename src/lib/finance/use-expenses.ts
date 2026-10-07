@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { financeApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { abrirArquivoEmNovaAba, financeiroEnviarArquivo } from "./financeiro-api";
 
 // ExpenseType: Custo=1, Despesa=2, Investimento=3
 export const EXPENSE_CATEGORIES = [
@@ -28,6 +29,12 @@ export interface ExpenseDto {
   bancoContaId?: string | null;
   categoriaFinanceiraId?: string | null;
   centroDeCustoId?: string | null;
+
+  /**
+   * Tem comprovante anexado (foto ou PDF). Campo novo da fase W1: enquanto a API não o devolver,
+   * vem ausente e a tela só mostra "Anexar comprovante".
+   */
+  temComprovante?: boolean | null;
 }
 
 export function useExpensesByMonth(month: number, year: number) {
@@ -85,4 +92,28 @@ export function useMarkExpensePaid() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["expenses"] }),
   });
+}
+
+/** Anexa (ou troca) o comprovante de uma despesa: foto ou PDF, em multipart no campo `arquivo`. */
+export function useAnexarComprovanteDaDespesa() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, arquivo }: { id: string; arquivo: File }) =>
+      financeiroEnviarArquivo<void>(
+        `/api/Expenses/${id}/comprovante`,
+        arquivo,
+        "Não foi possível anexar o comprovante."
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["expenses"] }),
+  });
+}
+
+/** Abre o comprovante da despesa numa aba nova (a aba abre no clique; ver abrirArquivoEmNovaAba). */
+export function abrirComprovanteDaDespesa(id: string, nomeDoArquivo: string, janela?: Window | null) {
+  return abrirArquivoEmNovaAba(
+    `/api/Expenses/${id}/comprovante`,
+    nomeDoArquivo,
+    janela,
+    "Não foi possível abrir o comprovante."
+  );
 }
