@@ -28,12 +28,15 @@ export function SeletorDeAlunos({
   onChange,
   disabled = false,
   rotulo = "Alunos",
+  excluir,
 }: {
   valor: number[];
   onChange: (ids: number[]) => void;
   disabled?: boolean;
   /** Nome do grupo para leitor de tela. */
   rotulo?: string;
+  /** Alunos que não entram na lista (os que já estão na mensalidade, por exemplo). */
+  excluir?: number[];
 }) {
   const { data: alunos, isLoading, isError } = useAllStudents();
   const { data: turmas } = useClasses();
@@ -51,11 +54,12 @@ export function SeletorDeAlunos({
     return (alunos ?? [])
       .filter(
         (a) =>
+          !excluir?.includes(a.id) &&
           (turma === TODAS || String(a.classId) === turma) &&
           (termo === "" || normalizar(a.fullName ?? "").includes(termo))
       )
       .sort((a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? "", "pt-BR"));
-  }, [alunos, turma, busca]);
+  }, [alunos, turma, busca, excluir]);
 
   function alternar(id: number, marcado: boolean) {
     onChange(marcado ? [...valor.filter((v) => v !== id), id] : valor.filter((v) => v !== id));

@@ -1,7 +1,6 @@
 import {
   ArrowLeftRight,
   ArrowRightLeft,
-  Banknote,
   CalendarDays,
   CalendarOff,
   CalendarRange,
@@ -33,7 +32,6 @@ import {
   Package,
   PiggyBank,
   ReceiptText,
-  Repeat,
   Shapes,
   ShoppingCart,
   SlidersHorizontal,
@@ -175,11 +173,11 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/relacionamento/atividades", label: "Atividades", area: "atividades", icon: Shapes, grupo: GRUPO_COMUNICACAO },
     { href: "/relacionamento/mural", label: "Mural", area: "mural", icon: Images, grupo: GRUPO_COMUNICACAO },
     { href: "/relacionamento/chat", label: "Chat", area: "chat", icon: MessageCircle, grupo: GRUPO_COMUNICACAO },
-    // Mensalidades e Inadimplência vieram do Financeiro; as quatro primeiras são a mesma área
-    // (pagamentos), e a Loja tem a sua. "Cobranças" é a raiz do grupo: o prefixo mais longo
-    // (secaoAtiva) acende as irmãs quando a pessoa está nelas.
-    { href: "/relacionamento/pagamentos/mensalidades", label: "Mensalidades", area: "pagamentos", icon: Banknote, grupo: GRUPO_PAGAMENTOS },
-    { href: "/relacionamento/pagamentos/planos", label: "Planos recorrentes", area: "pagamentos", icon: Repeat, grupo: GRUPO_PAGAMENTOS },
+    // Cobranças reúne tudo que se cobra da família (individual, recorrente e por família); a
+    // mensalidade e os planos recorrentes moram na aba Recorrente. As rotas antigas
+    // (/pagamentos/mensalidades e /pagamentos/planos) redirecionam para lá. Todas são da área
+    // pagamentos, e a Loja tem a sua. "Cobranças" é a raiz do grupo: o prefixo mais longo
+    // (secaoAtiva) acende a irmã Inadimplência quando a pessoa está nela.
     { href: "/relacionamento/pagamentos", label: "Cobranças", area: "pagamentos", icon: CreditCard, grupo: GRUPO_PAGAMENTOS },
     { href: "/relacionamento/pagamentos/inadimplencia", label: "Inadimplência", area: "pagamentos", icon: CircleAlert, grupo: GRUPO_PAGAMENTOS },
     { href: "/relacionamento/loja", label: "Loja", area: "loja", icon: Store, grupo: GRUPO_PAGAMENTOS },

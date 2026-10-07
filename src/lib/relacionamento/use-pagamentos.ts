@@ -27,6 +27,32 @@ const PAGAMENTOS = [CHAVE, "pagamentos"] as const;
 export const STATUS_DA_COBRANCA: StatusDaCobranca[] = ["Pendente", "Vencida", "Paga", "Cancelada", "Estornada"];
 export type OrigemDaCobranca = "Asaas" | "Manual";
 export type TipoDaCobranca = "individual" | "recorrente";
+/**
+ * De onde a cobrança veio: cobrança avulsa da escola, pedido da loja, plano "Outro" (período
+ * integral, transporte), mensalidade ou projeto/evento. Individual = escola + loja + projeto;
+ * recorrente = plano + mensalidade.
+ */
+export type FonteDaCobranca = "escola" | "loja" | "plano" | "mensalidade" | "projeto";
+
+export const ROTULO_DA_FONTE: Record<FonteDaCobranca, string> = {
+  escola: "Escola",
+  loja: "Loja",
+  plano: "Outro plano",
+  mensalidade: "Mensalidade",
+  projeto: "Projeto",
+};
+
+function fonteDaCobranca(
+  v: string | null | undefined,
+  c: { planoId?: string | null; pedidoId?: string | null; projetoId?: string | null }
+): FonteDaCobranca {
+  if (v === "escola" || v === "loja" || v === "plano" || v === "mensalidade" || v === "projeto") return v;
+  // Servidor antigo, sem `fonte`: deduz pelo que a cobrança carrega.
+  if (c.projetoId) return "projeto";
+  if (c.pedidoId) return "loja";
+  if (c.planoId) return "plano";
+  return "escola";
+}
 export type ProvedorDaCarteira = "asaas" | "manual";
 
 /** Tamanhos de página oferecidos na lista de cobranças. */
@@ -56,8 +82,14 @@ export interface Cobranca {
   contaFinanceiraId: string | null;
   contaNome: string | null;
   tipo: TipoDaCobranca;
+  fonte: FonteDaCobranca;
   planoId: string | null;
+  /** Plano de mensalidade de um aluno (fonte "mensalidade"). */
+  tuitionPlanId: string | null;
   pedidoId: string | null;
+  /** Projeto ou evento que gerou a cobrança (fonte "projeto"); essas linhas são só de leitura aqui. */
+  projetoId: string | null;
+  projetoNome: string | null;
   asaasInvoiceUrl: string | null;
   pixCopiaECola: string | null;
   pixQrCodeBase64: string | null;
@@ -78,6 +110,7 @@ export interface FiltroDeCobrancas {
   /** Responsável, aluno ou descrição. */
   busca: string;
   tipo: TipoDaCobranca | null;
+  fonte: FonteDaCobranca | null;
   planoId: string | null;
 }
 
@@ -201,15 +234,17 @@ export interface ResultadoDoPlano {
 
 const dia = (v: string | null | undefined) => (v ? v.slice(0, 10) : null);
 
-type CobrancaCrua = Partial<Omit<Cobranca, "guardianId" | "studentId" | "status" | "origem" | "tipo">> & {
+type CobrancaCrua = Partial<Omit<Cobranca, "guardianId" | "studentId" | "status" | "origem" | "tipo" | "fonte">> & {
   guardianId?: string | number;
   studentId?: string | number | null;
   status?: string;
   origem?: string;
   tipo?: string;
+  fonte?: string;
 };
 
 function cobranca(c: CobrancaCrua): Cobranca {
+  const fonte = fonteDaCobranca(c.fonte, c);
   return {
     id: String(c.id ?? ""),
     nomeDoResponsavel: c.nomeDoResponsavel ?? "",
@@ -224,9 +259,13 @@ function cobranca(c: CobrancaCrua): Cobranca {
     plano: c.plano ?? null,
     contaFinanceiraId: c.contaFinanceiraId ?? null,
     contaNome: c.contaNome ?? null,
-    tipo: c.tipo === "recorrente" ? "recorrente" : "individual",
+    tipo: c.tipo === "recorrente" || fonte === "plano" || fonte === "mensalidade" ? "recorrente" : "individual",
+    fonte,
     planoId: c.planoId ?? null,
+    tuitionPlanId: c.tuitionPlanId ?? null,
     pedidoId: c.pedidoId ?? null,
+    projetoId: c.projetoId ?? null,
+    projetoNome: c.projetoNome ?? null,
     asaasInvoiceUrl: c.asaasInvoiceUrl ?? null,
     pixCopiaECola: c.pixCopiaECola ?? null,
     pixQrCodeBase64: c.pixQrCodeBase64 ?? null,
@@ -315,6 +354,7 @@ export function useCobrancasDaEscola(filtro: FiltroDeCobrancas, pagina: number, 
       filtro.contaId,
       filtro.busca,
       filtro.tipo,
+      filtro.fonte,
       filtro.planoId,
       pagina,
       tamanho,
@@ -338,6 +378,7 @@ export function useCobrancasDaEscola(filtro: FiltroDeCobrancas, pagina: number, 
           contaId: filtro.contaId,
           busca: filtro.busca.trim(),
           tipo: filtro.tipo,
+          fonte: filtro.fonte,
           planoId: filtro.planoId,
           pagina,
           tamanho,
@@ -589,5 +630,280 @@ export function usePagamentosDaFamiliaNaEscola(guardianId: string | null) {
           "Não foi possível carregar os pagamentos da família."
         )
       ),
+  });
+}
+
+
+// ------------------------------------------------------------------ mensalidade
+
+/** Um aluno na mensalidade: o plano dele (valor, dia, vigência, reajuste). */
+export interface AlunoDaMensalidade {
+  tuitionPlanId: string | null;
+  studentId: number;
+  alunoNome: string;
+  turma: string | null;
+  guardianId: string | null;
+  nomeDoResponsavel: string | null;
+  valorMensal: number;
+  diaVencimento: number;
+  /** yyyy-MM-dd */
+  dataInicio: string;
+  dataFim: string | null;
+  /** Reajuste combinado com a família (%). Nulo = vale o percentual da escola. */
+  percentualReajuste: number | null;
+  ativo: boolean;
+  gerarCobrancaAsaas: boolean;
+}
+
+export interface Mensalidades {
+  quantidadeDeAlunos: number;
+  quantidadeAtivos: number;
+  valorMaisComum: number | null;
+  diaVencimentoMaisComum: number | null;
+  /** Conta em que as mensalidades caem (a padrão das mensalidades). */
+  contaFinanceiraId: string | null;
+  contaNome: string | null;
+  gerarCobrancaAsaasPadrao: boolean;
+  /** Próximo mês a gerar, "AAAA-MM". */
+  proximaCompetencia: string;
+  alunos: AlunoDaMensalidade[];
+}
+
+export interface SalvarAlunoDaMensalidade {
+  studentId: number;
+  guardianId?: string | null;
+  valorMensal: number;
+  diaVencimento: number;
+  dataInicio: string;
+  dataFim?: string | null;
+  percentualReajuste?: number | null;
+  gerarCobrancaAsaas: boolean;
+  /** true reativa quem tinha saido da mensalidade; sem o campo o backend nao reativa. */
+  ativo?: boolean | null;
+}
+
+export interface ResultadoDaGeracaoMensal {
+  criadas: number;
+  existentes: number;
+  ignoradas: Ignorada[];
+  totalDeIgnoradas: number;
+  avisos: string[];
+}
+
+type AlunoDaMensalidadeCru = Partial<Omit<AlunoDaMensalidade, "guardianId" | "tuitionPlanId">> & {
+  guardianId?: string | number | null;
+  tuitionPlanId?: string | number | null;
+};
+type MensalidadesCru = Partial<Omit<Mensalidades, "alunos" | "contaFinanceiraId">> & {
+  contaFinanceiraId?: string | number | null;
+  alunos?: AlunoDaMensalidadeCru[] | null;
+};
+
+function competenciaDeHoje(): string {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function mensalidades(m: MensalidadesCru | null | undefined): Mensalidades {
+  const alunos: AlunoDaMensalidade[] = (m?.alunos ?? []).map((a) => ({
+    tuitionPlanId: a.tuitionPlanId === undefined || a.tuitionPlanId === null ? null : String(a.tuitionPlanId),
+    studentId: a.studentId ?? 0,
+    alunoNome: a.alunoNome ?? "",
+    turma: a.turma ?? null,
+    guardianId: a.guardianId === undefined || a.guardianId === null ? null : String(a.guardianId),
+    nomeDoResponsavel: a.nomeDoResponsavel ?? null,
+    valorMensal: a.valorMensal ?? 0,
+    diaVencimento: a.diaVencimento ?? 10,
+    dataInicio: dia(a.dataInicio) ?? "",
+    dataFim: dia(a.dataFim),
+    percentualReajuste: a.percentualReajuste ?? null,
+    ativo: a.ativo ?? true,
+    gerarCobrancaAsaas: a.gerarCobrancaAsaas ?? false,
+  }));
+  return {
+    quantidadeDeAlunos: m?.quantidadeDeAlunos ?? alunos.length,
+    quantidadeAtivos: m?.quantidadeAtivos ?? alunos.filter((a) => a.ativo).length,
+    valorMaisComum: m?.valorMaisComum ?? null,
+    diaVencimentoMaisComum: m?.diaVencimentoMaisComum ?? null,
+    contaFinanceiraId:
+      m?.contaFinanceiraId === undefined || m.contaFinanceiraId === null ? null : String(m.contaFinanceiraId),
+    contaNome: m?.contaNome ?? null,
+    gerarCobrancaAsaasPadrao: m?.gerarCobrancaAsaasPadrao ?? false,
+    proximaCompetencia: m?.proximaCompetencia ?? competenciaDeHoje(),
+    alunos,
+  };
+}
+
+/** A mensalidade da escola: o resumo e os alunos com valor, dia e vigência. */
+export function useMensalidades() {
+  return useQuery({
+    queryKey: [...PAGAMENTOS, "mensalidades"],
+    staleTime: 15_000,
+    queryFn: async (): Promise<Mensalidades> =>
+      mensalidades(
+        await relacionamentoJson<MensalidadesCru | null>(
+          "/mensalidades",
+          {},
+          "Não foi possível carregar as mensalidades."
+        )
+      ),
+  });
+}
+
+/** Grava (inclui ou atualiza) os alunos enviados, um plano de mensalidade por aluno. */
+export function useSalvarAlunosDaMensalidade() {
+  const invalidar = useInvalidarPagamentos();
+  return useMutation({
+    mutationFn: async (alunos: SalvarAlunoDaMensalidade[]): Promise<Mensalidades> =>
+      mensalidades(
+        await relacionamentoJson<MensalidadesCru | null>(
+          "/mensalidades/alunos",
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              alunos: alunos.map((a) => ({
+                ...a,
+                guardianId: a.guardianId ?? null,
+                dataFim: a.dataFim ?? null,
+                percentualReajuste: a.percentualReajuste ?? null,
+              })),
+            }),
+          },
+          "Não foi possível salvar as mensalidades dos alunos."
+        )
+      ),
+    onSuccess: invalidar,
+  });
+}
+
+/** Tira o aluno da mensalidade (desativa o plano dele). As parcelas já geradas continuam. */
+export function useRemoverAlunoDaMensalidade() {
+  const invalidar = useInvalidarPagamentos();
+  return useMutation({
+    mutationFn: (studentId: number) =>
+      relacionamentoJson<void>(
+        `/mensalidades/alunos/${studentId}`,
+        { method: "DELETE" },
+        "Não foi possível tirar o aluno da mensalidade."
+      ),
+    onSuccess: invalidar,
+  });
+}
+
+/** Gera as parcelas do mês. Quem já tem a parcela daquele mês não recebe outra. */
+export function useGerarMensalidades() {
+  const invalidar = useInvalidarPagamentos();
+  return useMutation({
+    mutationFn: async ({ ano, mes }: { ano: number; mes: number }): Promise<ResultadoDaGeracaoMensal> => {
+      const r = await relacionamentoJson<{
+        criadas?: number;
+        existentes?: number;
+        ignoradas?: number | Partial<Ignorada>[] | null;
+        avisos?: string[] | null;
+      } | null>(
+        `/mensalidades/gerar${consulta({ ano, mes })}`,
+        { method: "POST" },
+        "Não foi possível gerar as parcelas da mensalidade."
+      );
+      const lista = Array.isArray(r?.ignoradas) ? ignoradas(r.ignoradas) : [];
+      return {
+        criadas: r?.criadas ?? 0,
+        existentes: r?.existentes ?? 0,
+        ignoradas: lista,
+        totalDeIgnoradas: typeof r?.ignoradas === "number" ? r.ignoradas : lista.length,
+        avisos: (r?.avisos ?? []).filter(Boolean),
+      };
+    },
+    onSuccess: invalidar,
+  });
+}
+
+// ------------------------------------------------------------------ inadimplência
+
+export interface CobrancaEmAtraso extends Cobranca {
+  diasAtraso: number;
+}
+
+export interface FamiliaInadimplente {
+  guardianId: string;
+  nome: string;
+  email: string | null;
+  telefone: string | null;
+  totalVencido: number;
+  quantidade: number;
+  itens: CobrancaEmAtraso[];
+}
+
+export interface InadimplenciaUnificada {
+  totalVencido: number;
+  quantidade: number;
+  familias: FamiliaInadimplente[];
+}
+
+export interface FiltroDeInadimplencia {
+  contaId: string | null;
+  fonte: FonteDaCobranca | null;
+  classId: number | null;
+  busca: string;
+  /** Vencimento a partir de / até (yyyy-MM-dd). */
+  de: string;
+  ate: string;
+}
+
+/** Quem está devendo, agrupado por família: cobranças vencidas e não pagas de todas as fontes. */
+export function useInadimplenciaUnificada(filtro: FiltroDeInadimplencia) {
+  return useQuery({
+    queryKey: [
+      ...PAGAMENTOS,
+      "inadimplencia",
+      filtro.contaId,
+      filtro.fonte,
+      filtro.classId,
+      filtro.busca,
+      filtro.de,
+      filtro.ate,
+    ],
+    staleTime: 15_000,
+    placeholderData: keepPreviousData,
+    queryFn: async (): Promise<InadimplenciaUnificada> => {
+      const r = await relacionamentoJson<{
+        totalVencido?: number;
+        quantidade?: number;
+        familias?:
+          | (Partial<Omit<FamiliaInadimplente, "guardianId" | "itens">> & {
+              guardianId?: string | number;
+              itens?: (CobrancaCrua & { diasAtraso?: number })[] | null;
+            })[]
+          | null;
+      } | null>(
+        `/cobrancas/inadimplencia${consulta({
+          contaId: filtro.contaId,
+          fonte: filtro.fonte,
+          classId: filtro.classId,
+          busca: filtro.busca.trim(),
+          de: filtro.de,
+          ate: filtro.ate,
+        })}`,
+        {},
+        "Não foi possível carregar a inadimplência."
+      );
+      const familias: FamiliaInadimplente[] = (r?.familias ?? []).map((f) => {
+        const itens: CobrancaEmAtraso[] = (f.itens ?? []).map((i) => ({ ...cobranca(i), diasAtraso: i.diasAtraso ?? 0 }));
+        return {
+          guardianId: String(f.guardianId ?? ""),
+          nome: f.nome ?? "",
+          email: f.email ?? null,
+          telefone: f.telefone ?? null,
+          totalVencido: f.totalVencido ?? itens.reduce((soma, i) => soma + i.valor, 0),
+          quantidade: f.quantidade ?? itens.length,
+          itens,
+        };
+      });
+      return {
+        totalVencido: r?.totalVencido ?? familias.reduce((soma, f) => soma + f.totalVencido, 0),
+        quantidade: r?.quantidade ?? familias.reduce((soma, f) => soma + f.quantidade, 0),
+        familias,
+      };
+    },
   });
 }

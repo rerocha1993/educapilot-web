@@ -1,21 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
-import { AbaPlanos } from "@/components/relacionamento/pagamentos/aba-planos";
-import { RelacionamentoNav } from "@/components/relacionamento/relacionamento-nav";
-
-export default function PlanosRecorrentesPage() {
-  return (
-    <div className="flex flex-col gap-4">
-      <RelacionamentoNav />
-
-      <CabecalhoDaPagina
-        eyebrow="Relacionamento · Pagamentos"
-        titulo="Planos recorrentes"
-        apoio="Cobranças mensais fora da mensalidade, como período integral ou transporte, cada plano com os seus alunos."
-      />
-
-      <AbaPlanos />
-    </div>
-  );
+// Os planos recorrentes passaram a morar na aba Recorrente de Cobranças (2026-10). A rota antiga
+// fica de pé por causa de favoritos e links salvos.
+export default function PlanosRedirect() {
+  redirect("/relacionamento/pagamentos?aba=recorrente");
 }
