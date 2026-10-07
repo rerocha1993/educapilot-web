@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Landmark, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Info, Landmark, Pencil, Plus, Trash2, Wallet } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,9 @@ import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { CampoDeDinheiro, emCentavos, emReais } from "@/components/finance/campo-de-dinheiro";
 import { ConexoesDasContas } from "@/components/finance/conexoes-das-contas";
 import { CredenciaisDeBanco } from "@/components/finance/credenciais-de-banco";
+import { RecebimentoDaConta } from "@/components/finance/recebimento-da-conta";
 import { BANCOS, banco } from "@/lib/finance/bancos";
+import { useCarteiras, type CarteiraDeRecebimento } from "@/lib/finance/use-carteiras";
 import {
   TIPOS_DE_CONTA,
   useContas,
@@ -66,6 +68,7 @@ const CONTA_VAZIA = {
 export default function ContasPage() {
   const { data: contas, isLoading, isError } = useContas(true);
   const { data: transferencias } = useTransferencias();
+  const { data: carteiras, isSuccess: carteirasCarregadas } = useCarteiras();
   const salvarConta = useSalvarConta();
   const excluirConta = useExcluirConta();
   const transferir = useTransferir();
@@ -74,6 +77,8 @@ export default function ContasPage() {
   const [dialogConta, setDialogConta] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
   const [form, setForm] = useState(CONTA_VAZIA);
+
+  const [contaDoRecebimento, setContaDoRecebimento] = useState<SaldoDaConta | null>(null);
 
   const [dialogTransferencia, setDialogTransferencia] = useState(false);
   const [transf, setTransf] = useState({
@@ -86,6 +91,11 @@ export default function ContasPage() {
 
   const ativas = useMemo(() => (contas ?? []).filter((c) => c.ativa), [contas]);
   const inativas = useMemo(() => (contas ?? []).filter((c) => !c.ativa), [contas]);
+
+  const carteiraDaConta = useMemo(
+    () => new Map((carteiras ?? []).map((c) => [c.contaId, c])),
+    [carteiras]
+  );
 
   const total = ativas.reduce((soma, c) => soma + c.saldoAtual, 0);
   const totalAReceber = ativas.reduce((soma, c) => soma + c.aReceber, 0);
@@ -236,9 +246,24 @@ export default function ContasPage() {
             </div>
           </div>
 
+          {carteirasCarregadas && carteiras.length === 0 && (
+            <p className="flex items-start gap-2 rounded-lg border border-border bg-muted px-3.5 py-2.5 text-[12.5px] text-muted-foreground">
+              <Info className="mt-px size-4 shrink-0" />
+              Nenhuma conta recebe pagamentos das famílias ainda. Configure o recebimento em uma conta
+              para gerar cobranças.
+            </p>
+          )}
+
           <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
             {ativas.map((conta) => (
-              <CartaoDaConta key={conta.id} conta={conta} onEditar={() => abrirEdicao(conta)} onApagar={() => apagar(conta)} />
+              <CartaoDaConta
+                key={conta.id}
+                conta={conta}
+                carteira={carteiraDaConta.get(conta.id)}
+                onEditar={() => abrirEdicao(conta)}
+                onApagar={() => apagar(conta)}
+                onRecebimento={() => setContaDoRecebimento(conta)}
+              />
             ))}
           </div>
         </>
@@ -249,7 +274,14 @@ export default function ContasPage() {
           <h2 className="font-heading text-[15.5px] font-semibold text-muted-foreground">Contas encerradas</h2>
           <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
             {inativas.map((conta) => (
-              <CartaoDaConta key={conta.id} conta={conta} onEditar={() => abrirEdicao(conta)} onApagar={() => apagar(conta)} />
+              <CartaoDaConta
+                key={conta.id}
+                conta={conta}
+                carteira={carteiraDaConta.get(conta.id)}
+                onEditar={() => abrirEdicao(conta)}
+                onApagar={() => apagar(conta)}
+                onRecebimento={() => setContaDoRecebimento(conta)}
+              />
             ))}
           </div>
         </div>
@@ -293,6 +325,10 @@ export default function ContasPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {contaDoRecebimento && (
+        <RecebimentoDaConta conta={contaDoRecebimento} onFechar={() => setContaDoRecebimento(null)} />
       )}
 
       <Dialog open={dialogConta} onOpenChange={setDialogConta}>
@@ -520,12 +556,16 @@ export default function ContasPage() {
 
 function CartaoDaConta({
   conta,
+  carteira,
   onEditar,
   onApagar,
+  onRecebimento,
 }: {
   conta: SaldoDaConta;
+  carteira?: CarteiraDeRecebimento;
   onEditar: () => void;
   onApagar: () => void;
+  onRecebimento: () => void;
 }) {
   const marca = banco(conta.banco);
   const negativo = conta.saldoAtual < 0;
@@ -580,6 +620,24 @@ function CartaoDaConta({
         <span>
           A pagar <span className="font-mono tabular-nums text-foreground">{dinheiro(conta.aPagar)}</span>
         </span>
+      </div>
+
+      <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-border pt-3.5">
+        {carteira?.provedor === "asaas" &&
+          (carteira.ultimoTesteOk ? (
+            <Badge variant="success">Asaas conectado</Badge>
+          ) : (
+            <Badge variant="pending">Asaas · teste pendente</Badge>
+          ))}
+        {carteira?.provedor === "manual" && <Badge variant="secondary">Recebimento manual</Badge>}
+        {carteira && !carteira.ativa && <Badge variant="outline">Recebimento pausado</Badge>}
+        {carteira?.padraoParaMensalidades && <Badge variant="outline">Recebe mensalidades</Badge>}
+        {carteira?.padraoParaCobrancas && <Badge variant="outline">Recebe cobranças</Badge>}
+
+        <Button variant="outline" size="sm" className="ml-auto" onClick={onRecebimento}>
+          <Wallet className="size-4" />
+          {carteira ? "Recebimento" : "Configurar recebimento"}
+        </Button>
       </div>
     </div>
   );
