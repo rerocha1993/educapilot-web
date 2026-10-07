@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 const NAV = [
   { href: "/master/tenants", label: "Escolas" },
   { href: "/master/modulos", label: "Catálogo de módulos" },
+  { href: "/master/arquivos", label: "Arquivos" },
 ];
 
 export default function MasterPanelLayout({ children }: { children: React.ReactNode }) {
