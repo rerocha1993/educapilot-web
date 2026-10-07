@@ -81,10 +81,12 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/rh\/configuracao/, modulo: "rh", area: "configuracao" },
   { padrao: /^\/rh/, modulo: "rh", area: null },
 
-  // Relacionamento (avisos, cronograma e famílias). A entrada do módulo só redireciona.
+  // Relacionamento (avisos, cronograma, famílias, atividades e mural). A entrada do módulo só redireciona.
   { padrao: /^\/relacionamento\/avisos/, modulo: "relacionamento", area: "avisos" },
   { padrao: /^\/relacionamento\/cronograma/, modulo: "relacionamento", area: "cronograma" },
   { padrao: /^\/relacionamento\/familias/, modulo: "relacionamento", area: "familias" },
+  { padrao: /^\/relacionamento\/atividades/, modulo: "relacionamento", area: "atividades" },
+  { padrao: /^\/relacionamento\/mural/, modulo: "relacionamento", area: "mural" },
   { padrao: /^\/relacionamento\/configuracao/, modulo: "relacionamento", area: "configuracao" },
   { padrao: /^\/relacionamento/, modulo: "relacionamento", area: null },
 

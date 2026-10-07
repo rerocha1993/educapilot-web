@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, DoorOpen, Ellipsis, House, MapPin, Megaphone, type LucideIcon } from "lucide-react";
+import { CalendarDays, Ellipsis, House, Images, MapPin, Megaphone, type LucideIcon } from "lucide-react";
 
 import { MarcaEducaPilot } from "@/components/auth/marca";
 import { useSessaoLocal } from "@/lib/auth/use-sessao-local";
@@ -14,12 +14,17 @@ import { cn } from "@/lib/utils";
 
 const PORTARIA = "/responsavel/portaria";
 
-const ABAS: { href: string; rotulo: string; icone: LucideIcon; exata?: boolean }[] = [
+/**
+ * A barra de baixo cabe cinco itens. "Fotos" tomou o lugar de "Portaria": a Portaria continua a um
+ * toque, pelo cartão "Estou a caminho" do Início e pelo atalho de "Mais" (que por isso fica ativo
+ * nela, e nas Atividades, que também moram lá).
+ */
+const ABAS: { href: string; rotulo: string; icone: LucideIcon; exata?: boolean; tambem?: string[] }[] = [
   { href: "/responsavel", rotulo: "Início", icone: House, exata: true },
   { href: "/responsavel/avisos", rotulo: "Avisos", icone: Megaphone },
   { href: "/responsavel/agenda", rotulo: "Agenda", icone: CalendarDays },
-  { href: PORTARIA, rotulo: "Portaria", icone: DoorOpen },
-  { href: "/responsavel/mais", rotulo: "Mais", icone: Ellipsis },
+  { href: "/responsavel/mural", rotulo: "Fotos", icone: Images },
+  { href: "/responsavel/mais", rotulo: "Mais", icone: Ellipsis, tambem: [PORTARIA, "/responsavel/atividades"] },
 ];
 
 /**
@@ -107,7 +112,8 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
         >
           <ul className="mx-auto grid max-w-md grid-cols-5">
             {ABAS.map((aba) => {
-              const ativa = aba.exata ? pathname === aba.href : pathname === aba.href || pathname.startsWith(`${aba.href}/`);
+              const dentroDe = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
+              const ativa = aba.exata ? pathname === aba.href : dentroDe(aba.href) || (aba.tambem ?? []).some(dentroDe);
               const Icone = aba.icone;
               const comBadge = aba.href === "/responsavel/avisos" && naoLidos > 0;
 

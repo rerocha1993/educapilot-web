@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, CalendarDays, DoorOpen, Megaphone, type LucideIcon } from "lucide-react";
+import { Camera, CalendarClock, CalendarDays, ChevronRight, DoorOpen, Images, Megaphone, MapPin, type LucideIcon } from "lucide-react";
 
+import { CartaoDeAlbum, CartaoDeAtividade } from "@/components/relacionamento/portal/conteudo";
 import {
   ErroDoPortal,
   ItemDeAviso,
@@ -13,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInicioDoPortal } from "@/lib/relacionamento/use-portal-familia";
 
-/** Início do site do responsável: o dia de hoje, o que vem aí e os avisos recentes. */
+/** Início do site do responsável: o dia de hoje, as fotos da sala, o que vem aí e os avisos recentes. */
 export default function InicioDoResponsavelPage() {
   const { data, isLoading, isError, refetch } = useInicioDoPortal();
 
@@ -34,6 +35,9 @@ export default function InicioDoResponsavelPage() {
   const primeiroNome = data.responsavel.nome.split(" ")[0];
   const proximos = data.proximosEventos.slice(0, 3);
   const recentes = data.avisosRecentes.slice(0, 3);
+  const atividades = data.atividadesRecentes.slice(0, 3);
+  const albuns = data.albunsRecentes.slice(0, 3);
+  const variosFilhos = data.alunos.length > 1;
 
   return (
     <>
@@ -56,6 +60,20 @@ export default function InicioDoResponsavelPage() {
         </p>
       )}
 
+      <Link
+        href="/responsavel/portaria"
+        className="flex min-h-16 items-center gap-3 rounded-xl border border-action-border bg-action-soft px-4 py-3 text-action-soft-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:opacity-90"
+      >
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-action text-action-foreground">
+          <MapPin aria-hidden className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold">Estou a caminho</span>
+          <span className="block text-[13px]">Avise a portaria que você está chegando</span>
+        </span>
+        <ChevronRight aria-hidden className="size-5 shrink-0" />
+      </Link>
+
       <SecaoDoPortal titulo="Hoje" acao={{ href: "/responsavel/agenda", rotulo: "Agenda" }}>
         {data.agendaDeHoje.length === 0 ? (
           <VazioDoPortal icone={<CalendarDays />} titulo="Nada marcado para hoje" texto="A rotina e os eventos do dia aparecem aqui." />
@@ -64,6 +82,38 @@ export default function InicioDoResponsavelPage() {
             {data.agendaDeHoje.map((item) => (
               <li key={`${item.origem}-${item.id}`}>
                 <LinhaDaAgenda item={item} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </SecaoDoPortal>
+
+      <SecaoDoPortal titulo="Da sala de aula" acao={{ href: "/responsavel/atividades", rotulo: "Ver todas" }}>
+        {atividades.length === 0 ? (
+          <VazioDoPortal
+            icone={<Camera />}
+            titulo="Nenhuma atividade por enquanto"
+            texto="As fotos e o relato do dia da turma aparecem aqui."
+          />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {atividades.map((a) => (
+              <li key={a.id}>
+                <CartaoDeAtividade atividade={a} mostrarAluno={variosFilhos} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </SecaoDoPortal>
+
+      <SecaoDoPortal titulo="Mural" acao={{ href: "/responsavel/mural", rotulo: "Ver fotos" }}>
+        {albuns.length === 0 ? (
+          <VazioDoPortal icone={<Images />} titulo="Nenhum álbum por enquanto" texto="Festas, passeios e projetos da escola." />
+        ) : (
+          <ul className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1">
+            {albuns.map((a) => (
+              <li key={a.id} className="w-40 shrink-0">
+                <CartaoDeAlbum album={a} compacto />
               </li>
             ))}
           </ul>
@@ -100,8 +150,8 @@ export default function InicioDoResponsavelPage() {
 
       <SecaoDoPortal titulo="Atalhos">
         <div className="grid grid-cols-2 gap-2">
-          <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Estou a caminho" texto="Avisar a portaria" />
           <Atalho href="/responsavel/agenda?aba=rotina" icone={CalendarClock} titulo="Rotina da semana" texto="Horários da turma" />
+          <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Entrada, saída e visitas" />
         </div>
       </SecaoDoPortal>
     </>

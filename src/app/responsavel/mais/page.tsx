@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { Camera, ChevronRight, DoorOpen, LogOut, type LucideIcon } from "lucide-react";
 
 import { ErroDoPortal } from "@/components/relacionamento/portal/comum";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,11 @@ export default function MaisDoResponsavelPage() {
   return (
     <>
       <h1 className="font-heading text-[clamp(22px,6vw,26px)] font-semibold tracking-[-.03em]">Mais</h1>
+
+      <nav aria-label="Atalhos" className="flex flex-col gap-2">
+        <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Estou a caminho, entrada e saída" />
+        <Atalho href="/responsavel/atividades" icone={Camera} titulo="Atividades" texto="O que a turma fez em sala, com fotos" />
+      </nav>
 
       {isLoading && <Skeleton className="h-40 w-full rounded-xl" />}
       {isError && <ErroDoPortal texto="Não foi possível carregar seus dados." onTentar={() => refetch()} />}
@@ -65,5 +71,23 @@ export default function MaisDoResponsavelPage() {
         EducaPilot · versão <span className="font-mono tabular-nums">{pacote.version}</span>
       </p>
     </>
+  );
+}
+
+function Atalho({ href, icone: Icone, titulo, texto }: { href: string; icone: LucideIcon; titulo: string; texto: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:bg-muted"
+    >
+      <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
+        <Icone aria-hidden className="size-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-semibold">{titulo}</span>
+        <span className="block text-[13px] text-muted-foreground">{texto}</span>
+      </span>
+      <ChevronRight aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+    </Link>
   );
 }

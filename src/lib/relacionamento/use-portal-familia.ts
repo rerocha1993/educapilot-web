@@ -80,6 +80,55 @@ export interface InicioDoPortal {
   proximosEventos: AgendaItem[];
   avisosRecentes: AvisoResumo[];
   agendaDeHoje: AgendaItem[];
+  /** Até 3 do feed de atividades. */
+  atividadesRecentes: AtividadeDaFamilia[];
+  /** Até 3 álbuns do mural. */
+  albunsRecentes: AlbumDaFamilia[];
+}
+
+/** Foto de atividade ou álbum, vista pelos pais. */
+export interface FotoDaFamilia {
+  id: string;
+  legenda: string | null;
+  largura: number | null;
+  altura: number | null;
+}
+
+export interface AtividadeDaFamilia {
+  id: string;
+  turma: string;
+  /** Nome do filho, quando o servidor o manda (família com mais de um aluno). */
+  aluno: string | null;
+  /** yyyy-MM-dd */
+  data: string;
+  titulo: string;
+  resumo: string;
+  professorNome: string;
+  /** Instante UTC. */
+  publicadaEm: string | null;
+  /** Prévia: até 4 fotos. No detalhe, todas. */
+  fotos: FotoDaFamilia[];
+  totalDeFotos: number;
+}
+
+export interface AtividadeCompleta extends AtividadeDaFamilia {
+  texto: string;
+}
+
+export interface AlbumDaFamilia {
+  id: string;
+  titulo: string;
+  turma: string | null;
+  escolaToda: boolean;
+  dataDoEvento: string | null;
+  publicadoEm: string | null;
+  totalDeFotos: number;
+  capaFotoId: string | null;
+}
+
+export interface AlbumCompleto extends AlbumDaFamilia {
+  descricao: string;
+  fotos: FotoDaFamilia[];
 }
 
 export interface DiaDaAgenda {
@@ -163,6 +212,69 @@ function detalhe(a: DetalheCru): AvisoDetalhe {
   return { ...aviso({ ...a, anexos: anexos.length }), texto: a.texto ?? "", anexos };
 }
 
+function fotoDaFamilia(f: Partial<FotoDaFamilia>): FotoDaFamilia {
+  return {
+    id: f.id ?? "",
+    legenda: f.legenda?.trim() ? f.legenda : null,
+    largura: f.largura ?? null,
+    altura: f.altura ?? null,
+  };
+}
+
+type FotoDaFamiliaCrua = Partial<FotoDaFamilia>;
+
+type AtividadeCrua = Omit<Partial<AtividadeDaFamilia>, "fotos" | "totalDeFotos"> & {
+  fotos?: FotoDaFamiliaCrua[] | number;
+  totalDeFotos?: number;
+  texto?: string;
+};
+
+function atividade(a: AtividadeCrua): AtividadeDaFamilia {
+  const fotos = Array.isArray(a.fotos) ? a.fotos.map(fotoDaFamilia) : [];
+  return {
+    id: a.id ?? "",
+    turma: a.turma ?? "",
+    aluno: a.aluno ?? null,
+    data: dia(a.data) ?? "",
+    titulo: a.titulo ?? "",
+    resumo: a.resumo ?? "",
+    professorNome: a.professorNome ?? "",
+    publicadaEm: a.publicadaEm ?? null,
+    fotos,
+    totalDeFotos: a.totalDeFotos ?? (typeof a.fotos === "number" ? a.fotos : fotos.length),
+  };
+}
+
+function atividadeCompleta(a: AtividadeCrua): AtividadeCompleta {
+  return { ...atividade(a), texto: a.texto ?? "" };
+}
+
+type AlbumCru = Omit<Partial<AlbumDaFamilia>, "totalDeFotos"> & {
+  fotos?: FotoDaFamiliaCrua[] | number;
+  descricao?: string;
+};
+
+function album(a: AlbumCru): AlbumDaFamilia {
+  return {
+    id: a.id ?? "",
+    titulo: a.titulo ?? "",
+    turma: a.turma ?? null,
+    escolaToda: a.escolaToda ?? !a.turma,
+    dataDoEvento: dia(a.dataDoEvento),
+    publicadoEm: a.publicadoEm ?? null,
+    totalDeFotos: typeof a.fotos === "number" ? a.fotos : (a.fotos?.length ?? 0),
+    capaFotoId: a.capaFotoId ?? null,
+  };
+}
+
+function albumCompleto(a: AlbumCru): AlbumCompleto {
+  return {
+    ...album(a),
+    descricao: a.descricao ?? "",
+    fotos: Array.isArray(a.fotos) ? a.fotos.map(fotoDaFamilia) : [],
+  };
+}
+
 // ------------------------------------------------------------------ início
 
 export function useInicioDoPortal(habilitado = true) {
@@ -173,13 +285,15 @@ export function useInicioDoPortal(habilitado = true) {
     refetchInterval: 60_000,
     queryFn: async (): Promise<InicioDoPortal> => {
       const r = await responsavelJson<
-        | (Partial<Omit<InicioDoPortal, "alunos" | "proximosEventos" | "avisosRecentes" | "agendaDeHoje" | "escola" | "responsavel">> & {
+        | (Partial<Omit<InicioDoPortal, "alunos" | "proximosEventos" | "avisosRecentes" | "agendaDeHoje" | "atividadesRecentes" | "albunsRecentes" | "escola" | "responsavel">> & {
             escola?: Partial<InicioDoPortal["escola"]>;
             responsavel?: Partial<InicioDoPortal["responsavel"]>;
             alunos?: Partial<FilhoDoPortal>[];
             proximosEventos?: Partial<AgendaItem>[];
             avisosRecentes?: AvisoCru[];
             agendaDeHoje?: Partial<AgendaItem>[];
+            atividadesRecentes?: AtividadeCrua[];
+            albunsRecentes?: AlbumCru[];
           })
         | null
       >("/inicio", {}, "Não foi possível carregar seus dados.");
@@ -196,6 +310,8 @@ export function useInicioDoPortal(habilitado = true) {
         proximosEventos: (r?.proximosEventos ?? []).map(agendaItem),
         avisosRecentes: (r?.avisosRecentes ?? []).map(aviso),
         agendaDeHoje: (r?.agendaDeHoje ?? []).map(agendaItem),
+        atividadesRecentes: (r?.atividadesRecentes ?? []).map(atividade),
+        albunsRecentes: (r?.albunsRecentes ?? []).map(album),
       };
     },
   });
@@ -317,5 +433,59 @@ export function useRotinaDosFilhos() {
         })),
       }));
     },
+  });
+}
+
+// ------------------------------------------------------------------ atividades e mural
+
+export const TAMANHO_DA_PAGINA_DE_ATIVIDADES = 10;
+
+/** Feed de atividades da sala, de um filho ou de todos (`studentId` nulo). */
+export function useAtividadesDoPortal(studentId: number | null) {
+  return useInfiniteQuery({
+    queryKey: [...CHAVE, "atividades", "lista", studentId],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const r = await responsavelJson<{ total?: number; itens?: AtividadeCrua[] } | null>(
+        `/atividades${consulta({ studentId, pagina: pageParam, tamanho: TAMANHO_DA_PAGINA_DE_ATIVIDADES })}`,
+        {},
+        "Não foi possível carregar as atividades."
+      );
+      return { total: r?.total ?? 0, itens: (r?.itens ?? []).map(atividade) };
+    },
+    getNextPageParam: (ultima, todas) => {
+      const carregados = todas.reduce((soma, p) => soma + p.itens.length, 0);
+      return ultima.itens.length > 0 && carregados < ultima.total ? todas.length + 1 : undefined;
+    },
+  });
+}
+
+export function useAtividadeDoPortal(id: string) {
+  return useQuery({
+    queryKey: [...CHAVE, "atividades", "detalhe", id],
+    enabled: !!id,
+    queryFn: async () =>
+      atividadeCompleta(
+        (await responsavelJson<AtividadeCrua>(`/atividades/${id}`, {}, "Não foi possível abrir a atividade.")) ?? {}
+      ),
+  });
+}
+
+export function useMuralDoPortal() {
+  return useQuery({
+    queryKey: [...CHAVE, "mural", "lista"],
+    queryFn: async (): Promise<AlbumDaFamilia[]> => {
+      const lista = await responsavelJson<AlbumCru[] | null>("/mural", {}, "Não foi possível carregar o mural.");
+      return (lista ?? []).map(album);
+    },
+  });
+}
+
+export function useAlbumDoPortal(id: string) {
+  return useQuery({
+    queryKey: [...CHAVE, "mural", "detalhe", id],
+    enabled: !!id,
+    queryFn: async () =>
+      albumCompleto((await responsavelJson<AlbumCru>(`/mural/${id}`, {}, "Não foi possível abrir o álbum.")) ?? {}),
   });
 }

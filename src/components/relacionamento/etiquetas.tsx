@@ -55,3 +55,18 @@ export function destinoDaPublicacao(p: { escolaToda: boolean; turmas: { nome: st
   if (p.escolaToda || p.turmas.length === 0) return "Escola toda";
   return p.turmas.map((t) => t.nome).join(", ");
 }
+
+/** Situação de um álbum do mural ("Publicado" no masculino, como a API manda). */
+export function EtiquetaDoStatusDoAlbum({ status, className }: { status: "Rascunho" | "Publicado"; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[11.5px] font-semibold whitespace-nowrap",
+        status === "Publicado" ? "bg-success-soft text-success-soft-foreground" : "bg-muted text-muted-foreground",
+        className
+      )}
+    >
+      {status}
+    </span>
+  );
+}

@@ -149,3 +149,45 @@ export async function abrirAnexoDaFamilia(anexoId: string, nome: string): Promis
   if (!res.ok) throw new Error(await mensagemDeErro(res, "Não foi possível abrir o anexo."));
   await entregar(res, nome, true);
 }
+
+/** Envio multipart de vários arquivos no mesmo campo (fotos de atividade e de álbum). */
+export async function relacionamentoUploadVarios<T>(
+  caminho: string,
+  campo: string,
+  arquivos: File[],
+  falha: string
+): Promise<T> {
+  const form = new FormData();
+  for (const arquivo of arquivos) form.append(campo, arquivo, arquivo.name);
+  return relacionamentoJson<T>(caminho, { method: "POST", body: form }, falha);
+}
+
+// ------------------------------------------------------------------ fotos autenticadas
+
+/** Miniatura (quadrada, leve) ou a foto original reduzida no envio. */
+export type VarianteDaFoto = "thumb" | "original";
+
+/**
+ * Como buscar o arquivo de uma foto. Cada lado (escola, família) tem o seu: o endpoint exige o
+ * Bearer, então a imagem não pode ser um <img src> direto.
+ */
+export type BaixarFoto = (fotoId: string, variante: VarianteDaFoto) => Promise<Blob>;
+
+async function blobDe(res: Response, falha: string): Promise<Blob> {
+  if (!res.ok) throw new Error(await mensagemDeErro(res, falha));
+  return res.blob();
+}
+
+const FALHA_DA_FOTO = "Não foi possível carregar a foto.";
+
+/** Foto de uma atividade, pelo lado da escola. */
+export const baixarFotoDaAtividade: BaixarFoto = async (fotoId, variante) =>
+  blobDe(await relacionamentoFetch(`/atividades/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
+
+/** Foto de um álbum do mural, pelo lado da escola. */
+export const baixarFotoDoMural: BaixarFoto = async (fotoId, variante) =>
+  blobDe(await relacionamentoFetch(`/mural/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
+
+/** Foto de atividade ou de álbum, pelo lado dos pais (o servidor confere o vínculo com a turma). */
+export const baixarFotoDaFamilia: BaixarFoto = async (fotoId, variante) =>
+  blobDe(await responsavelFetch(`/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
