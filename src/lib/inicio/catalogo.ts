@@ -4,9 +4,12 @@ import {
   CalendarCheck,
   CalendarClock,
   ClipboardList,
+  Contact,
   DoorOpen,
   FileSignature,
   FileStack,
+  GraduationCap,
+  Briefcase,
   Inbox,
   MessageSquareWarning,
   NotebookPen,
@@ -252,14 +255,72 @@ export const PENDENCIAS: ItemDoInicio[] = [
 
 // ------------------------------------------------------------------ blocos
 
-export type IdDeBloco = "numeros" | "precisa" | "tarefas" | "formularios" | "atalhos";
+export type IdDeBloco =
+  | "numeros"
+  | "precificacao"
+  | "aniversariantes"
+  | "calendario"
+  | "precisa"
+  | "tarefas"
+  | "formularios"
+  | "atalhos";
 
-export const BLOCOS: { id: IdDeBloco; rotulo: string }[] = [
-  { id: "numeros", rotulo: "Números do dia" },
-  { id: "precisa", rotulo: "Precisa de você" },
-  { id: "tarefas", rotulo: "Minhas tarefas" },
-  { id: "formularios", rotulo: "Formulários" },
-  { id: "atalhos", rotulo: "Atalhos" },
+export const BLOCOS: { id: IdDeBloco; rotulo: string; descricao: string }[] = [
+  { id: "numeros", rotulo: "Números do dia", descricao: "Os números do dia da escola." },
+  {
+    id: "precificacao",
+    rotulo: "Mensalidades fora do alvo",
+    descricao: "Quantas mensalidades estão abaixo do alvo do estudo de precificação e o impacto no ano.",
+  },
+  {
+    id: "aniversariantes",
+    rotulo: "Aniversariantes",
+    descricao: "Quem faz aniversário hoje e nos próximos dias.",
+  },
+  {
+    id: "calendario",
+    rotulo: "Este mês",
+    descricao: "Os próximos eventos do calendário escolar.",
+  },
+  { id: "precisa", rotulo: "Precisa de você", descricao: "O que pede decisão agora." },
+  { id: "tarefas", rotulo: "Minhas tarefas", descricao: "O resumo do seu quadro de tarefas." },
+  { id: "formularios", rotulo: "Formulários", descricao: "O andamento dos formulários escolhidos." },
+  { id: "atalhos", rotulo: "Atalhos", descricao: "Os acessos rápidos às telas do dia a dia." },
+];
+
+// ------------------------------------------------------------------ aniversariantes
+
+/**
+ * As listas do bloco Aniversariantes. Cada uma é uma lista dentro do cartão, e não uma tela que
+ * se abre: `rota` aqui só diz qual permissão a lista exige.
+ *
+ * `equipe` vem do RH: só aparece para quem abre a tela de funcionários, e o servidor também só
+ * devolve a lista para quem tem a área.
+ */
+export type IdDeAniversariantes = "alunos" | "responsaveis" | "equipe";
+
+export const ANIVERSARIANTES: ItemDoInicio[] = [
+  {
+    id: "alunos",
+    rotulo: "Alunos",
+    descricao: "Alunos que fazem aniversário, com a turma e a idade que fazem.",
+    rota: "/admin/alunos",
+    icone: GraduationCap,
+  },
+  {
+    id: "responsaveis",
+    rotulo: "Mães e responsáveis",
+    descricao: "Responsáveis que fazem aniversário, com o aluno de quem são.",
+    rota: "/admin/responsaveis",
+    icone: Contact,
+  },
+  {
+    id: "equipe",
+    rotulo: "Equipe",
+    descricao: "Funcionários da escola que fazem aniversário, com o cargo.",
+    rota: "/rh/funcionarios",
+    icone: Briefcase,
+  },
 ];
 
 // ------------------------------------------------------------------ padrão de fábrica por papel
@@ -270,6 +331,13 @@ export interface PadraoDoPapel {
   numeros: string[];
   pendencias: string[];
   atalhos: string[];
+  /** Listas do bloco Aniversariantes (ids de ANIVERSARIANTES). */
+  aniversariantes: string[];
+  /**
+   * Blocos que nascem desligados para este papel: continuam na lista de personalização, e a pessoa
+   * liga se quiser. Só vale para quem nunca viu o bloco — quem já escolheu mantém a escolha.
+   */
+  desligados?: IdDeBloco[];
   /**
    * O botão laranja do cabeçalho, quando o papel tem um. É um id de atalho, e vem do papel — não
    * da tela: a gestão não quer "Registrar ocorrência" fixo ali, a professora quer.
@@ -284,17 +352,21 @@ export interface PadraoDoPapel {
  * menor alcance — mesma normalização que o backend faz ao gravar.
  */
 const GESTAO: PadraoDoPapel = {
-  blocos: ["numeros", "precisa", "formularios", "atalhos", "tarefas"],
+  blocos: ["numeros", "precificacao", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
   pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
+  aniversariantes: ["alunos", "responsaveis", "equipe"],
 };
 
 const COORDENACAO: PadraoDoPapel = {
-  blocos: ["numeros", "precisa", "tarefas", "atalhos", "formularios"],
+  blocos: ["numeros", "aniversariantes", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
   numeros: ["presencas", "envios-aguardando", "contratos-assinados"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas", "envios-aguardando"],
   atalhos: ["chamada", "planejamento", "ocorrencias", "checklist", "relatorios"],
+  aniversariantes: ["alunos", "responsaveis", "equipe"],
+  // Preço da mensalidade é assunto da gestão: o bloco existe na personalização, desligado.
+  desligados: ["precificacao"],
   acaoPrincipal: "ocorrencias",
 };
 
@@ -303,13 +375,18 @@ const SECRETARIA: PadraoDoPapel = {
   numeros: ["contratos-assinados", "envios-aguardando", "presencas"],
   pendencias: ["contratos-conferencia", "envios-aguardando", "chamada-aberta", "faltas-sem-justificativa"],
   atalhos: ["contratos", "envios", "alunos", "formularios"],
+  aniversariantes: ["alunos", "responsaveis"],
+  // Calendário é opcional para a secretaria: o bloco está na lista de personalização, desligado.
+  desligados: ["calendario", "precificacao"],
 };
 
 const PROFESSOR: PadraoDoPapel = {
-  blocos: ["numeros", "precisa", "tarefas", "atalhos", "formularios"],
+  blocos: ["numeros", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
   numeros: ["presencas"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas"],
   atalhos: ["chamada", "ocorrencias", "planejamento", "checklist"],
+  aniversariantes: ["alunos"],
+  desligados: ["precificacao"],
   acaoPrincipal: "ocorrencias",
 };
 

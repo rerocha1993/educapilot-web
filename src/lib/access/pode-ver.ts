@@ -45,8 +45,11 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   // Financeiro
   { padrao: /^\/finance\/mensalidades/, modulo: "finance", area: "mensalidades" },
   { padrao: /^\/finance\/receitas/, modulo: "finance", area: "receitas" },
+  { padrao: /^\/finance\/recibos/, modulo: "finance", area: "recibos" },
   { padrao: /^\/finance\/despesas/, modulo: "finance", area: "despesas" },
   { padrao: /^\/finance\/orcamento/, modulo: "finance", area: "orcamento" },
+  { padrao: /^\/finance\/precificacao/, modulo: "finance", area: "precificacao" },
+  { padrao: /^\/finance\/projetos/, modulo: "finance", area: "projetos" },
   { padrao: /^\/finance\/inadimplencia/, modulo: "finance", area: "inadimplencia" },
   { padrao: /^\/finance\/contas/, modulo: "finance", area: "contas" },
   { padrao: /^\/finance\/conciliacao/, modulo: "finance", area: "conciliacao" },
@@ -68,6 +71,28 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/portaria\/configuracao/, modulo: "reception", area: "configuracao" },
   { padrao: /^\/portaria/, modulo: "reception", area: null },
 
+  // RH. Como na Portaria, a entrada do módulo (visão geral) é aberta a qualquer área dele.
+  { padrao: /^\/rh\/funcionarios/, modulo: "rh", area: "funcionarios" },
+  { padrao: /^\/rh\/ponto/, modulo: "rh", area: "ponto" },
+  { padrao: /^\/rh\/atestados/, modulo: "rh", area: "atestados" },
+  { padrao: /^\/rh\/afastamentos/, modulo: "rh", area: "afastamentos" },
+  { padrao: /^\/rh\/documentos/, modulo: "rh", area: "documentos" },
+  { padrao: /^\/rh\/relatorios/, modulo: "rh", area: "relatorios" },
+  { padrao: /^\/rh\/configuracao/, modulo: "rh", area: "configuracao" },
+  { padrao: /^\/rh/, modulo: "rh", area: null },
+
+  // Relacionamento (avisos, cronograma, famílias, atividades e mural). A entrada do módulo só redireciona.
+  { padrao: /^\/relacionamento\/avisos/, modulo: "relacionamento", area: "avisos" },
+  { padrao: /^\/relacionamento\/cronograma/, modulo: "relacionamento", area: "cronograma" },
+  { padrao: /^\/relacionamento\/familias/, modulo: "relacionamento", area: "familias" },
+  { padrao: /^\/relacionamento\/atividades/, modulo: "relacionamento", area: "atividades" },
+  { padrao: /^\/relacionamento\/mural/, modulo: "relacionamento", area: "mural" },
+  { padrao: /^\/relacionamento\/chat/, modulo: "relacionamento", area: "chat" },
+  { padrao: /^\/relacionamento\/pagamentos/, modulo: "relacionamento", area: "pagamentos" },
+  { padrao: /^\/relacionamento\/loja/, modulo: "relacionamento", area: "loja" },
+  { padrao: /^\/relacionamento\/configuracao/, modulo: "relacionamento", area: "configuracao" },
+  { padrao: /^\/relacionamento/, modulo: "relacionamento", area: null },
+
   // Rotina
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
@@ -75,6 +100,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
   { padrao: /^\/reunioes/, modulo: "tasks", area: "reunioes" },
+  { padrao: /^\/calendario/, modulo: "tasks", area: "calendario" },
   { padrao: /^\/$/, modulo: "tasks", area: "chamada" },
 ];
 

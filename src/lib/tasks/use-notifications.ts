@@ -14,9 +14,10 @@ export interface NotificationDto {
   isRead: boolean;
 }
 
-export function useNotifications() {
+export function useNotifications(habilitado = true) {
   return useQuery({
     queryKey: ["notifications"],
+    enabled: habilitado,
     queryFn: async () => {
       const result = await tasksApi.GET("/api/Notifications");
       const data = unwrapApiResponse(result, "Não foi possível carregar as notificações.");

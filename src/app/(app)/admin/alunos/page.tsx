@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound, Camera } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,6 +76,30 @@ function SemAlunos({ semTurma, semBorda = false }: { semTurma: boolean; semBorda
   );
 }
 
+/** Autorização de uso de imagem no formulário: select de três estados (nulo = não informado). */
+type AutorizacaoDeImagem = "nao-informado" | "sim" | "nao";
+
+const ROTULO_DA_AUTORIZACAO: Record<AutorizacaoDeImagem, string> = {
+  "nao-informado": "Não informado",
+  sim: "Sim, autoriza",
+  nao: "Não autoriza",
+};
+
+function autorizacaoDe(valor: boolean | null | undefined): AutorizacaoDeImagem {
+  return valor === true ? "sim" : valor === false ? "nao" : "nao-informado";
+}
+
+/** Etiqueta da lista: a cor reforça, o texto e o ícone dizem. */
+function EtiquetaDeImagem({ valor }: { valor: boolean | null | undefined }) {
+  const estado = autorizacaoDe(valor);
+  return (
+    <Badge variant={estado === "sim" ? "success" : estado === "nao" ? "overdue" : "secondary"} className="gap-1">
+      <Camera aria-hidden />
+      {estado === "sim" ? "Imagem autorizada" : estado === "nao" ? "Imagem não autorizada" : "Imagem não informada"}
+    </Badge>
+  );
+}
+
 function PeriodoNaLista({ periodo }: { periodo?: Parameters<typeof descreverPeriodo>[0] }) {
   const descricao = periodo ? descreverPeriodo(periodo) : null;
   if (!descricao) return <span className="text-xs text-muted-foreground">Sem período</span>;
@@ -111,6 +135,7 @@ export default function AlunosPage() {
   const [continuousMedication, setContinuousMedication] = useState("");
   const [dietaryRestriction, setDietaryRestriction] = useState("");
   const [healthInsurance, setHealthInsurance] = useState("");
+  const [autorizaImagem, setAutorizaImagem] = useState<AutorizacaoDeImagem>("nao-informado");
 
   // Turma do aluno, separada do filtro da lista: até aqui salvar usava a turma FILTRADA, então
   // não havia como mover um aluno de turma — abrir o cadastro e salvar o devolvia para a mesma.
@@ -145,6 +170,7 @@ export default function AlunosPage() {
       setContinuousMedication("");
       setDietaryRestriction("");
       setHealthInsurance("");
+      setAutorizaImagem("nao-informado");
       setClassId(selectedClassId);
     } else if (editing) {
       setFullName(editing.fullName);
@@ -153,6 +179,7 @@ export default function AlunosPage() {
       setContinuousMedication(editing.continuousMedication ?? "");
       setDietaryRestriction(editing.dietaryRestriction ?? "");
       setHealthInsurance(editing.healthInsurance ?? "");
+      setAutorizaImagem(autorizacaoDe(editing.autorizaUsoDeImagem));
       setClassId(editing.classId);
     }
   }, [editing, selectedClassId]);
@@ -177,6 +204,7 @@ export default function AlunosPage() {
         continuousMedication: continuousMedication.trim() || null,
         dietaryRestriction: dietaryRestriction.trim() || null,
         healthInsurance: healthInsurance.trim() || null,
+        autorizaUsoDeImagem: autorizaImagem === "sim" ? true : autorizaImagem === "nao" ? false : null,
       });
       if (temPortaria && periodoAlterado && id) {
         await definirPeriodo.mutateAsync({
@@ -288,6 +316,9 @@ export default function AlunosPage() {
                     )}
                   </div>
                   <span className="font-mono text-sm tabular-nums text-muted-foreground">{formatarSoData(s.birthDate)}</span>
+                  <div>
+                    <EtiquetaDeImagem valor={s.autorizaUsoDeImagem} />
+                  </div>
                   {temPortaria && (
                     <div className="text-sm">
                       <PeriodoNaLista periodo={periodoPorAluno.get(s.id)} />
@@ -324,6 +355,7 @@ export default function AlunosPage() {
                 <TableRow>
                   <TableHead>Aluno</TableHead>
                   <TableHead>Data de nascimento</TableHead>
+                  <TableHead>Uso de imagem</TableHead>
                   {temPortaria && <TableHead>Período</TableHead>}
                   <TableHead className="w-20 text-right">Ações</TableHead>
                 </TableRow>
@@ -332,7 +364,7 @@ export default function AlunosPage() {
                 {studentsLoading &&
                   Array.from({ length: 4 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={temPortaria ? 4 : 3}>
+                      <TableCell colSpan={temPortaria ? 5 : 4}>
                         <Skeleton className="h-5 w-full" />
                       </TableCell>
                     </TableRow>
@@ -340,7 +372,7 @@ export default function AlunosPage() {
 
                 {!studentsLoading && filteredStudents.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={temPortaria ? 4 : 3} className="p-0">
+                    <TableCell colSpan={temPortaria ? 5 : 4} className="p-0">
                       <SemAlunos semTurma={selectedClassId === null} semBorda />
                     </TableCell>
                   </TableRow>
@@ -361,6 +393,9 @@ export default function AlunosPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm tabular-nums">
                       {formatarSoData(s.birthDate)}
+                    </TableCell>
+                    <TableCell>
+                      <EtiquetaDeImagem valor={s.autorizaUsoDeImagem} />
                     </TableCell>
                     {temPortaria && (
                       <TableCell className="text-sm">
@@ -447,6 +482,30 @@ export default function AlunosPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex flex-col gap-[5px]">
+              <Label
+                htmlFor="aluno-autoriza-imagem"
+                className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground"
+              >
+                Autoriza uso de imagem
+              </Label>
+              <Select value={autorizaImagem} onValueChange={(v) => v && setAutorizaImagem(v as AutorizacaoDeImagem)}>
+                <SelectTrigger id="aluno-autoriza-imagem" className="w-full">
+                  <SelectValue>{() => ROTULO_DA_AUTORIZACAO[autorizaImagem]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(ROTULO_DA_AUTORIZACAO) as AutorizacaoDeImagem[]).map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {ROTULO_DA_AUTORIZACAO[v]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Vale para fotos em atividades e no mural. A professora vê um aviso quando a turma tem alunos sem autorização.
+              </p>
             </div>
 
             {temPortaria && (

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -173,6 +174,14 @@ export default function ReceitasPage() {
                 Marcar recebido
               </Button>
             )}
+            {r.status === 2 && (
+              <Link
+                href={`/finance/recibos/novo?revenueEntryId=${r.id}`}
+                className={buttonVariants({ variant: "outline", size: "sm", className: "w-full" })}
+              >
+                Emitir recibo
+              </Link>
+            )}
           </div>
         ))}
       </div>
@@ -186,7 +195,7 @@ export default function ReceitasPage() {
               <TableHead>Vence</TableHead>
               <TableHead className="text-right">Valor previsto</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-32 text-right">Ações</TableHead>
+              <TableHead className="w-36 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -233,6 +242,14 @@ export default function ReceitasPage() {
                     >
                       Marcar recebido
                     </Button>
+                  )}
+                  {r.status === 2 && (
+                    <Link
+                      href={`/finance/recibos/novo?revenueEntryId=${r.id}`}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                    >
+                      Emitir recibo
+                    </Link>
                   )}
                 </TableCell>
               </TableRow>

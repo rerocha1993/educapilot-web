@@ -27,6 +27,8 @@ export interface PreferenciasDoInicio {
   numeros: string[];
   atalhos: string[];
   pendencias: string[];
+  /** Listas do bloco Aniversariantes ("alunos", "responsaveis", "equipe"). */
+  aniversariantes: string[];
   /** Ids (guid) dos formulários resumidos na tela, na ordem escolhida. */
   formularios: string[];
 }
@@ -36,6 +38,7 @@ export const PREFERENCIAS_VAZIAS: PreferenciasDoInicio = {
   numeros: [],
   atalhos: [],
   pendencias: [],
+  aniversariantes: [],
   formularios: [],
 };
 
@@ -69,6 +72,7 @@ function normalizar(bruto: Partial<PreferenciasDoInicio> | null): PreferenciasDo
     numeros: bruto?.numeros ?? [],
     atalhos: bruto?.atalhos ?? [],
     pendencias: bruto?.pendencias ?? [],
+    aniversariantes: bruto?.aniversariantes ?? [],
     formularios: bruto?.formularios ?? [],
   };
 }
@@ -118,7 +122,8 @@ export function useSalvarPreferenciasDoInicio() {
  */
 export function arranjarBlocos<T extends { id: string }>(
   catalogo: T[],
-  salvo: BlocoDoPainel[] | undefined
+  salvo: BlocoDoPainel[] | undefined,
+  desligadosDeFabrica: readonly string[] = []
 ): BlocoDoPainel[] {
   const doCatalogo = new Set(catalogo.map((b) => b.id));
   // Id salvo que não existe mais no catálogo é lixo de versão antiga: sai fora.
@@ -140,8 +145,9 @@ export function arranjarBlocos<T extends { id: string }>(
       }
     }
 
-    // Bloco novo nasce visível: a pessoa escolheu esconder os outros, não este.
-    arranjo.splice(destino, 0, { id: bloco.id, visivel: true });
+    // Bloco novo nasce visível: a pessoa escolheu esconder os outros, não este. A exceção é o que
+    // o papel dela marca como opcional (ver PadraoDoPapel.desligados): esse nasce desligado.
+    arranjo.splice(destino, 0, { id: bloco.id, visivel: !desligadosDeFabrica.includes(bloco.id) });
     jaTem.add(bloco.id);
   });
 

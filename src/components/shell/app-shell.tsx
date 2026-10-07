@@ -24,13 +24,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
-import { clearSession } from "@/lib/auth/session";
+import { encerrarSessao } from "@/lib/auth/sair";
 import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS, SUBITENS_DO_MENU } from "@/lib/kernel/nav-items";
 import { acessoDaRota } from "@/lib/access/pode-ver";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { cn } from "@/lib/utils";
 import { AlterarSenhaDialog } from "@/components/shell/alterar-senha-dialog";
+import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
+import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
+import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
 // espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
@@ -53,6 +56,8 @@ const TITULO_DO_MODULO: Record<string, string> = {
   finance: "Financeiro",
   events: "Eventos & vendas",
   admin: "Administração",
+  rh: "RH",
+  relacionamento: "Relacionamento",
 };
 
 /** Módulo dono de uma rota, para marcar a aba certa em telas internas (/checklist é da Rotina). */
@@ -133,6 +138,16 @@ export function AppShell({
 
   const visibleItems = NAV_ITEMS.filter((item) => moduloVisivel(item.href));
 
+  // O sino lê /api/Notifications, que é da Rotina, e as conversas não lidas do chat, que são do
+  // Relacionamento: aparece para quem tem uma das duas coisas. O Responsável nem chega a este
+  // shell (o layout o manda para /responsavel), mas a regra fica explícita.
+  const comRotina = moduloVisivel("/");
+  const comChat = rotaVisivel("/relacionamento/chat");
+  const mostraSino = session.role !== "Responsavel" && (comRotina || comChat);
+
+  // Tempo real do chat: uma conexão por sessão, ligada ao cache das telas. Só para quem tem a área.
+  useChatTempoReal("escola", session.role !== "Responsavel" && comChat);
+
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
     .slice(0, 3);
@@ -165,7 +180,7 @@ export function AppShell({
   }
 
   function handleLogout() {
-    clearSession();
+    encerrarSessao();
     router.push("/login");
   }
 
@@ -222,14 +237,14 @@ export function AppShell({
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col bg-sidebar py-5 transition-[width] duration-150 md:flex",
+          "hidden shrink-0 flex-col bg-sidebar py-5 transition-[width] duration-150 md:flex print:hidden!",
           collapsed ? "w-16 px-2" : "w-[250px] px-3"
         )}
       >
         <div className={cn("flex items-center gap-2.5", collapsed ? "flex-col" : "px-2")}>
           <Link href={INICIO_HREF} className="flex items-center gap-2.5 overflow-hidden">
             <Image
-              src="/icon-192.png"
+              src="/icon-192-claro.png"
               alt=""
               width={32}
               height={32}
@@ -305,7 +320,7 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
+        <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex print:hidden!">
           <div className="flex min-w-0 items-center gap-2 text-[13px] text-muted-foreground">
             <span className="truncate">{session.name}</span>
             {tituloDaTela && (
@@ -330,12 +345,13 @@ export function AppShell({
                 <Settings className="size-4" />
               </Link>
             )}
+            {mostraSino && <SinoDeAvisos tamanho="sm" comRotina={comRotina} comChat={comChat} />}
             {menuDoUsuario("sm")}
           </div>
         </header>
 
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
-        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[3rem_1fr_3rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[5.75rem_1fr_5.75rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!">
           <button
             type="button"
             onClick={abrirMenu}
@@ -352,7 +368,10 @@ export function AppShell({
             </span>
           </Link>
 
-          <div className="flex justify-end">{menuDoUsuario("lg")}</div>
+          <div className="flex items-center justify-end">
+            {mostraSino && <SinoDeAvisos tamanho="lg" comRotina={comRotina} comChat={comChat} />}
+            {menuDoUsuario("lg")}
+          </div>
         </header>
 
         {/* min-w-0 (2026-09): sem isso, um item flex não encolhe abaixo da largura
@@ -362,6 +381,7 @@ export function AppShell({
             testando a Chamada no mobile. No celular o padding de baixo abre espaço
             para a barra de abas fixa. */}
         <main className="min-w-0 flex-1 overflow-auto bg-background p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pb-11 md:pt-6">
+          <BannerDeNotificacoes className="mb-4" />
           {children}
         </main>
       </div>
@@ -369,7 +389,7 @@ export function AppShell({
       {/* Barra de abas do celular. */}
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden!"
       >
         <ul className="grid grid-cols-5">
           <AbaDoCelular
@@ -415,7 +435,7 @@ export function AppShell({
           <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col bg-sidebar pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 py-4">
               <span className="flex items-center gap-2.5">
-                <Image src="/icon-192.png" alt="" width={30} height={30} className="size-[30px] shrink-0" />
+                <Image src="/icon-192-claro.png" alt="" width={30} height={30} className="size-[30px] shrink-0" />
                 <span className="font-heading text-[17px] font-semibold text-white">
                   Educa<span className="text-action-brand">Pilot</span>
                 </span>

@@ -10,8 +10,11 @@ import {
   CarrosselDeFormularios,
   ordenarPelaEscolha,
 } from "@/components/flow/carrossel-de-formularios";
+import { Aniversariantes } from "@/components/inicio/aniversariantes";
 import { AtalhosDoInicio } from "@/components/inicio/atalhos-do-inicio";
 import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
+import { EsteMes } from "@/components/inicio/este-mes";
+import { ForaDoAlvo } from "@/components/inicio/fora-do-alvo";
 import {
   DialogPersonalizarInicio,
   type SecaoComItens,
@@ -23,6 +26,7 @@ import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useMeuQuadro } from "@/lib/flow/use-tarefas";
 import {
+  ANIVERSARIANTES,
   ATALHOS,
   BLOCOS,
   NUMEROS,
@@ -52,6 +56,7 @@ function saudacao(hora: number) {
 /** Qual lista de itens cada bloco escolhe. Bloco fora daqui só liga e desliga. */
 const SECAO_DO_BLOCO: Partial<Record<IdDeBloco, SecaoComItens>> = {
   numeros: "numeros",
+  aniversariantes: "aniversariantes",
   precisa: "pendencias",
   atalhos: "atalhos",
 };
@@ -78,8 +83,22 @@ export default function InicioPage() {
   const catalogoDeAtalhos = podeVer(ATALHOS);
   const catalogoDePendencias = podeVer(PENDENCIAS);
 
+  // Aniversariantes: o bloco abre para quem vê alunos ou faz a chamada (a professora não tem a
+  // tela de alunos, mas tem as turmas dela); a lista de responsáveis pede a tela de responsáveis.
+  // A equipe vem do RH e pede a tela de funcionários (rotaVisivel dela, pelo `rota` do catálogo).
+  // O servidor recorta por turma e por permissão de novo — isto só decide o que a tela oferece.
+  const veAlunos = rotaVisivel("/admin/alunos") || rotaVisivel("/");
+  const catalogoDeAniversariantes = ANIVERSARIANTES.filter((i) =>
+    i.id === "alunos" ? veAlunos : rotaVisivel(i.rota)
+  );
+
   const numeros = escolherItens(catalogoDeNumeros, preferencias?.numeros, padrao.numeros);
   const atalhos = escolherItens(catalogoDeAtalhos, preferencias?.atalhos, padrao.atalhos);
+  const listasDeAniversariantes = escolherItens(
+    catalogoDeAniversariantes,
+    preferencias?.aniversariantes,
+    padrao.aniversariantes
+  );
   const tiposDePendencia = escolherItens(
     catalogoDePendencias,
     preferencias?.pendencias,
@@ -104,6 +123,9 @@ export default function InicioPage() {
       ) : (
         painel && <NumerosDoDia itens={numeros} painel={painel} />
       ),
+    precificacao: () => <ForaDoAlvo />,
+    aniversariantes: () => <Aniversariantes listas={listasDeAniversariantes.map((i) => i.id)} />,
+    calendario: () => <EsteMes />,
     precisa: () => <PrecisaDeVoce pendencias={pendencias} />,
     tarefas: () => <CartaoDeTarefas />,
     formularios: () =>
@@ -120,6 +142,10 @@ export default function InicioPage() {
 
   const permitido: Record<IdDeBloco, boolean> = {
     numeros: catalogoDeNumeros.length > 0,
+    // O painel de precificação exige a área do Financeiro; sem ela o bloco nem entra na lista.
+    precificacao: rotaVisivel("/finance/precificacao"),
+    aniversariantes: catalogoDeAniversariantes.length > 0,
+    calendario: rotaVisivel("/calendario"),
     precisa: catalogoDePendencias.length > 0,
     tarefas: rotaVisivel("/flow/tarefas"),
     formularios: rotaVisivel("/flow/respostas"),
@@ -135,28 +161,27 @@ export default function InicioPage() {
 
   // Blocos que a permissão tira saem do arranjo salvo e, se a permissão voltar um dia,
   // reaparecem na posição de fábrica como qualquer bloco novo.
-  const arranjo = arranjarBlocos(catalogoDeBlocos, preferencias?.blocos).filter(
+  const arranjo = arranjarBlocos(catalogoDeBlocos, preferencias?.blocos, padrao.desligados).filter(
     (p) => permitido[p.id as IdDeBloco]
   );
 
+  const catalogosPorSecao: Record<SecaoComItens, ItemDoInicio[]> = {
+    numeros: catalogoDeNumeros,
+    aniversariantes: catalogoDeAniversariantes,
+    pendencias: catalogoDePendencias,
+    atalhos: catalogoDeAtalhos,
+  };
+  const escolhidosPorSecao: Record<SecaoComItens, ItemDoInicio[]> = {
+    numeros,
+    aniversariantes: listasDeAniversariantes,
+    pendencias: tiposDePendencia,
+    atalhos,
+  };
+
   const secoes: SecaoParaPersonalizar[] = arranjo.map((p) => {
     const chave = SECAO_DO_BLOCO[p.id as IdDeBloco];
-    const catalogo =
-      chave === "numeros"
-        ? catalogoDeNumeros
-        : chave === "atalhos"
-          ? catalogoDeAtalhos
-          : chave === "pendencias"
-            ? catalogoDePendencias
-            : [];
-    const escolhidos =
-      chave === "numeros"
-        ? numeros
-        : chave === "atalhos"
-          ? atalhos
-          : chave === "pendencias"
-            ? tiposDePendencia
-            : [];
+    const catalogo = chave ? catalogosPorSecao[chave] : [];
+    const escolhidos = chave ? escolhidosPorSecao[chave] : [];
 
     return {
       id: p.id,

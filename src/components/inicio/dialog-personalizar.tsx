@@ -22,14 +22,14 @@ import {
 } from "@/lib/kernel/use-painel-preferencias";
 
 /** As seções da tela que são escolhidas item a item. As demais só ligam e desligam. */
-export type SecaoComItens = "numeros" | "atalhos" | "pendencias";
+export type SecaoComItens = "numeros" | "atalhos" | "pendencias" | "aniversariantes";
 
 export interface SecaoParaPersonalizar {
   /** Id do bloco na tela — é o que liga e desliga a seção inteira. */
   id: string;
   rotulo: string;
   visivel: boolean;
-  /** Ausente no bloco que não tem itens para escolher (o quadro de tarefas, os formulários). */
+  /** Ausente no bloco que não tem itens para escolher (o quadro de tarefas, os formulários, o calendário, as mensalidades fora do alvo). */
   chave?: SecaoComItens;
   /** Já filtrado pela permissão: o que a pessoa não pode abrir não entra nem nesta lista. */
   catalogo: ItemDoInicio[];
@@ -131,6 +131,7 @@ export function DialogPersonalizarInicio({
         numeros: idsDe("numeros"),
         atalhos: idsDe("atalhos"),
         pendencias: idsDe("pendencias"),
+        aniversariantes: idsDe("aniversariantes"),
         formularios,
       },
       "Início atualizado."
@@ -139,7 +140,7 @@ export function DialogPersonalizarInicio({
 
   function restaurar() {
     void enviar(
-      { blocos: [], numeros: [], atalhos: [], pendencias: [], formularios },
+      { blocos: [], numeros: [], atalhos: [], pendencias: [], aniversariantes: [], formularios },
       "Início de volta ao padrão do seu perfil."
     );
   }
