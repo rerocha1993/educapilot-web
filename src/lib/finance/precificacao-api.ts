@@ -50,10 +50,20 @@ async function mensagemDeErro(res: Response, falha: string): Promise<string> {
   return falha;
 }
 
-/** Chamada que devolve JSON. Falha vira Error com a mensagem do backend. */
+/** Erro da API com o código HTTP, para a tela tratar 409 (conflito) de um jeito próprio. */
+export class ErroDaApi extends Error {
+  readonly status: number;
+  constructor(mensagem: string, status: number) {
+    super(mensagem);
+    this.name = "ErroDaApi";
+    this.status = status;
+  }
+}
+
+/** Chamada que devolve JSON. Falha vira ErroDaApi (um Error) com a mensagem do backend. */
 export async function precificacaoJson<T>(caminho: string, init: RequestInit, falha: string): Promise<T> {
   const res = await precificacaoFetch(caminho, init);
-  if (!res.ok) throw new Error(await mensagemDeErro(res, falha));
+  if (!res.ok) throw new ErroDaApi(await mensagemDeErro(res, falha), res.status);
   if (res.status === 204) return undefined as T;
   return (await res.json().catch(() => undefined)) as T;
 }

@@ -11,10 +11,12 @@ import { PassoAlunos } from "@/components/finance/precificacao/passo-alunos";
 import { PassoCustos } from "@/components/finance/precificacao/passo-custos";
 import { PassoIndices } from "@/components/finance/precificacao/passo-indices";
 import { PassoMargem } from "@/components/finance/precificacao/passo-margem";
+import { PassoModalidades } from "@/components/finance/precificacao/passo-modalidades";
 import { PassoNivelamento } from "@/components/finance/precificacao/passo-nivelamento";
 import {
   alvoEditavel,
   linhaEditavel,
+  modalidadeEditavel,
   useRascunho,
   type EdicaoDoEstudo,
 } from "@/components/finance/precificacao/rascunho";
@@ -37,13 +39,14 @@ import {
 } from "@/lib/finance/use-precificacao";
 import { formatarMoeda } from "@/lib/rh/formatar";
 
-type Passo = "custos" | "indices" | "alunos" | "margem" | "nivelamento";
+type Passo = "custos" | "indices" | "alunos" | "margem" | "modalidades" | "nivelamento";
 
 const PASSOS: { id: Passo; rotulo: string }[] = [
   { id: "custos", rotulo: "Custos" },
   { id: "indices", rotulo: "Próximo ano" },
   { id: "alunos", rotulo: "Alunos e capacidade" },
   { id: "margem", rotulo: "Margem e retorno" },
+  { id: "modalidades", rotulo: "Modalidades" },
   { id: "nivelamento", rotulo: "Nivelamento" },
 ];
 
@@ -86,16 +89,20 @@ function EditorDoEstudo({ estudo }: { estudo: EstudoDetalhe }) {
   // Cada parte editável guarda a edição fora da aba: trocar de passo não perde o que foi digitado.
   const linhasBase = useMemo(() => estudo.linhas.map(linhaEditavel), [estudo.linhas]);
   const alvosBase = useMemo(() => estudo.alvos.map(alvoEditavel), [estudo.alvos]);
+  const modalidadesBase = useMemo(() => estudo.modalidades.map(modalidadeEditavel), [estudo.modalidades]);
   const premissasBase = useMemo(() => premissasDoEstudo(estudo), [estudo]);
+  // O passo "Modalidades" só existe quando o estudo tem modalidades.
+  const passos = estudo.modalidades.length > 0 ? PASSOS : PASSOS.filter((p) => p.id !== "modalidades");
 
   const edicao: EdicaoDoEstudo = {
     linhas: useRascunho(linhasBase),
     premissas: useRascunho(premissasBase),
     alvos: useRascunho(alvosBase),
+    modalidades: useRascunho(modalidadesBase),
     somenteLeitura: aprovado,
     estudo,
   };
-  const pendente = edicao.linhas.sujo || edicao.premissas.sujo || edicao.alvos.sujo;
+  const pendente = edicao.linhas.sujo || edicao.premissas.sujo || edicao.alvos.sujo || edicao.modalidades.sujo;
 
   // Fechar a aba com edição não salva pede confirmação ao navegador.
   useEffect(() => {
@@ -197,7 +204,7 @@ function EditorDoEstudo({ estudo }: { estudo: EstudoDetalhe }) {
         {/* Pílulas como a navegação do Financeiro; no celular a faixa rola de lado. */}
         <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
           <TabsList className="group-data-horizontal/tabs:h-auto w-max gap-1 rounded-lg bg-muted p-1">
-            {PASSOS.map((p, i) => (
+            {passos.map((p, i) => (
               <TabsTrigger
                 key={p.id}
                 value={p.id}
@@ -222,6 +229,11 @@ function EditorDoEstudo({ estudo }: { estudo: EstudoDetalhe }) {
         <TabsContent value="margem" keepMounted>
           <PassoMargem edicao={edicao} />
         </TabsContent>
+        {estudo.modalidades.length > 0 && (
+          <TabsContent value="modalidades" keepMounted>
+            <PassoModalidades edicao={edicao} />
+          </TabsContent>
+        )}
         <TabsContent value="nivelamento" keepMounted>
           <PassoNivelamento
             estudo={estudo}

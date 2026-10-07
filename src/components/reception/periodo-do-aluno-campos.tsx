@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Clock, Sun, Sunset, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type {
   ConfiguracaoPortaria,
@@ -16,9 +17,29 @@ export interface ValorDoPeriodo {
   tipo: TipoDePeriodo | null;
   orientacao: OrientacaoDoPeriodo | null;
   horarioReferencia: string;
+  /** 0 a 10; nulo usa o padrão da modalidade. Só vale para integral, 8 e 10 horas. */
+  refeicoesPorDia: number | null;
+  /** Nulo usa o padrão da modalidade. Só vale para integral, 8 e 10 horas. */
+  atividadesExtras: boolean | null;
 }
 
-export const PERIODO_VAZIO: ValorDoPeriodo = { tipo: null, orientacao: null, horarioReferencia: "" };
+export const PERIODO_VAZIO: ValorDoPeriodo = {
+  tipo: null,
+  orientacao: null,
+  horarioReferencia: "",
+  refeicoesPorDia: null,
+  atividadesExtras: null,
+};
+
+/** Refeições e atividades extras só são escolhidas nestes períodos; nos demais vale o padrão. */
+const COM_DETALHES: (TipoDePeriodo | null)[] = ["Integral", "OitoHoras", "DezHoras"];
+
+/** Tira refeições e extras de um período que não os aceita, para não ficar lixo escondido. */
+function normalizar(valor: ValorDoPeriodo): ValorDoPeriodo {
+  return COM_DETALHES.includes(valor.tipo) ? valor : { ...valor, refeicoesPorDia: null, atividadesExtras: null };
+}
+
+const PADRAO = "__padrao__";
 
 export const ROTULOS_DO_PERIODO: Record<TipoDePeriodo, string> = {
   Integral: "Integral",
@@ -75,6 +96,8 @@ export function valorDoPeriodo(periodo?: PeriodoDoAluno | null): ValorDoPeriodo 
     tipo: periodo?.tipo ?? null,
     orientacao: periodo?.orientacao ?? null,
     horarioReferencia: periodo?.horarioReferencia ?? "",
+    refeicoesPorDia: periodo?.refeicoesPorDia ?? null,
+    atividadesExtras: periodo?.atividadesExtras ?? null,
   };
 }
 
@@ -181,10 +204,16 @@ export function PeriodoDoAlunoCampos({
   const mostrarOutros = outrosAbertos || (valor.tipo !== null && valor.tipo !== "Integral");
   const horas = valor.tipo ? HORAS[valor.tipo] : undefined;
   const previsto = horariosDoPeriodo(valor, config);
+  const comDetalhes = COM_DETALHES.includes(valor.tipo);
+
+  function emitir(novo: ValorDoPeriodo) {
+    onChange(normalizar(novo));
+  }
 
   function escolher(tipo: TipoDePeriodo) {
     const cargaHoraria = !!HORAS[tipo];
-    onChange({
+    emitir({
+      ...valor,
       tipo,
       orientacao: cargaHoraria ? (valor.orientacao ?? "Entrada") : null,
       horarioReferencia: cargaHoraria ? valor.horarioReferencia : "",
@@ -198,7 +227,7 @@ export function PeriodoDoAlunoCampos({
           selecionada={valor.tipo === "Integral"}
           onClick={() => {
             onOutrosAbertos(false);
-            onChange({ tipo: "Integral", orientacao: null, horarioReferencia: "" });
+            emitir({ ...valor, tipo: "Integral", orientacao: null, horarioReferencia: "" });
           }}
           titulo="Integral"
           detalhe={`${c.integralEntrada} às ${c.integralSaida}, sem horário a informar`}
@@ -208,7 +237,7 @@ export function PeriodoDoAlunoCampos({
           selecionada={mostrarOutros}
           onClick={() => {
             onOutrosAbertos(true);
-            if (valor.tipo === "Integral") onChange(PERIODO_VAZIO);
+            if (valor.tipo === "Integral") emitir(PERIODO_VAZIO);
           }}
           titulo="Outros períodos"
           detalhe="Meio período ou carga horária"
@@ -263,13 +292,13 @@ export function PeriodoDoAlunoCampos({
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Opcao
                   selecionada={valor.orientacao === "Entrada"}
-                  onClick={() => onChange({ ...valor, orientacao: "Entrada" })}
+                  onClick={() => emitir({ ...valor, orientacao: "Entrada" })}
                   titulo="Horário de entrada"
                   detalhe="Sempre entra no mesmo horário; a saída é calculada"
                 />
                 <Opcao
                   selecionada={valor.orientacao === "Saida"}
-                  onClick={() => onChange({ ...valor, orientacao: "Saida" })}
+                  onClick={() => emitir({ ...valor, orientacao: "Saida" })}
                   titulo="Horário de saída"
                   detalhe="Sempre sai no mesmo horário; a entrada é calculada"
                 />
@@ -283,7 +312,7 @@ export function PeriodoDoAlunoCampos({
                     type="time"
                     className="w-32"
                     value={valor.horarioReferencia}
-                    onChange={(e) => onChange({ ...valor, horarioReferencia: e.target.value })}
+                    onChange={(e) => emitir({ ...valor, horarioReferencia: e.target.value })}
                   />
                 </div>
                 {previsto.entrada && previsto.saida && (
@@ -302,6 +331,82 @@ export function PeriodoDoAlunoCampos({
           )}
         </div>
       )}
+
+      {comDetalhes && (
+        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border-dashed p-3">
+          <p className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+            Refeições e atividades
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-[5px]">
+              <Label
+                htmlFor="periodo-refeicoes"
+                className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground"
+              >
+                Refeições por dia
+              </Label>
+              <Select
+                value={valor.refeicoesPorDia === null ? PADRAO : String(valor.refeicoesPorDia)}
+                onValueChange={(v) => v && emitir({ ...valor, refeicoesPorDia: v === PADRAO ? null : Number(v) })}
+              >
+                <SelectTrigger id="periodo-refeicoes" className="w-full">
+                  <SelectValue>
+                    {() =>
+                      valor.refeicoesPorDia === null ? "Padrão da modalidade" : rotuloDeRefeicoes(valor.refeicoesPorDia)
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent alignItemWithTrigger={false}>
+                  <SelectItem value={PADRAO}>Padrão da modalidade</SelectItem>
+                  {Array.from({ length: 11 }, (_, n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {rotuloDeRefeicoes(n)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-[5px]">
+              <Label
+                htmlFor="periodo-extras"
+                className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground"
+              >
+                Atividades extras
+              </Label>
+              <Select
+                value={valor.atividadesExtras === null ? PADRAO : valor.atividadesExtras ? "sim" : "nao"}
+                onValueChange={(v) =>
+                  v && emitir({ ...valor, atividadesExtras: v === PADRAO ? null : v === "sim" })
+                }
+              >
+                <SelectTrigger id="periodo-extras" className="w-full">
+                  <SelectValue>
+                    {() =>
+                      valor.atividadesExtras === null
+                        ? "Padrão da modalidade"
+                        : valor.atividadesExtras
+                          ? "Sim, participa"
+                          : "Não participa"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent alignItemWithTrigger={false}>
+                  <SelectItem value={PADRAO}>Padrão da modalidade</SelectItem>
+                  <SelectItem value="sim">Sim, participa</SelectItem>
+                  <SelectItem value="nao">Não participa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Deixe no padrão para valer o que a modalidade prevê. Estes dados dividem o custo na precificação.
+          </p>
+        </div>
+      )}
     </div>
   );
+}
+
+function rotuloDeRefeicoes(n: number): string {
+  return n === 0 ? "Nenhuma refeição" : n === 1 ? "1 refeição" : `${n} refeições`;
 }

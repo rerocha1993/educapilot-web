@@ -36,11 +36,18 @@ export function DialogAprovarEstudo({
   const aprovar = useAprovarEstudo(estudo.id);
   const [reajusteGeral, setReajusteGeral] = useState(true);
   const [porTurma, setPorTurma] = useState(false);
+  // Com 2+ modalidades com alunos, o reajuste por modalidade é o caminho natural: já vem marcado.
+  const temModalidades = estudo.modalidades.length > 0;
+  const [porModalidade, setPorModalidade] = useState(estudo.nivelaPorModalidade);
   const sugerido = estudo.resultado.reajusteSugeridoGeral;
 
   async function confirmar() {
     try {
-      await aprovar.mutateAsync({ aplicarReajusteGeral: reajusteGeral, aplicarPorTurma: porTurma });
+      await aprovar.mutateAsync({
+        aplicarReajusteGeral: reajusteGeral,
+        aplicarPorTurma: porTurma,
+        aplicarPorModalidade: temModalidades && porModalidade,
+      });
       toast.success("Estudo aprovado.");
       onFechar();
     } catch (err) {
@@ -71,7 +78,15 @@ export function DialogAprovarEstudo({
           </label>
 
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3">
-            <Checkbox checked={porTurma} onCheckedChange={(v) => setPorTurma(v === true)} className="mt-0.5" />
+            <Checkbox
+              checked={porTurma}
+              onCheckedChange={(v) => {
+                setPorTurma(v === true);
+                // Os dois mexem no mesmo valor do plano: escolher um desmarca o outro.
+                if (v === true) setPorModalidade(false);
+              }}
+              className="mt-0.5"
+            />
             <span className="grid gap-0.5 text-sm">
               <span className="font-medium">Aplicar reajuste por turma nos planos</span>
               <span className="text-[13px] text-muted-foreground">
@@ -80,6 +95,27 @@ export function DialogAprovarEstudo({
               </span>
             </span>
           </label>
+
+          {temModalidades && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3">
+              <Checkbox
+                checked={porModalidade}
+                onCheckedChange={(v) => {
+                  setPorModalidade(v === true);
+                  if (v === true) setPorTurma(false);
+                }}
+                className="mt-0.5"
+              />
+              <span className="grid gap-0.5 text-sm">
+                <span className="font-medium">Aplicar o reajuste por modalidade</span>
+                <span className="text-[13px] text-muted-foreground">
+                  Cada aluno recebe o reajuste da sua modalidade (integral, 8 horas, meio período...), gravado no plano
+                  de mensalidade dele. Valores já negociados com a família são trocados. Escolher esta opção desmarca a
+                  de turma.
+                </span>
+              </span>
+            </label>
+          )}
 
           {alteracoesPendentes && (
             <p role="alert" className="text-sm text-destructive">

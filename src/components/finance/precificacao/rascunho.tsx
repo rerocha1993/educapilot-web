@@ -3,7 +3,13 @@
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { AlvoDeMensalidade, EstudoDetalhe, LinhaDeCusto, Premissas } from "@/lib/finance/use-precificacao";
+import type {
+  AlvoDeMensalidade,
+  EstudoDetalhe,
+  LinhaDeCusto,
+  ModalidadeDoEstudo,
+  Premissas,
+} from "@/lib/finance/use-precificacao";
 
 /**
  * Edição ainda não salva de uma parte do estudo.
@@ -42,6 +48,8 @@ export interface LinhaEditavel {
   base: number;
   aumento: number | null;
   observacao: string;
+  /** Como o custo é dividido entre os alunos (BaseDeRateio). */
+  baseDeRateio: string;
   /** O que o servidor tem hoje; sem isto (linha nova) o projetado ainda não existe. */
   salva?: { base: number; aumento: number | null; projetado: number };
 }
@@ -56,6 +64,7 @@ export function linhaEditavel(l: LinhaDeCusto): LinhaEditavel {
     base: l.valorMensalBase,
     aumento: l.aumentoPercentual ?? null,
     observacao: l.observacao ?? "",
+    baseDeRateio: l.baseDeRateio || "PorAluno",
     salva: { base: l.valorMensalBase, aumento: l.aumentoPercentual ?? null, projetado: l.valorMensalProjetado },
   };
 }
@@ -78,11 +87,36 @@ export function alvoEditavel(a: AlvoDeMensalidade): AlvoEditavel {
   return { id: a.id, capacidadeMeta: a.capacidadeMeta, mensalidadeDefinida: a.mensalidadeDefinida ?? null };
 }
 
+// ------------------------------------------------------------------ modalidades
+
+/**
+ * Edição de uma modalidade do estudo. A mensalidade pode ser dada em reais ou em reajuste %, nunca
+ * nos dois: mexer em um limpa o outro. O reajuste não vem preenchido do servidor (ali ele é o
+ * resultado do cálculo, não uma escolha), só o valor definido.
+ */
+export interface ModalidadeEditavel {
+  /** Id do alvo no estudo. */
+  id: string;
+  capacidadeMeta: number;
+  mensalidadeDefinida: number | null;
+  reajustePercentual: number | null;
+}
+
+export function modalidadeEditavel(m: ModalidadeDoEstudo): ModalidadeEditavel {
+  return {
+    id: m.id,
+    capacidadeMeta: m.capacidadeMeta,
+    mensalidadeDefinida: m.semPeriodo ? null : (m.mensalidadeDefinida ?? null),
+    reajustePercentual: null,
+  };
+}
+
 /** Tudo o que os passos editam, de uma vez, e o que o servidor diz hoje. */
 export interface EdicaoDoEstudo {
   linhas: Rascunho<LinhaEditavel[]>;
   premissas: Rascunho<Premissas>;
   alvos: Rascunho<AlvoEditavel[]>;
+  modalidades: Rascunho<ModalidadeEditavel[]>;
   somenteLeitura: boolean;
   estudo: EstudoDetalhe;
 }

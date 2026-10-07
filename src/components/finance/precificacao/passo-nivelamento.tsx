@@ -16,6 +16,7 @@ import {
   useNivelamento,
   type EstudoDetalhe,
   type ItemDeNivelamento,
+  type ResumoPorModalidade,
   type StatusDeNivelamento,
 } from "@/lib/finance/use-precificacao";
 import { formatarMoeda } from "@/lib/rh/formatar";
@@ -39,9 +40,62 @@ const VARIANTE_DO_STATUS: Record<StatusDeNivelamento, "overdue" | "pending" | "s
   SemBase: "waiting",
 };
 
+const SEM_PERIODO = "Sem período informado";
+
+/** Grupo de itens do nivelamento de uma modalidade. */
+interface GrupoDeModalidade {
+  chave: string;
+  nome: string;
+  itens: ItemDeNivelamento[];
+  alunos: number;
+  foraDoAlvo: number;
+  impactoAnual: number | null;
+}
+
+const estaForaDoAlvo = (status: string) => status === "AbaixoDoCusto" || status === "AbaixoDoAlvo";
+
+/**
+ * Agrupa os itens por modalidade. A ordem e o impacto vêm do resumo do servidor quando ele manda;
+ * a contagem sai dos próprios itens, para bater com a lista que está na tela.
+ */
+function agruparPorModalidade(itens: ItemDeNivelamento[], resumos: ResumoPorModalidade[]): GrupoDeModalidade[] {
+  const grupos = new Map<string, GrupoDeModalidade>();
+  const chaveDe = (id?: string | null, nome?: string | null) => id ?? (nome ? `nome:${nome}` : "sem-periodo");
+
+  for (const r of resumos) {
+    const chave = chaveDe(r.modalidadeId, r.nome);
+    grupos.set(chave, {
+      chave,
+      nome: r.nome || SEM_PERIODO,
+      itens: [],
+      alunos: 0,
+      foraDoAlvo: 0,
+      impactoAnual: r.impactoAnual ?? null,
+    });
+  }
+  for (const i of itens) {
+    const chave = chaveDe(i.modalidadeId, i.modalidade);
+    let g = grupos.get(chave);
+    if (!g) {
+      g = { chave, nome: i.modalidade || SEM_PERIODO, itens: [], alunos: 0, foraDoAlvo: 0, impactoAnual: null };
+      grupos.set(chave, g);
+    }
+    g.itens.push(i);
+  }
+  for (const g of grupos.values()) {
+    g.alunos = g.itens.length;
+    g.foraDoAlvo = g.itens.filter((i) => estaForaDoAlvo(i.status)).length;
+  }
+
+  // "Sem período" por último; o resto na ordem do servidor (ou por nome).
+  return [...grupos.values()]
+    .filter((g) => g.itens.length > 0)
+    .sort((a, b) => Number(a.chave === "sem-periodo") - Number(b.chave === "sem-periodo"));
+}
+
 const ordemDoStatus: StatusDeNivelamento[] = ["AbaixoDoCusto", "AbaixoDoAlvo", "NoAlvo", "AcimaDoAlvo", "SemBase"];
 
-function EtiquetaDoStatus({ status }: { status: string }) {
+export function EtiquetaDoStatus({ status }: { status: string }) {
   const conhecido = (ordemDoStatus as string[]).includes(status);
   return (
     <Badge variant={conhecido ? VARIANTE_DO_STATUS[status as StatusDeNivelamento] : "waiting"}>
@@ -93,6 +147,12 @@ export function PassoNivelamento({
     [itens, status, turma]
   );
 
+  const agrupar = estudo.nivelaPorModalidade;
+  const grupos = useMemo(
+    () => (agrupar ? agruparPorModalidade(filtrados, data?.porModalidade ?? []) : []),
+    [agrupar, filtrados, data]
+  );
+
   const resumo = data?.resumo ?? estudo.nivelamentoResumo;
   const impacto = data?.impactoAnual ?? estudo.nivelamentoResumo.impactoAnual;
   const aprovado = estudo.status === "Aprovado";
@@ -100,7 +160,7 @@ export function PassoNivelamento({
   return (
     <div className="flex flex-col gap-4">
       <p className="max-w-[640px] text-sm leading-relaxed text-muted-foreground">
-        Compara a mensalidade de cada aluno com o alvo da turma. O impacto é quanto a escola recebe a mais em um ano se
+        Compara a mensalidade de cada aluno com o alvo {estudo.nivelaPorModalidade ? "(por modalidade)" : "da turma"}. O impacto é quanto a escola recebe a mais em um ano se
         as mensalidades abaixo do alvo chegarem nele.
       </p>
 
@@ -190,57 +250,87 @@ export function PassoNivelamento({
             {formatarInteiro(filtrados.length)} de {formatarInteiro(itens.length)} mensalidades
           </p>
 
-          <div className="flex flex-col gap-2 md:hidden">
-            {filtrados.map((i) => (
-              <CartaoDaLista
-                key={i.tuitionPlanId}
-                titulo={i.alunoNome}
-                subtitulo={[i.turma, i.responsavelNome].filter(Boolean).join(" · ") || undefined}
-                etiquetas={<EtiquetaDoStatus status={i.status} />}
-                detalhes={<DetalhesDoItem item={i} />}
-              />
-            ))}
-          </div>
-
-          <div className="hidden rounded-xl border border-border bg-card md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Turma</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead className="text-right">Atual</TableHead>
-                  <TableHead className="text-right">Alvo da turma</TableHead>
-                  <TableHead className="text-right">Diferença</TableHead>
-                  <TableHead>Situação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtrados.map((i) => (
-                  <TableRow key={i.tuitionPlanId}>
-                    <TableCell className="font-medium">{i.alunoNome}</TableCell>
-                    <TableCell>{i.turma ?? "—"}</TableCell>
-                    <TableCell>{i.responsavelNome ?? "—"}</TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums">{formatarMoeda(i.valorAtual)}</TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums">{formatarMoeda(i.alvoDaTurma)}</TableCell>
-                    <TableCell className="text-right">
-                      <Diferenca valor={i.diferenca} />
-                    </TableCell>
-                    <TableCell>
-                      <EtiquetaDoStatus status={i.status} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          {agrupar ? (
+            <div className="flex flex-col gap-5">
+              <p className="text-xs text-muted-foreground">
+                Há mais de uma modalidade com alunos, então a lista está separada por modalidade.
+              </p>
+              {grupos.map((g) => (
+                <section key={g.chave} aria-label={g.nome} className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <h3 className="font-heading text-sm font-semibold">{g.nome}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {formatarInteiro(g.alunos)} {g.alunos === 1 ? "aluno" : "alunos"} ·{" "}
+                      {formatarInteiro(g.foraDoAlvo)} fora do alvo
+                      {g.impactoAnual !== null ? ` · impacto ${formatarMoeda(g.impactoAnual)} no ano` : ""}
+                    </p>
+                  </div>
+                  <ListaDeItens itens={g.itens} rotuloDoAlvo="Alvo" />
+                </section>
+              ))}
+            </div>
+          ) : (
+            <ListaDeItens itens={filtrados} rotuloDoAlvo="Alvo da turma" />
+          )}
         </>
       )}
     </div>
   );
 }
 
-function DetalhesDoItem({ item }: { item: ItemDeNivelamento }) {
+/** Os alunos de um nivelamento: cartões no celular, tabela no computador. */
+function ListaDeItens({ itens, rotuloDoAlvo }: { itens: ItemDeNivelamento[]; rotuloDoAlvo: string }) {
+  return (
+    <>
+      <div className="flex flex-col gap-2 md:hidden">
+        {itens.map((i) => (
+          <CartaoDaLista
+            key={i.tuitionPlanId}
+            titulo={i.alunoNome}
+            subtitulo={[i.turma, i.responsavelNome].filter(Boolean).join(" · ") || undefined}
+            etiquetas={<EtiquetaDoStatus status={i.status} />}
+            detalhes={<DetalhesDoItem item={i} rotuloDoAlvo={rotuloDoAlvo} />}
+          />
+        ))}
+      </div>
+
+      <div className="hidden rounded-xl border border-border bg-card md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Aluno</TableHead>
+              <TableHead>Turma</TableHead>
+              <TableHead>Responsável</TableHead>
+              <TableHead className="text-right">Atual</TableHead>
+              <TableHead className="text-right">{rotuloDoAlvo}</TableHead>
+              <TableHead className="text-right">Diferença</TableHead>
+              <TableHead>Situação</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {itens.map((i) => (
+              <TableRow key={i.tuitionPlanId}>
+                <TableCell className="font-medium">{i.alunoNome}</TableCell>
+                <TableCell>{i.turma ?? "—"}</TableCell>
+                <TableCell>{i.responsavelNome ?? "—"}</TableCell>
+                <TableCell className="text-right font-mono text-sm tabular-nums">{formatarMoeda(i.valorAtual)}</TableCell>
+                <TableCell className="text-right font-mono text-sm tabular-nums">{formatarMoeda(i.alvoDaTurma)}</TableCell>
+                <TableCell className="text-right">
+                  <Diferenca valor={i.diferenca} />
+                </TableCell>
+                <TableCell>
+                  <EtiquetaDoStatus status={i.status} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
+  );
+}
+
+function DetalhesDoItem({ item, rotuloDoAlvo }: { item: ItemDeNivelamento; rotuloDoAlvo: string }) {
   return (
     <>
       <span className="flex justify-between gap-2">
@@ -248,7 +338,7 @@ function DetalhesDoItem({ item }: { item: ItemDeNivelamento }) {
         <span className="font-mono tabular-nums">{formatarMoeda(item.valorAtual)}</span>
       </span>
       <span className="flex justify-between gap-2">
-        <span>Alvo da turma</span>
+        <span>{rotuloDoAlvo}</span>
         <span className="font-mono tabular-nums">{formatarMoeda(item.alvoDaTurma)}</span>
       </span>
       <span className="flex justify-between gap-2">

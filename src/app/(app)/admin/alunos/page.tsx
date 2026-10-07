@@ -213,6 +213,9 @@ export default function AlunosPage() {
             tipo: periodoAlterado.tipo,
             orientacao: periodoAlterado.orientacao,
             horarioReferencia: periodoAlterado.horarioReferencia || null,
+            // O PUT substitui tudo: refeições e extras vão junto, senão voltariam a vazio.
+            refeicoesPorDia: periodoAlterado.refeicoesPorDia,
+            atividadesExtras: periodoAlterado.atividadesExtras,
           },
         });
       }

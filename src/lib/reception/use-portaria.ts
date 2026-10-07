@@ -80,12 +80,19 @@ export interface PeriodoDoAluno {
   horarioReferencia?: string | null;
   entradaPrevista?: string | null;
   saidaPrevista?: string | null;
+  /** 0 a 10; vazio usa o padrão da modalidade (precificação). */
+  refeicoesPorDia?: number | null;
+  /** Vazio usa o padrão da modalidade (precificação). */
+  atividadesExtras?: boolean | null;
 }
 
+/** O PUT substitui tudo: envie os campos atuais junto, ou eles voltam a vazio. */
 export interface DefinirPeriodo {
   tipo: TipoDePeriodo | null;
   orientacao?: OrientacaoDoPeriodo | null;
   horarioReferencia?: string | null;
+  refeicoesPorDia?: number | null;
+  atividadesExtras?: boolean | null;
 }
 
 export interface ResponsavelACaminho {

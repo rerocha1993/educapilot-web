@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calculator, Plus } from "lucide-react";
+import { Calculator, Layers, Plus } from "lucide-react";
 
 import { DialogNovoEstudo } from "@/components/finance/precificacao/dialog-novo-estudo";
 import { FinanceNav } from "@/components/finance/finance-nav";
@@ -11,7 +11,7 @@ import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { ErroDeCarga } from "@/components/rh/campo";
 import { CartaoDaLista } from "@/components/rh/lista-movel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatarData } from "@/lib/format/date";
@@ -50,11 +50,21 @@ export default function PrecificacaoPage() {
         titulo="Precificação"
         apoio="Forme a mensalidade do próximo ano a partir dos custos que o financeiro já tem."
         acoes={
-          <Button variant="action" className="w-full md:w-auto" onClick={() => setCriando(true)}>
-            <Plus />
-            Novo estudo
-          </Button>
+          <>
+            <Link
+              href="/finance/precificacao/modalidades"
+              className={buttonVariants({ variant: "outline", className: "flex-1 md:flex-none" })}
+            >
+              <Layers />
+              Modalidades
+            </Link>
+            <Button variant="action" className="flex-1 md:flex-none" onClick={() => setCriando(true)}>
+              <Plus />
+              Novo estudo
+            </Button>
+          </>
         }
+        acoesClassName="w-full md:w-auto"
       />
 
       {isError ? (
