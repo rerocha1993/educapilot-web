@@ -69,6 +69,11 @@ export interface EventoDto {
   escolaToda: boolean;
   turmas: TurmaDoEvento[];
   criadoEm: string;
+  /**
+   * Guid do projeto que gerou o evento (as datas do projeto viram evento no calendário). Esse
+   * evento só se muda pelo projeto: o servidor devolve 409 ao editar ou excluir.
+   */
+  projetoId?: string | null;
 }
 
 export interface EventoInput {

@@ -13,8 +13,11 @@ import { ErroDeCarga } from "@/components/rh/campo";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatarSoData } from "@/lib/format/date";
 import {
+  baseDoProjeto,
+  descricaoDaBase,
+  numeroDeParticipantes,
+  periodoDoProjeto,
   ROTULO_DO_STATUS,
   useProjetos,
   type ProjetoResumo,
@@ -37,7 +40,7 @@ export default function ProjetosPage() {
 
   // Mais recente primeiro: o evento que vem aí fica no alto; sem data, vale a criação.
   const lista = [...(data ?? [])].sort((a, b) =>
-    (b.dataDoEvento ?? b.criadoEm).localeCompare(a.dataDoEvento ?? a.criadoEm)
+    (b.dataInicio ?? b.dataDoEvento ?? b.criadoEm).localeCompare(a.dataInicio ?? a.dataDoEvento ?? a.criadoEm)
   );
 
   return (
@@ -120,8 +123,9 @@ export default function ProjetosPage() {
 }
 
 function CartaoDoProjeto({ projeto: p }: { projeto: ProjetoResumo }) {
-  // Receita prevista: o que as famílias pagam se todas pagarem o valor por família.
-  const previsto = p.valorPorFamilia * p.numeroDeFamilias;
+  // Receita prevista: o que os participantes pagam se todos pagarem o valor por participante.
+  const previsto = p.valorPorFamilia * numeroDeParticipantes(p);
+  const semCobranca = baseDoProjeto(p) === "SemCobranca";
   const turmas = p.turmas.map((t) => t.nome).join(", ");
 
   return (
@@ -133,9 +137,11 @@ function CartaoDoProjeto({ projeto: p }: { projeto: ProjetoResumo }) {
         <div className="min-w-0">
           <p className="font-heading text-[16px] font-semibold break-words">{p.nome}</p>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
-            {p.dataDoEvento ? `Evento em ${formatarSoData(p.dataDoEvento)}` : "Sem data marcada"}
+            {periodoDoProjeto(p) ?? "Sem data marcada"}
             {" · "}
             {turmas || "Escola toda"}
+            {" · "}
+            {descricaoDaBase(p)}
           </p>
         </div>
         <EtiquetaDoProjeto status={p.status} />
@@ -143,7 +149,9 @@ function CartaoDoProjeto({ projeto: p }: { projeto: ProjetoResumo }) {
 
       <div className="mt-4 grid gap-3">
         <LinhaComBarra rotulo="Gasto / orçamento" valor={p.gasto} total={p.custoTotal} />
-        <LinhaComBarra rotulo="Arrecadado / previsto" valor={p.arrecadado} total={previsto} inverso />
+        {!semCobranca && (
+          <LinhaComBarra rotulo="Arrecadado / previsto" valor={p.arrecadado} total={previsto} inverso />
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-3 sm:grid-cols-5">

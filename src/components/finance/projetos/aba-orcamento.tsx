@@ -19,7 +19,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { formatarPercentual } from "@/lib/finance/precificacao-formatar";
-import { dadosDoProjeto, useSalvarDados, useSalvarItens } from "@/lib/finance/use-projetos";
+import {
+  baseDoProjeto,
+  dadosDoProjeto,
+  descricaoDaBase,
+  porParticipante,
+  useSalvarDados,
+  useSalvarItens,
+  valorPorParticipante,
+} from "@/lib/finance/use-projetos";
 import { formatarMoeda } from "@/lib/rh/formatar";
 import { cn } from "@/lib/utils";
 
@@ -30,9 +38,9 @@ const COLUNAS = "lg:grid-cols-[minmax(0,1fr)_9rem_5.5rem_8rem_6.5rem_4.5rem_2.25
 
 /**
  * Orçamento do projeto: itens editáveis e, ao lado, o que o servidor calcula a partir deles
- * (valor sugerido por família, receita e resultado previstos).
+ * (valor sugerido por participante, receita e resultado previstos).
  *
- * Os números do painel são os do último cálculo salvo: mudar item, margem ou famílias só
+ * Os números do painel são os do último cálculo salvo: mudar item, margem ou valor definido só
  * recalcula ao salvar, e a tela avisa quando o que se vê está defasado.
  */
 export function AbaOrcamento({ edicao, onAprovar }: { edicao: EdicaoDoProjeto; onAprovar: () => void }) {
@@ -40,6 +48,7 @@ export function AbaOrcamento({ edicao, onAprovar }: { edicao: EdicaoDoProjeto; o
   const salvarDados = useSalvarDados(projeto.id);
   const salvarItens = useSalvarItens(projeto.id);
   const o = projeto.orcamento;
+  const semCobranca = baseDoProjeto(projeto) === "SemCobranca";
 
   const lista = itens.valor;
   const totalDosItens = lista.reduce((s, i) => s + totalDoItem(i), 0);
@@ -69,7 +78,6 @@ export function AbaOrcamento({ edicao, onAprovar }: { edicao: EdicaoDoProjeto; o
   async function salvar() {
     const p = parametros.valor;
     if (parametros.sujo) {
-      if (p.familias === null || p.familias < 1) return void toast.error("Informe o número de famílias (pelo menos 1).");
       if (p.margem !== null && p.margem < 0) return void toast.error("A margem não pode ser negativa.");
     }
     if (itens.sujo) {
@@ -85,7 +93,6 @@ export function AbaOrcamento({ edicao, onAprovar }: { edicao: EdicaoDoProjeto; o
         await salvarDados.mutateAsync({
           ...dadosDoProjeto(projeto),
           margemDesejadaPercentual: p.margem ?? 0,
-          numeroDeFamilias: Math.round(p.familias ?? projeto.numeroDeFamilias),
           valorPorFamiliaDefinido: p.valorDefinido ?? undefined,
         });
         parametros.descartar();
@@ -116,7 +123,7 @@ export function AbaOrcamento({ edicao, onAprovar }: { edicao: EdicaoDoProjeto; o
   return (
     <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:items-start">
       <aside
-        aria-label="Valor por família"
+        aria-label={valorPorParticipante(projeto)}
         className="order-first grid content-start gap-4 rounded-xl border border-border bg-card p-4 2xl:sticky 2xl:top-4 2xl:order-last"
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-1">
@@ -130,73 +137,85 @@ export function AbaOrcamento({ edicao, onAprovar }: { edicao: EdicaoDoProjeto; o
               onChange={(v) => parametros.editar((a) => ({ ...a, margem: v }))}
               sufixo="%"
               min={0}
-              disabled={somenteLeitura}
+              disabled={somenteLeitura || semCobranca}
             />
           </div>
 
-          <div className="grid gap-1.5">
-            <label htmlFor="orc-familias" className="text-sm leading-none font-medium">
-              Número de famílias
-            </label>
-            <CampoNumerico
-              id="orc-familias"
-              valor={parametros.valor.familias}
-              onChange={(v) => parametros.editar((a) => ({ ...a, familias: v }))}
-              min={0}
-              disabled={somenteLeitura}
-            />
-          </div>
-
-          <div className="grid gap-1.5">
-            <label htmlFor="orc-definido" className="text-sm leading-none font-medium">
-              Valor por família definido
-            </label>
-            <CampoDeDinheiro
-              id="orc-definido"
-              valorEmCentavos={emCentavos(parametros.valor.valorDefinido)}
-              onChange={(c) => parametros.editar((a) => ({ ...a, valorDefinido: c === null ? null : emReais(c) }))}
-              placeholder="usar o sugerido"
-              disabled={somenteLeitura}
-            />
-            <p className="text-xs text-muted-foreground">Em branco, cobra o valor sugerido.</p>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-action-soft px-3.5 py-3">
-          <p className="text-[12.5px] font-medium text-action-soft-foreground">Valor sugerido por família</p>
-          <p className="mt-1 font-heading text-[28px] font-semibold tracking-[-.03em] tabular-nums">
-            {formatarMoeda(o.valorSugeridoPorFamilia)}
-          </p>
-          {o.valorPorFamilia !== o.valorSugeridoPorFamilia && (
-            <p className="mt-0.5 text-[13px] text-action-soft-foreground">
-              Cobrando {formatarMoeda(o.valorPorFamilia)} por família
+          {/* O número vem da base escolhida em "Editar dados": aqui só se lê. */}
+          <div className="grid content-start gap-1.5">
+            <span className="text-sm leading-none font-medium">Participantes</span>
+            <p className="flex min-h-8 items-center font-mono text-sm font-semibold max-md:min-h-10">
+              {descricaoDaBase(projeto)}
             </p>
+            {!somenteLeitura && (
+              <p className="text-xs text-muted-foreground">Para mudar, use &ldquo;Editar dados&rdquo;.</p>
+            )}
+          </div>
+
+          {!semCobranca && (
+            <div className="grid gap-1.5">
+              <label htmlFor="orc-definido" className="text-sm leading-none font-medium">
+                {valorPorParticipante(projeto)} definido
+              </label>
+              <CampoDeDinheiro
+                id="orc-definido"
+                valorEmCentavos={emCentavos(parametros.valor.valorDefinido)}
+                onChange={(c) => parametros.editar((a) => ({ ...a, valorDefinido: c === null ? null : emReais(c) }))}
+                placeholder="usar o sugerido"
+                disabled={somenteLeitura}
+              />
+              <p className="text-xs text-muted-foreground">Em branco, cobra o valor sugerido.</p>
+            </div>
           )}
         </div>
+
+        {semCobranca ? (
+          <p className="rounded-lg bg-muted px-3.5 py-3 text-[13px] text-muted-foreground">
+            Só controle de gastos: este projeto não tem cobrança por participante nem valor sugerido.
+          </p>
+        ) : (
+          <div className="rounded-lg bg-action-soft px-3.5 py-3">
+            <p className="text-[12.5px] font-medium text-action-soft-foreground">
+              Valor sugerido {porParticipante(projeto)}
+            </p>
+            <p className="mt-1 font-heading text-[28px] font-semibold tracking-[-.03em] tabular-nums">
+              {formatarMoeda(o.valorSugeridoPorFamilia)}
+            </p>
+            {o.valorPorFamilia !== o.valorSugeridoPorFamilia && (
+              <p className="mt-0.5 text-[13px] text-action-soft-foreground">
+                Cobrando {formatarMoeda(o.valorPorFamilia)} {porParticipante(projeto)}
+              </p>
+            )}
+          </div>
+        )}
 
         <dl className="grid gap-2 text-sm">
           <div className="flex items-baseline justify-between gap-3">
             <dt className="text-muted-foreground">Custo do orçamento</dt>
             <dd className="font-mono font-semibold tabular-nums">{formatarMoeda(o.custoTotal)}</dd>
           </div>
-          <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-muted-foreground">Receita prevista</dt>
-            <dd className="font-mono font-semibold tabular-nums">{formatarMoeda(o.receitaPrevista)}</dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-muted-foreground">Resultado previsto</dt>
-            <dd
-              className={cn(
-                "font-mono font-semibold tabular-nums",
-                resultadoNegativo && "text-destructive"
-              )}
-            >
-              {formatarMoeda(o.resultadoPrevisto)}
-              <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                ({formatarPercentual(o.margemPrevistaPercentual)})
-              </span>
-            </dd>
-          </div>
+          {!semCobranca && (
+            <>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-muted-foreground">Receita prevista</dt>
+                <dd className="font-mono font-semibold tabular-nums">{formatarMoeda(o.receitaPrevista)}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-muted-foreground">Resultado previsto</dt>
+                <dd
+                  className={cn(
+                    "font-mono font-semibold tabular-nums",
+                    resultadoNegativo && "text-destructive"
+                  )}
+                >
+                  {formatarMoeda(o.resultadoPrevisto)}
+                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                    ({formatarPercentual(o.margemPrevistaPercentual)})
+                  </span>
+                </dd>
+              </div>
+            </>
+          )}
         </dl>
 
         {sujo && (

@@ -2,7 +2,8 @@ import type { Rascunho } from "@/components/finance/precificacao/rascunho";
 import type { ItemDoOrcamento, ProjetoDetalhe } from "@/lib/finance/use-projetos";
 
 /**
- * O que a aba Orçamento edita antes de salvar: os itens e os três números do painel.
+ * O que a aba Orçamento edita antes de salvar: os itens e os dois números do painel (margem e
+ * valor definido). O número de participantes mudou de lugar: sai da base escolhida em "Editar dados".
  *
  * O rascunho mora na página do projeto (e não na aba) porque as abas se alternam: trocar de aba
  * não pode jogar fora o que foi digitado.
@@ -22,8 +23,7 @@ export interface ItemEditavel {
 
 export interface Parametros {
   margem: number | null;
-  familias: number | null;
-  /** Valor por família que a escola decidiu cobrar no lugar do sugerido; nulo usa o sugerido. */
+  /** Valor por participante que a escola decidiu cobrar no lugar do sugerido; nulo usa o sugerido. */
   valorDefinido: number | null;
 }
 
@@ -50,7 +50,6 @@ export function itemEditavel(i: ItemDoOrcamento): ItemEditavel {
 export function parametrosDoProjeto(p: ProjetoDetalhe): Parametros {
   return {
     margem: p.margemDesejadaPercentual,
-    familias: p.numeroDeFamilias,
     valorDefinido: p.valorPorFamiliaDefinido ?? null,
   };
 }

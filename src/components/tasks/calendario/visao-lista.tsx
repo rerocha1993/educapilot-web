@@ -12,7 +12,7 @@ import {
 import type { EventoDto } from "@/lib/tasks/use-calendario";
 import { cn } from "@/lib/utils";
 
-import { EtiquetaDoTipo } from "./etiqueta-do-tipo";
+import { EtiquetaDeProjeto, EtiquetaDoTipo } from "./etiqueta-do-tipo";
 import { ESTILO_DO_TIPO } from "./estilo-do-tipo";
 
 /** "Escola toda" ou os nomes das turmas. */
@@ -121,7 +121,10 @@ export function LinhaDoEvento({
           {detalhes.join(" · ")}
         </span>
       </span>
-      <EtiquetaDoTipo tipo={evento.tipo} />
+      <span className="flex shrink-0 flex-col items-end gap-1">
+        <EtiquetaDoTipo tipo={evento.tipo} />
+        {evento.projetoId && <EtiquetaDeProjeto />}
+      </span>
     </button>
   );
 }

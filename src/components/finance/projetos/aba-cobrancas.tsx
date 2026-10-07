@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 import {
+  baseDoProjeto,
   useCancelarCobranca,
   useCobrancas,
   useMarcarPaga,
@@ -72,6 +73,7 @@ export function AbaCobrancas({ projeto }: { projeto: ProjetoDetalhe }) {
 
   const encerrado = projeto.status === "Encerrado";
   const aprovado = projeto.status === "Planejamento";
+  const semCobranca = baseDoProjeto(projeto) === "SemCobranca";
   const c = projeto.execucao.cobrancas;
   const lista = (data ?? []).filter((x) => filtro === "todas" || x.status === filtro);
 
@@ -96,14 +98,18 @@ export function AbaCobrancas({ projeto }: { projeto: ProjetoDetalhe }) {
             <Button
               variant="action"
               className="w-full sm:w-auto"
-              disabled={!aprovado}
+              disabled={!aprovado || semCobranca}
               onClick={() => setDialogo({ tipo: "gerar" })}
             >
               <Plus />
               Gerar cobranças
             </Button>
-            {!aprovado && (
-              <p className="text-xs text-muted-foreground">Aprove o orçamento para cobrar as famílias.</p>
+            {semCobranca ? (
+              <p className="text-xs text-muted-foreground">Este projeto é só de controle de gastos.</p>
+            ) : (
+              !aprovado && (
+                <p className="text-xs text-muted-foreground">Aprove o orçamento para cobrar as famílias.</p>
+              )
             )}
           </div>
         )}
@@ -149,7 +155,7 @@ export function AbaCobrancas({ projeto }: { projeto: ProjetoDetalhe }) {
               <Button variant="outline" onClick={() => setFiltro("todas")}>
                 Ver todas
               </Button>
-            ) : !encerrado && aprovado ? (
+            ) : !encerrado && aprovado && !semCobranca ? (
               <Button variant="action" onClick={() => setDialogo({ tipo: "gerar" })}>
                 <Plus />
                 Gerar cobranças

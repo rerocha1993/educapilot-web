@@ -1,4 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatarSoData } from "@/lib/format/date";
 import { projetosEnviarArquivo, projetosJson } from "./projetos-api";
 
 /**
@@ -24,19 +26,38 @@ export function rotuloDoStatus(status: string): string {
   return (ROTULO_DO_STATUS as Record<string, string>)[status] ?? status;
 }
 
+/**
+ * Em que número o valor por participante se apoia: as famílias ou os alunos das turmas, uma
+ * estimativa digitada (festa aberta à comunidade) ou nenhuma (só controle de gastos, sem cobrança).
+ */
+export type BaseDeParticipantes = "Familias" | "Alunos" | "Estimativa" | "SemCobranca";
+
+/** Os campos de data e de participantes que a lista e o detalhe do projeto têm em comum. */
+export interface QuemEQuando {
+  /** "yyyy-MM-dd". Igual a `dataInicio`; fica por compatibilidade com a API antiga. */
+  dataDoEvento?: string;
+  dataInicio?: string;
+  /** Sem fim, o projeto é de um dia só. */
+  dataFim?: string;
+  baseDeParticipantes?: BaseDeParticipantes;
+  estimativaDeParticipantes?: number;
+  /** O número efetivo da base. Com `SemCobranca` vem 0. */
+  numeroDeParticipantes?: number;
+  /** Igual a `numeroDeParticipantes`; fica por compatibilidade. */
+  numeroDeFamilias: number;
+}
+
 export interface TurmaDoProjeto {
   classId: number;
   nome: string;
 }
 
-export interface ProjetoResumo {
+export interface ProjetoResumo extends QuemEQuando {
   id: string;
   nome: string;
   status: StatusDoProjeto;
-  dataDoEvento?: string;
   custoTotal: number;
   valorPorFamilia: number;
-  numeroDeFamilias: number;
   gasto: number;
   arrecadado: number;
   aReceber: number;
@@ -86,14 +107,12 @@ export interface ExecucaoDoProjeto {
   alertas: string[];
 }
 
-export interface ProjetoDetalhe {
+export interface ProjetoDetalhe extends QuemEQuando {
   id: string;
   nome: string;
   descricao?: string;
-  dataDoEvento?: string;
   status: StatusDoProjeto;
   margemDesejadaPercentual: number;
-  numeroDeFamilias: number;
   valorPorFamiliaDefinido?: number;
   centroDeCustoId?: string;
   contaFinanceiraId?: string;
@@ -205,22 +224,29 @@ export interface ResultadoDaGeracao {
 
 // ------------------------------------------------------------------ corpos de envio
 
+/** Corpo do POST. O `numeroDeFamilias` não é mais enviado: o número vem da base. */
 export interface NovoProjeto {
   nome: string;
   descricao?: string;
-  dataDoEvento?: string;
+  dataInicio?: string;
+  dataFim?: string;
   margemDesejadaPercentual?: number;
-  numeroDeFamilias: number;
+  baseDeParticipantes: BaseDeParticipantes;
+  /** Só com `Estimativa` (pelo menos 1). */
+  estimativaDeParticipantes?: number;
   contaFinanceiraId?: string;
   classIds?: number[];
 }
 
+/** Corpo do PUT: o conjunto todo dos dados gerais. */
 export interface DadosDoProjeto {
   nome: string;
   descricao?: string;
-  dataDoEvento?: string;
+  dataInicio?: string;
+  dataFim?: string;
   margemDesejadaPercentual: number;
-  numeroDeFamilias: number;
+  baseDeParticipantes: BaseDeParticipantes;
+  estimativaDeParticipantes?: number;
   contaFinanceiraId?: string;
   classIds: number[];
   valorPorFamiliaDefinido?: number;
@@ -254,14 +280,68 @@ export interface GerarCobrancas {
   descricao?: string;
 }
 
+/** A base do projeto; resposta de uma API sem o campo conta como "Famílias" (o que valia antes). */
+export function baseDoProjeto(p: Pick<QuemEQuando, "baseDeParticipantes">): BaseDeParticipantes {
+  return p.baseDeParticipantes ?? "Familias";
+}
+
+/** O número efetivo de participantes, com o campo antigo como reserva. */
+export function numeroDeParticipantes(p: QuemEQuando): number {
+  return p.numeroDeParticipantes ?? p.numeroDeFamilias ?? 0;
+}
+
+function contar(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+/** Quem participa, em poucas palavras: "38 famílias", "52 alunos", "Estimativa: 80", "Sem cobrança". */
+export function descricaoDaBase(p: QuemEQuando): string {
+  const base = baseDoProjeto(p);
+  const n = numeroDeParticipantes(p);
+  if (base === "Alunos") return contar(n, "aluno", "alunos");
+  if (base === "Estimativa") return `Estimativa: ${p.estimativaDeParticipantes ?? n}`;
+  if (base === "SemCobranca") return "Sem cobrança";
+  return contar(n, "família", "famílias");
+}
+
+/** "por família" só quando a base é Famílias; nas outras, "por participante". */
+export function porParticipante(p: Pick<QuemEQuando, "baseDeParticipantes">): string {
+  return baseDoProjeto(p) === "Familias" ? "por família" : "por participante";
+}
+
+export function valorPorParticipante(p: Pick<QuemEQuando, "baseDeParticipantes">): string {
+  return baseDoProjeto(p) === "Familias" ? "Valor por família" : "Valor por participante";
+}
+
+/**
+ * O período do projeto: "10 a 12/11/2026" (mesmo mês), "28/10 a 02/11/2026", "10/11/2026" (um dia
+ * só) ou nulo sem data. As datas são "yyyy-MM-dd" e não passam por fuso.
+ */
+export function periodoDoProjeto(p: QuemEQuando): string | null {
+  const inicio = (p.dataInicio ?? p.dataDoEvento)?.slice(0, 10);
+  if (!inicio) return null;
+  const fim = p.dataFim?.slice(0, 10);
+  if (!fim || fim === inicio) return formatarSoData(inicio);
+
+  const [ai, mi, di] = inicio.split("-");
+  const [af, mf, df] = fim.split("-");
+  if (ai === af && mi === mf) return `${di} a ${df}/${mf}/${af}`;
+  if (ai === af) return `${di}/${mi} a ${df}/${mf}/${af}`;
+  return `${formatarSoData(inicio)} a ${formatarSoData(fim)}`;
+}
+
 /** Os dados gerais como o servidor os tem hoje, no formato do PUT (para mudar só uma parte). */
 export function dadosDoProjeto(p: ProjetoDetalhe): DadosDoProjeto {
+  const base = baseDoProjeto(p);
   return {
     nome: p.nome,
     descricao: p.descricao,
-    dataDoEvento: p.dataDoEvento,
+    dataInicio: (p.dataInicio ?? p.dataDoEvento)?.slice(0, 10),
+    dataFim: p.dataFim?.slice(0, 10),
     margemDesejadaPercentual: p.margemDesejadaPercentual,
-    numeroDeFamilias: p.numeroDeFamilias,
+    baseDeParticipantes: base,
+    estimativaDeParticipantes:
+      base === "Estimativa" ? (p.estimativaDeParticipantes ?? numeroDeParticipantes(p)) : undefined,
     contaFinanceiraId: p.contaFinanceiraId,
     classIds: p.turmas.map((t) => t.classId),
     valorPorFamiliaDefinido: p.valorPorFamiliaDefinido,
@@ -362,6 +442,45 @@ export function usePublicoPrevisto(id: string, classIds: number[], habilitado: b
       ).map((r) => ({ ...r, alunos: r.alunos ?? [] }));
     },
   });
+}
+
+export interface ParticipantesDasTurmas {
+  familias: number;
+  alunos: number;
+}
+
+/**
+ * Quantas famílias e quantos alunos as turmas têm (sem turmas, a escola toda). A consulta espera
+ * 300 ms depois da última marcação, para não disparar uma a cada clique; enquanto espera ou busca,
+ * `contando` é verdadeiro e `data` ainda traz a contagem anterior.
+ */
+export function useParticipantesDasTurmas(classIds: number[]) {
+  const chave = useMemo(() => [...new Set(classIds)].sort((a, b) => a - b).join(","), [classIds]);
+  const [esperada, setEsperada] = useState(chave);
+
+  useEffect(() => {
+    const t = setTimeout(() => setEsperada(chave), 300);
+    return () => clearTimeout(t);
+  }, [chave]);
+
+  const ids = esperada ? esperada.split(",").map(Number) : [];
+  const consulta = useQuery({
+    queryKey: ["finance", "projetos", "participantes", ids],
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      projetosJson<ParticipantesDasTurmas>(
+        `/participantes${ids.length > 0 ? `?classIds=${ids.join(",")}` : ""}`,
+        {},
+        "Não foi possível contar os participantes."
+      ),
+  });
+
+  return {
+    data: consulta.data,
+    contando: chave !== esperada || consulta.isFetching,
+    isError: consulta.isError && !consulta.data,
+  };
 }
 
 export function useCobrancas(id: string | null) {

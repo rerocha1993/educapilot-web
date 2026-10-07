@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { FolderKanban } from "lucide-react";
 
 import {
   cobreODia,
@@ -178,8 +179,8 @@ function ChipDoEvento({
         ev.stopPropagation();
         onAbrir(evento);
       }}
-      title={`${evento.titulo} · ${ROTULO_DO_TIPO[evento.tipo]}`}
-      aria-label={`${evento.titulo}, ${ROTULO_DO_TIPO[evento.tipo]}${hora ? `, às ${hora}` : ""}`}
+      title={`${evento.titulo} · ${ROTULO_DO_TIPO[evento.tipo]}${evento.projetoId ? " · Projeto" : ""}`}
+      aria-label={`${evento.titulo}, ${ROTULO_DO_TIPO[evento.tipo]}${evento.projetoId ? ", projeto" : ""}${hora ? `, às ${hora}` : ""}`}
       className={cn(
         "relative flex w-full min-w-0 items-center gap-1 overflow-hidden rounded-[5px] py-[3px] pr-1.5 pl-2 text-left text-[11.5px] leading-tight outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         estilo.chip
@@ -189,6 +190,7 @@ function ChipDoEvento({
       <Icone aria-hidden className="size-3 shrink-0" />
       {hora && <span className="shrink-0 font-mono tabular-nums">{hora}</span>}
       <span className="min-w-0 truncate font-medium">{evento.titulo}</span>
+      {evento.projetoId && <FolderKanban aria-hidden className="ml-auto size-3 shrink-0 opacity-70" />}
     </button>
   );
 }

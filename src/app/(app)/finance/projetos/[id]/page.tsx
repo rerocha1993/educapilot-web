@@ -26,12 +26,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatarData, formatarSoData } from "@/lib/format/date";
+import { formatarData } from "@/lib/format/date";
 import {
+  baseDoProjeto,
+  descricaoDaBase,
+  periodoDoProjeto,
+  porParticipante,
   useAprovarProjeto,
   useEncerrarProjeto,
   useExcluirProjeto,
   useProjeto,
+  valorPorParticipante,
   type ProjetoDetalhe,
 } from "@/lib/finance/use-projetos";
 import { formatarMoeda } from "@/lib/rh/formatar";
@@ -142,6 +147,8 @@ function PainelDoProjeto({ projeto }: { projeto: ProjetoDetalhe }) {
   const e = projeto.execucao;
   const o = projeto.orcamento;
   const turmas = projeto.turmas.map((t) => t.nome).join(", ");
+  const periodo = periodoDoProjeto(projeto);
+  const semCobranca = baseDoProjeto(projeto) === "SemCobranca";
 
   return (
     <>
@@ -152,12 +159,12 @@ function PainelDoProjeto({ projeto }: { projeto: ProjetoDetalhe }) {
         tags={
           <>
             <EtiquetaDoProjeto status={projeto.status} />
-            {projeto.dataDoEvento && <Badge variant="outline">{formatarSoData(projeto.dataDoEvento)}</Badge>}
+            {periodo && <Badge variant="outline">{periodo}</Badge>}
           </>
         }
         apoio={
           <>
-            {turmas || "Escola toda"}
+            {descricaoDaBase(projeto)} · {turmas || "Escola toda"}
             {projeto.descricao ? ` · ${projeto.descricao}` : ""}
           </>
         }
@@ -208,9 +215,9 @@ function PainelDoProjeto({ projeto }: { projeto: ProjetoDetalhe }) {
       <section aria-label="Resumo do projeto" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <Estatistica rotulo="Orçamento total" valor={formatarMoeda(o.custoTotal)} />
         <Estatistica
-          rotulo="Valor por família"
-          valor={formatarMoeda(o.valorPorFamilia)}
-          rodape={`${projeto.numeroDeFamilias} ${projeto.numeroDeFamilias === 1 ? "família" : "famílias"}`}
+          rotulo={valorPorParticipante(projeto)}
+          valor={semCobranca ? "—" : formatarMoeda(o.valorPorFamilia)}
+          rodape={descricaoDaBase(projeto)}
         />
         <Estatistica
           rotulo="Gasto"
@@ -289,7 +296,11 @@ function PainelDoProjeto({ projeto }: { projeto: ProjetoDetalhe }) {
       {pergunta === "aprovar" && (
         <Confirmacao
           titulo="Aprovar e virar planejamento?"
-          descricao={`Isso cria o centro de custo "${projeto.nome}" no Financeiro: as despesas lançadas com comprovante passam a ser ligadas a ele, e as cobranças das famílias saem a ${formatarMoeda(o.valorPorFamilia)} por família. A partir daí o projeto fica em planejamento e acompanha gasto e arrecadação.`}
+          descricao={`Isso cria o centro de custo "${projeto.nome}" no Financeiro: as despesas lançadas com comprovante passam a ser ligadas a ele${
+            semCobranca
+              ? ". Como o projeto é só de controle de gastos, não há cobrança por participante. A partir daí ele fica em planejamento e acompanha o gasto."
+              : `, e as cobranças saem a ${formatarMoeda(o.valorPorFamilia)} ${porParticipante(projeto)}. A partir daí o projeto fica em planejamento e acompanha gasto e arrecadação.`
+          }`}
           rotuloConfirmar="Aprovar"
           pendente={aprovar.isPending}
           onConfirmar={confirmarAprovacao}

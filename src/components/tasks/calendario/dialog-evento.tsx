@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import { Eye, EyeOff, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ import {
   type TipoDeEvento,
 } from "@/lib/tasks/use-calendario";
 
-import { EtiquetaDoTipo } from "./etiqueta-do-tipo";
+import { EtiquetaDeProjeto, EtiquetaDoTipo } from "./etiqueta-do-tipo";
 import { turmasDoEvento } from "./visao-lista";
 
 export interface TurmaParaEscolher {
@@ -145,8 +146,13 @@ export function DialogEvento({
   somenteLeitura: boolean;
   onFechar: () => void;
 }) {
+  // Evento que nasceu de um projeto não se edita aqui (o servidor devolveria 409): só pelo projeto.
+  if (evento?.projetoId) {
+    return <DetalheDoEvento evento={evento} podeEditar={!somenteLeitura} onFechar={onFechar} />;
+  }
+
   if (somenteLeitura && evento) {
-    return <DetalheDoEvento evento={evento} onFechar={onFechar} />;
+    return <DetalheDoEvento evento={evento} podeEditar={false} onFechar={onFechar} />;
   }
 
   return <FormularioDoEvento evento={evento} dataInicial={dataInicial} turmas={turmas} onFechar={onFechar} />;
@@ -437,7 +443,17 @@ function Campo({
 }
 
 /** O evento como o professor o vê: tudo legível, nada editável. */
-function DetalheDoEvento({ evento, onFechar }: { evento: EventoDto; onFechar: () => void }) {
+function DetalheDoEvento({
+  evento,
+  podeEditar,
+  onFechar,
+}: {
+  evento: EventoDto;
+  /** Quem escreve no calendário: vê "Editar" e "Excluir" desabilitados, com o caminho do projeto. */
+  podeEditar: boolean;
+  onFechar: () => void;
+}) {
+  const doProjeto = !!evento.projetoId;
   const mesmoDia = diaDe(evento.inicio) === diaDe(evento.fim);
   const horario = evento.diaInteiro ? "Dia inteiro" : faixaDeHorario(evento.horaInicio, evento.horaFim);
 
@@ -445,8 +461,9 @@ function DetalheDoEvento({ evento, onFechar }: { evento: EventoDto; onFechar: ()
     <Dialog open onOpenChange={(aberto) => !aberto && onFechar()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div>
+          <div className="flex flex-wrap gap-1.5">
             <EtiquetaDoTipo tipo={evento.tipo} />
+            {doProjeto && <EtiquetaDeProjeto />}
           </div>
           <DialogTitle className="text-lg leading-snug break-words">{evento.titulo}</DialogTitle>
           <DialogDescription>
@@ -492,7 +509,32 @@ function DetalheDoEvento({ evento, onFechar }: { evento: EventoDto; onFechar: ()
           )}
         </dl>
 
-        <DialogFooter>
+        {doProjeto && podeEditar && (
+          <div className="grid gap-2 rounded-lg bg-muted px-3.5 py-3 text-sm">
+            <p className="text-muted-foreground">
+              Este evento vem de um projeto. As datas e as turmas mudam no próprio projeto.
+            </p>
+            <Link
+              href={`/finance/projetos/${evento.projetoId}`}
+              className="inline-flex min-h-10 w-fit items-center gap-1.5 font-semibold text-primary underline-offset-4 hover:underline md:min-h-0"
+            >
+              <FolderKanban aria-hidden className="size-4" />
+              Edite pelo projeto
+            </Link>
+          </div>
+        )}
+
+        <DialogFooter className={doProjeto && podeEditar ? "sm:justify-between" : undefined}>
+          {doProjeto && podeEditar && (
+            <div className="flex gap-2 max-sm:flex-col">
+              <Button type="button" variant="destructive" disabled title="Edite pelo projeto">
+                Excluir
+              </Button>
+              <Button type="button" variant="outline" disabled title="Edite pelo projeto">
+                Editar
+              </Button>
+            </div>
+          )}
           <Button variant="outline" onClick={onFechar}>
             Fechar
           </Button>

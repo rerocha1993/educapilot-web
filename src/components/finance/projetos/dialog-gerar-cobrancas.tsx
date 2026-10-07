@@ -22,6 +22,7 @@ import { hojeIsoBrasilia } from "@/lib/format/date";
 import {
   useGerarCobrancas,
   usePublicoPrevisto,
+  valorPorParticipante,
   type ProjetoDetalhe,
   type ResultadoDaGeracao,
   type ResponsavelPrevisto,
@@ -154,7 +155,7 @@ export function DialogGerarCobrancas({ projeto, onFechar }: { projeto: ProjetoDe
 
         <form onSubmit={confirmar} noValidate className="grid gap-3.5">
           <div className="grid gap-3.5 sm:grid-cols-2">
-            <Campo id="cobranca-valor" rotulo="Valor por família">
+            <Campo id="cobranca-valor" rotulo={valorPorParticipante(projeto)}>
               <CampoDeDinheiro
                 id="cobranca-valor"
                 valorEmCentavos={emCentavos(valor)}
