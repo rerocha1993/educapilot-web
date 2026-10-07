@@ -25,6 +25,7 @@ import { PrecisaDeVoce, montarPendencias } from "@/components/inicio/precisa-de-
 import { useRequireSession } from "@/lib/auth/use-session";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useMeuQuadro } from "@/lib/flow/use-tarefas";
+import { usePendenciasDoPonto } from "@/lib/rh/use-marcacoes";
 import {
   ANIVERSARIANTES,
   ATALHOS,
@@ -109,7 +110,9 @@ export default function InicioPage() {
   const { data: quadro } = useMeuQuadro({
     enabled: tiposDePendencia.some((t) => t.id === "tarefas-atrasadas"),
   });
-  const pendencias = montarPendencias(tiposDePendencia, painel, quadro);
+  // O resumo do ponto também só é pedido quando o item foi escolhido (e a pessoa tem a área).
+  const { data: pontoPendente } = usePendenciasDoPonto(tiposDePendencia.some((t) => t.id === "ponto-pendente"));
+  const pendencias = montarPendencias(tiposDePendencia, painel, quadro, pontoPendente);
 
   const primeiroNome = session?.name.split(" ").find(Boolean) ?? "";
   const hoje = new Date();

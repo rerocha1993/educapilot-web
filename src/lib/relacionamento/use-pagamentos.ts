@@ -535,6 +535,18 @@ export function usePlanos() {
   });
 }
 
+/** O plano Mensalidade em si (um por escola), para editar a carteira dele; null enquanto nao existe. */
+export function usePlanoDaMensalidade() {
+  return useQuery({
+    queryKey: [...PAGAMENTOS, "planos", "mensalidade"],
+    staleTime: 15_000,
+    queryFn: async (): Promise<Plano | null> => {
+      const lista = await relacionamentoJson<PlanoCru[] | null>("/planos", {}, "Não foi possível carregar os planos.");
+      return (lista ?? []).map(plano).find((p) => p.tipo === "mensalidade") ?? null;
+    },
+  });
+}
+
 export function usePlano(id: string | null) {
   return useQuery({
     queryKey: [...PAGAMENTOS, "planos", "detalhe", id],

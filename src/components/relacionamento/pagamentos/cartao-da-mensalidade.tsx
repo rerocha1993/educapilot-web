@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { DialogAlunosDaMensalidade } from "@/components/relacionamento/pagamentos/dialog-alunos-da-mensalidade";
 import { ItemDoResultado } from "@/components/relacionamento/pagamentos/aba-planos";
+import { SeletorDeCarteira } from "@/components/relacionamento/pagamentos/seletor-de-carteira";
 import { ErroDeCarga } from "@/components/rh/campo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ import {
   useMensalidades,
   type Mensalidades,
   type ResultadoDaGeracaoMensal,
+  useEditarPlano,
+  usePlanoDaMensalidade,
 } from "@/lib/relacionamento/use-pagamentos";
 import { formatarMoeda } from "@/lib/rh/formatar";
 
@@ -80,16 +83,9 @@ export function CartaoDaMensalidade() {
             <dd className="font-semibold">{nomeDoMes(data.proximaCompetencia)}</dd>
           </div>
           <div className="col-span-2">
-            <dt className="text-xs text-muted-foreground">Carteira</dt>
-            <dd className="flex items-center gap-1.5 break-words">
-              {data.contaNome ? (
-                <>
-                  <Wallet aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
-                  {data.contaNome}
-                </>
-              ) : (
-                <span className="text-muted-foreground">Sem carteira</span>
-              )}
+            <dt className="text-xs text-muted-foreground">Carteira das parcelas</dt>
+            <dd className="mt-1">
+              <CarteiraDaMensalidade contaFinanceiraId={data.contaFinanceiraId} contaNome={data.contaNome} />
             </dd>
           </div>
         </dl>
@@ -230,5 +226,55 @@ export function DialogGerarMensalidades({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * A carteira onde as parcelas da Mensalidade caem. E a conta do plano Mensalidade; trocar aqui so
+ * vale para parcelas futuras. Sem plano ainda (nenhum aluno), mostra o texto e nada para escolher.
+ */
+function CarteiraDaMensalidade({ contaFinanceiraId, contaNome }: { contaFinanceiraId: string | null; contaNome: string | null }) {
+  const plano = usePlanoDaMensalidade();
+  const editar = useEditarPlano();
+
+  if (!plano.data) {
+    return (
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        <Wallet aria-hidden className="size-3.5 shrink-0" />
+        {contaNome ?? "Sem carteira"}
+      </span>
+    );
+  }
+
+  const p = plano.data;
+  return (
+    <SeletorDeCarteira
+      padrao="mensalidades"
+      semPreSelecao
+      value={contaFinanceiraId}
+      className="max-w-xs"
+      onChange={(id) => {
+        if (id === contaFinanceiraId) return;
+        editar.mutate(
+          {
+            id: p.id,
+            dados: {
+              nome: p.nome,
+              descricao: p.descricao ?? undefined,
+              valor: p.valor,
+              diaVencimento: p.diaVencimento,
+              inicio: p.inicio,
+              fim: p.fim ?? undefined,
+              gerarCobrancaAsaas: p.gerarCobrancaAsaas,
+              contaFinanceiraId: id,
+            },
+          },
+          {
+            onSuccess: () => toast.success("Carteira da mensalidade atualizada. Vale para as parcelas futuras."),
+            onError: (err) => toast.error(err instanceof Error ? err.message : "Não foi possível trocar a carteira."),
+          }
+        );
+      }}
+    />
   );
 }

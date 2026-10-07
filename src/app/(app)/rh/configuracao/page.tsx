@@ -9,6 +9,7 @@ import { RhNav } from "@/components/rh/rh-nav";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePodeEscreverNoRh } from "@/lib/rh/use-pode-escrever";
 import {
@@ -47,6 +48,14 @@ interface Campos {
   toleranciaMinutos: string;
   horasSemanais: string;
   diasDaSemana: number[];
+  pontoPeloCelularAtivo: boolean;
+  raioDaCercaMetros: string;
+  precisaoMaximaMetros: string;
+  exigirFoto: boolean;
+  foraDaCercaBloqueia: boolean;
+  intervaloMinimoEntreBatidasMinutos: string;
+  aprovarAparelhoNovo: boolean;
+  exigirSequencia: boolean;
 }
 
 const numero = (texto: string) => Number(texto.trim().replace(",", "."));
@@ -61,6 +70,14 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
     toleranciaMinutos: String(inicial.toleranciaMinutos),
     horasSemanais: String(inicial.horasSemanais),
     diasDaSemana: inicial.diasDaSemana,
+    pontoPeloCelularAtivo: inicial.pontoPeloCelularAtivo,
+    raioDaCercaMetros: String(inicial.raioDaCercaMetros),
+    precisaoMaximaMetros: String(inicial.precisaoMaximaMetros),
+    exigirFoto: inicial.exigirFoto,
+    foraDaCercaBloqueia: inicial.foraDaCercaBloqueia,
+    intervaloMinimoEntreBatidasMinutos: String(inicial.intervaloMinimoEntreBatidasMinutos),
+    aprovarAparelhoNovo: inicial.aprovarAparelhoNovo,
+    exigirSequencia: inicial.exigirSequencia,
   }));
   const [erro, setErro] = useState<string | null>(null);
 
@@ -98,6 +115,19 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
     }
     if (campos.diasDaSemana.length === 0) return setErro("Marque ao menos um dia de trabalho.");
 
+    const raio = numero(campos.raioDaCercaMetros);
+    const precisao = numero(campos.precisaoMaximaMetros);
+    const intervaloMinimo = numero(campos.intervaloMinimoEntreBatidasMinutos);
+    if (!Number.isFinite(raio) || raio < 10 || raio > 5000) {
+      return setErro("O raio da cerca vai de 10 a 5.000 metros.");
+    }
+    if (!Number.isFinite(precisao) || precisao < 10 || precisao > 1000) {
+      return setErro("A precisão máxima vai de 10 a 1.000 metros.");
+    }
+    if (!Number.isFinite(intervaloMinimo) || intervaloMinimo < 0 || intervaloMinimo > 240) {
+      return setErro("O tempo mínimo entre batidas vai de 0 a 240 minutos.");
+    }
+
     try {
       await salvar.mutateAsync({
         jornadaEntrada: campos.jornadaEntrada,
@@ -106,6 +136,14 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
         toleranciaMinutos: Math.round(tolerancia),
         horasSemanais: horas,
         diasDaSemana: campos.diasDaSemana,
+        pontoPeloCelularAtivo: campos.pontoPeloCelularAtivo,
+        raioDaCercaMetros: Math.round(raio),
+        precisaoMaximaMetros: Math.round(precisao),
+        exigirFoto: campos.exigirFoto,
+        foraDaCercaBloqueia: campos.foraDaCercaBloqueia,
+        intervaloMinimoEntreBatidasMinutos: Math.round(intervaloMinimo),
+        aprovarAparelhoNovo: campos.aprovarAparelhoNovo,
+        exigirSequencia: campos.exigirSequencia,
       });
       toast.success("Configuração salva.");
     } catch (err) {
@@ -189,6 +227,94 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
             ))}
           </div>
         </section>
+
+        <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+          <div>
+            <h2 className="font-heading text-[15.5px] font-semibold">Ponto pelo celular</h2>
+            <p className="mt-0.5 text-[13px] leading-[1.55] text-muted-foreground">
+              A equipe bate o ponto pelo próprio celular, com biometria, localização e foto. O que fugir das regras
+              abaixo fica pendente para você aprovar em Ponto.
+            </p>
+          </div>
+
+          <Opcao
+            id="cfg-celular-ativo"
+            titulo="Ligar o ponto pelo celular"
+            texto="Desligado, ninguém vê a tela Meu ponto."
+            marcado={campos.pontoPeloCelularAtivo}
+            onChange={(v) => mudar({ pontoPeloCelularAtivo: v })}
+          />
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Campo
+              id="cfg-raio"
+              rotulo="Raio da cerca (m)"
+              dica="Distância da escola em que a batida é considerada no local. Se a escola não tem localização cadastrada em Portaria › Configuração, a cerca não é aplicada."
+            >
+              <Input
+                id="cfg-raio"
+                inputMode="numeric"
+                value={campos.raioDaCercaMetros}
+                onChange={(e) => mudar({ raioDaCercaMetros: e.target.value })}
+              />
+            </Campo>
+            <Campo
+              id="cfg-precisao"
+              rotulo="Precisão máxima (m)"
+              dica="Se o GPS do celular errar por mais que isto, a batida fica pendente."
+            >
+              <Input
+                id="cfg-precisao"
+                inputMode="numeric"
+                value={campos.precisaoMaximaMetros}
+                onChange={(e) => mudar({ precisaoMaximaMetros: e.target.value })}
+              />
+            </Campo>
+            <Campo
+              id="cfg-intervalo-minimo"
+              rotulo="Tempo mínimo entre batidas (min)"
+              dica="Evita bater duas vezes sem querer."
+            >
+              <Input
+                id="cfg-intervalo-minimo"
+                inputMode="numeric"
+                value={campos.intervaloMinimoEntreBatidasMinutos}
+                onChange={(e) => mudar({ intervaloMinimoEntreBatidasMinutos: e.target.value })}
+              />
+            </Campo>
+          </div>
+
+          <div className="flex flex-col divide-y divide-border">
+            <Opcao
+              id="cfg-exigir-foto"
+              titulo="Pedir uma foto na batida"
+              texto="Uma selfie rápida, para conferir quem bateu. Sem foto, a batida fica pendente."
+              marcado={campos.exigirFoto}
+              onChange={(v) => mudar({ exigirFoto: v })}
+            />
+            <Opcao
+              id="cfg-fora-bloqueia"
+              titulo="Bloquear batida fora da escola"
+              texto="Ligado, quem está fora da cerca não consegue bater. Desligado, a batida é aceita e fica pendente."
+              marcado={campos.foraDaCercaBloqueia}
+              onChange={(v) => mudar({ foraDaCercaBloqueia: v })}
+            />
+            <Opcao
+              id="cfg-aprovar-aparelho"
+              titulo="Aprovar cada celular novo"
+              texto="O celular cadastrado só vale depois da sua aprovação. Até lá, as batidas ficam pendentes."
+              marcado={campos.aprovarAparelhoNovo}
+              onChange={(v) => mudar({ aprovarAparelhoNovo: v })}
+            />
+            <Opcao
+              id="cfg-exigir-sequencia"
+              titulo="Exigir a ordem do dia"
+              texto="Entrada, saída para o intervalo, volta e saída, nesta ordem. Fora dela, a batida fica pendente."
+              marcado={campos.exigirSequencia}
+              onChange={(v) => mudar({ exigirSequencia: v })}
+            />
+          </div>
+        </section>
       </fieldset>
 
       {erro && (
@@ -207,5 +333,30 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
         <p className="text-sm text-muted-foreground">Você pode ver a configuração, mas não alterá-la.</p>
       )}
     </form>
+  );
+}
+
+/** Uma opção liga/desliga com título e frase de ajuda; o texto inteiro também é clicável. */
+function Opcao({
+  id,
+  titulo,
+  texto,
+  marcado,
+  onChange,
+}: {
+  id: string;
+  titulo: string;
+  texto: string;
+  marcado: boolean;
+  onChange: (valor: boolean) => void;
+}) {
+  return (
+    <label htmlFor={id} className="flex min-h-12 cursor-pointer items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">{titulo}</span>
+        <span className="mt-0.5 block text-[13px] leading-[1.5] text-muted-foreground">{texto}</span>
+      </span>
+      <Switch id={id} checked={marcado} onCheckedChange={onChange} className="mt-0.5" />
+    </label>
   );
 }

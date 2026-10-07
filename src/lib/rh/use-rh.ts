@@ -247,6 +247,20 @@ export interface ConfiguracaoDoRh {
   horasSemanais: number;
   /** 0 = domingo … 6 = sábado. */
   diasDaSemana: number[];
+  // Ponto pelo celular (2026-10). O servidor guarda tudo junto com a jornada.
+  pontoPeloCelularAtivo: boolean;
+  /** Distância da escola em que a batida vale como "no local". */
+  raioDaCercaMetros: number;
+  /** Acima desta incerteza do GPS, a batida fica pendente. */
+  precisaoMaximaMetros: number;
+  exigirFoto: boolean;
+  /** Fora da cerca: bloqueia a batida (true) ou deixa pendente para a gestão (false). */
+  foraDaCercaBloqueia: boolean;
+  intervaloMinimoEntreBatidasMinutos: number;
+  /** Celular novo só vale depois que a gestão aprova. */
+  aprovarAparelhoNovo: boolean;
+  /** Exige entrada, intervalo e saída na ordem. */
+  exigirSequencia: boolean;
 }
 
 export interface RelatorioDoFuncionario {
@@ -728,6 +742,14 @@ export const CONFIGURACAO_PADRAO: ConfiguracaoDoRh = {
   toleranciaMinutos: 10,
   horasSemanais: 40,
   diasDaSemana: [1, 2, 3, 4, 5],
+  pontoPeloCelularAtivo: false,
+  raioDaCercaMetros: 100,
+  precisaoMaximaMetros: 100,
+  exigirFoto: true,
+  foraDaCercaBloqueia: false,
+  intervaloMinimoEntreBatidasMinutos: 5,
+  aprovarAparelhoNovo: true,
+  exigirSequencia: true,
 };
 
 export function useConfiguracaoDoRh() {
@@ -747,6 +769,15 @@ export function useConfiguracaoDoRh() {
         toleranciaMinutos: b?.toleranciaMinutos ?? CONFIGURACAO_PADRAO.toleranciaMinutos,
         horasSemanais: b?.horasSemanais ?? CONFIGURACAO_PADRAO.horasSemanais,
         diasDaSemana: b?.diasDaSemana ?? CONFIGURACAO_PADRAO.diasDaSemana,
+        pontoPeloCelularAtivo: b?.pontoPeloCelularAtivo ?? CONFIGURACAO_PADRAO.pontoPeloCelularAtivo,
+        raioDaCercaMetros: b?.raioDaCercaMetros ?? CONFIGURACAO_PADRAO.raioDaCercaMetros,
+        precisaoMaximaMetros: b?.precisaoMaximaMetros ?? CONFIGURACAO_PADRAO.precisaoMaximaMetros,
+        exigirFoto: b?.exigirFoto ?? CONFIGURACAO_PADRAO.exigirFoto,
+        foraDaCercaBloqueia: b?.foraDaCercaBloqueia ?? CONFIGURACAO_PADRAO.foraDaCercaBloqueia,
+        intervaloMinimoEntreBatidasMinutos:
+          b?.intervaloMinimoEntreBatidasMinutos ?? CONFIGURACAO_PADRAO.intervaloMinimoEntreBatidasMinutos,
+        aprovarAparelhoNovo: b?.aprovarAparelhoNovo ?? CONFIGURACAO_PADRAO.aprovarAparelhoNovo,
+        exigirSequencia: b?.exigirSequencia ?? CONFIGURACAO_PADRAO.exigirSequencia,
       } satisfies ConfiguracaoDoRh;
     },
   });

@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarClock,
   ClipboardList,
+  Clock,
   Contact,
   DoorOpen,
   FileSignature,
@@ -251,6 +252,13 @@ export const PENDENCIAS: ItemDoInicio[] = [
     rota: "/flow/respostas",
     icone: Inbox,
   },
+  {
+    id: "ponto-pendente",
+    rotulo: "Batidas de ponto para aprovar",
+    descricao: "Batidas do celular fora das regras e celulares novos esperando aprovação.",
+    rota: "/rh/ponto",
+    icone: Clock,
+  },
 ];
 
 // ------------------------------------------------------------------ blocos
@@ -354,7 +362,7 @@ export interface PadraoDoPapel {
 const GESTAO: PadraoDoPapel = {
   blocos: ["numeros", "precificacao", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
-  pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "chamada-aberta"],
+  pendencias: ["mensalidades-vencidas", "contratos-conferencia", "envios-aguardando", "ponto-pendente", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
   aniversariantes: ["alunos", "responsaveis", "equipe"],
 };

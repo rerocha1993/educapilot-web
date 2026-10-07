@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Clock,
   House,
   KeyRound,
   LogOut,
@@ -39,12 +40,20 @@ import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
 import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
+import { useMeuPontoDisponivel } from "@/lib/rh/use-meu-ponto";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
 // espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
 // Estado persistido em localStorage (por navegador, não sincroniza entre
 // dispositivos) pra manter a escolha entre navegações/reloads.
 const COLLAPSE_STORAGE_KEY = "educapilot_sidebar_collapsed";
+
+/**
+ * Meu ponto: tela de quem bate o ponto pelo celular. No celular ela tem layout próprio (sem o
+ * cabeçalho e a barra de abas do shell) — é usada em pé, com uma mão, e o botão grande fica no pé
+ * da tela. O caminho de volta é a seta da própria página.
+ */
+const MEU_PONTO_HREF = "/meu-ponto";
 
 // Celular (abaixo de md): a sidebar some e dá lugar a um cabeçalho com menu, uma barra de abas
 // embaixo e a tela Início com atalhos. A barra tem espaço para cinco abas: Início, três módulos e
@@ -98,6 +107,9 @@ export function AppShell({
   const fecharMenu = () => setMenuAbertoEm(null);
   const { carregando, moduloVisivel, rotaVisivel, entradaDo } = useVisibilidade();
   const { data: modulosAtivos } = useActiveModules();
+  // O atalho só existe para quem tem ficha de funcionário e a escola ligou o ponto pelo celular.
+  const comMeuPonto = useMeuPontoDisponivel(session.role !== "Responsavel");
+  const telaLimpaNoCelular = pathname === MEU_PONTO_HREF;
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -201,7 +213,9 @@ export function AppShell({
       ? "Início"
       : pathname === ADMIN_HREF || pathname.startsWith(`${ADMIN_HREF}/`)
         ? TITULO_DO_MODULO.admin
-        : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
+        : pathname === MEU_PONTO_HREF
+          ? "Meu ponto"
+          : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
 
   const menuDoUsuario = (tamanho: "sm" | "lg") => (
     <DropdownMenu>
@@ -219,6 +233,12 @@ export function AppShell({
           {session.role}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {comMeuPonto && (
+          <DropdownMenuItem onClick={() => router.push(MEU_PONTO_HREF)}>
+            <Clock className="size-4" />
+            Meu ponto
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => setAlterandoSenha(true)}>
           <KeyRound className="size-4" />
           Alterar senha
@@ -337,7 +357,12 @@ export function AppShell({
         </header>
 
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
-        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[2.75rem_1fr_auto] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!">
+        <header
+          className={cn(
+            "sticky top-0 z-30 grid shrink-0 grid-cols-[2.75rem_1fr_auto] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!",
+            telaLimpaNoCelular && "hidden"
+          )}
+        >
           <button
             type="button"
             onClick={abrirMenu}
@@ -367,7 +392,14 @@ export function AppShell({
             mesmo o conteúdo interno tendo seu próprio scroll horizontal. Achado
             testando a Chamada no mobile. No celular o padding de baixo abre espaço
             para a barra de abas fixa. */}
-        <main className="min-w-0 flex-1 overflow-auto bg-background p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pb-11 md:pt-6">
+        <main
+          className={cn(
+            "min-w-0 flex-1 overflow-auto bg-background p-4 md:px-6 md:pb-11 md:pt-6",
+            telaLimpaNoCelular
+              ? "pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]"
+              : "pb-[calc(6rem+env(safe-area-inset-bottom))]"
+          )}
+        >
           <BannerDeNotificacoes className="mb-4" />
           {children}
         </main>
@@ -376,7 +408,10 @@ export function AppShell({
       {/* Barra de abas do celular. */}
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden!"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden!",
+          telaLimpaNoCelular && "hidden"
+        )}
       >
         <ul className="grid grid-cols-5">
           <AbaDoCelular
@@ -460,6 +495,16 @@ export function AppShell({
                   <span className="block text-[11px] text-sidebar-muted">{session.role}</span>
                 </span>
               </div>
+              {comMeuPonto && (
+                <Link
+                  href={MEU_PONTO_HREF}
+                  onClick={fecharMenu}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-sidebar-foreground active:bg-sidebar-accent"
+                >
+                  <Clock className="size-5 text-sidebar-muted" />
+                  Meu ponto
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => {

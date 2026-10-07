@@ -274,7 +274,7 @@ export function BarraDeFiltros({ f }: { f: FiltrosDeCobranca }) {
         )}
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid max-w-4xl gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <SeletorDeCarteira value={f.carteira} onChange={f.definirCarteira} permitirVazio className="w-full" />
 
         <Select value={f.turma} onValueChange={(v) => v && f.definirTurma(v)}>

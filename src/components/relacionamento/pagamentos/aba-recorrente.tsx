@@ -66,9 +66,23 @@ export function AbaRecorrente({ f, onNova }: { f: FiltrosDeCobranca; onNova: () 
 
   return (
     <div className="grid gap-5">
-      <section aria-label="Planos" className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {/* Cartoes de largura fixa: sem esticar um cartao sozinho na tela toda. Com so a Mensalidade,
+          o cartao tracejado ao lado convida a criar o proximo plano e preenche o espaco. */}
+      <section aria-label="Planos" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <CartaoDaMensalidade />
-        <CartoesDosPlanos />
+        <CartoesDosPlanos
+          aoVazio={
+            <button
+              type="button"
+              onClick={onNova}
+              className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+            >
+              <Plus className="size-5" />
+              <span className="font-medium">Novo plano recorrente</span>
+              <span className="text-xs">Período integral, transporte, material: tudo que se cobra todo mês.</span>
+            </button>
+          }
+        />
       </section>
 
       <section aria-label="Parcelas" className="grid gap-3">

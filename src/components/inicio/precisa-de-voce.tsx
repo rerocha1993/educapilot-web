@@ -8,6 +8,7 @@ import { formatarData } from "@/lib/format/date";
 import type { ItemDoInicio } from "@/lib/inicio/catalogo";
 import type { PainelInicio } from "@/lib/kernel/use-painel";
 import type { Quadro } from "@/lib/flow/use-tarefas";
+import type { PendenciasDoPonto } from "@/lib/rh/use-marcacoes";
 
 /**
  * "Precisa de você": o que pede decisão agora.
@@ -38,13 +39,37 @@ export interface Pendencia {
 export function montarPendencias(
   itens: ItemDoInicio[],
   painel: PainelInicio | undefined,
-  quadro: Quadro | undefined
+  quadro: Quadro | undefined,
+  ponto?: PendenciasDoPonto
 ): Pendencia[] {
-  if (!painel) return [];
-
   return itens
-    .map((item) => construir(item, painel, quadro))
+    .map((item) => {
+      // O ponto vem do RH, e não do painel: um painel que falhou não esconde a fila de aprovação.
+      if (item.id === "ponto-pendente") return construirDoPonto(item, ponto);
+      return painel ? construir(item, painel, quadro) : null;
+    })
     .filter((p): p is Pendencia => p !== null);
+}
+
+function construirDoPonto(item: ItemDoInicio, ponto: PendenciasDoPonto | undefined): Pendencia | null {
+  if (!ponto) return null;
+  const { marcacoes, aparelhos } = ponto;
+  if (marcacoes + aparelhos === 0) return null;
+
+  const partes = [
+    marcacoes > 0 ? `${marcacoes} ${marcacoes === 1 ? "batida" : "batidas"}` : null,
+    aparelhos > 0 ? `${aparelhos} ${aparelhos === 1 ? "celular novo" : "celulares novos"}` : null,
+  ].filter(Boolean);
+
+  return {
+    id: item.id,
+    // Cai direto na fila de aprovação, e não no espelho do mês.
+    href: `${item.rota}?aba=pendencias`,
+    icon: item.icone,
+    titulo: marcacoes > 0 ? `${marcacoes} ${marcacoes === 1 ? "batida de ponto" : "batidas de ponto"} para aprovar` : `${aparelhos} ${aparelhos === 1 ? "celular novo" : "celulares novos"} para aprovar`,
+    sub: marcacoes > 0 && aparelhos > 0 ? `${partes.join(" e ")} esperando a gestão` : "Ponto pelo celular",
+    acao: "Aprovar",
+  };
 }
 
 function construir(
