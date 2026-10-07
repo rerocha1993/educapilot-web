@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Inbox, RotateCcw } from "lucide-react";
+import { Inbox, RotateCcw, Upload } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -31,10 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BotaoDeExportar } from "@/components/finance/botao-de-exportar";
 import { ClassificacaoDoLancamento } from "@/components/finance/classificacao-do-lancamento";
+import { DialogDeImportacao } from "@/components/finance/dialog-de-importacao";
 import { DialogRegistrarRecebimento } from "@/components/finance/dialogs-de-baixa";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { ResumoDoPagamento } from "@/components/finance/resumo-do-pagamento";
+import { SeletorDeMes } from "@/components/finance/seletor-de-mes";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { Confirmacao } from "@/components/rh/confirmacao";
@@ -47,6 +50,7 @@ import {
   revenueCategoryLabel,
   type RevenueEntryDto,
 } from "@/lib/finance/use-revenues";
+import { exportarLancamentosDoMes } from "@/lib/finance/use-importacao";
 import { situacaoDoServidor } from "@/lib/finance/diferenca-do-pagamento";
 import { competenciaDeIso, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
@@ -93,14 +97,14 @@ const EMPTY_FORM = {
 
 export default function ReceitasPage() {
   const now = new Date();
-  const [month] = useState(now.getMonth() + 1);
-  const [year] = useState(now.getFullYear());
+  const [{ mes: month, ano: year }, setPeriodo] = useState({ mes: now.getMonth() + 1, ano: now.getFullYear() });
 
   const { data: revenues, isLoading, isError } = useRevenuesByMonth(month, year);
   const createRevenue = useCreateRevenue();
   const reabrir = useReabrirReceita();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importando, setImportando] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [recebendo, setRecebendo] = useState<RevenueEntryDto | null>(null);
   const [reabrindo, setReabrindo] = useState<RevenueEntryDto | null>(null);
@@ -155,11 +159,23 @@ export default function ReceitasPage() {
           </span>
         }
         acoes={
-          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
-            Nova receita
-          </Button>
+          <>
+            <Button variant="outline" className="flex-1 md:flex-none" onClick={() => setImportando(true)}>
+              <Upload />
+              Importar
+            </Button>
+            <BotaoDeExportar
+              className="flex-1 md:flex-none"
+              onExportar={() => exportarLancamentosDoMes("receitas", month, year)}
+            />
+            <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+              Nova receita
+            </Button>
+          </>
         }
       />
+
+      <SeletorDeMes valor={{ mes: month, ano: year }} onChange={(v) => setPeriodo(v)} />
 
       {isError && (
         <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
@@ -289,11 +305,6 @@ export default function ReceitasPage() {
         </Table>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Importar Excel existe no backend (layout de coluna fixo), mas fora do escopo
-        desta primeira versão da tela.
-      </p>
-
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -371,6 +382,8 @@ export default function ReceitasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {importando && <DialogDeImportacao tipo="receitas" onFechar={() => setImportando(false)} />}
 
       {recebendo && <DialogRegistrarRecebimento receita={recebendo} onFechar={() => setRecebendo(null)} />}
 

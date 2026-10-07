@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Inbox, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Inbox, Pencil, RotateCcw, Trash2, Upload } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -15,12 +15,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BotaoDeExportar } from "@/components/finance/botao-de-exportar";
 import { ComprovanteDaDespesa } from "@/components/finance/comprovante-da-despesa";
 import { DialogDeDespesa } from "@/components/finance/dialog-de-despesa";
 import { DialogDeEscopoDaSerie } from "@/components/finance/dialog-de-escopo-da-serie";
+import { DialogDeImportacao } from "@/components/finance/dialog-de-importacao";
 import { DialogRegistrarPagamento } from "@/components/finance/dialogs-de-baixa";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import { ResumoDoPagamento } from "@/components/finance/resumo-do-pagamento";
+import { SeletorDeMes } from "@/components/finance/seletor-de-mes";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { Confirmacao } from "@/components/rh/confirmacao";
@@ -33,6 +36,7 @@ import {
   type EscopoDaSerie,
   type ExpenseDto,
 } from "@/lib/finance/use-expenses";
+import { exportarLancamentosDoMes } from "@/lib/finance/use-importacao";
 import { situacaoDoServidor } from "@/lib/finance/diferenca-do-pagamento";
 import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
@@ -51,6 +55,7 @@ function isOverdue(e: ExpenseDto) {
 
 type Dialogo =
   | { tipo: "nova" }
+  | { tipo: "importar" }
   | { tipo: "editar"; despesa: ExpenseDto }
   | { tipo: "pagar"; despesa: ExpenseDto }
   | { tipo: "reabrir"; despesa: ExpenseDto }
@@ -155,8 +160,7 @@ function AcoesDaDespesa({
 
 export default function DespesasPage() {
   const now = new Date();
-  const [month] = useState(now.getMonth() + 1);
-  const [year] = useState(now.getFullYear());
+  const [{ mes: month, ano: year }, setPeriodo] = useState({ mes: now.getMonth() + 1, ano: now.getFullYear() });
 
   const { data: expenses, isLoading, isError } = useExpensesByMonth(month, year);
   const excluir = useDeleteExpense();
@@ -207,11 +211,23 @@ export default function DespesasPage() {
           </span>
         }
         acoes={
-          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogo({ tipo: "nova" })}>
-            Nova despesa
-          </Button>
+          <>
+            <Button variant="outline" className="flex-1 md:flex-none" onClick={() => setDialogo({ tipo: "importar" })}>
+              <Upload />
+              Importar
+            </Button>
+            <BotaoDeExportar
+              className="flex-1 md:flex-none"
+              onExportar={() => exportarLancamentosDoMes("despesas", month, year)}
+            />
+            <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogo({ tipo: "nova" })}>
+              Nova despesa
+            </Button>
+          </>
         }
       />
+
+      <SeletorDeMes valor={{ mes: month, ano: year }} onChange={(v) => setPeriodo(v)} />
 
       {/* Estatística do guia: rótulo pequeno, número grande em mono, contagem em cinza ao lado. */}
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
@@ -381,9 +397,7 @@ export default function DespesasPage() {
         </Table>
       </div>
 
-      {/* "Importar Excel" existe no backend, mas com layout de coluna fixo e sem documentação de
-          formato — fora do escopo desta primeira versão. O comprovante agora se anexa em cada
-          despesa (clipe) e chega também pela Caixa de comprovantes. */}
+      {/* O comprovante se anexa em cada despesa (clipe) e chega também pela Caixa de comprovantes. */}
       <p className="text-xs text-muted-foreground">
         Mandou a foto de um comprovante pelo WhatsApp?{" "}
         <Link href="/finance/comprovantes" className="underline">
@@ -392,6 +406,7 @@ export default function DespesasPage() {
         , pronto para virar despesa.
       </p>
 
+      {dialogo?.tipo === "importar" && <DialogDeImportacao tipo="despesas" onFechar={fechar} />}
       {dialogo?.tipo === "nova" && <DialogDeDespesa despesa={null} onFechar={fechar} />}
       {dialogo?.tipo === "editar" && <DialogDeDespesa despesa={dialogo.despesa} onFechar={fechar} />}
       {dialogo?.tipo === "pagar" && <DialogRegistrarPagamento despesa={dialogo.despesa} onFechar={fechar} />}

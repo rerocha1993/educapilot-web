@@ -57,10 +57,21 @@ async function mensagemDeErro(res: Response, falha: string): Promise<string> {
   return falha;
 }
 
-/** Chamada que devolve JSON. Falha vira Error com a mensagem do backend. */
+/** Erro da API com o código HTTP, para a tela tratar um caso (409, por exemplo) com frase própria. */
+export class ErroDeApi extends Error {
+  readonly status: number;
+
+  constructor(mensagem: string, status: number) {
+    super(mensagem);
+    this.name = "ErroDeApi";
+    this.status = status;
+  }
+}
+
+/** Chamada que devolve JSON. Falha vira ErroDeApi com a mensagem do backend. */
 export async function financeiroJson<T>(caminho: string, init: RequestInit, falha: string): Promise<T> {
   const res = await financeiroFetch(caminho, init);
-  if (!res.ok) throw new Error(await mensagemDeErro(res, falha));
+  if (!res.ok) throw new ErroDeApi(await mensagemDeErro(res, falha), res.status);
   if (res.status === 204) return undefined as T;
   return (await res.json().catch(() => undefined)) as T;
 }
@@ -83,8 +94,22 @@ export async function financeiroEnviarArquivo<T>(
 /** Baixa um arquivo autenticado como Blob. */
 export async function financeiroBaixarArquivo(caminho: string, falha: string): Promise<Blob> {
   const res = await financeiroFetch(caminho);
-  if (!res.ok) throw new Error(await mensagemDeErro(res, falha));
+  if (!res.ok) throw new ErroDeApi(await mensagemDeErro(res, falha), res.status);
   return res.blob();
+}
+
+/** Baixa um arquivo autenticado e o salva no computador com o nome dado. */
+export async function baixarArquivoComNome(caminho: string, nomeDoArquivo: string, falha: string): Promise<void> {
+  const blob = await financeiroBaixarArquivo(caminho, falha);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = nomeDoArquivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoga depois: revogar na hora pode cancelar o download em alguns navegadores.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 /**

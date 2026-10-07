@@ -1,24 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { financeApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import { ErroDeApi, financeiroJson } from "./financeiro-api";
 
-// Espelha SharedKernel.Enums.RevenueCategory/ExpenseType do backend — Categoria é um
-// int genérico que significa uma coisa ou outra dependendo de Tipo (ver comentário em
-// Budget.cs).
-export const RECEITA_CATEGORIES = [
-  { value: 1, label: "Mensalidade" },
-  { value: 2, label: "Patrocínio" },
-  { value: 3, label: "Evento" },
-  { value: 4, label: "Investimento" },
-  { value: 5, label: "Verba pública" },
-  { value: 99, label: "Outro" },
-] as const;
-
-export const DESPESA_CATEGORIES = [
-  { value: 1, label: "Custo" },
-  { value: 2, label: "Despesa" },
-  { value: 3, label: "Investimento" },
-] as const;
+// F3 (2026-10): o orçamento passou a usar o plano de contas (categoriaFinanceiraId) e, se quiser,
+// um centro de custo. O enum `categoria` continua na resposta por compatibilidade, mas a tela não
+// o escolhe mais; `categoriaLabel` já vem como "Grupo › Conta".
 
 export interface BudgetDto {
   id: string;
@@ -26,8 +13,12 @@ export interface BudgetDto {
   mes: number | null;
   tipo: "Receita" | "Despesa";
   categoria: number;
+  /** "Grupo › Conta" do plano de contas. */
   categoriaLabel: string | null;
   valorPlanejado: number;
+  categoriaFinanceiraId?: string | null;
+  centroDeCustoId?: string | null;
+  centroDeCustoNome?: string | null;
 }
 
 export interface BudgetComparativoDto {
@@ -37,6 +28,9 @@ export interface BudgetComparativoDto {
   planejado: number;
   realizado: number;
   variacao: number;
+  categoriaFinanceiraId?: string | null;
+  centroDeCustoId?: string | null;
+  centroDeCustoNome?: string | null;
 }
 
 export function useBudgets(ano: number) {
@@ -65,18 +59,41 @@ export interface CreateBudgetInput {
   ano: number;
   mes?: number | null;
   tipo: "Receita" | "Despesa";
-  categoria: number;
+  /** Conta do plano de contas. */
+  categoriaFinanceiraId: string;
+  centroDeCustoId?: string | null;
   valorPlanejado: number;
 }
 
+export const MENSAGEM_DE_ORCAMENTO_REPETIDO =
+  "Já existe orçamento dessa categoria neste mês. Apague o que está cadastrado ou importe uma planilha para atualizá-lo.";
+
+// A rota aceita categoriaFinanceiraId, que ainda não está nos tipos gerados do Swagger: fetch cru.
+// Chave única (ano, mês, tipo, categoria, centro): repetida volta 409.
 export function useCreateBudget() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateBudgetInput) => {
-      const result = await financeApi.POST("/api/Budgets", {
-        body: { ano: input.ano, mes: input.mes ?? null, tipo: input.tipo, categoria: input.categoria, valorPlanejado: input.valorPlanejado },
-      });
-      unwrapApiResponse(result, "Não foi possível criar o orçamento.");
+      try {
+        await financeiroJson<unknown>(
+          "/api/Budgets",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              ano: input.ano,
+              mes: input.mes ?? null,
+              tipo: input.tipo,
+              categoriaFinanceiraId: input.categoriaFinanceiraId,
+              centroDeCustoId: input.centroDeCustoId || null,
+              valorPlanejado: input.valorPlanejado,
+            }),
+          },
+          "Não foi possível criar o orçamento."
+        );
+      } catch (err) {
+        if (err instanceof ErroDeApi && err.status === 409) throw new Error(MENSAGEM_DE_ORCAMENTO_REPETIDO);
+        throw err;
+      }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
   });
