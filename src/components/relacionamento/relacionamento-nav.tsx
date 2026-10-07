@@ -5,33 +5,18 @@ import { usePathname } from "next/navigation";
 
 import { podeVerArea } from "@/lib/access/pode-ver";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { useSecoesVisiveis } from "@/lib/access/use-secoes-visiveis";
+import { secaoAtiva } from "@/lib/kernel/secoes-do-modulo";
 import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
 import { cn } from "@/lib/utils";
 
 /**
- * Abas do Relacionamento. Cada uma é uma área da permissão, com o mesmo slug do catálogo do
- * backend.
+ * Abas do Relacionamento, só no celular. No computador as seções vivem na barra lateral
+ * (catálogo em secoes-do-modulo.ts) e esta faixa não renderiza nada.
  *
- * Aba de tela que ainda não existe entra no array com `emBreve`: não aparece, e quando a tela
- * existir basta tirar a marca. A aba Chat leva a contagem de conversas não lidas.
+ * Cada aba é uma área da permissão, com o mesmo slug do catálogo do backend. A aba Chat leva a
+ * contagem de conversas não lidas.
  */
-export const ABAS_DO_RELACIONAMENTO: readonly {
-  href: string;
-  label: string;
-  area: string;
-  emBreve?: boolean;
-}[] = [
-  { href: "/relacionamento/avisos", label: "Avisos e eventos", area: "avisos" },
-  { href: "/relacionamento/cronograma", label: "Cronograma", area: "cronograma" },
-  { href: "/relacionamento/familias", label: "Famílias", area: "familias" },
-  { href: "/relacionamento/atividades", label: "Atividades", area: "atividades" },
-  { href: "/relacionamento/mural", label: "Mural", area: "mural" },
-  { href: "/relacionamento/chat", label: "Chat", area: "chat" },
-  { href: "/relacionamento/pagamentos", label: "Pagamentos", area: "pagamentos" },
-  { href: "/relacionamento/loja", label: "Loja virtual", area: "loja" },
-  { href: "/relacionamento/configuracao", label: "Configuração", area: "configuracao" },
-];
-
 export function RelacionamentoNav() {
   const pathname = usePathname();
   const { data: meuAcesso } = useMeuAcesso();
@@ -39,16 +24,15 @@ export function RelacionamentoNav() {
   const naoLidasDoChat = resumoDoChat?.conversasNaoLidas ?? 0;
 
   // Filtra pela área, e não pela rota: quem só tem "Avisos" não vê as outras abas.
-  const abas = ABAS_DO_RELACIONAMENTO.filter(
-    (aba) => !aba.emBreve && podeVerArea(meuAcesso, "relacionamento", aba.area)
-  );
+  const abas = useSecoesVisiveis("/relacionamento");
+  const ativaHref = secaoAtiva(abas, pathname);
 
   return (
     // A faixa rola de lado no celular; o w-max mantém as pílulas do mesmo tamanho lá dentro.
-    <div className="-mx-1 overflow-x-auto px-1 pb-0.5 print:hidden">
+    <div className="-mx-1 overflow-x-auto px-1 pb-0.5 md:hidden print:hidden">
       <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
         {abas.map((aba) => {
-          const ativa = pathname === aba.href || pathname.startsWith(`${aba.href}/`);
+          const ativa = ativaHref === aba.href;
           return (
             <Link
               key={aba.href}

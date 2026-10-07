@@ -57,25 +57,8 @@ export const NAV_ITEMS = [
   { href: "/relacionamento", label: "Relacionamento", icon: HeartHandshake, moduleSlug: "relacionamento" },
 ] as const;
 
-/**
- * Subitens que abrem embaixo do módulo quando a pessoa está dentro dele.
- *
- * Fluxos virou dois produtos na mesma caixa: o quadro de tarefas da equipe e os formulários da
- * família. Oito pílulas numa faixa só era uma lista, não uma navegação — aqui a barra separa as
- * duas metades, e as pílulas de dentro da tela passam a mostrar só as funções da metade aberta.
- */
-export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]> = {
-  // Rotina tem várias telas e a barra só lista as duas de entrada: a Chamada do dia e o
-  // Calendário. As demais continuam nas abas de dentro da tela (RotinaNav).
-  "/": [
-    { href: "/", label: "Chamada" },
-    { href: "/calendario", label: "Calendário" },
-  ],
-  "/flow": [
-    { href: "/flow/tarefas", label: "Quadro" },
-    { href: "/flow", label: "Formulários" },
-  ],
-};
+// As seções de cada ferramenta (o que eram as abas dentro das telas) moram em
+// secoes-do-modulo.ts; a barra lateral mostra as da ferramenta aberta.
 
 /**
  * Por onde entrar em cada módulo, na ordem de preferência.

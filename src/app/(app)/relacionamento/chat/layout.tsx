@@ -20,7 +20,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     <div className="flex flex-col gap-4">
       <RelacionamentoNav />
 
-      <div className="grid gap-4 md:h-[calc(100dvh-12rem)] md:min-h-[30rem] md:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]">
+      <div className="grid gap-4 md:h-[calc(100dvh-8.5rem)] md:min-h-[30rem] md:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]">
         <div className={cn("min-h-0 max-md:min-h-[24rem]", conversaAbertaId && "max-md:hidden")}>
           <ListaDeConversas conversaAbertaId={conversaAbertaId} />
         </div>

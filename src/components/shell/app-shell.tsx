@@ -25,15 +25,20 @@ import {
 import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
 import { encerrarSessao } from "@/lib/auth/sair";
-import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS, SUBITENS_DO_MENU } from "@/lib/kernel/nav-items";
+import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS } from "@/lib/kernel/nav-items";
+import { ferramentaDaRota } from "@/lib/kernel/secoes-do-modulo";
 import { acessoDaRota } from "@/lib/access/pode-ver";
+import { useSecoesVisiveis } from "@/lib/access/use-secoes-visiveis";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
 import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { cn } from "@/lib/utils";
 import { AlterarSenhaDialog } from "@/components/shell/alterar-senha-dialog";
+import { LancadorDeFerramentas } from "@/components/shell/lancador-de-ferramentas";
+import { NavegacaoLateral } from "@/components/shell/navegacao-lateral";
 import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
 import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
+import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
 // espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
@@ -91,7 +96,7 @@ export function AppShell({
   const menuAberto = menuAbertoEm === pathname;
   const abrirMenu = () => setMenuAbertoEm(pathname);
   const fecharMenu = () => setMenuAbertoEm(null);
-  const { moduloVisivel, rotaVisivel, entradaDo } = useVisibilidade();
+  const { carregando, moduloVisivel, rotaVisivel, entradaDo } = useVisibilidade();
   const { data: modulosAtivos } = useActiveModules();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -133,8 +138,21 @@ export function AppShell({
     itens: grupo.hrefs
       .filter((href) => href === INICIO_HREF || moduloVisivel(href))
       .map(itemDoMenu)
-      .filter((i) => i !== undefined),
+      .filter((i) => i !== undefined)
+      .map(({ href, label, icon }) => ({ href, label, icon })),
   })).filter((g) => g.itens.length > 0);
+
+  // A ferramenta aberta decide o que a barra lateral lista: as seções dela. Fora de uma ferramenta
+  // (Início, /settings) ou numa que a pessoa não pode ver, a barra mostra a lista de ferramentas —
+  // ninguém fica sem navegação. Enquanto o acesso carrega, o cabeçalho da ferramenta já aparece e
+  // as seções entram em seguida.
+  const ferramentaHref = ferramentaDaRota(pathname);
+  const itemDaFerramenta =
+    ferramentaHref && (carregando || moduloVisivel(ferramentaHref)) ? itemDoMenu(ferramentaHref) : undefined;
+  const ferramenta = itemDaFerramenta
+    ? { href: itemDaFerramenta.href, label: itemDaFerramenta.label, icon: itemDaFerramenta.icon }
+    : null;
+  const secoes = useSecoesVisiveis(ferramenta?.href ?? null);
 
   const visibleItems = NAV_ITEMS.filter((item) => moduloVisivel(item.href));
 
@@ -148,35 +166,20 @@ export function AppShell({
   // Tempo real do chat: uma conexão por sessão, ligada ao cache das telas. Só para quem tem a área.
   useChatTempoReal("escola", session.role !== "Responsavel" && comChat);
 
+  // A seção Chat da barra lateral leva a contagem de conversas não lidas (a mesma consulta do sino).
+  const { data: resumoDoChat } = useResumoDoChat(comChat);
+  const contagens = { "/relacionamento/chat": comChat ? (resumoDoChat?.conversasNaoLidas ?? 0) : 0 };
+
+  // O lançador destaca a ferramenta aberta, ou o Início.
+  const atualDoLancador = pathname === INICIO_HREF ? INICIO_HREF : ferramentaHref;
+
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
     .slice(0, 3);
 
-  /**
-   * Subitens que aparecem embaixo do módulo aberto.
-   *
-   * Só do módulo em que a pessoa está: a barra não vira uma árvore com tudo aberto ao mesmo
-   * tempo. Cada subitem passa pela permissão de área — quem não tem Formulários vê só o Quadro.
-   */
-  function subitensVisiveis(href: string) {
-    if (!itemAtivo(href)) return [];
-    return (SUBITENS_DO_MENU[href] ?? []).filter((sub) => rotaVisivel(sub.href));
-  }
-
-  // O subitem acende na rota dele e nas telas de dentro. "/flow" é prefixo de todas as outras, e
-  // por isso é o último a ser testado: só acende quando nenhum irmão mais específico casou.
-  function subitemAtivo(href: string, irmaos: { href: string }[]) {
-    const maisEspecifico = irmaos
-      .filter((s) => pathname === s.href || pathname.startsWith(`${s.href}/`))
-      .sort((a, b) => b.href.length - a.href.length)[0];
-
-    return maisEspecifico?.href === href;
-  }
-
   function itemAtivo(href: string) {
     if (href === INICIO_HREF) return pathname === INICIO_HREF;
-    if (href === "/") return pathname === "/" || moduloDaRota(pathname) === "tasks";
-    return pathname === href || pathname.startsWith(`${href}/`);
+    return ferramentaHref === href;
   }
 
   function handleLogout() {
@@ -269,34 +272,17 @@ export function AppShell({
           </Button>
         </div>
 
-        <nav className="mt-6 flex flex-col">
-          {grupos.map((grupo) => (
-            <div key={grupo.titulo} className="mb-1.5">
-              {!collapsed && (
-                <div className="px-2.5 pb-2 pt-2.5 text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted">
-                  {grupo.titulo}
-                </div>
-              )}
-              {grupo.itens.map((item) => (
-                <div key={item.href}>
-                  <ItemDaSidebar
-                    href={entradaDo(item.href)}
-                    label={item.label}
-                    icon={item.icon}
-                    ativo={itemAtivo(item.href)}
-                    recolhido={collapsed}
-                  />
-                  {!collapsed && subitensVisiveis(item.href).length > 1 && (
-                    <SubitensDaSidebar
-                      itens={subitensVisiveis(item.href)}
-                      ativo={(href) => subitemAtivo(href, subitensVisiveis(item.href))}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </nav>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <NavegacaoLateral
+            ferramenta={ferramenta}
+            grupos={grupos}
+            secoes={secoes}
+            pathname={pathname}
+            entradaDo={entradaDo}
+            recolhido={collapsed}
+            contagens={contagens}
+          />
+        </div>
 
         {!collapsed && (
           <div className="mt-auto pt-4">
@@ -345,13 +331,14 @@ export function AppShell({
                 <Settings className="size-4" />
               </Link>
             )}
+            <LancadorDeFerramentas grupos={grupos} atualHref={atualDoLancador} entradaDo={entradaDo} tamanho="sm" />
             {mostraSino && <SinoDeAvisos tamanho="sm" comRotina={comRotina} comChat={comChat} />}
             {menuDoUsuario("sm")}
           </div>
         </header>
 
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
-        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[5.75rem_1fr_5.75rem] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!">
+        <header className="sticky top-0 z-30 grid shrink-0 grid-cols-[2.75rem_1fr_auto] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!">
           <button
             type="button"
             onClick={abrirMenu}
@@ -361,14 +348,15 @@ export function AppShell({
             <Menu className="size-6" />
           </button>
 
-          <Link href={INICIO_HREF} className="flex h-16 items-center justify-center gap-2">
+          <Link href={INICIO_HREF} className="flex h-16 min-w-0 items-center justify-center gap-2">
             <Image src="/icon-192.png" alt="" width={32} height={32} className="size-8 shrink-0" priority />
-            <span className="font-heading text-xl font-semibold tracking-tight text-foreground">
+            <span className="hidden font-heading text-xl font-semibold tracking-tight text-foreground min-[400px]:inline">
               Educa<span className="text-action-brand">Pilot</span>
             </span>
           </Link>
 
           <div className="flex items-center justify-end">
+            <LancadorDeFerramentas grupos={grupos} atualHref={atualDoLancador} entradaDo={entradaDo} tamanho="lg" />
             {mostraSino && <SinoDeAvisos tamanho="lg" comRotina={comRotina} comChat={comChat} />}
             {menuDoUsuario("lg")}
           </div>
@@ -450,34 +438,17 @@ export function AppShell({
               </button>
             </div>
 
-            <nav className="flex flex-1 flex-col overflow-y-auto px-3">
-              {grupos.map((grupo) => (
-                <div key={grupo.titulo} className="mb-1.5">
-                  <div className="px-2.5 pb-2 pt-2.5 text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted">
-                    {grupo.titulo}
-                  </div>
-                  {grupo.itens.map((item) => (
-                    <div key={item.href}>
-                      <ItemDaSidebar
-                        href={entradaDo(item.href)}
-                        label={item.label}
-                        icon={item.icon}
-                        ativo={itemAtivo(item.href)}
-                        recolhido={false}
-                        grande
-                      />
-                      {subitensVisiveis(item.href).length > 1 && (
-                        <SubitensDaSidebar
-                          itens={subitensVisiveis(item.href)}
-                          ativo={(href) => subitemAtivo(href, subitensVisiveis(item.href))}
-                          grande
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </nav>
+            <div className="flex-1 overflow-y-auto px-3">
+              <NavegacaoLateral
+                ferramenta={ferramenta}
+                grupos={grupos}
+                secoes={secoes}
+                pathname={pathname}
+                entradaDo={entradaDo}
+                contagens={contagens}
+                grande
+              />
+            </div>
 
             <div className="flex flex-col gap-1 border-t border-sidebar-border px-3 py-3">
               <div className="flex items-center gap-2.5 px-2 pb-2">
@@ -516,93 +487,6 @@ export function AppShell({
       )}
 
       <AlterarSenhaDialog open={alterandoSenha} onOpenChange={setAlterandoSenha} />
-    </div>
-  );
-}
-
-function ItemDaSidebar({
-  href,
-  label,
-  icon: Icon,
-  ativo,
-  recolhido,
-  grande,
-}: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  ativo: boolean;
-  recolhido: boolean;
-  grande?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      title={recolhido ? label : undefined}
-      aria-current={ativo ? "page" : undefined}
-      className={cn(
-        "relative flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
-        grande ? "py-3" : "py-2.5",
-        recolhido && "justify-center px-0",
-        ativo
-          ? "bg-white/[.07] text-white"
-          : "text-sidebar-foreground hover:bg-white/5 hover:text-white"
-      )}
-    >
-      {/* A marca laranja à esquerda diz onde a pessoa está — some quando o item não é o atual. */}
-      {ativo && !recolhido && (
-        <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r-[3px] bg-action-brand" />
-      )}
-      <span
-        className={cn(
-          "grid size-6 shrink-0 place-items-center rounded-md transition-colors",
-          ativo ? "bg-action-brand text-white" : "bg-sidebar-accent text-sidebar-muted"
-        )}
-      >
-        <Icon className="size-3.5" />
-      </span>
-      {!recolhido && <span className="truncate">{label}</span>}
-    </Link>
-  );
-}
-
-/**
- * As duas metades de um módulo, listadas embaixo dele na barra.
- *
- * Entra recuada, com um fio à esquerda ligando os itens ao pai: sem a linha, os subitens parecem
- * módulos soltos de menos importância, e não partes do que está aberto.
- */
-function SubitensDaSidebar({
-  itens,
-  ativo,
-  grande,
-}: {
-  itens: { href: string; label: string }[];
-  ativo: (href: string) => boolean;
-  grande?: boolean;
-}) {
-  return (
-    <div className="relative my-0.5 ml-[26px] flex flex-col border-l border-sidebar-border pl-2.5">
-      {itens.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          aria-current={ativo(item.href) ? "page" : undefined}
-          className={cn(
-            "relative rounded-md px-2.5 text-[13px] transition-colors",
-            grande ? "py-2.5" : "py-1.5",
-            ativo(item.href)
-              ? "font-semibold text-white"
-              : "font-medium text-sidebar-foreground hover:bg-white/5 hover:text-white"
-          )}
-        >
-          {/* O fio da esquerda acende no item aberto: é o que diz em qual metade a pessoa está. */}
-          {ativo(item.href) && (
-            <span className="absolute -left-[11px] top-1.5 bottom-1.5 w-[2px] rounded-full bg-action-brand" />
-          )}
-          {item.label}
-        </Link>
-      ))}
     </div>
   );
 }

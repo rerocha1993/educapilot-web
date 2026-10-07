@@ -3,42 +3,25 @@
 import { usePathname } from "next/navigation";
 
 import { AbasDePilulas } from "@/components/padroes/cabecalho-da-pagina";
-import { podeVerRota } from "@/lib/access/pode-ver";
-import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { useSecoesVisiveis } from "@/lib/access/use-secoes-visiveis";
+import { GRUPO_FORMULARIOS, GRUPO_QUADRO } from "@/lib/kernel/secoes-do-modulo";
 
 /**
- * Abas do módulo Fluxos, iguais em todas as telas dele.
+ * Abas do módulo Fluxos, só no celular. No computador as seções (as duas metades) vivem na barra
+ * lateral e esta faixa não renderiza nada; o catálogo é o de secoes-do-modulo.ts.
  *
- * O módulo tem duas metades: o quadro de tarefas da equipe e os formulários da família. A barra
- * lateral escolhe a metade; estas pílulas mostram só as funções dela. Com as oito juntas numa
- * faixa só, o que existia era uma lista — ninguém achava Contratos no meio de Automações.
- *
- * Antes, as telas de dentro (Contratos, por exemplo) não tinham aba nenhuma: quem entrava ficava
- * sem nada para clicar e voltava pelo menu lateral.
+ * O módulo tem duas metades: o quadro de tarefas da equipe e os formulários da família. As
+ * pílulas mostram só as funções da metade aberta — com as sete juntas numa faixa só, o que
+ * existia era uma lista.
  *
  * Cada pílula é uma área da permissão: quem não tem "Caixa de envios" não vê a pílula.
  */
-const QUADRO = [
-  { rotulo: "Meu quadro", href: "/flow/tarefas" },
-  { rotulo: "Equipe", href: "/flow/tarefas/equipe" },
-  { rotulo: "Automações", href: "/flow/tarefas/automacoes" },
-];
-
-// Contratos saiu daqui (2026-09): a tela foi para Administração. O formulário continua sendo
-// quem gera o contrato — o que mudou é onde os contratos gerados são conferidos.
-const FORMULARIOS = [
-  { rotulo: "Formulários", href: "/flow" },
-  { rotulo: "Caixa de envios", href: "/flow/respostas" },
-  { rotulo: "Relatórios", href: "/flow/relatorios" },
-  { rotulo: "Dados de referência", href: "/flow/referencias" },
-];
-
 export function AbasDeFormularios() {
   const pathname = usePathname();
-  const { data: meuAcesso } = useMeuAcesso();
+  const secoes = useSecoesVisiveis("/flow");
 
   const noQuadro = pathname.startsWith("/flow/tarefas");
-  const abas = noQuadro ? QUADRO : FORMULARIOS;
+  const grupo = noQuadro ? GRUPO_QUADRO : GRUPO_FORMULARIOS;
 
   const ativa = (href: string) => {
     // "/flow" e "/flow/tarefas" são prefixo das irmãs: só acendem na rota exata. O formulário
@@ -53,9 +36,10 @@ export function AbasDeFormularios() {
 
   return (
     <AbasDePilulas
-      itens={abas
-        .filter((aba) => podeVerRota(meuAcesso, aba.href))
-        .map((aba) => ({ rotulo: aba.rotulo, href: aba.href, ativo: ativa(aba.href) }))}
+      className="md:hidden print:hidden"
+      itens={secoes
+        .filter((aba) => aba.grupo === grupo)
+        .map((aba) => ({ rotulo: aba.label, href: aba.href, ativo: ativa(aba.href) }))}
     />
   );
 }
