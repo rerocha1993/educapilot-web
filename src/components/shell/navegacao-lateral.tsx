@@ -1,7 +1,8 @@
 "use client";
 
+import { useId, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ChevronLeft, Circle, House, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronLeft, Circle, House, type LucideIcon } from "lucide-react";
 
 import type { GrupoDoLancador } from "@/components/shell/lancador-de-ferramentas";
 import { INICIO_HREF } from "@/lib/kernel/nav-items";
@@ -113,36 +114,185 @@ export function NavegacaoLateral({
         </div>
       )}
 
-      <nav
-        aria-label={`Seções de ${ferramenta.label}`}
-        className={cn("flex flex-col", recolhido ? "mt-3 gap-0.5 border-t border-sidebar-border pt-3" : "mt-4")}
-      >
-        {secoes.map((secao, indice) => {
-          const novoGrupo = secao.grupo !== undefined && secao.grupo !== secoes[indice - 1]?.grupo;
+      {/* key: cada ferramenta lembra os próprios subtítulos fechados. */}
+      <SecoesDaFerramenta
+        key={ferramenta.href}
+        ferramenta={ferramenta}
+        secoes={secoes}
+        ativa={ativa}
+        recolhido={recolhido}
+        grande={grande}
+        contagens={contagens}
+      />
+    </div>
+  );
+}
+
+/** Um trecho consecutivo da lista de seções: com subtítulo (`grupo`) ou solto, sem ele. */
+interface BlocoDeSecoes {
+  grupo?: string;
+  itens: SecaoDoModulo[];
+}
+
+/**
+ * Agrupa seções vizinhas de mesmo `grupo`. Seções sem grupo ficam soltas, na ordem do catálogo —
+ * o Financeiro abre com o Painel solto e o Relacionamento termina com Famílias e Configuração.
+ */
+function emBlocos(secoes: readonly SecaoDoModulo[]): BlocoDeSecoes[] {
+  const blocos: BlocoDeSecoes[] = [];
+  for (const secao of secoes) {
+    const ultimo = blocos[blocos.length - 1];
+    if (ultimo && ultimo.grupo === secao.grupo) ultimo.itens.push(secao);
+    else blocos.push({ grupo: secao.grupo, itens: [secao] });
+  }
+  return blocos;
+}
+
+const CHAVE_DOS_GRUPOS = "educapilot_sidebar_grupos_fechados";
+
+/**
+ * Subtítulos fechados desta ferramenta, lembrados por navegador (aberto é o padrão). Vive no
+ * localStorage e é lido por useSyncExternalStore: o servidor renderiza tudo aberto, o cliente
+ * aplica o guardado sem passar por um efeito, e a barra e o menu do celular ficam em sintonia.
+ */
+const ouvintesDosGrupos = new Set<() => void>();
+
+function assinarGrupos(avisar: () => void) {
+  ouvintesDosGrupos.add(avisar);
+  window.addEventListener("storage", avisar);
+  return () => {
+    ouvintesDosGrupos.delete(avisar);
+    window.removeEventListener("storage", avisar);
+  };
+}
+
+function lerGruposBrutos(ferramentaHref: string): string {
+  try {
+    return localStorage.getItem(`${CHAVE_DOS_GRUPOS}:${ferramentaHref}`) ?? "";
+  } catch {
+    // localStorage indisponível (aba privada, etc.): tudo aberto.
+    return "";
+  }
+}
+
+function fechadosDe(bruto: string): string[] {
+  try {
+    const lista: unknown = bruto ? JSON.parse(bruto) : [];
+    return Array.isArray(lista) ? lista.filter((g): g is string => typeof g === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function gravarFechados(ferramentaHref: string, fechados: string[]) {
+  try {
+    localStorage.setItem(`${CHAVE_DOS_GRUPOS}:${ferramentaHref}`, JSON.stringify(fechados));
+  } catch {
+    // só não persiste; o clique continua funcionando.
+  }
+  ouvintesDosGrupos.forEach((avisar) => avisar());
+}
+
+/**
+ * As seções da ferramenta aberta. Cada `grupo` vira um subtítulo que abre e fecha, com os itens
+ * indentados; o que não tem grupo fica solto. O grupo que contém a seção ativa não fecha — a
+ * pessoa nunca perde de vista onde está. Recolhida, a barra mostra só os ícones em sequência, um
+ * filete separando os grupos e sem subtítulo.
+ */
+function SecoesDaFerramenta({
+  ferramenta,
+  secoes,
+  ativa,
+  recolhido,
+  grande,
+  contagens,
+}: {
+  ferramenta: { href: string; label: string };
+  secoes: SecaoDoModulo[];
+  ativa: string | null;
+  recolhido: boolean;
+  grande: boolean;
+  contagens: Record<string, number>;
+}) {
+  const idBase = useId();
+  const blocos = useMemo(() => emBlocos(secoes), [secoes]);
+  const bruto = useSyncExternalStore(
+    assinarGrupos,
+    () => lerGruposBrutos(ferramenta.href),
+    () => ""
+  );
+  const fechados = useMemo(() => fechadosDe(bruto), [bruto]);
+
+  function alternar(grupo: string) {
+    gravarFechados(
+      ferramenta.href,
+      fechados.includes(grupo) ? fechados.filter((g) => g !== grupo) : [...fechados, grupo]
+    );
+  }
+
+  return (
+    <nav
+      aria-label={`Seções de ${ferramenta.label}`}
+      className={cn("flex flex-col", recolhido ? "mt-3 gap-0.5 border-t border-sidebar-border pt-3" : "mt-4")}
+    >
+      {blocos.map((bloco, indice) => {
+        const grupo = bloco.grupo;
+        const itens = bloco.itens.map((secao) => (
+          <ItemDaSidebar
+            key={secao.href}
+            href={secao.href}
+            label={secao.label}
+            icon={secao.icon ?? Circle}
+            ativo={ativa === secao.href}
+            recolhido={recolhido}
+            grande={grande}
+            indentado={!recolhido && grupo !== undefined}
+            contagem={contagens[secao.href]}
+          />
+        ));
+
+        if (grupo === undefined) return <div key={`solto-${indice}`}>{itens}</div>;
+
+        if (recolhido) {
           return (
-            <div key={secao.href}>
-              {novoGrupo &&
-                (recolhido ? (
-                  indice > 0 && <div className="mx-2 my-1.5 border-t border-sidebar-border" />
-                ) : (
-                  <div className="px-2.5 pb-1.5 pt-3 text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted">
-                    {secao.grupo}
-                  </div>
-                ))}
-              <ItemDaSidebar
-                href={secao.href}
-                label={secao.label}
-                icon={secao.icon ?? Circle}
-                ativo={ativa === secao.href}
-                recolhido={recolhido}
-                grande={grande}
-                contagem={contagens[secao.href]}
-              />
+            <div key={grupo}>
+              {indice > 0 && <div className="mx-2 my-1.5 border-t border-sidebar-border" />}
+              {itens}
             </div>
           );
-        })}
-      </nav>
-    </div>
+        }
+
+        const temAtiva = bloco.itens.some((secao) => secao.href === ativa);
+        const aberto = temAtiva || !fechados.includes(grupo);
+        const idDoPainel = `${idBase}-${indice}`;
+
+        return (
+          <div key={grupo}>
+            <button
+              type="button"
+              onClick={() => alternar(grupo)}
+              aria-expanded={aberto}
+              aria-controls={idDoPainel}
+              // A seção aberta mora aqui: o grupo fica aberto e o botão não tem o que fazer.
+              disabled={temAtiva}
+              className={cn(
+                "flex w-full items-center justify-between gap-2 rounded-md px-2.5 pb-1.5 pt-3 text-left text-[10.5px] font-bold uppercase tracking-[.16em] text-sidebar-muted transition-colors enabled:hover:text-white",
+                grande && "min-h-11 pb-2"
+              )}
+            >
+              <span className="min-w-0 truncate">{grupo}</span>
+              <ChevronDown
+                aria-hidden
+                className={cn("size-3.5 shrink-0 transition-transform", !aberto && "-rotate-90")}
+              />
+            </button>
+            <div id={idDoPainel} hidden={!aberto}>
+              {itens}
+            </div>
+          </div>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -154,6 +304,7 @@ export function ItemDaSidebar({
   ativo,
   recolhido,
   grande,
+  indentado = false,
   contagem = 0,
 }: {
   href: string;
@@ -162,6 +313,8 @@ export function ItemDaSidebar({
   ativo: boolean;
   recolhido: boolean;
   grande?: boolean;
+  /** Item dentro de um subtítulo: recuado, com a marca do ativo ainda alcançando a borda da barra. */
+  indentado?: boolean;
   contagem?: number;
 }) {
   return (
@@ -174,6 +327,7 @@ export function ItemDaSidebar({
         "relative flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
         grande ? "py-3" : "py-2.5",
         recolhido && "justify-center px-0",
+        indentado && "ml-3",
         ativo
           ? "bg-white/[.07] text-white"
           : "text-sidebar-foreground hover:bg-white/5 hover:text-white"
@@ -181,7 +335,12 @@ export function ItemDaSidebar({
     >
       {/* A marca laranja à esquerda diz onde a pessoa está — some quando o item não é o atual. */}
       {ativo && !recolhido && (
-        <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r-[3px] bg-action-brand" />
+        <span
+          className={cn(
+            "absolute top-2 bottom-2 w-[3px] rounded-r-[3px] bg-action-brand",
+            indentado ? "-left-6" : "-left-3"
+          )}
+        />
       )}
       <span
         className={cn(

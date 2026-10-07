@@ -12,7 +12,7 @@ import { secaoAtiva } from "@/lib/kernel/secoes-do-modulo";
  */
 export function FinanceNav() {
   const pathname = usePathname();
-  // Cada seção é uma área da permissão: quem não tem "Inadimplência" não vê a aba dela.
+  // Cada seção é uma área da permissão: quem não tem "Contas" não vê a aba dela.
   const itens = useSecoesVisiveis("/finance");
   const ativa = secaoAtiva(itens, pathname);
 

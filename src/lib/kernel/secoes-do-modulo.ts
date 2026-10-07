@@ -33,6 +33,7 @@ import {
   Package,
   PiggyBank,
   ReceiptText,
+  Repeat,
   Shapes,
   ShoppingCart,
   SlidersHorizontal,
@@ -77,6 +78,19 @@ export interface SecaoDoModulo {
 /** Metades de Fluxos: o quadro de tarefas da equipe e os formulários da família. */
 export const GRUPO_QUADRO = "Quadro";
 export const GRUPO_FORMULARIOS = "Formulários";
+
+/** Subtítulos do Financeiro. */
+export const GRUPO_MOVIMENTO = "Movimento";
+export const GRUPO_PLANEJAMENTO = "Planejamento";
+export const GRUPO_TESOURARIA = "Tesouraria";
+
+/** Subtítulos do RH. */
+export const GRUPO_PESSOAS = "Pessoas";
+export const GRUPO_JORNADA = "Jornada";
+
+/** Subtítulos do Relacionamento. */
+export const GRUPO_COMUNICACAO = "Comunicação";
+export const GRUPO_PAGAMENTOS = "Pagamentos";
 
 /**
  * Catálogo único das seções de cada ferramenta, indexado pelo href da ferramenta (o mesmo de
@@ -126,44 +140,50 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/flow/referencias", label: "Dados de referência", icon: Database, grupo: GRUPO_FORMULARIOS },
   ],
 
+  // Mensalidades e inadimplência moram em Relacionamento > Pagamentos (2026-10): quem cobra a
+  // família é quem atende a família.
   "/finance": [
     { href: "/finance", label: "Painel", icon: LayoutDashboard },
-    { href: "/finance/despesas", label: "Despesas", icon: TrendingDown },
-    { href: "/finance/receitas", label: "Receitas", icon: TrendingUp },
-    { href: "/finance/recibos", label: "Recibos", icon: ReceiptText },
-    { href: "/finance/mensalidades", label: "Mensalidades", icon: Banknote },
-    { href: "/finance/inadimplencia", label: "Inadimplência", icon: CircleAlert },
-    { href: "/finance/orcamento", label: "Orçamento", icon: PiggyBank },
-    { href: "/finance/precificacao", label: "Precificação", icon: Tag },
-    { href: "/finance/projetos", label: "Projetos", icon: FolderKanban },
-    { href: "/finance/contas", label: "Contas", icon: Landmark },
-    { href: "/finance/conciliacao", label: "Conciliação", icon: ArrowLeftRight },
-    { href: "/finance/plano-de-contas", label: "Plano de contas", icon: ListTree },
-    { href: "/finance/fechamento", label: "Fechamento", icon: Lock },
+    { href: "/finance/receitas", label: "Receitas", icon: TrendingUp, grupo: GRUPO_MOVIMENTO },
+    { href: "/finance/despesas", label: "Despesas", icon: TrendingDown, grupo: GRUPO_MOVIMENTO },
+    { href: "/finance/recibos", label: "Recibos", icon: ReceiptText, grupo: GRUPO_MOVIMENTO },
+    { href: "/finance/orcamento", label: "Orçamento anual", icon: PiggyBank, grupo: GRUPO_PLANEJAMENTO },
+    { href: "/finance/projetos", label: "Projetos e eventos", icon: FolderKanban, grupo: GRUPO_PLANEJAMENTO },
+    { href: "/finance/precificacao", label: "Precificação", icon: Tag, grupo: GRUPO_PLANEJAMENTO },
+    { href: "/finance/contas", label: "Contas", icon: Landmark, grupo: GRUPO_TESOURARIA },
+    { href: "/finance/conciliacao", label: "Conciliação", icon: ArrowLeftRight, grupo: GRUPO_TESOURARIA },
+    { href: "/finance/plano-de-contas", label: "Plano de contas", icon: ListTree, grupo: GRUPO_TESOURARIA },
+    { href: "/finance/fechamento", label: "Fechamento", icon: Lock, grupo: GRUPO_TESOURARIA },
   ],
 
   // A visão geral do RH não tem área própria (`null`): abre para quem tem qualquer uma delas.
   "/rh": [
     { href: "/rh", label: "Visão geral", area: null, icon: LayoutDashboard },
-    { href: "/rh/funcionarios", label: "Funcionários", area: "funcionarios", icon: Users },
-    { href: "/rh/ponto", label: "Ponto", area: "ponto", icon: Clock },
-    { href: "/rh/atestados", label: "Atestados", area: "atestados", icon: Stethoscope },
-    { href: "/rh/afastamentos", label: "Afastamentos", area: "afastamentos", icon: CalendarOff },
-    { href: "/rh/documentos", label: "Documentos", area: "documentos", icon: FileText },
+    { href: "/rh/funcionarios", label: "Funcionários", area: "funcionarios", icon: Users, grupo: GRUPO_PESSOAS },
+    { href: "/rh/documentos", label: "Documentos", area: "documentos", icon: FileText, grupo: GRUPO_PESSOAS },
+    { href: "/rh/ponto", label: "Ponto", area: "ponto", icon: Clock, grupo: GRUPO_JORNADA },
+    { href: "/rh/atestados", label: "Atestados", area: "atestados", icon: Stethoscope, grupo: GRUPO_JORNADA },
+    { href: "/rh/afastamentos", label: "Afastamentos", area: "afastamentos", icon: CalendarOff, grupo: GRUPO_JORNADA },
     { href: "/rh/relatorios", label: "Relatórios", area: "relatorios", icon: ChartColumn },
     { href: "/rh/configuracao", label: "Configuração", area: "configuracao", icon: SlidersHorizontal },
   ],
 
   // A seção Chat leva a contagem de conversas não lidas (ver app-shell).
   "/relacionamento": [
-    { href: "/relacionamento/avisos", label: "Avisos e eventos", area: "avisos", icon: Megaphone },
-    { href: "/relacionamento/cronograma", label: "Cronograma", area: "cronograma", icon: CalendarDays },
+    { href: "/relacionamento/avisos", label: "Avisos e eventos", area: "avisos", icon: Megaphone, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/cronograma", label: "Cronograma", area: "cronograma", icon: CalendarDays, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/atividades", label: "Atividades", area: "atividades", icon: Shapes, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/mural", label: "Mural", area: "mural", icon: Images, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/chat", label: "Chat", area: "chat", icon: MessageCircle, grupo: GRUPO_COMUNICACAO },
+    // Mensalidades e Inadimplência vieram do Financeiro; as quatro primeiras são a mesma área
+    // (pagamentos), e a Loja tem a sua. "Cobranças" é a raiz do grupo: o prefixo mais longo
+    // (secaoAtiva) acende as irmãs quando a pessoa está nelas.
+    { href: "/relacionamento/pagamentos/mensalidades", label: "Mensalidades", area: "pagamentos", icon: Banknote, grupo: GRUPO_PAGAMENTOS },
+    { href: "/relacionamento/pagamentos/planos", label: "Planos recorrentes", area: "pagamentos", icon: Repeat, grupo: GRUPO_PAGAMENTOS },
+    { href: "/relacionamento/pagamentos", label: "Cobranças", area: "pagamentos", icon: CreditCard, grupo: GRUPO_PAGAMENTOS },
+    { href: "/relacionamento/pagamentos/inadimplencia", label: "Inadimplência", area: "pagamentos", icon: CircleAlert, grupo: GRUPO_PAGAMENTOS },
+    { href: "/relacionamento/loja", label: "Loja", area: "loja", icon: Store, grupo: GRUPO_PAGAMENTOS },
     { href: "/relacionamento/familias", label: "Famílias", area: "familias", icon: UsersRound },
-    { href: "/relacionamento/atividades", label: "Atividades", area: "atividades", icon: Shapes },
-    { href: "/relacionamento/mural", label: "Mural", area: "mural", icon: Images },
-    { href: "/relacionamento/chat", label: "Chat", area: "chat", icon: MessageCircle },
-    { href: "/relacionamento/pagamentos", label: "Pagamentos", area: "pagamentos", icon: CreditCard },
-    { href: "/relacionamento/loja", label: "Loja virtual", area: "loja", icon: Store },
     { href: "/relacionamento/configuracao", label: "Configuração", area: "configuracao", icon: SlidersHorizontal },
   ],
 

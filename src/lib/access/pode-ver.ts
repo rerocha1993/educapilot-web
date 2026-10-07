@@ -43,14 +43,12 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/admin/, modulo: "admin", area: null },
 
   // Financeiro
-  { padrao: /^\/finance\/mensalidades/, modulo: "finance", area: "mensalidades" },
   { padrao: /^\/finance\/receitas/, modulo: "finance", area: "receitas" },
   { padrao: /^\/finance\/recibos/, modulo: "finance", area: "recibos" },
   { padrao: /^\/finance\/despesas/, modulo: "finance", area: "despesas" },
   { padrao: /^\/finance\/orcamento/, modulo: "finance", area: "orcamento" },
   { padrao: /^\/finance\/precificacao/, modulo: "finance", area: "precificacao" },
   { padrao: /^\/finance\/projetos/, modulo: "finance", area: "projetos" },
-  { padrao: /^\/finance\/inadimplencia/, modulo: "finance", area: "inadimplencia" },
   { padrao: /^\/finance\/contas/, modulo: "finance", area: "contas" },
   { padrao: /^\/finance\/conciliacao/, modulo: "finance", area: "conciliacao" },
   { padrao: /^\/finance\/plano-de-contas/, modulo: "finance", area: "plano-de-contas" },
@@ -88,6 +86,11 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relacionamento\/atividades/, modulo: "relacionamento", area: "atividades" },
   { padrao: /^\/relacionamento\/mural/, modulo: "relacionamento", area: "mural" },
   { padrao: /^\/relacionamento\/chat/, modulo: "relacionamento", area: "chat" },
+  // Mensalidades e inadimplência (antes em /finance) são da área Pagamentos, como cobranças e
+  // planos; o backend aceita relacionamento:pagamentos nas APIs delas. As duas linhas abaixo
+  // deixam a regra à vista, mesmo que o prefixo geral já a cobrisse.
+  { padrao: /^\/relacionamento\/pagamentos\/mensalidades/, modulo: "relacionamento", area: "pagamentos" },
+  { padrao: /^\/relacionamento\/pagamentos\/inadimplencia/, modulo: "relacionamento", area: "pagamentos" },
   { padrao: /^\/relacionamento\/pagamentos/, modulo: "relacionamento", area: "pagamentos" },
   { padrao: /^\/relacionamento\/loja/, modulo: "relacionamento", area: "loja" },
   { padrao: /^\/relacionamento\/configuracao/, modulo: "relacionamento", area: "configuracao" },
