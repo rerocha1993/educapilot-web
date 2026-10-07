@@ -163,13 +163,14 @@ export function confiancaEmPercentual(c: number | null | undefined): number | nu
 
 // ------------------------------------------------------------------ cobranças
 
-export type StatusDaCobranca = "Pendente" | "Paga" | "Vencida" | "Cancelada";
+export type StatusDaCobranca = "Pendente" | "Paga" | "Vencida" | "Cancelada" | "Estornada";
 
 export const ROTULO_DA_COBRANCA: Record<StatusDaCobranca, string> = {
   Pendente: "Pendente",
   Paga: "Paga",
   Vencida: "Vencida",
   Cancelada: "Cancelada",
+  Estornada: "Estornada",
 };
 
 export interface ResponsavelPrevisto {

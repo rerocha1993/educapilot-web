@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { StatusDaCobranca } from "@/lib/finance/use-projetos";
 import { consulta, relacionamentoJson } from "./api";
@@ -14,6 +14,9 @@ import {
  *
  * Mesma regra dos outros hooks do módulo: o servidor omite o nulo, e os normalizadores devolvem
  * `null`. Datas são texto "yyyy-MM-dd"; o dia do vencimento nunca passa por Date.
+ *
+ * Carteira = uma conta do Financeiro com recebimento configurado (Asaas automático ou manual).
+ * Toda cobrança cai numa carteira; no código ela é a `contaFinanceiraId`, na tela é "a conta".
  */
 
 const CHAVE = "relacionamento";
@@ -21,11 +24,16 @@ const PAGAMENTOS = [CHAVE, "pagamentos"] as const;
 
 // ------------------------------------------------------------------ vocabulário
 
-export const STATUS_DA_COBRANCA: StatusDaCobranca[] = ["Pendente", "Vencida", "Paga", "Cancelada"];
+export const STATUS_DA_COBRANCA: StatusDaCobranca[] = ["Pendente", "Vencida", "Paga", "Cancelada", "Estornada"];
 export type OrigemDaCobranca = "Asaas" | "Manual";
+export type TipoDaCobranca = "individual" | "recorrente";
+export type ProvedorDaCarteira = "asaas" | "manual";
+
+/** Tamanhos de página oferecidos na lista de cobranças. */
+export const TAMANHOS_DA_PAGINA = [25, 50, 100] as const;
 
 function statusDaCobranca(v: string | null | undefined): StatusDaCobranca {
-  return v === "Paga" || v === "Vencida" || v === "Cancelada" ? v : "Pendente";
+  return v === "Paga" || v === "Vencida" || v === "Cancelada" || v === "Estornada" ? v : "Pendente";
 }
 
 // ------------------------------------------------------------------ tipos
@@ -44,10 +52,14 @@ export interface Cobranca {
   status: StatusDaCobranca;
   origem: OrigemDaCobranca;
   plano: string | null;
+  /** Conta do Financeiro em que a cobrança cai (a "carteira"); nulo nas cobranças antigas. */
+  contaFinanceiraId: string | null;
+  contaNome: string | null;
+  tipo: TipoDaCobranca;
+  planoId: string | null;
   pedidoId: string | null;
   asaasInvoiceUrl: string | null;
   pixCopiaECola: string | null;
-  /** O resumo da escola não manda o QR; se o servidor passar a mandar, a tela já o mostra. */
   pixQrCodeBase64: string | null;
   boletoUrl: string | null;
   pagaEm: string | null;
@@ -61,6 +73,39 @@ export interface FiltroDeCobrancas {
   de: string;
   ate: string;
   origem: OrigemDaCobranca | null;
+  /** Carteira (conta do Financeiro) em que a cobrança cai. */
+  contaId: string | null;
+  /** Responsável, aluno ou descrição. */
+  busca: string;
+  tipo: TipoDaCobranca | null;
+  planoId: string | null;
+}
+
+export interface PaginaDeCobrancas {
+  itens: Cobranca[];
+  total: number;
+  /** Começa em 1. */
+  pagina: number;
+  tamanho: number;
+}
+
+/** Uma conta do Financeiro que recebe das famílias: a "carteira" que a escola escolhe. */
+export interface ContaParaCobranca {
+  contaId: string;
+  nome: string;
+  banco: string;
+  provedor: ProvedorDaCarteira;
+  padraoParaCobrancas: boolean;
+  padraoParaMensalidades: boolean;
+  /** Só faz sentido no Asaas: a chave foi testada e funciona. */
+  asaasOk: boolean;
+}
+
+export interface PeriodoDoResumo {
+  /** Vencimento a partir de (yyyy-MM-dd). */
+  de?: string;
+  ate?: string;
+  contaId?: string | null;
 }
 
 export interface ResumoDeCobrancas {
@@ -86,6 +131,8 @@ export interface Ignorada {
 export interface ResultadoDaGeracao {
   criadas: number;
   ignoradas: Ignorada[];
+  /** Avisos do servidor, como "A conta X não gera link automático (recebimento manual)". */
+  avisos: string[];
 }
 
 export interface GerarCobrancasAvulsas {
@@ -97,6 +144,8 @@ export interface GerarCobrancasAvulsas {
   studentIds?: number[];
   somenteResponsavelFinanceiro: boolean;
   gerarAsaas: boolean;
+  /** Carteira da cobrança. Nulo = a padrão das cobranças. */
+  contaFinanceiraId?: string | null;
 }
 
 export interface Plano {
@@ -110,14 +159,17 @@ export interface Plano {
   fim: string | null;
   ativo: boolean;
   gerarCobrancaAsaas: boolean;
+  contaFinanceiraId: string | null;
+  contaNome: string | null;
   alunos: number;
 }
 
 export interface AlunoDoPlano {
   studentId: number;
-  nome: string;
+  alunoNome: string;
   turma: string | null;
-  guardianNome: string | null;
+  guardianId: string | null;
+  nomeDoResponsavel: string | null;
   ativo: boolean;
 }
 
@@ -133,6 +185,8 @@ export interface SalvarPlano {
   inicio: string;
   fim?: string;
   gerarCobrancaAsaas: boolean;
+  /** Carteira das parcelas futuras. Nulo = a padrão das cobranças. */
+  contaFinanceiraId?: string | null;
 }
 
 export interface ResultadoDoPlano {
@@ -147,11 +201,12 @@ export interface ResultadoDoPlano {
 
 const dia = (v: string | null | undefined) => (v ? v.slice(0, 10) : null);
 
-type CobrancaCrua = Partial<Omit<Cobranca, "guardianId" | "studentId" | "status" | "origem">> & {
+type CobrancaCrua = Partial<Omit<Cobranca, "guardianId" | "studentId" | "status" | "origem" | "tipo">> & {
   guardianId?: string | number;
   studentId?: string | number | null;
   status?: string;
   origem?: string;
+  tipo?: string;
 };
 
 function cobranca(c: CobrancaCrua): Cobranca {
@@ -167,6 +222,10 @@ function cobranca(c: CobrancaCrua): Cobranca {
     status: statusDaCobranca(c.status),
     origem: c.origem === "Asaas" ? "Asaas" : "Manual",
     plano: c.plano ?? null,
+    contaFinanceiraId: c.contaFinanceiraId ?? null,
+    contaNome: c.contaNome ?? null,
+    tipo: c.tipo === "recorrente" ? "recorrente" : "individual",
+    planoId: c.planoId ?? null,
     pedidoId: c.pedidoId ?? null,
     asaasInvoiceUrl: c.asaasInvoiceUrl ?? null,
     pixCopiaECola: c.pixCopiaECola ?? null,
@@ -181,7 +240,8 @@ function ignoradas(lista: Partial<Ignorada>[] | null | undefined): Ignorada[] {
   return (lista ?? []).map((i) => ({ nome: i.nome ?? "", motivo: i.motivo ?? "" }));
 }
 
-type PlanoCru = Partial<Omit<Plano, "alunos">> & { alunos?: number | Partial<AlunoDoPlano>[] };
+type AlunoDoPlanoCru = Partial<Omit<AlunoDoPlano, "guardianId">> & { guardianId?: string | number | null };
+type PlanoCru = Partial<Omit<Plano, "alunos">> & { alunos?: number | AlunoDoPlanoCru[] };
 
 function plano(p: PlanoCru): Plano {
   return {
@@ -194,17 +254,20 @@ function plano(p: PlanoCru): Plano {
     fim: dia(p.fim),
     ativo: p.ativo ?? true,
     gerarCobrancaAsaas: p.gerarCobrancaAsaas ?? false,
+    contaFinanceiraId: p.contaFinanceiraId ?? null,
+    contaNome: p.contaNome ?? null,
     alunos: typeof p.alunos === "number" ? p.alunos : (p.alunos?.length ?? 0),
   };
 }
 
 function planoDetalhe(p: PlanoCru): PlanoDetalhe {
-  const alunos = Array.isArray(p.alunos)
+  const alunos: AlunoDoPlano[] = Array.isArray(p.alunos)
     ? p.alunos.map((a) => ({
         studentId: a.studentId ?? 0,
-        nome: a.nome ?? "",
+        alunoNome: a.alunoNome ?? "",
         turma: a.turma ?? null,
-        guardianNome: a.guardianNome ?? null,
+        guardianId: a.guardianId === undefined || a.guardianId === null ? null : String(a.guardianId),
+        nomeDoResponsavel: a.nomeDoResponsavel ?? null,
         ativo: a.ativo ?? true,
       }))
     : [];
@@ -213,34 +276,94 @@ function planoDetalhe(p: PlanoCru): PlanoDetalhe {
 
 // ------------------------------------------------------------------ cobranças
 
-export function useCobrancasDaEscola(filtro: FiltroDeCobrancas) {
+/** Carteiras que a escola pode escolher ao cobrar. Vazio: nenhuma conta recebe ainda. */
+export function useContasParaCobranca() {
   return useQuery({
-    queryKey: [...PAGAMENTOS, "cobrancas", "lista", filtro.status, filtro.classId, filtro.de, filtro.ate, filtro.origem],
+    queryKey: [...PAGAMENTOS, "cobrancas", "contas"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<ContaParaCobranca[]> => {
+      const lista = await relacionamentoJson<(Partial<Omit<ContaParaCobranca, "contaId">> & { contaId?: string | number })[] | null>(
+        "/cobrancas/contas",
+        {},
+        "Não foi possível carregar as contas que recebem pagamentos."
+      );
+      return (lista ?? []).map((c) => ({
+        contaId: String(c.contaId ?? ""),
+        nome: c.nome ?? "",
+        banco: c.banco ?? "",
+        provedor: c.provedor === "asaas" ? "asaas" : "manual",
+        padraoParaCobrancas: c.padraoParaCobrancas ?? false,
+        padraoParaMensalidades: c.padraoParaMensalidades ?? false,
+        asaasOk: c.asaasOk ?? false,
+      }));
+    },
+  });
+}
+
+/** Uma página de cobranças, filtrada e paginada no servidor (ordem: vencimento, da mais recente). */
+export function useCobrancasDaEscola(filtro: FiltroDeCobrancas, pagina: number, tamanho: number) {
+  return useQuery({
+    queryKey: [
+      ...PAGAMENTOS,
+      "cobrancas",
+      "lista",
+      filtro.status,
+      filtro.classId,
+      filtro.de,
+      filtro.ate,
+      filtro.origem,
+      filtro.contaId,
+      filtro.busca,
+      filtro.tipo,
+      filtro.planoId,
+      pagina,
+      tamanho,
+    ],
     staleTime: 15_000,
-    queryFn: async (): Promise<Cobranca[]> => {
-      const lista = await relacionamentoJson<CobrancaCrua[] | null>(
+    // Trocar de página ou de filtro mantém a lista anterior na tela até a nova chegar.
+    placeholderData: keepPreviousData,
+    queryFn: async (): Promise<PaginaDeCobrancas> => {
+      const r = await relacionamentoJson<{
+        itens?: CobrancaCrua[] | null;
+        total?: number;
+        pagina?: number;
+        tamanho?: number;
+      } | null>(
         `/cobrancas${consulta({
           status: filtro.status,
           classId: filtro.classId,
           de: filtro.de,
           ate: filtro.ate,
           origem: filtro.origem,
+          contaId: filtro.contaId,
+          busca: filtro.busca.trim(),
+          tipo: filtro.tipo,
+          planoId: filtro.planoId,
+          pagina,
+          tamanho,
         })}`,
         {},
         "Não foi possível carregar as cobranças."
       );
-      return (lista ?? []).map(cobranca);
+      const itens = (r?.itens ?? []).map(cobranca);
+      return { itens, total: r?.total ?? itens.length, pagina: r?.pagina ?? pagina, tamanho: r?.tamanho ?? tamanho };
     },
   });
 }
 
-export function useResumoDeCobrancas(mes: number, ano: number) {
+/**
+ * Resumo do topo. Com `de`/`ate` (vencimento) segue o período; sem eles, o mês e o ano dados.
+ * `contaId` restringe a uma carteira.
+ */
+export function useResumoDeCobrancas(mes: number, ano: number, periodo: PeriodoDoResumo = {}) {
+  const { de = "", ate = "", contaId = null } = periodo;
+  const porPeriodo = de !== "" || ate !== "";
   return useQuery({
-    queryKey: [...PAGAMENTOS, "cobrancas", "resumo", mes, ano],
+    queryKey: [...PAGAMENTOS, "cobrancas", "resumo", mes, ano, de, ate, contaId],
     staleTime: 15_000,
     queryFn: async (): Promise<ResumoDeCobrancas> => {
       const r = await relacionamentoJson<Partial<ResumoDeCobrancas> | null>(
-        `/cobrancas/resumo${consulta({ mes, ano })}`,
+        `/cobrancas/resumo${consulta(porPeriodo ? { de, ate, contaId } : { mes, ano, contaId })}`,
         {},
         "Não foi possível carregar o resumo."
       );
@@ -293,12 +416,21 @@ export function useGerarCobrancasAvulsas() {
   const invalidar = useInvalidarPagamentos();
   return useMutation({
     mutationFn: async (dados: GerarCobrancasAvulsas): Promise<ResultadoDaGeracao> => {
-      const r = await relacionamentoJson<{ criadas?: number; ignoradas?: Partial<Ignorada>[] } | null>(
+      const r = await relacionamentoJson<{
+        criadas?: number;
+        ignoradas?: Partial<Ignorada>[];
+        avisos?: string[] | null;
+        aviso?: string | null;
+      } | null>(
         "/cobrancas/gerar",
-        { method: "POST", body: JSON.stringify(dados) },
+        { method: "POST", body: JSON.stringify({ ...dados, contaFinanceiraId: dados.contaFinanceiraId ?? null }) },
         "Não foi possível gerar as cobranças."
       );
-      return { criadas: r?.criadas ?? 0, ignoradas: ignoradas(r?.ignoradas) };
+      return {
+        criadas: r?.criadas ?? 0,
+        ignoradas: ignoradas(r?.ignoradas),
+        avisos: [...(r?.avisos ?? []), ...(r?.aviso ? [r.aviso] : [])].filter(Boolean),
+      };
     },
     onSuccess: invalidar,
   });
@@ -307,10 +439,24 @@ export function useGerarCobrancasAvulsas() {
 export function useMarcarCobrancaPaga() {
   const invalidar = useInvalidarPagamentos();
   return useMutation({
-    mutationFn: ({ id, data, formaDePagamento }: { id: string; data: string; formaDePagamento: string }) =>
+    mutationFn: ({
+      id,
+      data,
+      formaDePagamento,
+      contaFinanceiraId,
+    }: {
+      id: string;
+      data: string;
+      formaDePagamento: string;
+      /** Em qual conta o dinheiro caiu. Nulo = a conta da cobrança. */
+      contaFinanceiraId?: string | null;
+    }) =>
       relacionamentoJson<void>(
         `/cobrancas/${id}/marcar-paga`,
-        { method: "POST", body: JSON.stringify({ data, formaDePagamento }) },
+        {
+          method: "POST",
+          body: JSON.stringify({ data, formaDePagamento, contaFinanceiraId: contaFinanceiraId ?? null }),
+        },
         "Não foi possível marcar a cobrança como paga."
       ),
     onSuccess: invalidar,
@@ -355,7 +501,7 @@ export function useCriarPlano() {
       plano(
         (await relacionamentoJson<PlanoCru | null>(
           "/planos",
-          { method: "POST", body: JSON.stringify(dados) },
+          { method: "POST", body: JSON.stringify({ ...dados, contaFinanceiraId: dados.contaFinanceiraId ?? null }) },
           "Não foi possível criar o plano."
         )) ?? {}
       ),
@@ -369,7 +515,7 @@ export function useEditarPlano() {
     mutationFn: ({ id, dados }: { id: string; dados: SalvarPlano }) =>
       relacionamentoJson<void>(
         `/planos/${id}`,
-        { method: "PUT", body: JSON.stringify(dados) },
+        { method: "PUT", body: JSON.stringify({ ...dados, contaFinanceiraId: dados.contaFinanceiraId ?? null }) },
         "Não foi possível salvar o plano."
       ),
     onSuccess: invalidar,

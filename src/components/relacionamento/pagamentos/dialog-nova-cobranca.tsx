@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CampoDeDinheiro, emCentavos, emReais } from "@/components/finance/campo-de-dinheiro";
 import { SeletorDeTurmas } from "@/components/finance/projetos/seletor-de-turmas";
 import { SeletorDeAlunos } from "@/components/relacionamento/pagamentos/seletor-de-alunos";
+import { LinkParaContas, SeletorDeCarteira } from "@/components/relacionamento/pagamentos/seletor-de-carteira";
 import { Segmentado } from "@/components/relacionamento/segmentado";
 import { Campo } from "@/components/rh/campo";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { hojeIsoBrasilia } from "@/lib/format/date";
 import { formatarMoeda } from "@/lib/rh/formatar";
 import {
+  useContasParaCobranca,
   useGerarCobrancasAvulsas,
   usePublicoPrevistoDaEscola,
   type ResponsavelPrevisto,
@@ -57,7 +59,9 @@ const normalizar = (texto: string) =>
  */
 export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
   const gerar = useGerarCobrancasAvulsas();
+  const contas = useContasParaCobranca();
 
+  const [carteira, setCarteira] = useState<string | null>(null);
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState<number | null>(null);
   const [vencimento, setVencimento] = useState(() => maisDias(hojeIsoBrasilia(), 7));
@@ -83,6 +87,13 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
   const jaCobrados = previsto.length - disponiveis.length;
   const visiveis = previsto.filter((r) => !busca.trim() || normalizar(r.nome).includes(normalizar(busca)));
 
+  // "Onde o dinheiro cai": Asaas gera link sozinho; Manual não. Sem nenhuma conta, só sai manual.
+  const semContas = contas.isSuccess && contas.data.length === 0;
+  const conta = (contas.data ?? []).find((c) => c.contaId === carteira);
+  const manual = conta?.provedor === "manual";
+  const gerarNoAsaas = gerarAsaas && !manual;
+  const bloqueadoPorFaltaDeConta = semContas && gerarAsaas;
+
   const escolhidosValidos = escolhidos.filter((g) => disponiveis.some((r) => r.guardianId === g));
   const quantos = publico === "responsaveis" ? escolhidosValidos.length : disponiveis.length;
 
@@ -97,6 +108,10 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
     if (!descricao.trim()) return setErro("Diga o que está sendo cobrado.");
     if (valor === null || valor <= 0) return setErro("Informe o valor da cobrança.");
     if (!vencimento) return setErro("Informe o vencimento.");
+    if (contas.isSuccess && !semContas && !carteira) return setErro("Escolha em qual conta o dinheiro cai.");
+    if (bloqueadoPorFaltaDeConta) {
+      return setErro("Nenhuma conta recebe pagamentos ainda. Configure uma ou desmarque a geração do link.");
+    }
     if (quantos === 0) {
       return setErro(
         publico === "responsaveis"
@@ -116,7 +131,8 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
         studentIds: publico === "alunos" ? alunos : undefined,
         guardianIds: publico === "responsaveis" ? escolhidosValidos : undefined,
         somenteResponsavelFinanceiro: somenteFinanceiro,
-        gerarAsaas,
+        gerarAsaas: gerarNoAsaas,
+        contaFinanceiraId: carteira,
       });
       setResultado(r);
     } catch (err) {
@@ -135,6 +151,14 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
               {resultado.ignoradas.length > 0 && `, ${resultado.ignoradas.length} ignorada(s).`}
             </DialogDescription>
           </DialogHeader>
+
+          {resultado.avisos.length > 0 && (
+            <ul className="grid gap-1 rounded-lg border border-border bg-muted px-3 py-2 text-[13px] text-muted-foreground">
+              {resultado.avisos.map((a, n) => (
+                <li key={`${a}-${n}`}>{a}</li>
+              ))}
+            </ul>
+          )}
 
           {resultado.ignoradas.length > 0 ? (
             <div className="grid gap-2">
@@ -234,17 +258,6 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
                 </span>
               </span>
             </label>
-
-            <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-              <Checkbox checked={gerarAsaas} onCheckedChange={(v) => setGerarAsaas(v === true)} className="mt-0.5" />
-              <span>
-                Gerar no Asaas (link, Pix e boleto)
-                <span className="block text-[13px] text-muted-foreground">
-                  Precisa do Asaas da escola configurado e do CPF do responsável. Sem isso a cobrança sai manual: a
-                  família vê o valor e paga na secretaria.
-                </span>
-              </span>
-            </label>
           </div>
 
           <div className="grid gap-2">
@@ -338,6 +351,46 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
             </p>
           )}
 
+          <div className="grid gap-2 rounded-xl border border-border p-3">
+            <span className="text-sm leading-none font-medium">Onde o dinheiro cai</span>
+            <SeletorDeCarteira value={carteira} onChange={setCarteira} padrao="cobrancas" id="nova-carteira" disabled={gerar.isPending} />
+
+            {semContas ? (
+              <div className="grid gap-1.5 text-[13px] text-muted-foreground">
+                <p>
+                  Para gerar link, Pix e boleto, a escola precisa de uma conta com recebimento configurado. <LinkParaContas />
+                </p>
+                <p>
+                  Sem conta, a cobrança sai <strong className="font-medium text-foreground">sem carteira</strong>: a família vê
+                  &quot;pague na secretaria&quot; e vocês marcam como paga.
+                </p>
+              </div>
+            ) : manual ? (
+              <p className="text-[13px] text-muted-foreground">
+                A família vai ver &quot;pague na secretaria&quot;; vocês marcam como paga.
+              </p>
+            ) : conta ? (
+              <p className="text-[13px] text-muted-foreground">
+                Link, Pix e boleto serão gerados automaticamente.
+                {!conta.asaasOk && " A chave do Asaas desta conta ainda não foi testada; se falhar, a cobrança sai manual."}
+              </p>
+            ) : null}
+
+            {!manual && (
+              <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+                <Checkbox checked={gerarAsaas} onCheckedChange={(v) => setGerarAsaas(v === true)} className="mt-0.5" />
+                <span>
+                  Gerar link, Pix e boleto
+                  <span className="block text-[13px] text-muted-foreground">
+                    {semContas
+                      ? "Sem conta configurada isso não é possível: desmarque para criar a cobrança manual, sem carteira."
+                      : "Precisa do CPF do responsável. Sem ele a cobrança sai manual e a família paga na secretaria."}
+                  </span>
+                </span>
+              </label>
+            )}
+          </div>
+
           {erro && (
             <p role="alert" className="text-sm text-destructive">
               {erro}
@@ -348,7 +401,7 @@ export function DialogNovaCobranca({ onFechar }: { onFechar: () => void }) {
             <Button type="button" variant="outline" disabled={gerar.isPending} onClick={onFechar}>
               Cancelar
             </Button>
-            <Button type="submit" variant="action" disabled={gerar.isPending}>
+            <Button type="submit" variant="action" disabled={gerar.isPending || bloqueadoPorFaltaDeConta}>
               {gerar.isPending ? "Gerando..." : "Gerar cobranças"}
             </Button>
           </DialogFooter>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarSync, ChevronDown, Pencil, Plus, Power, Users } from "lucide-react";
+import { CalendarSync, ChevronDown, Pencil, Plus, Power, Users, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { DialogAlunosDoPlano, DialogPlano } from "@/components/relacionamento/pagamentos/dialog-plano";
@@ -163,6 +163,14 @@ function CartaoDoPlano({
             <span className="font-medium break-words">{p.nome}</span>
             <Badge variant={p.ativo ? "success" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
             {p.gerarCobrancaAsaas && <Badge variant="waiting">Asaas</Badge>}
+            {p.contaNome ? (
+              <Badge variant="outline">
+                <Wallet aria-hidden />
+                {p.contaNome}
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground">Sem carteira</span>
+            )}
           </span>
           <span className="mt-0.5 block text-[13px] text-muted-foreground">
             <span className="font-mono font-semibold text-foreground tabular-nums">{formatarMoeda(p.valor)}</span> por mês · vence
@@ -226,9 +234,9 @@ function DetalheDoPlano({ plano: p, onDialogo }: { plano: Plano; onDialogo: (d: 
           {(data?.alunos ?? []).map((a) => (
             <li key={a.studentId} className={cn("flex items-start gap-2 rounded-md px-1.5 py-1.5 text-sm", !a.ativo && "opacity-60")}>
               <span className="min-w-0 flex-1">
-                <span className="block break-words">{a.nome}</span>
+                <span className="block break-words">{a.alunoNome}</span>
                 <span className="block text-xs text-muted-foreground">
-                  {[a.turma, a.guardianNome].filter(Boolean).join(" · ") || "Sem responsável financeiro"}
+                  {[a.turma, a.nomeDoResponsavel].filter(Boolean).join(" · ") || "Sem responsável financeiro"}
                 </span>
               </span>
               {!a.ativo && <span className="shrink-0 text-xs text-muted-foreground">fora do plano</span>}

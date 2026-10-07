@@ -20,7 +20,7 @@ export function EtiquetaDoProjeto({ status }: { status: StatusDoProjeto }) {
 
 export function EtiquetaDaCobranca({ status }: { status: StatusDaCobranca }) {
   const variante =
-    status === "Paga" ? "success" : status === "Vencida" ? "overdue" : status === "Cancelada" ? "secondary" : "pending";
+    status === "Paga" ? "success" : status === "Vencida" ? "overdue" : status === "Cancelada" || status === "Estornada" ? "secondary" : "pending";
   return <Badge variant={variante}>{ROTULO_DA_COBRANCA[status] ?? status}</Badge>;
 }
 

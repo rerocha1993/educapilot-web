@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { CampoDeDinheiro, emCentavos, emReais } from "@/components/finance/campo-de-dinheiro";
 import { SeletorDeAlunos } from "@/components/relacionamento/pagamentos/seletor-de-alunos";
+import { SeletorDeCarteira } from "@/components/relacionamento/pagamentos/seletor-de-carteira";
 import { Campo } from "@/components/rh/campo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { hojeIsoBrasilia } from "@/lib/format/date";
 import {
+  useContasParaCobranca,
   useCriarPlano,
   useDefinirAlunosDoPlano,
   useEditarPlano,
@@ -38,6 +40,7 @@ export function DialogPlano({ plano, onFechar }: { plano?: Plano; onFechar: () =
   const criar = useCriarPlano();
   const editar = useEditarPlano();
   const pendente = criar.isPending || editar.isPending;
+  const contas = useContasParaCobranca();
 
   const [nome, setNome] = useState(plano?.nome ?? "");
   const [descricao, setDescricao] = useState(plano?.descricao ?? "");
@@ -46,8 +49,12 @@ export function DialogPlano({ plano, onFechar }: { plano?: Plano; onFechar: () =
   const [inicio, setInicio] = useState(plano?.inicio || hojeIsoBrasilia());
   const [fim, setFim] = useState(plano?.fim ?? "");
   const [asaas, setAsaas] = useState(plano?.gerarCobrancaAsaas ?? true);
+  const [carteira, setCarteira] = useState<string | null>(plano?.contaFinanceiraId ?? null);
   const [alunos, setAlunos] = useState<number[]>([]);
   const [erro, setErro] = useState<string | null>(null);
+
+  // Carteira manual não gera link: o plano sai manual, sem opção de Asaas.
+  const manual = (contas.data ?? []).find((c) => c.contaId === carteira)?.provedor === "manual";
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
@@ -67,7 +74,8 @@ export function DialogPlano({ plano, onFechar }: { plano?: Plano; onFechar: () =
       diaVencimento: diaNumero,
       inicio,
       fim: fim || undefined,
-      gerarCobrancaAsaas: asaas,
+      gerarCobrancaAsaas: asaas && !manual,
+      contaFinanceiraId: carteira,
     };
 
     try {
@@ -143,15 +151,37 @@ export function DialogPlano({ plano, onFechar }: { plano?: Plano; onFechar: () =
             </Campo>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-            <Checkbox checked={asaas} onCheckedChange={(v) => setAsaas(v === true)} className="mt-0.5" />
-            <span>
-              Gerar no Asaas (link, Pix e boleto)
-              <span className="block text-[13px] text-muted-foreground">
-                Precisa do Asaas da escola configurado e do CPF do responsável. Sem isso a cobrança sai manual.
+          <Campo
+            id="plano-carteira"
+            rotulo="Onde o dinheiro cai"
+            dica="As parcelas geradas vão cair nesta conta. Trocar aqui só vale para parcelas futuras."
+          >
+            <SeletorDeCarteira
+              value={carteira}
+              onChange={setCarteira}
+              padrao="cobrancas"
+              id="plano-carteira"
+              semPreSelecao={!!plano}
+              disabled={pendente}
+            />
+          </Campo>
+
+          {manual ? (
+            <p className="text-[13px] text-muted-foreground">
+              Nesta conta o recebimento é manual: a família vê &quot;pague na secretaria&quot; e vocês marcam cada parcela
+              como paga.
+            </p>
+          ) : (
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+              <Checkbox checked={asaas} onCheckedChange={(v) => setAsaas(v === true)} className="mt-0.5" />
+              <span>
+                Gerar link, Pix e boleto
+                <span className="block text-[13px] text-muted-foreground">
+                  Precisa do CPF do responsável. Sem ele a cobrança sai manual.
+                </span>
               </span>
-            </span>
-          </label>
+            </label>
+          )}
 
           {!plano && (
             <div className="grid gap-2">

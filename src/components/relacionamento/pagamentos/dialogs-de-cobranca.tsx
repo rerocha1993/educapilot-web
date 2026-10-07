@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { SeletorDeCarteira } from "@/components/relacionamento/pagamentos/seletor-de-carteira";
 import { Campo } from "@/components/rh/campo";
 import { Confirmacao } from "@/components/rh/confirmacao";
 import { Button } from "@/components/ui/button";
@@ -30,12 +31,14 @@ export function DialogMarcarPaga({ cobranca: x, onFechar }: { cobranca: Cobranca
   const marcar = useMarcarCobrancaPaga();
   const [data, setData] = useState(hojeIsoBrasilia());
   const [forma, setForma] = useState<FormaDePagamento>("Pix");
+  // Começa na conta da cobrança; a escola troca quando o dinheiro caiu em outra (dinheiro vivo no Caixa).
+  const [conta, setConta] = useState<string | null>(x.contaFinanceiraId);
 
   async function confirmar(e: React.FormEvent) {
     e.preventDefault();
     if (!data) return void toast.error("Informe a data do pagamento.");
     try {
-      await marcar.mutateAsync({ id: x.id, data, formaDePagamento: forma });
+      await marcar.mutateAsync({ id: x.id, data, formaDePagamento: forma, contaFinanceiraId: conta });
       toast.success("Cobrança marcada como paga.");
       onFechar();
     } catch (err) {
@@ -45,7 +48,7 @@ export function DialogMarcarPaga({ cobranca: x, onFechar }: { cobranca: Cobranca
 
   return (
     <Dialog open onOpenChange={(aberto) => !aberto && !marcar.isPending && onFechar()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Marcar como paga</DialogTitle>
           <DialogDescription>
@@ -70,6 +73,13 @@ export function DialogMarcarPaga({ cobranca: x, onFechar }: { cobranca: Cobranca
                 ))}
               </SelectContent>
             </Select>
+          </Campo>
+          <Campo
+            id="paga-conta"
+            rotulo="Em qual conta o dinheiro caiu?"
+            dica="Dinheiro vivo, por exemplo, cai na conta Caixa. Se não mudar, vale a conta da cobrança."
+          >
+            <SeletorDeCarteira value={conta} onChange={setConta} padrao="cobrancas" id="paga-conta" disabled={marcar.isPending} />
           </Campo>
           <DialogFooter>
             <Button type="button" variant="outline" disabled={marcar.isPending} onClick={onFechar}>
