@@ -10,6 +10,7 @@ import {
   Images,
   Megaphone,
   MapPin,
+  MessageCircle,
   ShoppingBag,
   Wallet,
   type LucideIcon,
@@ -75,6 +76,24 @@ export default function InicioDoResponsavelPage() {
         <p className="rounded-xl border border-border bg-accent px-4 py-3 text-sm leading-[1.55] whitespace-pre-line text-accent-foreground">
           {data.escola.mensagemDeBoasVindas}
         </p>
+      )}
+
+      {data.mensagensNaoLidas > 0 && (
+        <Link
+          href="/responsavel/chat"
+          className="flex min-h-16 items-center gap-3 rounded-xl border border-action-border bg-action-soft px-4 py-3 text-action-soft-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:opacity-90"
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-action text-action-foreground">
+            <MessageCircle aria-hidden className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold">
+              {data.mensagensNaoLidas} {data.mensagensNaoLidas === 1 ? "mensagem nova" : "mensagens novas"} da escola
+            </span>
+            <span className="block text-[13px]">Toque para ler e responder</span>
+          </span>
+          <ChevronRight aria-hidden className="size-5 shrink-0" />
+        </Link>
       )}
 
       {pagamentos && pagamentos.resumo.quantidadeEmAberto > 0 && (
@@ -194,7 +213,8 @@ export default function InicioDoResponsavelPage() {
       </SecaoDoPortal>
 
       <SecaoDoPortal titulo="Atalhos">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
+          <Atalho href="/responsavel/agenda" icone={CalendarDays} titulo="Agenda" texto="Eventos e calendário" />
           <Atalho href="/responsavel/agenda?aba=rotina" icone={CalendarClock} titulo="Rotina da semana" texto="Horários da turma" />
           <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Entrada, saída e visitas" />
           <Atalho href="/responsavel/mural" icone={Images} titulo="Fotos" texto="Álbuns da escola" />

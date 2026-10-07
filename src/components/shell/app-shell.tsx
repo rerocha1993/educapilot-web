@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { StoredSession } from "@/lib/auth/types";
-import { clearSession } from "@/lib/auth/session";
+import { encerrarSessao } from "@/lib/auth/sair";
 import { ADMIN_HREF, GRUPOS_DO_MENU, INICIO_HREF, NAV_ITEMS, SUBITENS_DO_MENU } from "@/lib/kernel/nav-items";
 import { acessoDaRota } from "@/lib/access/pode-ver";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
@@ -32,6 +32,8 @@ import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { cn } from "@/lib/utils";
 import { AlterarSenhaDialog } from "@/components/shell/alterar-senha-dialog";
 import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
+import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
+import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
 // espaço para a pagina": a sidebar era sempre w-56 fixo, sem jeito de encolher.
@@ -136,9 +138,15 @@ export function AppShell({
 
   const visibleItems = NAV_ITEMS.filter((item) => moduloVisivel(item.href));
 
-  // O sino lê /api/Notifications, que é da Rotina: só entra para quem tem o módulo. O Responsável
-  // nem chega a este shell (o layout o manda para /responsavel), mas a regra fica explícita.
-  const mostraSino = session.role !== "Responsavel" && moduloVisivel("/");
+  // O sino lê /api/Notifications, que é da Rotina, e as conversas não lidas do chat, que são do
+  // Relacionamento: aparece para quem tem uma das duas coisas. O Responsável nem chega a este
+  // shell (o layout o manda para /responsavel), mas a regra fica explícita.
+  const comRotina = moduloVisivel("/");
+  const comChat = rotaVisivel("/relacionamento/chat");
+  const mostraSino = session.role !== "Responsavel" && (comRotina || comChat);
+
+  // Tempo real do chat: uma conexão por sessão, ligada ao cache das telas. Só para quem tem a área.
+  useChatTempoReal("escola", session.role !== "Responsavel" && comChat);
 
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
@@ -172,7 +180,7 @@ export function AppShell({
   }
 
   function handleLogout() {
-    clearSession();
+    encerrarSessao();
     router.push("/login");
   }
 
@@ -337,7 +345,7 @@ export function AppShell({
                 <Settings className="size-4" />
               </Link>
             )}
-            {mostraSino && <SinoDeAvisos tamanho="sm" />}
+            {mostraSino && <SinoDeAvisos tamanho="sm" comRotina={comRotina} comChat={comChat} />}
             {menuDoUsuario("sm")}
           </div>
         </header>
@@ -361,7 +369,7 @@ export function AppShell({
           </Link>
 
           <div className="flex items-center justify-end">
-            {mostraSino && <SinoDeAvisos tamanho="lg" />}
+            {mostraSino && <SinoDeAvisos tamanho="lg" comRotina={comRotina} comChat={comChat} />}
             {menuDoUsuario("lg")}
           </div>
         </header>
@@ -373,6 +381,7 @@ export function AppShell({
             testando a Chamada no mobile. No celular o padding de baixo abre espaço
             para a barra de abas fixa. */}
         <main className="min-w-0 flex-1 overflow-auto bg-background p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pb-11 md:pt-6">
+          <BannerDeNotificacoes className="mb-4" />
           {children}
         </main>
       </div>

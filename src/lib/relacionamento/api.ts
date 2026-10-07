@@ -191,3 +191,27 @@ export const baixarFotoDoMural: BaixarFoto = async (fotoId, variante) =>
 /** Foto de atividade ou de álbum, pelo lado dos pais (o servidor confere o vínculo com a turma). */
 export const baixarFotoDaFamilia: BaixarFoto = async (fotoId, variante) =>
   blobDe(await responsavelFetch(`/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
+
+// ------------------------------------------------------------------ anexos do chat
+
+/** Miniatura ou original do anexo de uma mensagem, pelo lado da escola. */
+export const baixarAnexoDoChatDaEscola: BaixarFoto = async (mensagemId, variante) =>
+  blobDe(
+    await relacionamentoFetch(`/chat/mensagens/${mensagemId}/anexo${consulta({ variante })}`),
+    "Não foi possível carregar o anexo."
+  );
+
+/** Miniatura ou original do anexo de uma mensagem, pelo lado dos pais. */
+export const baixarAnexoDoChatDaFamilia: BaixarFoto = async (mensagemId, variante) =>
+  blobDe(
+    await responsavelFetch(`/chat/mensagens/${mensagemId}/anexo${consulta({ variante })}`),
+    "Não foi possível carregar o anexo."
+  );
+
+/** Abre o anexo (imagem original ou PDF) numa aba nova; se o navegador bloquear, baixa. */
+export async function abrirAnexoDoChat(lado: "escola" | "familia", mensagemId: string, nome: string): Promise<void> {
+  const caminho = `/chat/mensagens/${mensagemId}/anexo${consulta({ variante: "original" })}`;
+  const res = lado === "escola" ? await relacionamentoFetch(caminho) : await responsavelFetch(caminho);
+  if (!res.ok) throw new Error(await mensagemDeErro(res, "Não foi possível abrir o anexo."));
+  await entregar(res, nome, true);
+}

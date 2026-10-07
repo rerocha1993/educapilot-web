@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, ChevronRight, DoorOpen, Images, LogOut, ShoppingBag, type LucideIcon } from "lucide-react";
+import { CalendarDays, Camera, ChevronRight, DoorOpen, Images, LogOut, ShoppingBag, type LucideIcon } from "lucide-react";
 
 import { ErroDoPortal } from "@/components/relacionamento/portal/comum";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { clearSession } from "@/lib/auth/session";
+import { encerrarSessao } from "@/lib/auth/sair";
 import { useRastreio } from "@/lib/reception/rastreio-context";
 import { useInicioDoPortal } from "@/lib/relacionamento/use-portal-familia";
 import pacote from "../../../../package.json";
@@ -21,7 +21,7 @@ export default function MaisDoResponsavelPage() {
   function sair() {
     // Para o GPS antes de largar a sessão: sem ela, as posições seguintes dariam 401.
     rastreio.parar();
-    clearSession();
+    encerrarSessao();
     router.replace("/login");
   }
 
@@ -30,6 +30,7 @@ export default function MaisDoResponsavelPage() {
       <h1 className="font-heading text-[clamp(22px,6vw,26px)] font-semibold tracking-[-.03em]">Mais</h1>
 
       <nav aria-label="Atalhos" className="flex flex-col gap-2">
+        <Atalho href="/responsavel/agenda" icone={CalendarDays} titulo="Agenda" texto="Eventos da escola e rotina da turma" />
         <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Estou a caminho, entrada e saída" />
         <Atalho href="/responsavel/atividades" icone={Camera} titulo="Atividades" texto="O que a turma fez em sala, com fotos" />
         <Atalho href="/responsavel/mural" icone={Images} titulo="Fotos" texto="Álbuns de festas, passeios e projetos" />

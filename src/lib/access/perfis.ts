@@ -72,7 +72,7 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     // contas, fechamento) continua sendo da gestão.
     { moduloSlug: "finance", areas: ["recibos", "projetos"] },
     // Pagamentos e Loja ficam com a Secretaria: ela cobra as famílias e entrega o material.
-    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias", "atividades", "mural", "pagamentos", "loja"] },
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias", "atividades", "mural", "chat", "pagamentos", "loja"] },
   ],
   Coordenacao: [
     { moduloSlug: "tasks", areas: [] },
@@ -80,7 +80,7 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     { moduloSlug: "reception", areas: ["presenca", "mapa", "visitantes"] },
     { moduloSlug: "admin", areas: ["turmas", "alunos", "responsaveis"] },
     { moduloSlug: "rh", areas: ["funcionarios", "ponto", "atestados", "afastamentos", "documentos", "relatorios"] },
-    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias", "atividades", "mural"] },
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias", "atividades", "mural", "chat"] },
   ],
   // Em Fluxos, o professor leva só a área "quadro": ela dá o quadro de tarefas pessoal sem abrir
   // formulário, contrato nem caixa de envios. Lista vazia aqui abriria o módulo inteiro.
@@ -89,7 +89,8 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     { moduloSlug: "flow", areas: ["quadro"] },
     // Professor publica só para as turmas dele (o servidor recorta), com fotos das atividades e do mural;
     // famílias e configuração são da escola.
-    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "atividades", "mural"] },
+    // O chat do professor mostra só as conversas das turmas dele (o servidor recorta).
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "atividades", "mural", "chat"] },
   ],
   // Gestão não tem sugestão: quem é gestão marca o módulo inteiro na tela.
   Admin: [],

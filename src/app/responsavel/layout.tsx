@@ -3,35 +3,40 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Ellipsis, House, MapPin, Megaphone, Wallet, type LucideIcon } from "lucide-react";
+import { Ellipsis, House, MapPin, Megaphone, MessageCircle, Wallet, type LucideIcon } from "lucide-react";
 
 import { MarcaEducaPilot } from "@/components/auth/marca";
+import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
 import { useSessaoLocal } from "@/lib/auth/use-sessao-local";
 import { RastreioContext } from "@/lib/reception/rastreio-context";
 import { useRastreioTrajeto } from "@/lib/reception/use-rastreio-trajeto";
+import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 import { useInicioDoPortal } from "@/lib/relacionamento/use-portal-familia";
 import { usePagamentosDoPortal } from "@/lib/relacionamento/use-portal-pagamentos";
 import { cn } from "@/lib/utils";
 
 const PORTARIA = "/responsavel/portaria";
 const PAGAMENTOS = "/responsavel/pagamentos";
+const AVISOS = "/responsavel/avisos";
+const CHAT = "/responsavel/chat";
 
 /**
- * A barra de baixo cabe cinco itens. "Pagamentos" tomou o lugar de "Fotos", que antes tinha tomado o
- * de "Portaria": as três continuam a um toque. A Portaria, pelo cartão "Estou a caminho" do Início;
- * as Fotos, pelos cartões do Início; as duas, a Loja e as Atividades, pelos atalhos de "Mais" (que por
- * isso fica ativo em todas elas).
+ * A barra de baixo cabe cinco itens. O "Chat" tomou o lugar da "Agenda", que tomou o de "Pagamentos"
+ * antes e o de "Fotos" antes disso: tudo continua a um toque. A Agenda, pelos cartões "Hoje" e
+ * "Próximos eventos" do Início e pelo atalho de "Mais"; a Portaria, pelo cartão "Estou a caminho";
+ * as Fotos, a Loja e as Atividades, pelos cartões do Início e pelos atalhos de "Mais" (que por isso
+ * fica ativo em todas elas).
  */
 const ABAS: { href: string; rotulo: string; icone: LucideIcon; exata?: boolean; tambem?: string[] }[] = [
   { href: "/responsavel", rotulo: "Início", icone: House, exata: true },
-  { href: "/responsavel/avisos", rotulo: "Avisos", icone: Megaphone },
-  { href: "/responsavel/agenda", rotulo: "Agenda", icone: CalendarDays },
+  { href: AVISOS, rotulo: "Avisos", icone: Megaphone },
+  { href: CHAT, rotulo: "Chat", icone: MessageCircle },
   { href: PAGAMENTOS, rotulo: "Pagamentos", icone: Wallet },
   {
     href: "/responsavel/mais",
     rotulo: "Mais",
     icone: Ellipsis,
-    tambem: [PORTARIA, "/responsavel/atividades", "/responsavel/mural", "/responsavel/loja"],
+    tambem: [PORTARIA, "/responsavel/agenda", "/responsavel/atividades", "/responsavel/mural", "/responsavel/loja"],
   },
 ];
 
@@ -63,12 +68,15 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
 
   const rastreio = useRastreioTrajeto();
   const { data: inicio } = useInicioDoPortal(ehResponsavel);
+  // Mensagens novas chegam na hora (SignalR) e atualizam o ponto da aba e a lista de conversas.
+  useChatTempoReal("familia", ehResponsavel);
   // Cinco minutos de cache e sem atualização por tempo: o ponto da barra não pesa a cada tela.
   const { data: pagamentos } = usePagamentosDoPortal(ehResponsavel);
 
   if (!ehResponsavel) return null;
 
   const naoLidos = inicio?.avisosNaoLidos ?? 0;
+  const mensagensNaoLidas = inicio?.mensagensNaoLidas ?? 0;
   const emAberto = pagamentos?.resumo.quantidadeEmAberto ?? 0;
   const nomeDoPortal = inicio?.escola.nomeDoPortal || inicio?.escola.nome;
   const rastreando = rastreio.estado === "rastreando" && pathname !== PORTARIA;
@@ -114,6 +122,7 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
 
         {/* pb-28: a barra de baixo é fixa e o último cartão não pode ficar escondido atrás dela. */}
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+          <BannerDeNotificacoes />
           {children}
         </main>
 
@@ -126,15 +135,20 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
               const dentroDe = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
               const ativa = aba.exata ? pathname === aba.href : dentroDe(aba.href) || (aba.tambem ?? []).some(dentroDe);
               const Icone = aba.icone;
-              const contagem = aba.href === PAGAMENTOS ? emAberto : aba.href === "/responsavel/avisos" ? naoLidos : 0;
+              const contagem =
+                aba.href === PAGAMENTOS ? emAberto : aba.href === AVISOS ? naoLidos : aba.href === CHAT ? mensagensNaoLidas : 0;
               const textoDaContagem =
                 aba.href === PAGAMENTOS
                   ? contagem === 1
                     ? "pagamento em aberto"
                     : "pagamentos em aberto"
-                  : contagem === 1
-                    ? "aviso não lido"
-                    : "avisos não lidos";
+                  : aba.href === CHAT
+                    ? contagem === 1
+                      ? "mensagem não lida"
+                      : "mensagens não lidas"
+                    : contagem === 1
+                      ? "aviso não lido"
+                      : "avisos não lidos";
 
               return (
                 <li key={aba.href}>

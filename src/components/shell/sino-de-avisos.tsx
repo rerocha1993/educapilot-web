@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, MessagesSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatarDataHora } from "@/lib/format/date";
+import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -30,14 +32,33 @@ const AVISOS_VISIVEIS = 10;
  * este shell.
  *
  * Marcar como lido não fecha o menu: quem tem vários avisos quer limpar a fila de uma vez.
+ *
+ * Com a área Chat liberada, o sino também soma as conversas com mensagem não lida (GET
+ * /api/Relacionamento/chat/resumo) e mostra uma linha que leva ao chat. É o sino, e não um ponto
+ * no menu, porque ele aparece em todas as telas, no computador e no celular, e o menu lateral
+ * recolhido não tem onde pôr um número.
  */
-export function SinoDeAvisos({ tamanho = "sm" }: { tamanho?: "sm" | "lg" }) {
-  const { data, isLoading, isError } = useNotifications();
+export function SinoDeAvisos({
+  tamanho = "sm",
+  comRotina = true,
+  comChat = false,
+}: {
+  tamanho?: "sm" | "lg";
+  /** A pessoa tem a Rotina: só então a lista de avisos (/api/Notifications) existe para ela. */
+  comRotina?: boolean;
+  /** A pessoa pode abrir o chat da escola. */
+  comChat?: boolean;
+}) {
+  const router = useRouter();
+  const { data, isLoading, isError } = useNotifications(comRotina);
+  const { data: resumoDoChat } = useResumoDoChat(comChat);
   const marcar = useMarkNotificationRead();
   const marcarTodas = useMarkAllNotificationsRead();
 
-  const todos = data ?? [];
-  const naoLidos = todos.filter((n) => !n.isRead).length;
+  const todos = comRotina ? (data ?? []) : [];
+  const avisosNaoLidos = todos.filter((n) => !n.isRead).length;
+  const conversasNaoLidas = comChat ? (resumoDoChat?.conversasNaoLidas ?? 0) : 0;
+  const naoLidos = avisosNaoLidos + conversasNaoLidas;
   const recentes = [...todos]
     .sort((a, b) => b.sentDate.localeCompare(a.sentDate))
     .slice(0, AVISOS_VISIVEIS);
@@ -74,7 +95,7 @@ export function SinoDeAvisos({ tamanho = "sm" }: { tamanho?: "sm" | "lg" }) {
           <span className="text-sm font-semibold">
             Avisos
           </span>
-          {naoLidos > 0 && (
+          {avisosNaoLidos > 0 && (
             <DropdownMenuItem
               closeOnClick={false}
               disabled={marcarTodas.isPending}
@@ -88,7 +109,26 @@ export function SinoDeAvisos({ tamanho = "sm" }: { tamanho?: "sm" | "lg" }) {
         </div>
         <DropdownMenuSeparator />
 
-        {isLoading ? (
+        {conversasNaoLidas > 0 && (
+          <DropdownMenuItem
+            onClick={() => router.push("/relacionamento/chat")}
+            className="min-h-12 items-center gap-2.5 px-2 py-2 text-[13px] font-medium"
+          >
+            <span className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground">
+              <MessagesSquare aria-hidden className="size-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              {conversasNaoLidas} {conversasNaoLidas === 1 ? "conversa com mensagem nova" : "conversas com mensagens novas"}
+            </span>
+            <span className="shrink-0 text-xs font-semibold text-primary">Abrir chat</span>
+          </DropdownMenuItem>
+        )}
+
+        {!comRotina ? (
+          conversasNaoLidas === 0 && (
+            <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">Nenhum aviso por enquanto.</p>
+          )
+        ) : isLoading ? (
           <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">Carregando…</p>
         ) : isError ? (
           <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">

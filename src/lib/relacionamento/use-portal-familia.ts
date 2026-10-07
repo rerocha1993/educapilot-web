@@ -77,6 +77,8 @@ export interface InicioDoPortal {
   responsavel: { nome: string };
   alunos: FilhoDoPortal[];
   avisosNaoLidos: number;
+  /** Mensagens do chat que a escola mandou e a família ainda não leu. */
+  mensagensNaoLidas: number;
   proximosEventos: AgendaItem[];
   avisosRecentes: AvisoResumo[];
   agendaDeHoje: AgendaItem[];
@@ -307,6 +309,7 @@ export function useInicioDoPortal(habilitado = true) {
         responsavel: { nome: r?.responsavel?.nome ?? "" },
         alunos: (r?.alunos ?? []).map(filho),
         avisosNaoLidos: r?.avisosNaoLidos ?? 0,
+        mensagensNaoLidas: r?.mensagensNaoLidas ?? 0,
         proximosEventos: (r?.proximosEventos ?? []).map(agendaItem),
         avisosRecentes: (r?.avisosRecentes ?? []).map(aviso),
         agendaDeHoje: (r?.agendaDeHoje ?? []).map(agendaItem),

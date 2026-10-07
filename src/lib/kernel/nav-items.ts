@@ -115,6 +115,7 @@ export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
     "/relacionamento/familias",
     "/relacionamento/atividades",
     "/relacionamento/mural",
+    "/relacionamento/chat",
     "/relacionamento/pagamentos",
     "/relacionamento/loja",
     "/relacionamento/configuracao",

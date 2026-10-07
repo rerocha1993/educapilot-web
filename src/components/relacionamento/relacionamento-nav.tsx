@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 
 import { podeVerArea } from "@/lib/access/pode-ver";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
+import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
 import { cn } from "@/lib/utils";
 
 /**
  * Abas do Relacionamento. Cada uma é uma área da permissão, com o mesmo slug do catálogo do
  * backend.
  *
- * A aba da próxima fase (chat) já está no array com
- * `emBreve`: não aparecem enquanto a tela não existir, e quando existir basta tirar a marca.
+ * Aba de tela que ainda não existe entra no array com `emBreve`: não aparece, e quando a tela
+ * existir basta tirar a marca. A aba Chat leva a contagem de conversas não lidas.
  */
 export const ABAS_DO_RELACIONAMENTO: readonly {
   href: string;
@@ -25,7 +26,7 @@ export const ABAS_DO_RELACIONAMENTO: readonly {
   { href: "/relacionamento/familias", label: "Famílias", area: "familias" },
   { href: "/relacionamento/atividades", label: "Atividades", area: "atividades" },
   { href: "/relacionamento/mural", label: "Mural", area: "mural" },
-  { href: "/relacionamento/chat", label: "Chat", area: "chat", emBreve: true },
+  { href: "/relacionamento/chat", label: "Chat", area: "chat" },
   { href: "/relacionamento/pagamentos", label: "Pagamentos", area: "pagamentos" },
   { href: "/relacionamento/loja", label: "Loja virtual", area: "loja" },
   { href: "/relacionamento/configuracao", label: "Configuração", area: "configuracao" },
@@ -34,6 +35,8 @@ export const ABAS_DO_RELACIONAMENTO: readonly {
 export function RelacionamentoNav() {
   const pathname = usePathname();
   const { data: meuAcesso } = useMeuAcesso();
+  const { data: resumoDoChat } = useResumoDoChat(podeVerArea(meuAcesso, "relacionamento", "chat"));
+  const naoLidasDoChat = resumoDoChat?.conversasNaoLidas ?? 0;
 
   // Filtra pela área, e não pela rota: quem só tem "Avisos" não vê as outras abas.
   const abas = ABAS_DO_RELACIONAMENTO.filter(
@@ -59,6 +62,14 @@ export function RelacionamentoNav() {
               )}
             >
               {aba.label}
+              {aba.area === "chat" && naoLidasDoChat > 0 && (
+                <span className="ml-1.5 inline-grid min-w-4.5 place-items-center rounded-full bg-action px-1 text-[10.5px] leading-[18px] font-bold text-action-foreground tabular-nums">
+                  <span aria-hidden>{naoLidasDoChat > 99 ? "99+" : naoLidasDoChat}</span>
+                  <span className="sr-only">
+                    {naoLidasDoChat === 1 ? "conversa não lida" : "conversas não lidas"}
+                  </span>
+                </span>
+              )}
             </Link>
           );
         })}
