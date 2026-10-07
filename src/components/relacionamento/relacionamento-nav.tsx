@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * Abas do Relacionamento. Cada uma é uma área da permissão, com o mesmo slug do catálogo do
  * backend.
  *
- * As abas das próximas fases (chat, pagamentos, loja) já estão no array com
+ * A aba da próxima fase (chat) já está no array com
  * `emBreve`: não aparecem enquanto a tela não existir, e quando existir basta tirar a marca.
  */
 export const ABAS_DO_RELACIONAMENTO: readonly {
@@ -26,8 +26,8 @@ export const ABAS_DO_RELACIONAMENTO: readonly {
   { href: "/relacionamento/atividades", label: "Atividades", area: "atividades" },
   { href: "/relacionamento/mural", label: "Mural", area: "mural" },
   { href: "/relacionamento/chat", label: "Chat", area: "chat", emBreve: true },
-  { href: "/relacionamento/pagamentos", label: "Pagamentos", area: "pagamentos", emBreve: true },
-  { href: "/relacionamento/loja", label: "Loja virtual", area: "loja", emBreve: true },
+  { href: "/relacionamento/pagamentos", label: "Pagamentos", area: "pagamentos" },
+  { href: "/relacionamento/loja", label: "Loja virtual", area: "loja" },
   { href: "/relacionamento/configuracao", label: "Configuração", area: "configuracao" },
 ];
 

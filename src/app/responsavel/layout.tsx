@@ -3,28 +3,36 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Ellipsis, House, Images, MapPin, Megaphone, type LucideIcon } from "lucide-react";
+import { CalendarDays, Ellipsis, House, MapPin, Megaphone, Wallet, type LucideIcon } from "lucide-react";
 
 import { MarcaEducaPilot } from "@/components/auth/marca";
 import { useSessaoLocal } from "@/lib/auth/use-sessao-local";
 import { RastreioContext } from "@/lib/reception/rastreio-context";
 import { useRastreioTrajeto } from "@/lib/reception/use-rastreio-trajeto";
 import { useInicioDoPortal } from "@/lib/relacionamento/use-portal-familia";
+import { usePagamentosDoPortal } from "@/lib/relacionamento/use-portal-pagamentos";
 import { cn } from "@/lib/utils";
 
 const PORTARIA = "/responsavel/portaria";
+const PAGAMENTOS = "/responsavel/pagamentos";
 
 /**
- * A barra de baixo cabe cinco itens. "Fotos" tomou o lugar de "Portaria": a Portaria continua a um
- * toque, pelo cartão "Estou a caminho" do Início e pelo atalho de "Mais" (que por isso fica ativo
- * nela, e nas Atividades, que também moram lá).
+ * A barra de baixo cabe cinco itens. "Pagamentos" tomou o lugar de "Fotos", que antes tinha tomado o
+ * de "Portaria": as três continuam a um toque. A Portaria, pelo cartão "Estou a caminho" do Início;
+ * as Fotos, pelos cartões do Início; as duas, a Loja e as Atividades, pelos atalhos de "Mais" (que por
+ * isso fica ativo em todas elas).
  */
 const ABAS: { href: string; rotulo: string; icone: LucideIcon; exata?: boolean; tambem?: string[] }[] = [
   { href: "/responsavel", rotulo: "Início", icone: House, exata: true },
   { href: "/responsavel/avisos", rotulo: "Avisos", icone: Megaphone },
   { href: "/responsavel/agenda", rotulo: "Agenda", icone: CalendarDays },
-  { href: "/responsavel/mural", rotulo: "Fotos", icone: Images },
-  { href: "/responsavel/mais", rotulo: "Mais", icone: Ellipsis, tambem: [PORTARIA, "/responsavel/atividades"] },
+  { href: PAGAMENTOS, rotulo: "Pagamentos", icone: Wallet },
+  {
+    href: "/responsavel/mais",
+    rotulo: "Mais",
+    icone: Ellipsis,
+    tambem: [PORTARIA, "/responsavel/atividades", "/responsavel/mural", "/responsavel/loja"],
+  },
 ];
 
 /**
@@ -55,10 +63,13 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
 
   const rastreio = useRastreioTrajeto();
   const { data: inicio } = useInicioDoPortal(ehResponsavel);
+  // Cinco minutos de cache e sem atualização por tempo: o ponto da barra não pesa a cada tela.
+  const { data: pagamentos } = usePagamentosDoPortal(ehResponsavel);
 
   if (!ehResponsavel) return null;
 
   const naoLidos = inicio?.avisosNaoLidos ?? 0;
+  const emAberto = pagamentos?.resumo.quantidadeEmAberto ?? 0;
   const nomeDoPortal = inicio?.escola.nomeDoPortal || inicio?.escola.nome;
   const rastreando = rastreio.estado === "rastreando" && pathname !== PORTARIA;
 
@@ -115,7 +126,15 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
               const dentroDe = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
               const ativa = aba.exata ? pathname === aba.href : dentroDe(aba.href) || (aba.tambem ?? []).some(dentroDe);
               const Icone = aba.icone;
-              const comBadge = aba.href === "/responsavel/avisos" && naoLidos > 0;
+              const contagem = aba.href === PAGAMENTOS ? emAberto : aba.href === "/responsavel/avisos" ? naoLidos : 0;
+              const textoDaContagem =
+                aba.href === PAGAMENTOS
+                  ? contagem === 1
+                    ? "pagamento em aberto"
+                    : "pagamentos em aberto"
+                  : contagem === 1
+                    ? "aviso não lido"
+                    : "avisos não lidos";
 
               return (
                 <li key={aba.href}>
@@ -129,11 +148,11 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
                   >
                     <span className="relative">
                       <Icone aria-hidden className={cn("size-5", ativa && "stroke-[2.4]")} />
-                      {comBadge && (
+                      {contagem > 0 && (
                         <span className="absolute -top-1.5 -right-2.5 grid min-w-4 place-items-center rounded-full bg-action px-1 font-mono text-[10px] leading-4 font-semibold text-action-foreground tabular-nums">
-                          <span aria-hidden>{naoLidos > 9 ? "9+" : naoLidos}</span>
+                          <span aria-hidden>{contagem > 9 ? "9+" : contagem}</span>
                           <span className="sr-only">
-                            {naoLidos} {naoLidos === 1 ? "aviso não lido" : "avisos não lidos"}
+                            {contagem} {textoDaContagem}
                           </span>
                         </span>
                       )}

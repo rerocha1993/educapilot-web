@@ -71,7 +71,8 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
     // (festa) também passa por ela, que cobra as famílias. O resto do Financeiro (despesas,
     // contas, fechamento) continua sendo da gestão.
     { moduloSlug: "finance", areas: ["recibos", "projetos"] },
-    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias", "atividades", "mural"] },
+    // Pagamentos e Loja ficam com a Secretaria: ela cobra as famílias e entrega o material.
+    { moduloSlug: "relacionamento", areas: ["avisos", "cronograma", "familias", "atividades", "mural", "pagamentos", "loja"] },
   ],
   Coordenacao: [
     { moduloSlug: "tasks", areas: [] },

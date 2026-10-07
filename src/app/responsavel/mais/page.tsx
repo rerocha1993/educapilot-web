@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, ChevronRight, DoorOpen, LogOut, type LucideIcon } from "lucide-react";
+import { Camera, ChevronRight, DoorOpen, Images, LogOut, ShoppingBag, type LucideIcon } from "lucide-react";
 
 import { ErroDoPortal } from "@/components/relacionamento/portal/comum";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ export default function MaisDoResponsavelPage() {
       <nav aria-label="Atalhos" className="flex flex-col gap-2">
         <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Estou a caminho, entrada e saída" />
         <Atalho href="/responsavel/atividades" icone={Camera} titulo="Atividades" texto="O que a turma fez em sala, com fotos" />
+        <Atalho href="/responsavel/mural" icone={Images} titulo="Fotos" texto="Álbuns de festas, passeios e projetos" />
+        <Atalho href="/responsavel/loja" icone={ShoppingBag} titulo="Loja" texto="Material, taxas e uniforme, com pagamento pelo portal" />
       </nav>
 
       {isLoading && <Skeleton className="h-40 w-full rounded-xl" />}

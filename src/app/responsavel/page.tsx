@@ -1,7 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { Camera, CalendarClock, CalendarDays, ChevronRight, DoorOpen, Images, Megaphone, MapPin, type LucideIcon } from "lucide-react";
+import {
+  Camera,
+  CalendarClock,
+  CalendarDays,
+  ChevronRight,
+  DoorOpen,
+  Images,
+  Megaphone,
+  MapPin,
+  ShoppingBag,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 
 import { CartaoDeAlbum, CartaoDeAtividade } from "@/components/relacionamento/portal/conteudo";
 import {
@@ -13,10 +25,15 @@ import {
 } from "@/components/relacionamento/portal/comum";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInicioDoPortal } from "@/lib/relacionamento/use-portal-familia";
+import { usePagamentosDoPortal } from "@/lib/relacionamento/use-portal-pagamentos";
+import { formatarMoeda } from "@/lib/rh/formatar";
+import { cn } from "@/lib/utils";
 
 /** Início do site do responsável: o dia de hoje, as fotos da sala, o que vem aí e os avisos recentes. */
 export default function InicioDoResponsavelPage() {
   const { data, isLoading, isError, refetch } = useInicioDoPortal();
+  // Mesma consulta do ponto da barra de baixo (cache de 5 minutos): não custa uma chamada a mais.
+  const { data: pagamentos } = usePagamentosDoPortal();
 
   if (isLoading) {
     return (
@@ -58,6 +75,34 @@ export default function InicioDoResponsavelPage() {
         <p className="rounded-xl border border-border bg-accent px-4 py-3 text-sm leading-[1.55] whitespace-pre-line text-accent-foreground">
           {data.escola.mensagemDeBoasVindas}
         </p>
+      )}
+
+      {pagamentos && pagamentos.resumo.quantidadeEmAberto > 0 && (
+        <Link
+          href="/responsavel/pagamentos"
+          className={cn(
+            "flex min-h-16 items-center gap-3 rounded-xl border px-4 py-3 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:opacity-90",
+            pagamentos.resumo.vencidas > 0
+              ? "border-destructive-border bg-destructive-soft text-destructive-soft-foreground"
+              : "border-border bg-card"
+          )}
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
+            <Wallet aria-hidden className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold">
+              {pagamentos.resumo.quantidadeEmAberto}{" "}
+              {pagamentos.resumo.quantidadeEmAberto === 1 ? "pagamento em aberto" : "pagamentos em aberto"}
+            </span>
+            <span className="block text-[13px]">
+              {formatarMoeda(pagamentos.resumo.totalEmAberto)}
+              {pagamentos.resumo.vencidas > 0 &&
+                ` · ${pagamentos.resumo.vencidas} ${pagamentos.resumo.vencidas === 1 ? "vencido" : "vencidos"}`}
+            </span>
+          </span>
+          <ChevronRight aria-hidden className="size-5 shrink-0" />
+        </Link>
       )}
 
       <Link
@@ -152,6 +197,8 @@ export default function InicioDoResponsavelPage() {
         <div className="grid grid-cols-2 gap-2">
           <Atalho href="/responsavel/agenda?aba=rotina" icone={CalendarClock} titulo="Rotina da semana" texto="Horários da turma" />
           <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Entrada, saída e visitas" />
+          <Atalho href="/responsavel/mural" icone={Images} titulo="Fotos" texto="Álbuns da escola" />
+          <Atalho href="/responsavel/loja" icone={ShoppingBag} titulo="Loja" texto="Material, taxas e uniforme" />
         </div>
       </SecaoDoPortal>
     </>
