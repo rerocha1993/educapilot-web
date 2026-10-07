@@ -195,6 +195,8 @@ export interface Plano {
   contaFinanceiraId: string | null;
   contaNome: string | null;
   alunos: number;
+  /** "mensalidade" e o plano unico da Mensalidade (cartao proprio na tela); "outro" sao os demais. */
+  tipo: "mensalidade" | "outro";
 }
 
 export interface AlunoDoPlano {
@@ -280,7 +282,11 @@ function ignoradas(lista: Partial<Ignorada>[] | null | undefined): Ignorada[] {
 }
 
 type AlunoDoPlanoCru = Partial<Omit<AlunoDoPlano, "guardianId">> & { guardianId?: string | number | null };
-type PlanoCru = Partial<Omit<Plano, "alunos">> & { alunos?: number | AlunoDoPlanoCru[] };
+type PlanoCru = Partial<Omit<Plano, "alunos" | "tipo">> & { alunos?: number | AlunoDoPlanoCru[]; tipo?: string | number | null };
+
+function tipoDoPlano(tipo: string | number | null | undefined): "mensalidade" | "outro" {
+  return tipo === 1 || String(tipo ?? "").toLowerCase() === "mensalidade" ? "mensalidade" : "outro";
+}
 
 function plano(p: PlanoCru): Plano {
   return {
@@ -296,6 +302,7 @@ function plano(p: PlanoCru): Plano {
     contaFinanceiraId: p.contaFinanceiraId ?? null,
     contaNome: p.contaNome ?? null,
     alunos: typeof p.alunos === "number" ? p.alunos : (p.alunos?.length ?? 0),
+    tipo: tipoDoPlano(p.tipo),
   };
 }
 
@@ -521,7 +528,9 @@ export function usePlanos() {
     staleTime: 15_000,
     queryFn: async (): Promise<Plano[]> => {
       const lista = await relacionamentoJson<PlanoCru[] | null>("/planos", {}, "Não foi possível carregar os planos.");
-      return (lista ?? []).map(plano);
+      // A Mensalidade vem na mesma lista (plano do tipo mensalidade), mas tem cartao e dialogos
+      // proprios na tela: aqui ficam so os planos "Outro".
+      return (lista ?? []).map(plano).filter((p) => p.tipo !== "mensalidade");
     },
   });
 }
@@ -693,6 +702,8 @@ export interface ResultadoDaGeracaoMensal {
 type AlunoDaMensalidadeCru = Partial<Omit<AlunoDaMensalidade, "guardianId" | "tuitionPlanId">> & {
   guardianId?: string | number | null;
   tuitionPlanId?: string | number | null;
+  /** Nome atual no backend (Limpeza 1); tuitionPlanId e o nome antigo. */
+  planoAlunoId?: string | number | null;
 };
 type MensalidadesCru = Partial<Omit<Mensalidades, "alunos" | "contaFinanceiraId">> & {
   contaFinanceiraId?: string | number | null;
@@ -706,7 +717,7 @@ function competenciaDeHoje(): string {
 
 function mensalidades(m: MensalidadesCru | null | undefined): Mensalidades {
   const alunos: AlunoDaMensalidade[] = (m?.alunos ?? []).map((a) => ({
-    tuitionPlanId: a.tuitionPlanId === undefined || a.tuitionPlanId === null ? null : String(a.tuitionPlanId),
+    tuitionPlanId: (() => { const id = a.planoAlunoId ?? a.tuitionPlanId; return id === undefined || id === null ? null : String(id); })(),
     studentId: a.studentId ?? 0,
     alunoNome: a.alunoNome ?? "",
     turma: a.turma ?? null,
