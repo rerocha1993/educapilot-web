@@ -50,6 +50,9 @@ export interface MovimentoDoExtrato {
   regraNome?: string | null;
   regraCategoriaId?: string | null;
   regraCategoriaNome?: string | null;
+  /** F6: o arquivo de um comprovante foi anexado a esta linha (veio da Caixa de comprovantes). */
+  temComprovante?: boolean;
+  comprovanteNome?: string | null;
 }
 
 export interface PainelDaConciliacao {
@@ -179,12 +182,15 @@ export interface BuscaDeLancamentos {
   busca: string;
   /** Em reais; traz só os lançamentos até 30% (ou R$ 50) distantes deste valor. Nulo não filtra. */
   valorAproximado: number | null;
+  /** Só os lançamentos desta conta. Vazio traz de todas. */
+  contaId?: string | null;
 }
 
 /** "Procurar outro lançamento": até 50 lançamentos em aberto e ainda não casados. */
 export function useLancamentosParaConciliar(filtro: BuscaDeLancamentos) {
   const params = new URLSearchParams({ tipo: filtro.tipo });
   if (filtro.busca.trim()) params.set("busca", filtro.busca.trim());
+  if (filtro.contaId) params.set("contaId", filtro.contaId);
   if (filtro.valorAproximado != null && filtro.valorAproximado > 0) {
     params.set("valorAproximado", String(filtro.valorAproximado));
   }

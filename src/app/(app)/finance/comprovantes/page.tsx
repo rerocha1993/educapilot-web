@@ -10,15 +10,18 @@ import { FinanceNav } from "@/components/finance/finance-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { ErroDeCarga } from "@/components/rh/campo";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  destinoDe,
   ROTULO_DA_ORIGEM,
   useComprovantesRecebidos,
   useResumoDosComprovantes,
+  type FiltroDeDestino,
   type FiltroDeSituacao,
   type FiltrosDosComprovantes,
   type OrigemDoComprovante,
@@ -33,6 +36,13 @@ const SITUACOES: { valor: FiltroDeSituacao; rotulo: string }[] = [
   { valor: "Lancado", rotulo: "Lançados" },
   { valor: "Descartado", rotulo: "Descartados" },
   { valor: "Todos", rotulo: "Todos" },
+];
+
+const DESTINOS: { valor: FiltroDeDestino; rotulo: string }[] = [
+  { valor: "", rotulo: "Todos" },
+  { valor: "Despesas", rotulo: "Despesa" },
+  { valor: "Projeto", rotulo: "Projeto" },
+  { valor: "Conciliar", rotulo: "Conciliar" },
 ];
 
 const FILTROS_INICIAIS: FiltrosDosComprovantes = {
@@ -82,6 +92,8 @@ function Numero({
 export default function CaixaDeComprovantesPage() {
   const [filtros, setFiltros] = useState(FILTROS_INICIAIS);
   const [enviando, setEnviando] = useState(false);
+  // O servidor não filtra pelo destino sugerido: este filtro vale para os comprovantes da página aberta.
+  const [destino, setDestino] = useState<FiltroDeDestino>("");
 
   const { data, isLoading, isError, refetch } = useComprovantesRecebidos(filtros);
   const { data: resumo, isLoading: carregandoResumo } = useResumoDosComprovantes();
@@ -92,10 +104,13 @@ export default function CaixaDeComprovantesPage() {
     setFiltros((f) => ({ ...f, pagina: 1, ...parte }));
   }
 
-  const itens = data?.itens ?? [];
+  const daPagina = data?.itens ?? [];
+  const itens = destino ? daPagina.filter((c) => destinoDe(c) === destino) : daPagina;
   const total = data?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / filtros.tamanho));
-  const comFiltro = filtros.de !== "" || filtros.ate !== "" || filtros.remetenteId !== "" || filtros.origem !== "";
+  const comFiltro =
+    filtros.de !== "" || filtros.ate !== "" || filtros.remetenteId !== "" || filtros.origem !== "" || destino !== "";
+  const aLancar = resumo?.aLancar ?? 0;
 
   const nomeDoRemetente = (remetentes ?? []).find((r) => r.id === filtros.remetenteId)?.nome;
 
@@ -106,7 +121,14 @@ export default function CaixaDeComprovantesPage() {
       <CabecalhoDaPagina
         eyebrow="Financeiro"
         titulo="Comprovantes"
-        apoio="Fotos e PDFs de comprovantes que chegam pelo WhatsApp ou pela tela. Confira, ajuste e lance como despesa."
+        apoio="Fotos e PDFs de comprovantes que chegam pelo WhatsApp ou pela tela. Confira e lance como despesa, no projeto ou na conciliação do extrato."
+        tags={
+          aLancar > 0 ? (
+            <Badge variant="pending">
+              {aLancar} a lançar
+            </Badge>
+          ) : undefined
+        }
         acoes={
           <Button variant="action" className="w-full md:w-auto" onClick={() => setEnviando(true)}>
             <UploadCloud />
@@ -121,7 +143,7 @@ export default function CaixaDeComprovantesPage() {
         <Numero rotulo="Lançados no mês" valor={resumo?.lancadosNoMes} carregando={carregandoResumo} tom="sucesso" />
       </div>
 
-      <section aria-label="Filtros" className="grid gap-3 rounded-xl border border-border bg-card p-3.5 sm:grid-cols-2 lg:grid-cols-5">
+      <section aria-label="Filtros" className="grid gap-3 rounded-xl border border-border bg-card p-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <div className="grid content-start gap-1.5">
           <Label htmlFor="fil-situacao">Situação</Label>
           <Select value={filtros.situacao} onValueChange={(v) => v && mudar({ situacao: v as FiltroDeSituacao })}>
@@ -183,7 +205,29 @@ export default function CaixaDeComprovantesPage() {
             </SelectContent>
           </Select>
         </div>
+
+        <div className="grid content-start gap-1.5">
+          <Label htmlFor="fil-destino">Sugestão de destino</Label>
+          <Select value={destino || TODOS} onValueChange={(v) => v && setDestino(v === TODOS ? "" : (v as FiltroDeDestino))}>
+            <SelectTrigger id="fil-destino" className="w-full">
+              <SelectValue>{() => DESTINOS.find((d) => d.valor === destino)?.rotulo ?? "Todos"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {DESTINOS.map((d) => (
+                <SelectItem key={d.valor || TODOS} value={d.valor || TODOS}>
+                  {d.rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </section>
+
+      {destino && daPagina.length > 0 && (
+        <p className="text-[13px] text-muted-foreground">
+          {itens.length} de {daPagina.length} comprovantes desta página têm essa sugestão.
+        </p>
+      )}
 
       {isError ? (
         <ErroDeCarga texto="Não foi possível carregar os comprovantes." onTentar={() => refetch()} />
@@ -217,7 +261,13 @@ export default function CaixaDeComprovantesPage() {
             titulo="Nenhum comprovante encontrado."
             texto="Tente outra situação ou mude o período."
             acao={
-              <Button variant="outline" onClick={() => setFiltros(FILTROS_INICIAIS)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFiltros(FILTROS_INICIAIS);
+                  setDestino("");
+                }}
+              >
                 Limpar filtros
               </Button>
             }

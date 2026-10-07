@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Check,
   CircleSlash,
+  Paperclip,
   Plus,
   RotateCcw,
   Scale,
@@ -330,7 +331,18 @@ function LinhaDoExtrato({
             {entrada ? <ArrowDownLeft className="size-4" /> : <ArrowUpRight className="size-4" />}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-medium break-words">{movimento.descricao || "Sem descrição"}</p>
+            <p className="text-sm font-medium break-words">
+              {movimento.descricao || "Sem descrição"}
+              {movimento.temComprovante && (
+                <span
+                  title={`Comprovante anexado: ${movimento.comprovanteNome || "arquivo"}`}
+                  className="ml-1.5 inline-flex align-middle text-muted-foreground"
+                >
+                  <Paperclip className="size-3.5" aria-hidden />
+                  <span className="sr-only">Comprovante anexado: {movimento.comprovanteNome || "arquivo"}</span>
+                </span>
+              )}
+            </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {data(movimento.data)}
               {movimento.situacao === SITUACAO.conciliado && movimento.lancamentoDescricao && (

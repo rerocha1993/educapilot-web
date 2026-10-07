@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { invalidarFinanceiro } from "./invalidar-financeiro";
 import {
   API_FINANCEIRO,
   abrirArquivoEmNovaAba,
@@ -24,6 +25,8 @@ const BASE = `${API_FINANCEIRO}/comprovantes`;
 export type StatusDoComprovanteRecebido = "Recebido" | "Lido" | "SemLeitura" | "Lancado" | "Descartado";
 export type OrigemDoComprovante = "WhatsApp" | "Tela";
 export type MetodoDaLeitura = "pdf-texto" | "ocr" | "anthropic";
+/** Para onde o sistema acha que o comprovante vai (W2). O servidor manda "Despesas", "Projeto" ou "Conciliar". */
+export type DestinoDoComprovante = "Despesas" | "Projeto" | "Conciliar";
 
 export interface ItemLidoDoComprovante {
   descricao: string;
@@ -59,7 +62,9 @@ export interface ComprovanteRecebido {
   confianca?: ConfiancaDaLeitura | null;
   metodoDaLeitura?: MetodoDaLeitura | null;
   erroDaLeitura?: string | null;
-  destinoSugerido?: string | null;
+  destinoSugerido?: DestinoDoComprovante | string | null;
+  /** Frase pronta do servidor: "Legenda cita o projeto Festa Junina". */
+  motivoDaSugestao?: string | null;
   projetoSugeridoId?: string | null;
   projetoSugeridoNome?: string | null;
   categoriaSugeridaId?: string | null;
@@ -67,6 +72,10 @@ export interface ComprovanteRecebido {
   contaSugeridaId?: string | null;
   contaSugeridaNome?: string | null;
   expenseId?: string | null;
+  /** Preenchido quando foi lançado no projeto. */
+  comprovanteDoProjetoId?: string | null;
+  /** Preenchido quando foi conciliado com uma linha do extrato. */
+  movimentoBancarioId?: string | null;
   lancadoEm?: string | null;
   descartadoEm?: string | null;
   motivoDoDescarte?: string | null;
@@ -84,6 +93,44 @@ export interface ResumoDosComprovantes {
   aLancar: number;
   semLeitura: number;
   lancadosNoMes: number;
+  /** Os que a leitura não conseguiu ler; já estão contados em `aLancar`. */
+  comErroDeLeitura: number;
+  /** Quando chegou o mais antigo que ainda espera. */
+  maisAntigoEm?: string | null;
+  ultimoRecebidoEm?: string | null;
+}
+
+export interface LancamentoNoProjeto {
+  projetoId: string;
+  itemDoOrcamentoId?: string;
+  valor?: number;
+  /** aaaa-mm-dd */
+  data?: string;
+  descricao?: string;
+  categoriaFinanceiraId?: string;
+  contaFinanceiraId?: string;
+}
+
+/** Uma linha do extrato que pode ser o pagamento do comprovante. */
+export interface MovimentoSugerido {
+  id: string;
+  contaId: string;
+  contaNome?: string | null;
+  /** aaaa-mm-dd */
+  data: string;
+  /** O que saiu da conta, positivo. */
+  valor: number;
+  descricao: string;
+  /** Linha menos o valor lido (negativo: saiu menos do que o comprovante diz). */
+  diferencaDeValor?: number | null;
+  diasDeDiferenca?: number | null;
+}
+
+export interface ConciliacaoDoComprovante {
+  contaFinanceiraId?: string;
+  movimentoId: string;
+  /** Despesa já cadastrada que esta linha quita. Vazio cria a despesa paga a partir do comprovante. */
+  lancamentoId?: string;
 }
 
 export interface LancamentoDeDespesa {
@@ -116,6 +163,14 @@ export function confiancaBaixa(c: number | null | undefined): boolean {
   return c !== null && c !== undefined && c < CONFIANCA_BAIXA;
 }
 
+/** O destino sugerido, normalizado: sem sugestão (ou valor desconhecido), o caminho de sempre, Despesas. */
+export function destinoDe(c: Pick<ComprovanteRecebido, "destinoSugerido">): DestinoDoComprovante {
+  const d = c.destinoSugerido?.trim().toLowerCase();
+  if (d === "projeto") return "Projeto";
+  if (d === "conciliar") return "Conciliar";
+  return "Despesas";
+}
+
 export function ehPdf(c: Pick<ComprovanteRecebido, "contentType" | "arquivoNome">): boolean {
   return !!c.contentType?.toLowerCase().includes("pdf") || /\.pdf$/i.test(c.arquivoNome);
 }
@@ -128,6 +183,8 @@ export const ROTULO_DA_ORIGEM: Record<OrigemDoComprovante, string> = {
 // ------------------------------------------------------------------ filtros
 
 export type FiltroDeSituacao = "ALancar" | "Lancado" | "Descartado" | "Todos";
+/** Filtro da tela pelo destino sugerido; o servidor não filtra por isso, então vale para a página aberta. */
+export type FiltroDeDestino = "" | DestinoDoComprovante;
 
 export interface FiltrosDosComprovantes {
   situacao: FiltroDeSituacao;
@@ -210,6 +267,9 @@ export function useResumoDosComprovantes(habilitado = true) {
         aLancar: r?.aLancar ?? 0,
         semLeitura: r?.semLeitura ?? 0,
         lancadosNoMes: r?.lancadosNoMes ?? 0,
+        comErroDeLeitura: r?.comErroDeLeitura ?? r?.semLeitura ?? 0,
+        maisAntigoEm: r?.maisAntigoEm ?? null,
+        ultimoRecebidoEm: r?.ultimoRecebidoEm ?? null,
       };
     },
   });
@@ -219,13 +279,15 @@ export function useResumoDosComprovantes(habilitado = true) {
 
 function useEscrita<V, R = ComprovanteRecebido>(
   enviar: (v: V) => Promise<R>,
-  { despesa = false }: { despesa?: boolean } = {}
+  { despesa = false, financeiro = false }: { despesa?: boolean; financeiro?: boolean } = {}
 ) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: enviar,
     onSuccess: async () => {
       if (despesa) queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      // Projeto e conciliação mexem em despesas, projetos, conciliação e painel de uma vez.
+      if (financeiro) invalidarFinanceiro(queryClient);
       await queryClient.invalidateQueries({ queryKey: CHAVE });
     },
   });
@@ -261,6 +323,50 @@ export function useLancarDespesaDoComprovante() {
         "Não foi possível lançar a despesa."
       ),
     { despesa: true }
+  );
+}
+
+/** Lança o comprovante como compra de um projeto: cria a despesa paga no centro de custo do projeto. */
+export function useLancarNoProjeto() {
+  return useEscrita(
+    ({ id, dados }: { id: string; dados: LancamentoNoProjeto }) =>
+      financeiroJson<ComprovanteRecebido>(
+        `${BASE}/${id}/lancar-no-projeto`,
+        { method: "POST", body: JSON.stringify(dados) },
+        "Não foi possível lançar no projeto."
+      ),
+    { financeiro: true }
+  );
+}
+
+/** Até 5 saídas do extrato que parecem ser o pagamento deste comprovante. Vazio se não há valor ou data lidos. */
+export function useMovimentosSugeridos(id: string, contaFinanceiraId: string, habilitado = true) {
+  return useQuery({
+    queryKey: [...CHAVE, "movimentos-sugeridos", id, contaFinanceiraId],
+    enabled: habilitado,
+    queryFn: async (): Promise<MovimentoSugerido[]> => {
+      const q = contaFinanceiraId ? `?contaFinanceiraId=${encodeURIComponent(contaFinanceiraId)}` : "";
+      return (
+        (await financeiroJson<MovimentoSugerido[] | null>(
+          `${BASE}/${id}/movimentos-sugeridos${q}`,
+          {},
+          "Não foi possível procurar no extrato."
+        )) ?? []
+      );
+    },
+  });
+}
+
+/** Casa o comprovante com uma linha do extrato, criando a despesa paga ou usando uma já cadastrada. */
+export function useConciliarComprovante() {
+  return useEscrita(
+    ({ id, dados }: { id: string; dados: ConciliacaoDoComprovante }) =>
+      financeiroJson<ComprovanteRecebido>(
+        `${BASE}/${id}/conciliar`,
+        { method: "POST", body: JSON.stringify({ ...dados, tipo: "Despesa" }) },
+        "Não foi possível conciliar o comprovante."
+      ),
+    { financeiro: true }
   );
 }
 
