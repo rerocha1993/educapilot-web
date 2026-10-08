@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 import { PassoAparelho } from "./fluxo-da-batida";
 import { Folha } from "./folha";
-import { Aviso, BotaoGrande, EtiquetaDaSituacao } from "./pecas";
+import { Aviso, BotaoGrande, EtiquetaDaSituacao, SeloQr } from "./pecas";
 
 const PAGINA_EM_DIAS = 30;
 
@@ -82,7 +82,13 @@ export function FolhaDoHistorico({
                       className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-border bg-card px-3.5 text-left active:bg-muted"
                     >
                       <span className="font-mono text-lg font-semibold tabular-nums">{b.horaLocal}</span>
-                      <span className="min-w-0 flex-1 truncate text-[15px]">{rotuloDoTipo(b.tipo)}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px]">{rotuloDoTipo(b.tipo)}</span>
+                        {b.origem === "Solicitacao" && (
+                          <span className="block truncate text-xs text-muted-foreground">Pedido de ajuste</span>
+                        )}
+                      </span>
+                      {b.provaDePresenca === "Qr" && <SeloQr />}
                       {b.situacao !== "Normal" && <EtiquetaDaSituacao situacao={b.situacao} />}
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                     </button>

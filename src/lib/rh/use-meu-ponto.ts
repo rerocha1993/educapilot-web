@@ -6,7 +6,7 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/browser";
 
-import { mensagemDeErro, rhFetch, rhJson } from "./api";
+import { mensagemDeErro, rhDownload, rhFetch, rhJson } from "./api";
 import type { PosicaoDoAparelho } from "./ponto-do-aparelho";
 
 /**
@@ -28,6 +28,10 @@ export type TipoDeBatida = (typeof TIPOS_DE_BATIDA)[number];
 
 export const SITUACOES_DA_BATIDA = ["Normal", "Pendente", "Aprovada", "Recusada"] as const;
 export type SituacaoDaBatida = (typeof SITUACOES_DA_BATIDA)[number];
+
+/** Como a batida provou que a pessoa estava na escola: pelo QR da recepção ou sem prova (só GPS). */
+export const PROVAS_DE_PRESENCA = ["Nenhuma", "Qr"] as const;
+export type ProvaDePresenca = (typeof PROVAS_DE_PRESENCA)[number];
 
 /** Nome completo do tipo, para listas e comprovante. */
 export const ROTULO_DO_TIPO: Record<TipoDeBatida, string> = {
@@ -69,6 +73,9 @@ export const PALAVRA_DO_MOTIVO: Record<string, string> = {
   "aparelho-pendente": "celular ainda não aprovado",
   "fora-de-sequencia": "fora da ordem",
   "intervalo-curto": "intervalo curto",
+  "excesso-de-batidas": "batidas demais no dia",
+  "jornada-excedida": "jornada acima do limite",
+  "ajuste-solicitado": "pedido de ajuste do funcionário",
 };
 
 export function motivosEmPalavras(motivos: string[]): string {
@@ -93,6 +100,7 @@ export interface BatidaDoDia {
   situacao: SituacaoDaBatida;
   motivos: string[];
   nsr: string | null;
+  provaDePresenca: ProvaDePresenca;
 }
 
 export interface ConfiguracaoDoPontoCelular {
@@ -102,6 +110,12 @@ export interface ConfiguracaoDoPontoCelular {
   raioMetros: number;
   precisaoMaximaMetros: number;
   foraDaCercaBloqueia: boolean;
+  /** Passou deste número de batidas no dia, a batida fica pendente. */
+  maximoDeBatidasPorDia: number;
+  /** Jornada acima destas horas no dia fica pendente. */
+  jornadaMaximaHoras: number;
+  /** O servidor manda o comprovante por e-mail ao funcionário. */
+  enviarComprovantePorEmail: boolean;
 }
 
 export interface AparelhoDoFuncionario {
@@ -146,6 +160,7 @@ export interface ComprovanteDoPonto {
   funcionarioNome: string | null;
   escolaNome: string | null;
   mensagem: string | null;
+  provaDePresenca: ProvaDePresenca;
 }
 
 export interface BatidaDoHistorico {
@@ -157,7 +172,9 @@ export interface BatidaDoHistorico {
   motivos: string[];
   nsr: string | null;
   temFoto: boolean;
+  /** "Celular", "Ajuste", "Solicitacao"... o servidor decide. */
   origem: string | null;
+  provaDePresenca: ProvaDePresenca;
 }
 
 // ------------------------------------------------------------------ normalização
@@ -176,6 +193,8 @@ function instante(v: string): number {
   return Date.parse(/(Z|[+-]\d{2}:?\d{2})$/.test(v) ? v : `${v}Z`);
 }
 
+const provaDe = (v: unknown): ProvaDePresenca => (v === "Qr" ? "Qr" : "Nenhuma");
+
 const nsrDe = (v: unknown): string | null => (v === null || v === undefined || v === "" ? null : String(v));
 
 type Parcial<T> = { [K in keyof T]?: T[K] | null };
@@ -188,6 +207,7 @@ function batida(b: Parcial<BatidaDoDia> & { nsr?: unknown }): BatidaDoDia {
     situacao: (b.situacao ?? "Normal") as SituacaoDaBatida,
     motivos: b.motivos ?? [],
     nsr: nsrDe(b.nsr),
+    provaDePresenca: provaDe(b.provaDePresenca),
   };
 }
 
@@ -326,6 +346,9 @@ async function buscarMeuPonto(): Promise<RespostaDoMeuPonto> {
         raioMetros: b.configuracao?.raioMetros ?? 100,
         precisaoMaximaMetros: b.configuracao?.precisaoMaximaMetros ?? 100,
         foraDaCercaBloqueia: b.configuracao?.foraDaCercaBloqueia ?? false,
+        maximoDeBatidasPorDia: b.configuracao?.maximoDeBatidasPorDia ?? 6,
+        jornadaMaximaHoras: b.configuracao?.jornadaMaximaHoras ?? 12,
+        enviarComprovantePorEmail: b.configuracao?.enviarComprovantePorEmail ?? false,
       },
       escola: escola
         ? {
@@ -423,6 +446,8 @@ export async function assinarDesafio(
 
 export interface DadosDaBatida {
   tipo: TipoDeBatida;
+  /** Texto lido do QR da recepção; com ele a batida vale como "no local" mesmo sem GPS. */
+  codigoQr?: string | null;
   posicao: PosicaoDoAparelho | null;
   justificativa: string;
   resposta: AuthenticationResponseJSON;
@@ -439,6 +464,7 @@ export async function baterPonto(dados: DadosDaBatida): Promise<ComprovanteDoPon
     form.append("precisao", String(dados.posicao.precisao));
   }
   if (dados.justificativa.trim()) form.append("justificativa", dados.justificativa.trim());
+  if (dados.codigoQr) form.append("codigoQr", dados.codigoQr);
   form.append("resposta", JSON.stringify(dados.resposta));
   if (dados.foto) form.append("foto", dados.foto, dados.foto.name || "ponto.jpg");
 
@@ -458,6 +484,7 @@ export async function baterPonto(dados: DadosDaBatida): Promise<ComprovanteDoPon
     funcionarioNome: b.funcionarioNome ?? null,
     escolaNome: b.escolaNome ?? null,
     mensagem: b.mensagem ?? null,
+    provaDePresenca: provaDe(b.provaDePresenca),
   };
 }
 
@@ -497,6 +524,7 @@ export function useHistoricoDoPonto(de: string, ate: string, habilitado = true) 
             nsr: nsrDe(b.nsr),
             temFoto: b.temFoto ?? false,
             origem: b.origem ?? null,
+            provaDePresenca: provaDe(b.provaDePresenca),
           })
         )
         .sort((a, c) => c.data.localeCompare(a.data) || c.horaLocal.localeCompare(a.horaLocal));
@@ -518,6 +546,7 @@ export function comprovanteDoHistorico(b: BatidaDoHistorico, funcionarioNome: st
     funcionarioNome,
     escolaNome: null,
     mensagem: null,
+    provaDePresenca: b.provaDePresenca,
   };
 }
 
@@ -535,5 +564,57 @@ export function comprovanteDoDia(b: BatidaDoDia, dados: MeuPonto): ComprovanteDo
     funcionarioNome: dados.funcionario.nome,
     escolaNome: dados.escola?.nome ?? null,
     mensagem: null,
+    provaDePresenca: b.provaDePresenca,
   };
+}
+
+// ------------------------------------------------------------------ pedido de ajuste
+
+export interface PedidoDeAjuste {
+  /** yyyy-MM-dd; não futura e até 60 dias atrás. */
+  data: string;
+  tipo: TipoDeBatida;
+  /** HH:mm */
+  horaLocal: string;
+  /** 10 a 500 caracteres. */
+  justificativa: string;
+  /** A batida que o pedido corrige; sem ela, é uma batida que faltou. */
+  marcacaoOriginalId?: string | null;
+}
+
+export const AJUSTE_DIAS_PARA_TRAS = 60;
+export const JUSTIFICATIVA_MINIMA = 10;
+export const JUSTIFICATIVA_MAXIMA = 500;
+
+/**
+ * O funcionário pede que a gestão lance ou corrija uma batida. Fica pendente até alguém aprovar;
+ * aparece no histórico do próprio funcionário e na fila da gestão (origem "Solicitacao").
+ */
+export function useSolicitarAjuste() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (dados: PedidoDeAjuste) => {
+      const res = await chamar("/meu-ponto/solicitar-ajuste", {
+        method: "POST",
+        body: JSON.stringify({
+          data: dados.data,
+          tipo: dados.tipo,
+          horaLocal: dados.horaLocal,
+          justificativa: dados.justificativa.trim(),
+          marcacaoOriginalId: dados.marcacaoOriginalId ?? null,
+        }),
+      });
+      await exigirOk(res, "Não foi possível enviar o pedido de ajuste.");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [CHAVE] }),
+  });
+}
+
+/** Baixa o PDF do espelho de ponto do próprio funcionário. */
+export function baixarMeuEspelho(ano: number, mes: number): Promise<void> {
+  return rhDownload(
+    `/meu-ponto/espelho?mes=${mes}&ano=${ano}`,
+    `espelho-de-ponto-${ano}-${String(mes).padStart(2, "0")}.pdf`,
+    "Não foi possível baixar o seu espelho."
+  );
 }

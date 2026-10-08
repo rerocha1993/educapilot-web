@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { CircleAlert, CircleCheck, CircleX, Hourglass, Info } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleX, Hourglass, Info, QrCode } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,16 @@ export function EtiquetaDaSituacao({ situacao, className }: { situacao: Situacao
   );
 }
 
+/** Selo "QR": a batida foi provada pelo QR da recepção, não só pelo GPS. */
+export function SeloQr({ className }: { className?: string }) {
+  return (
+    <Badge variant="waiting" className={cn("h-6 px-2 text-xs", className)} title="Provada pelo QR da recepção">
+      <QrCode aria-hidden />
+      QR
+    </Badge>
+  );
+}
+
 /** Uma linha "rótulo — valor" do comprovante. */
 function Linha({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
   return (
@@ -93,10 +103,13 @@ export function ComprovanteDeBatida({
   comprovante,
   onFechar,
   recemRegistrado = false,
+  onPedirAjuste,
 }: {
   comprovante: ComprovanteDoPonto;
   onFechar: () => void;
   recemRegistrado?: boolean;
+  /** Mostra "Pedir ajuste desta batida"; sem ele, o botão não aparece. */
+  onPedirAjuste?: () => void;
 }) {
   const pendente = comprovante.situacao === "Pendente";
   const recusada = comprovante.situacao === "Recusada";
@@ -146,6 +159,11 @@ export function ComprovanteDeBatida({
         <Linha rotulo="Situação">
           <EtiquetaDaSituacao situacao={comprovante.situacao} />
         </Linha>
+        {comprovante.provaDePresenca === "Qr" && (
+          <Linha rotulo="Presença">
+            <SeloQr /> <span className="ml-1">Lida no QR da recepção</span>
+          </Linha>
+        )}
         <Linha rotulo="Número (NSR)">
           <span className="font-mono tabular-nums">{comprovante.nsr ?? "—"}</span>
         </Linha>
@@ -159,6 +177,11 @@ export function ComprovanteDeBatida({
       <Button variant="default" className="mt-4 h-12 w-full text-base max-md:h-12" onClick={onFechar}>
         Fechar
       </Button>
+      {onPedirAjuste && comprovante.id && (
+        <Button variant="ghost" className="mt-2 h-12 w-full text-base max-md:h-12" onClick={onPedirAjuste}>
+          Pedir ajuste desta batida
+        </Button>
+      )}
     </Folha>
   );
 }

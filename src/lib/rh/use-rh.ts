@@ -261,6 +261,12 @@ export interface ConfiguracaoDoRh {
   aprovarAparelhoNovo: boolean;
   /** Exige entrada, intervalo e saída na ordem. */
   exigirSequencia: boolean;
+  /** Mais batidas que isto no mesmo dia ficam pendentes (2 a 20). */
+  maximoDeBatidasPorDia: number;
+  /** Jornada acima destas horas no dia fica pendente (1 a 24). */
+  jornadaMaximaHoras: number;
+  /** Manda o comprovante da batida ao e-mail da ficha do funcionário. */
+  enviarComprovantePorEmail: boolean;
 }
 
 export interface RelatorioDoFuncionario {
@@ -750,6 +756,9 @@ export const CONFIGURACAO_PADRAO: ConfiguracaoDoRh = {
   intervaloMinimoEntreBatidasMinutos: 5,
   aprovarAparelhoNovo: true,
   exigirSequencia: true,
+  maximoDeBatidasPorDia: 6,
+  jornadaMaximaHoras: 12,
+  enviarComprovantePorEmail: false,
 };
 
 export function useConfiguracaoDoRh() {
@@ -778,6 +787,10 @@ export function useConfiguracaoDoRh() {
           b?.intervaloMinimoEntreBatidasMinutos ?? CONFIGURACAO_PADRAO.intervaloMinimoEntreBatidasMinutos,
         aprovarAparelhoNovo: b?.aprovarAparelhoNovo ?? CONFIGURACAO_PADRAO.aprovarAparelhoNovo,
         exigirSequencia: b?.exigirSequencia ?? CONFIGURACAO_PADRAO.exigirSequencia,
+        maximoDeBatidasPorDia: b?.maximoDeBatidasPorDia ?? CONFIGURACAO_PADRAO.maximoDeBatidasPorDia,
+        jornadaMaximaHoras: b?.jornadaMaximaHoras ?? CONFIGURACAO_PADRAO.jornadaMaximaHoras,
+        enviarComprovantePorEmail:
+          b?.enviarComprovantePorEmail ?? CONFIGURACAO_PADRAO.enviarComprovantePorEmail,
       } satisfies ConfiguracaoDoRh;
     },
   });

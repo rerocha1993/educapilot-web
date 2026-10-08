@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Camera, MapPin, Smartphone, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
-import { EtiquetaDaSituacao } from "@/components/ponto/pecas";
+import { EtiquetaDaSituacao, SeloQr } from "@/components/ponto/pecas";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +31,7 @@ const ROTULO_DA_ORIGEM: Record<string, string> = {
   Ajuste: "Ajuste da gestão",
   Manual: "Lançado à mão",
   Importado: "Importado",
+  Solicitacao: "Pedido do funcionário",
 };
 
 /** "a 35 m da escola" / "fora: 1,2 km" / "sem localização". */
@@ -101,7 +103,10 @@ export function CartaoDaMarcacao({
 
   const m = marcacao;
   const pendente = m.situacao === "Pendente";
+  const proveuPorQr = m.provaDePresenca === "Qr";
   const distancia = textoDaDistancia(m);
+  // Sem GPS mas com QR da recepção: a presença está provada, então não é um "sem localização" ruim.
+  if (proveuPorQr && m.distanciaDaEscolaMetros === null) distancia.texto = "Presença provada pelo QR da recepção";
 
   async function aprovarAgora() {
     try {
@@ -129,8 +134,14 @@ export function CartaoDaMarcacao({
             <span>{rotuloDoTipo(m.tipo)}</span>
             {comData && <span>· {formatarSoData(m.data)}</span>}
           </p>
-          <div className="mt-1.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <EtiquetaDaSituacao situacao={m.situacao} />
+            {proveuPorQr && <SeloQr />}
+            {m.origem === "Solicitacao" && (
+              <Badge variant="waiting" className="h-7 px-2.5 text-[12.5px]">
+                Pedido do funcionário
+              </Badge>
+            )}
           </div>
         </div>
       </div>

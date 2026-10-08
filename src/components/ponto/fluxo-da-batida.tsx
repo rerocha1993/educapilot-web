@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
-import { Camera, Fingerprint, LoaderCircle, MapPin, RefreshCw, Smartphone } from "lucide-react";
+import { Camera, CircleCheck, Fingerprint, LoaderCircle, MapPin, QrCode, RefreshCw, Smartphone } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,10 +37,13 @@ import {
   type TipoDeBatida,
 } from "@/lib/rh/use-meu-ponto";
 
+import { cn } from "@/lib/utils";
+
+import { LeitorDeQr } from "./leitor-de-qr";
 import { Aviso, BotaoGrande } from "./pecas";
 import { Folha } from "./folha";
 
-type Passo = "aparelho" | "localizacao" | "foto" | "confirmar";
+type Passo = "aparelho" | "localizacao" | "foto" | "qr" | "confirmar";
 
 interface FotoTirada {
   arquivo: File;
@@ -54,7 +57,10 @@ interface FotoTirada {
  *   1. aparelho     — só se este celular ainda não foi cadastrado (WebAuthn: criar a chave);
  *   2. localização  — explica, pede o GPS (15 s) e segue sem ele se a pessoa não quiser;
  *   3. foto         — só se a escola exige: selfie pela câmera da página ou pela do celular;
- *   4. confirmar    — resumo, aviso do que vai ficar pendente, justificativa e a biometria.
+ *   4. qr           — só se a pessoa escolheu "Ler o QR da recepção": no lugar do GPS, a câmera traseira
+ *                     lê o código da tela da recepção (que vence em segundos, por isso este passo vem
+ *                     logo antes de confirmar);
+ *   5. confirmar    — resumo, aviso do que vai ficar pendente, justificativa e a biometria.
  *
  * Nada trava a pessoa: localização e foto têm saída ("continuar sem"), que só deixa a batida
  * pendente para a gestão. O desafio da biometria é pedido ao entrar no passo 4, e não ao tocar no
@@ -96,6 +102,12 @@ export function FluxoDaBatida({
   const [justificativa, setJustificativa] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [semSaida, setSemSaida] = useState(false);
+
+  // QR da recepção: prova de presença no lugar do GPS. `usaQr` é a escolha da pessoa; `codigoQr` é
+  // o texto lido (vence em segundos, então é jogado fora quando o servidor o recusa).
+  const [usaQr, setUsaQr] = useState(false);
+  const [codigoQr, setCodigoQr] = useState<string | null>(null);
+  const [voltarDoQr, setVoltarDoQr] = useState<"localizacao" | "confirmar">("localizacao");
   const desafio = useRef<Promise<PublicKeyCredentialRequestOptionsJSON> | null>(null);
 
   useEffect(() => {
@@ -114,24 +126,60 @@ export function FluxoDaBatida({
       ? distanciaEmMetros(posicao, { latitude: escola.latitude as number, longitude: escola.longitude as number })
       : null;
   const foraDaCerca = configuracao.cercaAtiva && distancia !== null && distancia > configuracao.raioMetros;
-  const bloqueadaPelaCerca = foraDaCerca && configuracao.foraDaCercaBloqueia;
+  // Com o QR da recepção lido, o servidor dá a batida como no local: a cerca não bloqueia nem pende.
+  const bloqueadaPelaCerca = foraDaCerca && configuracao.foraDaCercaBloqueia && !codigoQr;
   const imprecisa = posicao !== null && posicao.precisao > configuracao.precisaoMaximaMetros;
 
   // O que fará esta batida ficar pendente. É só um aviso: quem decide é o servidor.
   const avisos: string[] = [];
   if (aparelhoPendente) avisos.push("Seu celular ainda não foi aprovado pela escola.");
-  if (!posicao) avisos.push("Sem localização: a escola não vai saber onde você estava.");
-  else if (foraDaCerca && distancia !== null) avisos.push(`Você está a ${formatarDistancia(distancia)} da escola.`);
-  else if (imprecisa) avisos.push(`A localização está imprecisa (erro de ${formatarDistancia(posicao.precisao)}).`);
+  if (!codigoQr) {
+    if (!posicao) avisos.push("Sem localização: a escola não vai saber onde você estava.");
+    else if (foraDaCerca && distancia !== null) avisos.push(`Você está a ${formatarDistancia(distancia)} da escola.`);
+    else if (imprecisa) avisos.push(`A localização está imprecisa (erro de ${formatarDistancia(posicao.precisao)}).`);
+  }
   if (configuracao.exigirFoto && !foto) avisos.push("Sem foto.");
 
   // ---------------------------------------------------------------- transições
 
   function prepararConfirmacao() {
+    // Escolheu o QR e ainda não leu: a leitura é o último passo antes da biometria, para o código
+    // (que vence em segundos) chegar ao servidor ainda válido.
+    if (usaQr && !codigoQr) {
+      setPasso("qr");
+      return;
+    }
+    irParaConfirmar();
+  }
+
+  function irParaConfirmar() {
     // Pede o desafio já, para a biometria abrir no mesmo instante do toque. O erro de verdade
     // aparece quando a pessoa confirma.
     novoDesafio();
     setPasso("confirmar");
+  }
+
+  /** "Ler o QR da recepção": pula o GPS e segue para a foto (se a escola pede) e para a leitura. */
+  function escolherQr(de: "localizacao" | "confirmar") {
+    setUsaQr(true);
+    setVoltarDoQr(de);
+    setErro(null);
+    setPosicao(null);
+    setPasso(configuracao.exigirFoto && !foto ? "foto" : "qr");
+  }
+
+  function aoLerQr(texto: string) {
+    setCodigoQr(texto);
+    setErro(null);
+    irParaConfirmar();
+  }
+
+  function desistirDoQr() {
+    setUsaQr(false);
+    setCodigoQr(null);
+    setErro(null);
+    if (voltarDoQr === "confirmar") irParaConfirmar();
+    else setPasso("localizacao");
   }
 
   function depoisDaLocalizacao(fotoAtual: FotoTirada | null) {
@@ -210,12 +258,25 @@ export function FluxoDaBatida({
       const comprovante = await baterPonto({
         tipo,
         posicao,
-        justificativa: foraDaCerca || !posicao || imprecisa || aparelhoPendente ? justificativa : "",
+        codigoQr,
+        justificativa: (codigoQr ? aparelhoPendente : foraDaCerca || !posicao || imprecisa || aparelhoPendente)
+          ? justificativa
+          : "",
         resposta,
         foto: foto?.arquivo ?? null,
       });
       onConcluir(comprovante);
     } catch (e) {
+      // O servidor recusou o código (venceu, é inválido ou esta pessoa já usou): joga fora e pede
+      // outra leitura, com a frase dele. 409 também é "fora de sequência", então só vale como QR
+      // quando a frase fala do código.
+      if (codigoQr && e instanceof ErroDoPonto && ehErroDoQr(e)) {
+        setCodigoQr(null);
+        setErro(e.message);
+        novoDesafio();
+        return;
+      }
+
       if (e instanceof ErroDoPonto && e.status === 409) {
         // Sequência ou intervalo: a tela do dia estava velha. Só resta fechar e reler.
         setSemSaida(true);
@@ -253,7 +314,9 @@ export function FluxoDaBatida({
             ? "Passo 1: onde você está"
             : passo === "foto"
               ? "Passo 2: uma selfie rápida"
-              : "Confira e confirme"
+              : passo === "qr"
+                ? "Ler o QR da recepção"
+                : "Confira e confirme"
       }
       onFechar={onFechar}
       bloqueada={enviando}
@@ -285,6 +348,7 @@ export function FluxoDaBatida({
               onPermitir={buscarLocalizacao}
               onSemLocalizacao={seguirSemLocalizacao}
               onContinuarAssim={() => depoisDaLocalizacao(foto)}
+              onLerQr={() => escolherQr("localizacao")}
             />
           )}
 
@@ -297,6 +361,8 @@ export function FluxoDaBatida({
             />
           )}
 
+          {passo === "qr" && <LeitorDeQr onLido={aoLerQr} onVoltar={desistirDoQr} />}
+
           {passo === "confirmar" && (
             <PassoConfirmar
               tipo={tipo}
@@ -307,6 +373,19 @@ export function FluxoDaBatida({
               raioMetros={configuracao.raioMetros}
               imprecisa={imprecisa}
               foto={foto}
+              usaQr={usaQr}
+              codigoQr={codigoQr}
+              onLerQr={() => escolherQr("confirmar")}
+              onLerQrDeNovo={() => {
+                setVoltarDoQr("confirmar");
+                setErro(null);
+                setPasso("qr");
+              }}
+              onSemQr={() => {
+                setUsaQr(false);
+                setCodigoQr(null);
+                setErro(null);
+              }}
               avisos={avisos}
               justificativa={justificativa}
               onJustificativa={setJustificativa}
@@ -324,6 +403,12 @@ export function FluxoDaBatida({
       )}
     </Folha>
   );
+}
+
+function ehErroDoQr(e: ErroDoPonto): boolean {
+  if (e.status === 422) return e.distanciaMetros == null;
+  if (e.status === 409) return /c[óo]digo|qr/i.test(e.message);
+  return false;
 }
 
 // ------------------------------------------------------------------ passo 0: cadastrar o celular
@@ -434,6 +519,7 @@ function PassoLocalizacao({
   onPermitir,
   onSemLocalizacao,
   onContinuarAssim,
+  onLerQr,
 }: {
   permissao: "granted" | "denied" | "prompt" | "desconhecida";
   buscando: boolean;
@@ -443,6 +529,7 @@ function PassoLocalizacao({
   onPermitir: () => void;
   onSemLocalizacao: () => void;
   onContinuarAssim: () => void;
+  onLerQr: () => void;
 }) {
   const negada = permissao === "denied";
 
@@ -497,6 +584,10 @@ function PassoLocalizacao({
               )}
             </BotaoGrande>
           )}
+          <BotaoGrande variant="outline" onClick={onLerQr}>
+            <QrCode className="size-5" aria-hidden />
+            Ler o QR da recepção
+          </BotaoGrande>
           {imprecisa ? (
             <BotaoGrande variant="outline" onClick={onContinuarAssim}>
               Continuar assim mesmo
@@ -709,6 +800,11 @@ function PassoConfirmar({
   raioMetros,
   imprecisa,
   foto,
+  usaQr,
+  codigoQr,
+  onLerQr,
+  onLerQrDeNovo,
+  onSemQr,
   avisos,
   justificativa,
   onJustificativa,
@@ -726,6 +822,11 @@ function PassoConfirmar({
   raioMetros: number;
   imprecisa: boolean;
   foto: FotoTirada | null;
+  usaQr: boolean;
+  codigoQr: string | null;
+  onLerQr: () => void;
+  onLerQrDeNovo: () => void;
+  onSemQr: () => void;
   avisos: string[];
   justificativa: string;
   onJustificativa: (texto: string) => void;
@@ -735,12 +836,28 @@ function PassoConfirmar({
   onAtualizarLocal: () => void;
   onFechar: () => void;
 }) {
-  const pendente = avisos.length > 0;
+  // Escolheu o QR e o código foi recusado (ou ainda não veio): sem ele não dá para confirmar.
+  const faltaOQr = usaQr && !codigoQr;
+  const pendente = avisos.length > 0 && !faltaOQr;
+  const podeOferecerQr = !usaQr && (!posicao || foraDaCerca || imprecisa);
 
   return (
     <div className="flex flex-col gap-4">
       <ul className="grid gap-2 text-[15px]">
-        <li className="flex items-center gap-3">
+        {usaQr && (
+          <li className="flex items-center gap-3">
+            <QrCode className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+            {codigoQr ? (
+              <span className="flex items-center gap-1.5 font-medium text-success">
+                <CircleCheck className="size-4" aria-hidden />
+                Código lido ✓
+              </span>
+            ) : (
+              <span className="text-muted-foreground">QR da recepção ainda não lido</span>
+            )}
+          </li>
+        )}
+        <li className={cn("flex items-center gap-3", usaQr && "hidden")}>
           <MapPin className="size-5 shrink-0 text-muted-foreground" aria-hidden />
           {posicao ? (
             distancia !== null ? (
@@ -818,6 +935,16 @@ function PassoConfirmar({
           <BotaoGrande variant="default" onClick={onFechar}>
             Fechar
           </BotaoGrande>
+        ) : faltaOQr ? (
+          <>
+            <BotaoGrande variant="action" onClick={onLerQrDeNovo}>
+              <QrCode className="size-5" aria-hidden />
+              {erro ? "Ler o QR de novo" : "Ler o QR da recepção"}
+            </BotaoGrande>
+            <BotaoGrande variant="ghost" onClick={onSemQr}>
+              Registrar sem o QR
+            </BotaoGrande>
+          </>
         ) : (
           <>
             <BotaoGrande variant="action" onClick={onConfirmar}>
@@ -828,6 +955,12 @@ function PassoConfirmar({
               O celular vai pedir sua digital, seu rosto ou o bloqueio de tela para confirmar o{" "}
               {ROTULO_DO_TIPO[tipo].toLowerCase()}.
             </p>
+            {podeOferecerQr && (
+              <BotaoGrande variant="outline" onClick={onLerQr}>
+                <QrCode className="size-5" aria-hidden />
+                Ler o QR da recepção
+              </BotaoGrande>
+            )}
           </>
         )}
         {bloqueada && (
