@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Inbox } from "lucide-react";
+import { Trash2, Inbox, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BotaoDeExportar } from "@/components/finance/botao-de-exportar";
+import { DialogDeImportacao } from "@/components/finance/dialog-de-importacao";
 import { FinanceNav } from "@/components/finance/finance-nav";
+import {
+  SeletorDeCentroDeCusto,
+  SeletorDoPlanoDeContas,
+} from "@/components/finance/seletor-do-plano-de-contas";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import {
@@ -38,15 +44,26 @@ import {
   useBudgetComparativo,
   useCreateBudget,
   useDeleteBudget,
-  RECEITA_CATEGORIES,
-  DESPESA_CATEGORIES,
 } from "@/lib/finance/use-budgets";
+import { exportarOrcamentoDoAno } from "@/lib/finance/use-importacao";
 
 function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const EMPTY_FORM = { tipo: "Despesa" as "Receita" | "Despesa", categoria: "2", mes: "", valorPlanejado: "" };
+const EMPTY_FORM = {
+  tipo: "Despesa" as "Receita" | "Despesa",
+  categoriaFinanceiraId: "",
+  centroDeCustoId: "",
+  mes: "",
+  valorPlanejado: "",
+};
+
+/** O centro de custo, em linha pequena, quando o orçamento é de um centro só. */
+function CentroDeCustoDoOrcamento({ nome }: { nome?: string | null }) {
+  if (!nome) return null;
+  return <span className="block text-xs font-normal text-muted-foreground">Centro de custo: {nome}</span>;
+}
 
 export default function OrcamentoPage() {
   const now = new Date();
@@ -58,19 +75,19 @@ export default function OrcamentoPage() {
   const deleteBudget = useDeleteBudget();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importando, setImportando] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
-
-  const categorias = form.tipo === "Receita" ? RECEITA_CATEGORIES : DESPESA_CATEGORIES;
 
   async function handleCreate() {
     const valor = Number(form.valorPlanejado.replace(",", "."));
-    if (!valor) return;
+    if (!valor || !form.categoriaFinanceiraId) return;
     try {
       await createBudget.mutateAsync({
         ano,
         mes: form.mes ? Number(form.mes) : null,
         tipo: form.tipo,
-        categoria: Number(form.categoria),
+        categoriaFinanceiraId: form.categoriaFinanceiraId,
+        centroDeCustoId: form.centroDeCustoId || null,
         valorPlanejado: valor,
       });
       toast.success("Orçamento cadastrado.");
@@ -103,9 +120,16 @@ export default function OrcamentoPage() {
         }
         apoio="Planejado x realizado por categoria — realizado é sempre dinheiro que efetivamente entrou/saiu (recebido/pago), não o previsto."
         acoes={
-          <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
-            + Novo orçamento
-          </Button>
+          <>
+            <Button variant="outline" className="flex-1 md:flex-none" onClick={() => setImportando(true)}>
+              <Upload />
+              Importar
+            </Button>
+            <BotaoDeExportar className="flex-1 md:flex-none" onExportar={() => exportarOrcamentoDoAno(ano)} />
+            <Button variant="action" className="w-full md:w-auto" onClick={() => setDialogOpen(true)}>
+              + Novo orçamento
+            </Button>
+          </>
         }
       />
 
@@ -133,12 +157,15 @@ export default function OrcamentoPage() {
           const ruim = c.tipo === "Receita" ? c.variacao < 0 : c.variacao > 0;
           return (
             <div
-              key={`${c.tipo}-${c.categoria}`}
+              key={`${c.tipo}-${c.categoria}-${c.categoriaFinanceiraId ?? ""}-${c.centroDeCustoId ?? ""}`}
               className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3.5 text-sm"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <Badge variant={c.tipo === "Receita" ? "default" : "secondary"}>{c.tipo}</Badge>
-                <span className="min-w-0 font-medium break-words">{c.categoriaLabel}</span>
+                <span className="min-w-0 font-medium break-words">
+                  {c.categoriaLabel}
+                  <CentroDeCustoDoOrcamento nome={c.centroDeCustoNome} />
+                </span>
               </div>
               <div className="flex flex-wrap justify-between gap-x-4 gap-y-2">
                 <div>
@@ -205,11 +232,14 @@ export default function OrcamentoPage() {
               // Despesa: variação positiva é ruim (gastou mais que o planejado).
               const ruim = c.tipo === "Receita" ? c.variacao < 0 : c.variacao > 0;
               return (
-                <TableRow key={`${c.tipo}-${c.categoria}`}>
+                <TableRow key={`${c.tipo}-${c.categoria}-${c.categoriaFinanceiraId ?? ""}-${c.centroDeCustoId ?? ""}`}>
                   <TableCell>
                     <Badge variant={c.tipo === "Receita" ? "default" : "secondary"}>{c.tipo}</Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{c.categoriaLabel}</TableCell>
+                  <TableCell className="font-medium whitespace-normal">
+                    {c.categoriaLabel}
+                    <CentroDeCustoDoOrcamento nome={c.centroDeCustoNome} />
+                  </TableCell>
                   <TableCell className="text-right font-mono text-sm tabular-nums">
                     {formatCurrency(c.planejado)}
                   </TableCell>
@@ -247,7 +277,11 @@ export default function OrcamentoPage() {
                 <Badge variant={b.tipo === "Receita" ? "default" : "secondary"} className="mr-2">
                   {b.tipo}
                 </Badge>
-                {b.categoriaLabel} ·{" "}
+                {b.categoriaLabel}
+                {b.centroDeCustoNome && (
+                  <span className="text-muted-foreground"> (centro: {b.centroDeCustoNome})</span>
+                )}{" "}
+                ·{" "}
                 {b.mes ? (
                   <span className="font-mono tabular-nums">
                     {String(b.mes).padStart(2, "0")}/{b.ano}
@@ -267,6 +301,8 @@ export default function OrcamentoPage() {
         </div>
       </div>
 
+      {importando && <DialogDeImportacao tipo="orcamento" onFechar={() => setImportando(false)} />}
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -278,7 +314,13 @@ export default function OrcamentoPage() {
               <Select
                 value={form.tipo}
                 onValueChange={(v) =>
-                  v && setForm((f) => ({ ...f, tipo: v as "Receita" | "Despesa", categoria: v === "Receita" ? "1" : "2" }))
+                  v &&
+                  setForm((f) => ({
+                    ...f,
+                    tipo: v as "Receita" | "Despesa",
+                    // A categoria é de um tipo só: trocar o tipo limpa a escolha.
+                    categoriaFinanceiraId: v === f.tipo ? f.categoriaFinanceiraId : "",
+                  }))
                 }
               >
                 <SelectTrigger className="w-full">
@@ -290,26 +332,15 @@ export default function OrcamentoPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-[5px]">
-              <Label className="text-xs text-muted-foreground">Categoria</Label>
-              <Select
-                value={form.categoria}
-                onValueChange={(v) => v && setForm((f) => ({ ...f, categoria: String(v) }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {() => categorias.find((c) => String(c.value) === form.categoria)?.label}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categorias.map((c) => (
-                    <SelectItem key={c.value} value={String(c.value)}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SeletorDoPlanoDeContas
+              tipo={form.tipo}
+              valor={form.categoriaFinanceiraId}
+              onChange={(id) => setForm((f) => ({ ...f, categoriaFinanceiraId: id }))}
+            />
+            <SeletorDeCentroDeCusto
+              valor={form.centroDeCustoId}
+              onChange={(id) => setForm((f) => ({ ...f, centroDeCustoId: id }))}
+            />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-[5px]">
                 <Label className="text-xs text-muted-foreground">Valor planejado</Label>
@@ -341,7 +372,10 @@ export default function OrcamentoPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreate} disabled={createBudget.isPending || !form.valorPlanejado}>
+            <Button
+              onClick={handleCreate}
+              disabled={createBudget.isPending || !form.valorPlanejado || !form.categoriaFinanceiraId}
+            >
               {createBudget.isPending ? "Salvando..." : "Cadastrar"}
             </Button>
           </DialogFooter>

@@ -3,35 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useMeuAcesso } from "@/lib/access/use-acessos";
-import { podeVerRota } from "@/lib/access/pode-ver";
+import { useSecoesVisiveis } from "@/lib/access/use-secoes-visiveis";
+import { secaoAtiva } from "@/lib/kernel/secoes-do-modulo";
 
-const ITEMS = [
-  { href: "/events", label: "Dashboard" },
-  { href: "/events/grupos", label: "Grupos de venda" },
-  { href: "/events/produtos", label: "Produtos" },
-  { href: "/events/pedidos", label: "Pedidos" },
-];
-
+/**
+ * Abas de Eventos & Vendas, só no celular. No computador as seções vivem na barra lateral
+ * (catálogo em secoes-do-modulo.ts) e esta faixa não renderiza nada.
+ */
 export function EventsNav() {
   const pathname = usePathname();
-  const { data: meuAcesso, isLoading, isError } = useMeuAcesso();
-
-  // Só as abas que a pessoa pode abrir — mesma regra da Rotina.
-  const itens = isLoading || isError ? [] : ITEMS.filter((item) => podeVerRota(meuAcesso, item.href));
+  // Só as seções que a pessoa pode abrir — mesma regra da Rotina.
+  const itens = useSecoesVisiveis("/events");
+  const ativa = secaoAtiva(itens, pathname);
 
   return (
     // Pílulas do guia: faixa cinza, ativo em branco com sombra leve. A faixa tem largura de
     // conteúdo (w-max) para o rolar horizontal do celular não deixar uma sobra cinza à direita.
-    <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0">
+    <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:hidden print:hidden">
       <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
         {itens.map((item) => {
-          const active =
-            pathname === item.href || (item.href !== "/events" && pathname.startsWith(`${item.href}/`));
+          const active = ativa === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "shrink-0 rounded-[9px] px-3.5 py-2 text-[13.5px] whitespace-nowrap transition-colors",
                 active

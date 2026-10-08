@@ -4,6 +4,8 @@ import {
   SquareKanban,
   ShoppingBag,
   FileStack,
+  HeartHandshake,
+  Users,
   Wallet,
 } from "lucide-react";
 
@@ -39,6 +41,8 @@ export function slugDeAcesso(href: string): string | null {
   if (href.startsWith("/events")) return "events";
   if (href.startsWith("/portaria")) return "reception";
   if (href.startsWith("/matriculas")) return "matriculas";
+  if (href.startsWith("/rh")) return "rh";
+  if (href.startsWith("/relacionamento")) return "relacionamento";
   return null;
 }
 
@@ -52,21 +56,12 @@ export const NAV_ITEMS = [
   { href: "/events", label: "Eventos & Vendas", icon: ShoppingBag, moduleSlug: "events" },
   { href: "/flow", label: "Fluxos", icon: FileStack, moduleSlug: "flow" },
   { href: "/finance", label: "Financeiro", icon: Wallet, moduleSlug: "finance" },
+  { href: "/rh", label: "RH", icon: Users, moduleSlug: "rh" },
+  { href: "/relacionamento", label: "Relacionamento", icon: HeartHandshake, moduleSlug: "relacionamento" },
 ] as const;
 
-/**
- * Subitens que abrem embaixo do módulo quando a pessoa está dentro dele.
- *
- * Fluxos virou dois produtos na mesma caixa: o quadro de tarefas da equipe e os formulários da
- * família. Oito pílulas numa faixa só era uma lista, não uma navegação — aqui a barra separa as
- * duas metades, e as pílulas de dentro da tela passam a mostrar só as funções da metade aberta.
- */
-export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]> = {
-  "/flow": [
-    { href: "/flow/tarefas", label: "Quadro" },
-    { href: "/flow", label: "Formulários" },
-  ],
-};
+// As seções de cada ferramenta (o que eram as abas dentro das telas) moram em
+// secoes-do-modulo.ts; a barra lateral mostra as da ferramenta aberta.
 
 /**
  * Por onde entrar em cada módulo, na ordem de preferência.
@@ -76,8 +71,41 @@ export const SUBITENS_DO_MENU: Record<string, { href: string; label: string }[]>
  * professora com só o Quadro, em Fluxos. O menu leva para a primeira destas que a pessoa pode abrir.
  */
 export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
-  "/": ["/", "/ocorrencias", "/checklist", "/planejamento-semanal", "/materiais", "/reunioes", "/relatorios"],
+  "/": [
+    "/",
+    "/ocorrencias",
+    "/checklist",
+    "/planejamento-semanal",
+    "/materiais",
+    "/reunioes",
+    "/calendario",
+    "/relatorios",
+  ],
   "/flow": ["/flow", "/flow/tarefas", "/flow/respostas", "/admin/contratos", "/flow/relatorios", "/flow/referencias"],
+  // A visão geral do RH é aberta a qualquer área do módulo; as demais entradas são para quem tem
+  // só uma área (a secretaria que lança ponto e nada mais, por exemplo).
+  "/rh": [
+    "/rh",
+    "/rh/funcionarios",
+    "/rh/ponto",
+    "/rh/atestados",
+    "/rh/afastamentos",
+    "/rh/documentos",
+    "/rh/relatorios",
+    "/rh/configuracao",
+  ],
+  // A entrada é a lista de avisos; quem só tem Cronograma ou Famílias cai na primeira que abre.
+  "/relacionamento": [
+    "/relacionamento/avisos",
+    "/relacionamento/cronograma",
+    "/relacionamento/familias",
+    "/relacionamento/atividades",
+    "/relacionamento/mural",
+    "/relacionamento/chat",
+    "/relacionamento/pagamentos",
+    "/relacionamento/loja",
+    "/relacionamento/configuracao",
+  ],
 };
 
 /**
@@ -97,8 +125,8 @@ const ROTAS_HOSPEDADAS: { prefixo: string; dono: string }[] = [
  * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.
  */
 export const GRUPOS_DO_MENU = [
-  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/portaria", "/matriculas", "/flow", "/finance"] },
-  { titulo: "Escola", hrefs: [ADMIN_HREF, "/events"] },
+  { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/relacionamento", "/portaria", "/matriculas", "/flow", "/finance"] },
+  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/events"] },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */

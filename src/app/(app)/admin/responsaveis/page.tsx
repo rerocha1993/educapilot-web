@@ -45,8 +45,9 @@ import {
 import { useAllStudents } from "@/lib/kernel/use-students";
 import { EnderecosDoResponsavel } from "@/components/registry/enderecos-do-responsavel";
 import { AcessoDoResponsavel } from "@/components/reception/acesso-do-responsavel";
+import { formatarSoData } from "@/lib/format/date";
 
-const EMPTY_FORM = { fullName: "", cpf: "", email: "", phone: "" };
+const EMPTY_FORM = { fullName: "", cpf: "", email: "", phone: "", dataDeNascimento: "" };
 const EMPTY_VINCULO_FORM = { studentId: "", parentesco: "", responsavelFinanceiro: true };
 
 /** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
@@ -64,6 +65,62 @@ function SemResponsaveis({ semBorda = false }: { semBorda?: boolean }) {
       <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
         Nenhum responsável cadastrado ainda.
       </p>
+    </div>
+  );
+}
+
+/**
+ * Data de nascimento no detalhe do responsável: mostra a data e deixa corrigir ou preencher.
+ *
+ * Esta tela não tinha edição nenhuma — um responsável já cadastrado só ganharia a data apagando e
+ * recadastrando. O PUT troca o registro inteiro, então os demais campos vão como já estão.
+ * A data é só texto "yyyy-MM-dd" ponta a ponta: nada passa por Date.
+ */
+function NascimentoDoResponsavel({ guardian }: { guardian: GuardianDto }) {
+  const saveGuardian = useSaveGuardian();
+  const atual = guardian.dataDeNascimento?.slice(0, 10) ?? "";
+  const [valor, setValor] = useState(atual);
+
+  async function salvar() {
+    try {
+      await saveGuardian.mutateAsync({
+        id: guardian.id,
+        fullName: guardian.fullName,
+        cpf: guardian.cpf,
+        email: guardian.email,
+        phone: guardian.phone,
+        dataDeNascimento: valor || null,
+      });
+      toast.success("Data de nascimento salva.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar a data de nascimento.");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+      <p className="text-sm font-medium">
+        Nascimento:{" "}
+        <span className="font-mono font-normal tabular-nums text-muted-foreground">
+          {atual ? formatarSoData(atual) : "não informado"}
+        </span>
+      </p>
+      <div className="flex items-center gap-2">
+        <Input
+          type="date"
+          aria-label="Data de nascimento"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={salvar}
+          disabled={saveGuardian.isPending || valor === atual}
+        >
+          {saveGuardian.isPending ? "Salvando..." : "Salvar"}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -109,6 +166,7 @@ export default function ResponsaveisPage() {
         cpf: form.cpf.trim() || undefined,
         email: form.email.trim() || undefined,
         phone: form.phone.trim() || undefined,
+        dataDeNascimento: form.dataDeNascimento || null,
       });
       toast.success("Responsável cadastrado.");
       setDialogOpen(false);
@@ -306,6 +364,16 @@ export default function ResponsaveisPage() {
               <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">E-mail</Label>
               <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             </div>
+            <div className="flex flex-col gap-[5px]">
+              <Label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Data de nascimento (opcional)
+              </Label>
+              <Input
+                type="date"
+                value={form.dataDeNascimento}
+                onChange={(e) => setForm((f) => ({ ...f, dataDeNascimento: e.target.value }))}
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               CPF é necessário só se for gerar cobrança real (Asaas) pra este
               responsável — sem CPF o plano de mensalidade continua funcionando
@@ -334,6 +402,8 @@ export default function ResponsaveisPage() {
                 <span className="font-mono tabular-nums">{detail.cpf ?? "CPF não cadastrado"}</span> ·{" "}
                 {detail.email ?? "—"} · <span className="font-mono tabular-nums">{detail.phone ?? "—"}</span>
               </div>
+
+              <NascimentoDoResponsavel key={`${detail.id}-${detail.dataDeNascimento ?? ""}`} guardian={detail} />
 
               <EnderecosDoResponsavel guardianId={detail.id} />
 

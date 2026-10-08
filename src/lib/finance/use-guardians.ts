@@ -17,6 +17,8 @@ export interface GuardianDto {
   cpf: string | null;
   email: string | null;
   phone: string | null;
+  /** Só-data "yyyy-MM-dd", sem hora e sem fuso. Ausente em resposta de API antiga. */
+  dataDeNascimento?: string | null;
   temCadastroAsaas: boolean;
   vinculos: StudentGuardianDto[] | null;
 }
@@ -38,13 +40,22 @@ export interface SaveGuardianInput {
   cpf?: string | null;
   email?: string | null;
   phone?: string | null;
+  /** "yyyy-MM-dd" ou vazio/null para limpar. */
+  dataDeNascimento?: string | null;
 }
 
 export function useSaveGuardian() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: SaveGuardianInput) => {
-      const body = { fullName: input.fullName, cpf: input.cpf ?? null, email: input.email ?? null, phone: input.phone ?? null };
+      const body = {
+        fullName: input.fullName,
+        cpf: input.cpf ?? null,
+        email: input.email ?? null,
+        phone: input.phone ?? null,
+        // Campo de data vazio chega como "": o backend espera null para "sem data".
+        dataDeNascimento: input.dataDeNascimento || null,
+      };
       if (input.id) {
         const result = await financeApi.PUT("/api/Guardians/{id}", { params: { path: { id: input.id } }, body });
         unwrapApiResponse(result, "Não foi possível salvar o responsável.");

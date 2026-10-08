@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "@/lib/auth/session";
+import { invalidarFinanceiro } from "./invalidar-financeiro";
 
 /**
  * Conciliação bancária — fase 2 do financeiro.
@@ -27,6 +28,10 @@ export interface SugestaoDeLancamento {
   pagamento?: string | null;
   categoria?: string | null;
   diasDeDiferenca: number;
+  /** F5: o valor do extrato difere do lançamento (juros, multa ou desconto). */
+  valorDiferente?: boolean;
+  /** Extrato menos lançamento; ausente quando o valor é igual. */
+  diferenca?: number | null;
 }
 
 export interface MovimentoDoExtrato {
@@ -45,6 +50,9 @@ export interface MovimentoDoExtrato {
   regraNome?: string | null;
   regraCategoriaId?: string | null;
   regraCategoriaNome?: string | null;
+  /** F6: o arquivo de um comprovante foi anexado a esta linha (veio da Caixa de comprovantes). */
+  temComprovante?: boolean;
+  comprovanteNome?: string | null;
 }
 
 export interface PainelDaConciliacao {
@@ -126,12 +134,8 @@ export function useImportarExtrato() {
       corpo.append("arquivo", arquivo);
       return chamar<ResultadoDaImportacao>(`/${contaId}/importar`, { method: "POST", body: corpo });
     },
-    onSuccess: () => {
-      // A importação pode ter dado baixa em lançamentos: receitas, despesas e saldos mudam junto.
-      queryClient.invalidateQueries({ queryKey: ["finance"] });
-      queryClient.invalidateQueries({ queryKey: ["revenues"] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-    },
+    // A importação pode ter dado baixa em lançamentos: receitas, despesas e saldos mudam junto.
+    onSuccess: () => invalidarFinanceiro(queryClient),
   });
 }
 
@@ -141,21 +145,60 @@ function useAcaoNoMovimento<TVariaveis>(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: executar,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["finance"] });
-      queryClient.invalidateQueries({ queryKey: ["revenues"] });
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-    },
+    onSuccess: () => invalidarFinanceiro(queryClient),
   });
 }
 
+/**
+ * Casa a linha do extrato com um lançamento. Quando o valor do extrato difere do lançamento, a
+ * divisão da diferença (juros, multa, desconto) vai explícita; sem ela, o servidor divide sozinho.
+ */
 export function useConciliar() {
-  return useAcaoNoMovimento(({ id, tipo, lancamentoId }: { id: string; tipo: string; lancamentoId: string }) =>
-    chamar<void>(`/movimentos/${id}/conciliar`, {
-      method: "POST",
-      body: JSON.stringify({ tipo, lancamentoId }),
-    })
+  return useAcaoNoMovimento(
+    ({
+      id,
+      tipo,
+      lancamentoId,
+      juros,
+      multa,
+      desconto,
+    }: {
+      id: string;
+      tipo: string;
+      lancamentoId: string;
+      juros?: number;
+      multa?: number;
+      desconto?: number;
+    }) =>
+      chamar<void>(`/movimentos/${id}/conciliar`, {
+        method: "POST",
+        body: JSON.stringify({ tipo, lancamentoId, juros, multa, desconto }),
+      })
   );
+}
+
+export interface BuscaDeLancamentos {
+  tipo: "Receita" | "Despesa";
+  busca: string;
+  /** Em reais; traz só os lançamentos até 30% (ou R$ 50) distantes deste valor. Nulo não filtra. */
+  valorAproximado: number | null;
+  /** Só os lançamentos desta conta. Vazio traz de todas. */
+  contaId?: string | null;
+}
+
+/** "Procurar outro lançamento": até 50 lançamentos em aberto e ainda não casados. */
+export function useLancamentosParaConciliar(filtro: BuscaDeLancamentos) {
+  const params = new URLSearchParams({ tipo: filtro.tipo });
+  if (filtro.busca.trim()) params.set("busca", filtro.busca.trim());
+  if (filtro.contaId) params.set("contaId", filtro.contaId);
+  if (filtro.valorAproximado != null && filtro.valorAproximado > 0) {
+    params.set("valorAproximado", String(filtro.valorAproximado));
+  }
+
+  return useQuery({
+    queryKey: ["finance", "conciliacao-lancamentos", params.toString()],
+    queryFn: () => chamar<SugestaoDeLancamento[]>(`/lancamentos?${params.toString()}`),
+  });
 }
 
 export function useIgnorarMovimento() {

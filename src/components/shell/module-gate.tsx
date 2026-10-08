@@ -8,6 +8,7 @@ import { useActiveModules } from "@/lib/kernel/use-active-modules";
 import { findNavItemForPath } from "@/lib/kernel/nav-items";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
+import { normalizarSlug } from "@/lib/access/use-visibilidade";
 
 /**
  * Bloqueia o CONTEÚDO da rota, não só o item de menu — esconder o link na sidebar não impede
@@ -43,7 +44,9 @@ export function ModuleGate({ children }: { children: React.ReactNode }) {
   }
 
   if (navItem && navItem.moduleSlug !== null) {
-    const temModulo = (activeModules ?? []).some((m) => m.slug === navItem.moduleSlug);
+    const temModulo = (activeModules ?? []).some(
+      (m) => normalizarSlug(m.slug) === normalizarSlug(navItem.moduleSlug)
+    );
     if (!temModulo) {
       return (
         <Aviso titulo="Módulo não contratado">

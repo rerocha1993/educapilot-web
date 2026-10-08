@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { financeApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
-import { hojeIsoBrasilia } from "@/lib/format/date";
+import { financeiroJson } from "./financeiro-api";
+import { invalidarFinanceiro } from "./invalidar-financeiro";
 
 export const REVENUE_CATEGORIES = [
   { value: 1, label: "Mensalidade" },
@@ -43,6 +44,17 @@ export interface RevenueEntryDto {
   competencyYear: number;
   paymentMethod: number;
   notes: string | null;
+
+  /** Conta em que a receita cai (fase 1 do financeiro). */
+  bancoContaId?: string | null;
+
+  // F5 (2026-10): baixa com valor real. receivedAmount = expectedAmount + juros + multa - desconto.
+  juros?: number | null;
+  multa?: number | null;
+  desconto?: number | null;
+  /** noDia, antecipado ou atrasado; nulo sem pagamento. */
+  situacaoDoPagamento?: "noDia" | "antecipado" | "atrasado" | null;
+  diasDeAtraso?: number | null;
 }
 
 export function useRevenuesByMonth(month: number, year: number) {
@@ -94,35 +106,39 @@ export function useCreateRevenue() {
   });
 }
 
-// Não existe endpoint dedicado de "marcar como recebido" (só Expense tem
-// confirmar-pagamento) — reenvia a entrada inteira via PUT, único caminho que o
-// backend expõe pra RevenueEntry.
-export function useMarkRevenueReceived() {
+/** Corpo de POST /api/RevenueEntries/{id}/baixar. A divisão vai explícita quando o valor difere. */
+export interface BaixaDaReceita {
+  /** aaaa-mm-dd; não pode ser futura. */
+  dataPagamento: string;
+  valorRecebido?: number;
+  juros?: number;
+  multa?: number;
+  desconto?: number;
+  contaFinanceiraId?: string;
+  /** Dinheiro, Pix, Boleto, CartaoCredito, CartaoDebito, Transferencia ou Outro. */
+  metodoPagamento?: string;
+}
+
+// Rotas novas (F5), fora dos tipos gerados do Swagger: fetch cru. O PUT não marca mais recebido.
+export function useBaixarReceita() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (entry: RevenueEntryDto) => {
-      const result = await financeApi.PUT("/api/RevenueEntries/{id}", {
-        params: { path: { id: entry.id } },
-        body: {
-          description: entry.description,
-          origin: entry.origin as 1 | 2 | 3 | 4 | 5 | 99,
-          status: 2, // Recebido
-          category: entry.category as 1 | 2 | 3 | 4 | 5 | 99,
-          costCenter: entry.costCenter,
-          expectedAmount: entry.expectedAmount,
-          receivedAmount: entry.expectedAmount,
-          dueDate: entry.dueDate,
-          // Coluna tipo data: o dia de hoje em Brasília, não o instante UTC (que à noite já é amanhã).
-          paymentDate: hojeIsoBrasilia(),
-          currency: "BRL",
-          competencyMonth: entry.competencyMonth,
-          competencyYear: entry.competencyYear,
-          paymentMethod: entry.paymentMethod as 1 | 2 | 3 | 4 | 5 | 99,
-          notes: entry.notes,
-        },
-      });
-      unwrapApiResponse(result, "Não foi possível confirmar o recebimento.");
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["revenues"] }),
+    mutationFn: ({ id, ...baixa }: BaixaDaReceita & { id: string }) =>
+      financeiroJson<RevenueEntryDto>(
+        `/api/RevenueEntries/${id}/baixar`,
+        { method: "POST", body: JSON.stringify(baixa) },
+        "Não foi possível registrar o recebimento."
+      ),
+    onSuccess: () => invalidarFinanceiro(queryClient),
+  });
+}
+
+/** Reabrir a receita reabre também a cobrança ligada a ela, inclusive paga pelo Asaas. */
+export function useReabrirReceita() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      financeiroJson<RevenueEntryDto>(`/api/RevenueEntries/${id}/reabrir`, { method: "POST" }, "Não foi possível reabrir a receita."),
+    onSuccess: () => invalidarFinanceiro(queryClient),
   });
 }

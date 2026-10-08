@@ -39,6 +39,7 @@
   --color-action-border: var(--action-border);
   --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-surface: var(--sidebar-surface);
+  --color-sidebar-deep: var(--sidebar-deep);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-border-dashed: var(--border-dashed);
@@ -159,19 +160,21 @@
 
   --radius: 0.625rem;
 
-  /* Navegação em roxo profundo (#2D095D, cor da marca): a sidebar é tinta da interface, não o
-     fundo da página. Todos os tons dela saem do mesmo roxo — quadrado dos ícones, hover, cartão
-     da conta e divisórias —, senão os botões viram manchas cinza sobre o roxo. */
-  --sidebar: #2D095D;
-  --sidebar-foreground: #D4C9EC;
+  /* Navegação em roxo profundo, puxado para o índigo e menos saturado que o roxo puro da marca:
+     a sidebar é tinta da interface, não o fundo da página. O fundo desce num gradiente discreto
+     (--sidebar no topo, --sidebar-deep embaixo) e todos os tons saem do mesmo roxo — quadrado
+     dos ícones, hover, cartão da conta e divisórias —, senão os botões viram manchas cinza. */
+  --sidebar: #241548;
+  --sidebar-deep: #170B33;
+  --sidebar-foreground: #D6CFE9;
   --sidebar-primary: #F5851F;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #3E1A72;
+  --sidebar-accent: #33225F;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #45227A;
+  --sidebar-border: #3A2B66;
   --sidebar-ring: #F5851F;
-  --sidebar-muted: #A797CF;
-  --sidebar-surface: #36106A;
+  --sidebar-muted: #9D92C6;
+  --sidebar-surface: #2B1A52;
 
   --kernel: #17141B;
   --kernel-foreground: #E9E5EF;
@@ -246,14 +249,17 @@
   --etapa-matriculado: #5FBF92;
   --etapa-perdido: #77776F;
 
-  --sidebar: #22074A;
-  --sidebar-foreground: #E4DCF3;
+  --sidebar: #1C0F38;
+  --sidebar-deep: #120826;
+  --sidebar-foreground: #E2DCF2;
   --sidebar-primary: #B9AEDD;
   --sidebar-primary-foreground: #1D1D1B;
-  --sidebar-accent: #351565;
-  --sidebar-accent-foreground: #E4DCF3;
-  --sidebar-border: #3B1C6B;
+  --sidebar-accent: #2C1D52;
+  --sidebar-accent-foreground: #E2DCF2;
+  --sidebar-border: #33255C;
   --sidebar-ring: #B9AEDD;
+  --sidebar-muted: #9A8FC2;
+  --sidebar-surface: #231541;
 
   --kernel: #1D1D1B;
   --kernel-foreground: #F5F5F3;

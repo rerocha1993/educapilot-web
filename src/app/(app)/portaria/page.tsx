@@ -14,10 +14,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PortariaNav, ABAS_DA_PORTARIA } from "@/components/reception/portaria-nav";
+import { PortariaNav } from "@/components/reception/portaria-nav";
 import { descreverPeriodo } from "@/components/reception/periodo-do-aluno-campos";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerArea } from "@/lib/access/pode-ver";
+import { SECOES_DO_MODULO } from "@/lib/kernel/secoes-do-modulo";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useDesfazerRegistro,
@@ -46,7 +47,9 @@ export default function PortariaHojePage() {
   // primeira área que tem, em vez de dar de cara com uma tela que não pode usar.
   useEffect(() => {
     if (isLoading || podeVerHoje) return;
-    const destino = ABAS_DA_PORTARIA.find((aba) => aba.href !== "/portaria" && podeVerArea(meuAcesso, "reception", aba.area));
+    const destino = SECOES_DO_MODULO["/portaria"].find(
+      (aba) => aba.href !== "/portaria" && podeVerArea(meuAcesso, "reception", aba.area ?? null)
+    );
     if (destino) router.replace(destino.href);
   }, [isLoading, podeVerHoje, meuAcesso, router]);
 

@@ -17,6 +17,9 @@ export const CAMPO_CADASTRO_OPTIONS: { value: string; label: string; grupo: stri
   { value: "responsavel.cpf", label: "CPF", grupo: "Responsável" },
   { value: "responsavel.email", label: "E-mail", grupo: "Responsável" },
   { value: "responsavel.telefone", label: "Telefone", grupo: "Responsável" },
+  { value: "responsavel.nascimento", label: "Data de nascimento", grupo: "Responsável" },
+
+  { value: "aluno.autorizaImagem", label: "Autoriza uso de imagem (sim/não)", grupo: "Aluno" },
 ];
 
 export function rotuloDoDestino(chave: string | undefined): string | null {

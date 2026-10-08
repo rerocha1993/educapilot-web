@@ -17,6 +17,9 @@ export interface StudentDto {
   continuousMedication: string | null;
   dietaryRestriction: string | null;
   healthInsurance: string | null;
+  // Autorização de uso de imagem (2026-10): nulo = a família ainda não respondeu. O servidor omite
+  // o nulo, então a propriedade pode nem vir.
+  autorizaUsoDeImagem?: boolean | null;
 }
 
 // Novo (2026-08) — picker de aluno pro módulo Financeiro (Responsáveis/Mensalidades),
@@ -58,6 +61,7 @@ export interface SaveStudentInput {
   continuousMedication?: string | null;
   dietaryRestriction?: string | null;
   healthInsurance?: string | null;
+  autorizaUsoDeImagem?: boolean | null;
 }
 
 export function useSaveStudent() {
@@ -83,6 +87,8 @@ export function useSaveStudent() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["students", "by-class", variables.classId] });
       queryClient.invalidateQueries({ queryKey: ["classes"] }); // contagem de alunos por turma
+      // O aviso de autorização de imagem das atividades e do mural conta a partir do cadastro.
+      queryClient.invalidateQueries({ queryKey: ["relacionamento", "autorizacao-de-imagem"] });
     },
   });
 }

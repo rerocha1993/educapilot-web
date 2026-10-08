@@ -121,7 +121,7 @@ export default function PainelFinanceiroPage() {
                   </p>
                 </div>
                 <Link
-                  href="/finance/inadimplencia"
+                  href="/relacionamento/pagamentos/inadimplencia"
                   className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-medium transition-colors hover:bg-muted"
                 >
                   Ver quem

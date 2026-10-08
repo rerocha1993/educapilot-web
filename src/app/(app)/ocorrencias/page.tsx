@@ -181,7 +181,7 @@ export default function OcorrenciasPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="print:hidden">
+      <div className="md:hidden print:hidden">
         <RotinaNav />
       </div>
 

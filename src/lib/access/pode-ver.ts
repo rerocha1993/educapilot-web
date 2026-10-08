@@ -43,11 +43,16 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/admin/, modulo: "admin", area: null },
 
   // Financeiro
-  { padrao: /^\/finance\/mensalidades/, modulo: "finance", area: "mensalidades" },
   { padrao: /^\/finance\/receitas/, modulo: "finance", area: "receitas" },
+  { padrao: /^\/finance\/recibos/, modulo: "finance", area: "recibos" },
   { padrao: /^\/finance\/despesas/, modulo: "finance", area: "despesas" },
+  // Caixa de comprovantes (WhatsApp e tela) e a configuração do Financeiro (quem pode mandar pelo
+  // WhatsApp) viram despesa paga: valem a área Despesas, que já existe no catálogo do backend.
+  { padrao: /^\/finance\/comprovantes/, modulo: "finance", area: "despesas" },
+  { padrao: /^\/finance\/configuracao/, modulo: "finance", area: "despesas" },
   { padrao: /^\/finance\/orcamento/, modulo: "finance", area: "orcamento" },
-  { padrao: /^\/finance\/inadimplencia/, modulo: "finance", area: "inadimplencia" },
+  { padrao: /^\/finance\/precificacao/, modulo: "finance", area: "precificacao" },
+  { padrao: /^\/finance\/projetos/, modulo: "finance", area: "projetos" },
   { padrao: /^\/finance\/contas/, modulo: "finance", area: "contas" },
   { padrao: /^\/finance\/conciliacao/, modulo: "finance", area: "conciliacao" },
   { padrao: /^\/finance\/plano-de-contas/, modulo: "finance", area: "plano-de-contas" },
@@ -82,6 +87,33 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/matriculas\/configuracao/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas/, modulo: "matriculas", area: null },
 
+  // RH. Como na Portaria, a entrada do módulo (visão geral) é aberta a qualquer área dele.
+  { padrao: /^\/rh\/funcionarios/, modulo: "rh", area: "funcionarios" },
+  { padrao: /^\/rh\/ponto/, modulo: "rh", area: "ponto" },
+  { padrao: /^\/rh\/atestados/, modulo: "rh", area: "atestados" },
+  { padrao: /^\/rh\/afastamentos/, modulo: "rh", area: "afastamentos" },
+  { padrao: /^\/rh\/documentos/, modulo: "rh", area: "documentos" },
+  { padrao: /^\/rh\/relatorios/, modulo: "rh", area: "relatorios" },
+  { padrao: /^\/rh\/configuracao/, modulo: "rh", area: "configuracao" },
+  { padrao: /^\/rh/, modulo: "rh", area: null },
+
+  // Relacionamento (avisos, cronograma, famílias, atividades e mural). A entrada do módulo só redireciona.
+  { padrao: /^\/relacionamento\/avisos/, modulo: "relacionamento", area: "avisos" },
+  { padrao: /^\/relacionamento\/cronograma/, modulo: "relacionamento", area: "cronograma" },
+  { padrao: /^\/relacionamento\/familias/, modulo: "relacionamento", area: "familias" },
+  { padrao: /^\/relacionamento\/atividades/, modulo: "relacionamento", area: "atividades" },
+  { padrao: /^\/relacionamento\/mural/, modulo: "relacionamento", area: "mural" },
+  { padrao: /^\/relacionamento\/chat/, modulo: "relacionamento", area: "chat" },
+  // Mensalidades e inadimplência (antes em /finance) são da área Pagamentos, como cobranças e
+  // planos; o backend aceita relacionamento:pagamentos nas APIs delas. As duas linhas abaixo
+  // deixam a regra à vista, mesmo que o prefixo geral já a cobrisse.
+  { padrao: /^\/relacionamento\/pagamentos\/mensalidades/, modulo: "relacionamento", area: "pagamentos" },
+  { padrao: /^\/relacionamento\/pagamentos\/inadimplencia/, modulo: "relacionamento", area: "pagamentos" },
+  { padrao: /^\/relacionamento\/pagamentos/, modulo: "relacionamento", area: "pagamentos" },
+  { padrao: /^\/relacionamento\/loja/, modulo: "relacionamento", area: "loja" },
+  { padrao: /^\/relacionamento\/configuracao/, modulo: "relacionamento", area: "configuracao" },
+  { padrao: /^\/relacionamento/, modulo: "relacionamento", area: null },
+
   // Rotina
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
@@ -89,6 +121,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
   { padrao: /^\/reunioes/, modulo: "tasks", area: "reunioes" },
+  { padrao: /^\/calendario/, modulo: "tasks", area: "calendario" },
   { padrao: /^\/$/, modulo: "tasks", area: "chamada" },
 ];
 
@@ -122,7 +155,7 @@ export function podeVerArea(
   const modulos = acesso?.modulos ?? [];
   if (modulos.length === 0) return true;
 
-  const doModulo = modulos.find((m) => m.moduloSlug === modulo);
+  const doModulo = modulos.find((m) => (m.moduloSlug ?? "").trim().toLowerCase() === modulo.toLowerCase());
   if (!doModulo) return false;
 
   if (area === null) return true;

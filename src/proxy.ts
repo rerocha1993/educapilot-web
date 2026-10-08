@@ -26,5 +26,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|site/).*)"],
+  // sw.js fica de fora: o service worker do push precisa ser servido direto, sem passar pelo proxy.
+  matcher: ["/((?!_next/static|_next/image|site/|sw\\.js$).*)"],
 };

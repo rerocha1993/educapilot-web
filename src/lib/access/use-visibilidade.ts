@@ -23,7 +23,9 @@ export function useVisibilidade() {
   // o menu inteiro.
   const carregando = modulosCarregando || acessoCarregando || acessoFalhou;
 
-  const ativos = new Set((activeModules ?? []).map((m) => m.slug));
+  // Chaves comparadas em minúsculas e sem espaços: o catálogo do Master é digitado à mão, e "RH"
+  // ou "Relacionamento " cadastrados assim não podem esconder o módulo de quem já tem acesso.
+  const ativos = new Set((activeModules ?? []).map((m) => normalizarSlug(m.slug)));
   const semAcessoDefinido = (meuAcesso?.modulos.length ?? 0) === 0;
 
   // Módulo de uma rota. O catálogo de rotas cobre as telas internas (/ocorrencias é da Rotina) que o
@@ -39,14 +41,14 @@ export function useVisibilidade() {
     // de quem não tem acesso a ela até a resposta chegar.
     if (!modulo) return true;
     if (modulo === "admin") return !carregando;
-    return !carregando && ativos.has(modulo);
+    return !carregando && ativos.has(normalizarSlug(modulo));
   }
 
   function moduloVisivel(href: string) {
     if (!contratado(href)) return false;
     if (semAcessoDefinido) return true;
     const slug = moduloDe(href);
-    return !slug || (meuAcesso?.modulos ?? []).some((m) => m.moduloSlug === slug);
+    return !slug || (meuAcesso?.modulos ?? []).some((m) => normalizarSlug(m.moduloSlug) === normalizarSlug(slug));
   }
 
   function rotaVisivel(href: string) {
@@ -61,4 +63,8 @@ export function useVisibilidade() {
   }
 
   return { carregando, moduloVisivel, rotaVisivel, entradaDo };
+}
+
+export function normalizarSlug(slug: string | null | undefined) {
+  return (slug ?? "").trim().toLowerCase();
 }
