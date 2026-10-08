@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CircleCheck, Clock, History, Smartphone, UserRoundX } from "lucide-react";
+import { ArrowLeft, CircleCheck, Clock, FileText, History, LoaderCircle, PencilLine, Smartphone, UserRoundX } from "lucide-react";
+import { toast } from "sonner";
 
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +11,7 @@ import { ErroDeCarga } from "@/components/rh/campo";
 import { dataPorExtenso, relogioDe, useAgoraDaEscola } from "@/lib/rh/ponto-formatar";
 import {
   ROTULO_DO_BOTAO,
+  baixarMeuEspelho,
   comprovanteDoDia,
   useAparelhoDesteCelular,
   useAtualizarMeuPonto,
@@ -22,6 +24,7 @@ import {
 import { FluxoDaBatida } from "./fluxo-da-batida";
 import { FolhaDosAparelhos, FolhaDoHistorico } from "./historico-e-aparelhos";
 import { LinhaDoDia } from "./linha-do-dia";
+import { FolhaDoPedidoDeAjuste } from "./pedido-de-ajuste";
 import { BotaoGrande, ComprovanteDeBatida } from "./pecas";
 
 /**
@@ -115,6 +118,7 @@ function Moldura({
 type FolhaAberta =
   | { tipo: "historico" }
   | { tipo: "aparelhos" }
+  | { tipo: "ajuste"; original: ComprovanteDoPonto | null }
   | { tipo: "comprovante"; comprovante: ComprovanteDoPonto; recem: boolean; voltarPara: "historico" | null };
 
 function PainelDoDia({ dados }: { dados: MeuPonto }) {
@@ -123,11 +127,31 @@ function PainelDoDia({ dados }: { dados: MeuPonto }) {
   const aparelhoDeste = useAparelhoDesteCelular(dados.aparelhos);
   const [fluxo, setFluxo] = useState<TipoDeBatida | null>(null);
   const [folha, setFolha] = useState<FolhaAberta | null>(null);
+  const [baixandoEspelho, setBaixandoEspelho] = useState(false);
 
   const { proximaBatida, concluido, batidas } = dados.hoje;
   const { horaMinuto, segundos } = relogioDe(agora);
   const nomeDaEscola = dados.escola?.nome ?? null;
   const primeiroNome = dados.funcionario.nome.split(" ").find(Boolean) ?? "";
+
+  async function baixarEspelho() {
+    const [ano, mes] = dados.hoje.data.split("-").map(Number);
+    setBaixandoEspelho(true);
+    try {
+      await baixarMeuEspelho(ano, mes);
+      toast.success("Espelho do mês baixado.");
+    } catch (e) {
+      toast.error(
+        e instanceof TypeError
+          ? "Sem conexão com a internet. Conecte-se e tente de novo."
+          : e instanceof Error
+            ? e.message
+            : "Não foi possível baixar o seu espelho."
+      );
+    } finally {
+      setBaixandoEspelho(false);
+    }
+  }
 
   return (
     <Moldura titulo={nomeDaEscola ?? "Meu ponto"} apoio={primeiroNome ? `Olá, ${primeiroNome}` : undefined}>
@@ -193,6 +217,18 @@ function PainelDoDia({ dados }: { dados: MeuPonto }) {
             <Smartphone className="size-5" aria-hidden />
             Meus celulares
           </BotaoGrande>
+          <BotaoGrande variant="outline" onClick={() => setFolha({ tipo: "ajuste", original: null })}>
+            <PencilLine className="size-5" aria-hidden />
+            Pedir ajuste
+          </BotaoGrande>
+          <BotaoGrande variant="outline" disabled={baixandoEspelho} onClick={() => void baixarEspelho()}>
+            {baixandoEspelho ? (
+              <LoaderCircle className="size-5 animate-spin" aria-hidden />
+            ) : (
+              <FileText className="size-5" aria-hidden />
+            )}
+            <span className="leading-tight">{baixandoEspelho ? "Baixando..." : "Meu espelho do mês"}</span>
+          </BotaoGrande>
         </div>
       </div>
 
@@ -223,11 +259,18 @@ function PainelDoDia({ dados }: { dados: MeuPonto }) {
         <FolhaDosAparelhos aparelhos={dados.aparelhos} aparelhoDeste={aparelhoDeste} onFechar={() => setFolha(null)} />
       )}
 
+      {folha?.tipo === "ajuste" && (
+        <FolhaDoPedidoDeAjuste hoje={dados.hoje.data} original={folha.original} onFechar={() => setFolha(null)} />
+      )}
+
       {folha?.tipo === "comprovante" && (
         <ComprovanteDeBatida
           comprovante={folha.comprovante}
           recemRegistrado={folha.recem}
           onFechar={() => setFolha(folha.voltarPara ? { tipo: folha.voltarPara } : null)}
+          onPedirAjuste={
+            folha.recem ? undefined : () => setFolha({ tipo: "ajuste", original: folha.comprovante })
+          }
         />
       )}
     </Moldura>

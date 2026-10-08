@@ -56,6 +56,9 @@ interface Campos {
   intervaloMinimoEntreBatidasMinutos: string;
   aprovarAparelhoNovo: boolean;
   exigirSequencia: boolean;
+  maximoDeBatidasPorDia: string;
+  jornadaMaximaHoras: string;
+  enviarComprovantePorEmail: boolean;
 }
 
 const numero = (texto: string) => Number(texto.trim().replace(",", "."));
@@ -78,6 +81,9 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
     intervaloMinimoEntreBatidasMinutos: String(inicial.intervaloMinimoEntreBatidasMinutos),
     aprovarAparelhoNovo: inicial.aprovarAparelhoNovo,
     exigirSequencia: inicial.exigirSequencia,
+    maximoDeBatidasPorDia: String(inicial.maximoDeBatidasPorDia),
+    jornadaMaximaHoras: String(inicial.jornadaMaximaHoras),
+    enviarComprovantePorEmail: inicial.enviarComprovantePorEmail,
   }));
   const [erro, setErro] = useState<string | null>(null);
 
@@ -127,6 +133,14 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
     if (!Number.isFinite(intervaloMinimo) || intervaloMinimo < 0 || intervaloMinimo > 240) {
       return setErro("O tempo mínimo entre batidas vai de 0 a 240 minutos.");
     }
+    const maximoDeBatidas = numero(campos.maximoDeBatidasPorDia);
+    const jornadaMaxima = numero(campos.jornadaMaximaHoras);
+    if (!Number.isInteger(maximoDeBatidas) || maximoDeBatidas < 2 || maximoDeBatidas > 20) {
+      return setErro("O máximo de batidas por dia vai de 2 a 20.");
+    }
+    if (!Number.isFinite(jornadaMaxima) || jornadaMaxima < 1 || jornadaMaxima > 24) {
+      return setErro("A jornada máxima por dia vai de 1 a 24 horas.");
+    }
 
     try {
       await salvar.mutateAsync({
@@ -144,6 +158,9 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
         intervaloMinimoEntreBatidasMinutos: Math.round(intervaloMinimo),
         aprovarAparelhoNovo: campos.aprovarAparelhoNovo,
         exigirSequencia: campos.exigirSequencia,
+        maximoDeBatidasPorDia: maximoDeBatidas,
+        jornadaMaximaHoras: jornadaMaxima,
+        enviarComprovantePorEmail: campos.enviarComprovantePorEmail,
       });
       toast.success("Configuração salva.");
     } catch (err) {
@@ -313,6 +330,40 @@ function Formulario({ inicial }: { inicial: ConfiguracaoDoRh }) {
               marcado={campos.exigirSequencia}
               onChange={(v) => mudar({ exigirSequencia: v })}
             />
+            <Opcao
+              id="cfg-comprovante-email"
+              titulo="Enviar comprovante por e-mail ao funcionário (usa o e-mail da ficha e a conta de e-mail da escola)"
+              texto="A cada batida, o funcionário recebe o comprovante no e-mail cadastrado na ficha. Sem e-mail na ficha ou sem conta de e-mail da escola configurada, nada é enviado."
+              marcado={campos.enviarComprovantePorEmail}
+              onChange={(v) => mudar({ enviarComprovantePorEmail: v })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Campo
+              id="cfg-max-batidas"
+              rotulo="Máximo de batidas por dia"
+              dica="De 2 a 20. Passou disso, a batida fica pendente para você conferir."
+            >
+              <Input
+                id="cfg-max-batidas"
+                inputMode="numeric"
+                value={campos.maximoDeBatidasPorDia}
+                onChange={(e) => mudar({ maximoDeBatidasPorDia: e.target.value })}
+              />
+            </Campo>
+            <Campo
+              id="cfg-jornada-maxima"
+              rotulo="Jornada máxima por dia (horas)"
+              dica="De 1 a 24. Se o dia passar disso, a batida fica pendente."
+            >
+              <Input
+                id="cfg-jornada-maxima"
+                inputMode="decimal"
+                value={campos.jornadaMaximaHoras}
+                onChange={(e) => mudar({ jornadaMaximaHoras: e.target.value })}
+              />
+            </Campo>
           </div>
         </section>
       </fieldset>

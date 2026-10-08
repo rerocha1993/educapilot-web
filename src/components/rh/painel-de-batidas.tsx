@@ -21,22 +21,38 @@ import { SeletorDeFuncionario, TODOS_OS_FUNCIONARIOS } from "./seletor-de-funcio
 
 const TODAS = "todas";
 
+const ORIGENS: { valor: string; rotulo: string }[] = [
+  { valor: TODAS, rotulo: "Todas as origens" },
+  { valor: "Celular", rotulo: "Pelo celular" },
+  { valor: "Solicitacao", rotulo: "Pedidos do funcionário" },
+  { valor: "Ajuste", rotulo: "Ajustes da gestão" },
+];
+
 /**
  * Batidas do dia (hoje por padrão), com filtro de dia, funcionário e situação. Cada batida é um
  * cartão com foto, distância da escola e aparelho; as que esperam decisão ganham Aprovar e Recusar.
  */
-export function PainelDeBatidas() {
+export function PainelDeBatidas({
+  dataInicial,
+  funcionarioInicial,
+}: {
+  /** Abre num dia e numa pessoa específicos (o link de um alerta). */
+  dataInicial?: string;
+  funcionarioInicial?: string;
+} = {}) {
   const podeEscrever = usePodeEscreverNoRh();
   const hoje = hojeIsoBrasilia();
-  const [data, setData] = useState(hoje);
-  const [funcionario, setFuncionario] = useState(TODOS_OS_FUNCIONARIOS);
+  const [data, setData] = useState(dataInicial ?? hoje);
+  const [funcionario, setFuncionario] = useState(funcionarioInicial ?? TODOS_OS_FUNCIONARIOS);
   const [situacao, setSituacao] = useState<SituacaoDaBatida | typeof TODAS>(TODAS);
+  const [origem, setOrigem] = useState(TODAS);
   const [ajustando, setAjustando] = useState<{ original: Marcacao | null } | null>(null);
 
   const { data: marcacoes, isLoading, isError, refetch } = useMarcacoes({
     data,
     funcionarioId: funcionario === TODOS_OS_FUNCIONARIOS ? null : funcionario,
     situacao: situacao === TODAS ? null : situacao,
+    origem: origem === TODAS ? null : origem,
   });
 
   const aguardando = (marcacoes ?? []).filter((m) => m.situacao === "Pendente").length;
@@ -97,6 +113,19 @@ export function PainelDeBatidas() {
               {SITUACOES_DA_BATIDA.map((s) => (
                 <SelectItem key={s} value={s}>
                   {ROTULO_DA_SITUACAO[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={origem} onValueChange={(v) => v && setOrigem(v)}>
+            <SelectTrigger aria-label="Origem" className="w-full md:w-52">
+              <SelectValue>{() => ORIGENS.find((o) => o.valor === origem)?.rotulo ?? "Todas as origens"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {ORIGENS.map((o) => (
+                <SelectItem key={o.valor} value={o.valor}>
+                  {o.rotulo}
                 </SelectItem>
               ))}
             </SelectContent>

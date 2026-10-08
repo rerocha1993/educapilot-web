@@ -34,6 +34,14 @@ export async function rhFetch(caminho: string, init: RequestInit = {}): Promise<
   return res;
 }
 
+/**
+ * Chamada SEM sessão, para os poucos endpoints anônimos do RH (a tela de QR da recepção). Não manda
+ * o token e não derruba a sessão num 401: quem abre essa tela no tablet da recepção nem tem login.
+ */
+export function rhFetchPublico(caminho: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(`${baseUrl}/api/Rh${caminho}`, { ...init, cache: "no-store" });
+}
+
 /** Corpo de erro do ASP.NET: { message } nos controllers do projeto, ProblemDetails nos demais. */
 interface CorpoDeErro {
   message?: string;
