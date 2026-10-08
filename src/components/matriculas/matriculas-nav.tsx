@@ -15,6 +15,7 @@ export const ABAS_DE_MATRICULAS = [
   { href: "/matriculas/conversas", label: "Conversas", area: "conversas" },
   { href: "/matriculas/visitas", label: "Visitas", area: "funil" },
   { href: "/matriculas/assistente", label: "Assistente", area: "configuracao" },
+  { href: "/matriculas/funcionamento", label: "Funcionamento", area: "configuracao" },
   { href: "/matriculas/agenda", label: "Agenda", area: "configuracao" },
   { href: "/matriculas/materiais", label: "Materiais", area: "configuracao" },
   { href: "/matriculas/anuncios", label: "Anúncios", area: "configuracao" },

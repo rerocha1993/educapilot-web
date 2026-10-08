@@ -600,3 +600,135 @@ export interface PrimeirosPassos {
   pronta: boolean;
   assistenteLigada: boolean;
 }
+
+// ------------------------------------------------------------------ como a assistente funciona
+
+export interface IdentidadeDoFuncionamento {
+  nomeDaAssistente?: string | null;
+  nomeDaEscola?: string | null;
+  ligada: boolean;
+  atendimentoInicio: number;
+  atendimentoFim: number;
+  esperaParaJuntarSegundos: number;
+  limiteMensalDeRespostas?: number | null;
+  respostasNoMes: number;
+  modelo: string;
+  chaveConfigurada: boolean;
+  maximoDeIteracoes: number;
+  maximoDeBaloes: number;
+}
+
+export interface TurmaDoFuncionamento {
+  nome: string;
+  criterio: string;
+  regraDeIdade: string;
+  grupo?: string | null;
+  comoApresentar?: string | null;
+}
+
+export interface BlocoDoFuncionamento {
+  titulo: string;
+  texto: string;
+}
+
+export interface MaterialDoFuncionamento {
+  titulo: string;
+  tipo: string;
+  turmas?: string | null;
+  gatilho?: string | null;
+  ano?: number | null;
+}
+
+export interface OQueElaSabe {
+  fichaPreenchida: boolean;
+  descricao?: string | null;
+  endereco?: string | null;
+  quemRecebeNaVisita?: string | null;
+  comoEAVisita?: string | null;
+  email?: string | null;
+  sobreAEscola?: string | null;
+  provaSocial?: string | null;
+  diaDoCorte: number;
+  mesDoCorte: number;
+  agendaDeVisitas?: string | null;
+  turmas: TurmaDoFuncionamento[];
+  fatos: BlocoDoFuncionamento[];
+  respostas: BlocoDoFuncionamento[];
+  naoSabe: string[];
+  materiais: MaterialDoFuncionamento[];
+}
+
+export interface SecaoDoManual {
+  id: string;
+  titulo: string;
+  texto: string;
+}
+
+export interface ComoElaEscreve {
+  texto?: string | null;
+  totalDeCaracteres: number;
+  secoes: SecaoDoManual[];
+}
+
+export interface ParametroDeFerramenta {
+  nome: string;
+  tipo: string;
+  obrigatorio: boolean;
+  descricao?: string | null;
+  valores: string[];
+}
+
+export interface FerramentaDoFuncionamento {
+  nome: string;
+  descricao: string;
+  parametros: ParametroDeFerramenta[];
+  disponivel: boolean;
+  motivo?: string | null;
+}
+
+export interface TravaDoFuncionamento {
+  chave: string;
+  titulo: string;
+  oQueConfere: string;
+  porQue: string;
+  tipo: "reescreve" | "ajusta" | "estrutura";
+}
+
+export interface ModeloDoFluxo {
+  nome: string;
+  situacao: string;
+  aprovado: boolean;
+}
+
+export interface FluxoDoFuncionamento {
+  chave: string;
+  grupo: "conversa" | "familia" | "equipe";
+  nome: string;
+  ligado: boolean;
+  temInterruptor: boolean;
+  quando: string;
+  oQueFaz: string;
+  regras: string[];
+  modelos: ModeloDoFluxo[];
+  pendencias: string[];
+}
+
+export interface EstadoDoFuncionamento {
+  whatsAppConectado: boolean;
+  numero?: string | null;
+  modelosAprovados: number;
+  modelosEmAnalise: number;
+  modelosComProblema: number;
+  modelosNaoEnviados: number;
+  modelosTotal: number;
+}
+
+export interface FuncionamentoDaAssistente {
+  identidade: IdentidadeDoFuncionamento;
+  oQueSabe: OQueElaSabe;
+  comoEscreve: ComoElaEscreve;
+  ferramentas: FerramentaDoFuncionamento[];
+  travas: TravaDoFuncionamento[];
+  fluxos: FluxoDoFuncionamento[];
+  estado: EstadoDoFuncionamento;
+}
