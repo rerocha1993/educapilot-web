@@ -121,12 +121,15 @@ const ROTAS_HOSPEDADAS: { prefixo: string; dono: string }[] = [
 
 /**
  * Os dois grupos do menu, na ordem da entrega de design: Operação é o dia a dia, Escola é o que
- * se ajusta de vez em quando. Cada href vem de NAV_ITEMS ou é Início/Administração, que não são
- * módulos vendidos — a visibilidade continua sendo decidida por useVisibilidade.
+ * se ajusta de vez em quando. Cada href vem de NAV_ITEMS ou é Início, que não é módulo vendido —
+ * a visibilidade continua sendo decidida por useVisibilidade.
+ *
+ * Administração NÃO entra aqui (2026-10): não é um módulo, é o painel padrão do sistema, só do gestor,
+ * e o único caminho até ele é a engrenagem do cabeçalho.
  */
 export const GRUPOS_DO_MENU = [
   { titulo: "Operação", hrefs: [INICIO_HREF, "/", "/relacionamento", "/portaria", "/matriculas", "/flow", "/finance"] },
-  { titulo: "Escola", hrefs: [ADMIN_HREF, "/rh", "/events"] },
+  { titulo: "Escola", hrefs: ["/rh", "/events"] },
 ] as const;
 
 /** Acha o item de nav "dono" de um pathname (o prefixo mais específico que bate). */
