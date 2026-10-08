@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { MessageCircle, Megaphone, Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ import {
   esperaEmTexto,
   idadeCurta,
   iniciais,
+  textoDoAnuncio,
 } from "@/lib/matriculas/rotulos";
 import { ESCALA_DE_INTERESSE, PERGUNTAS, ROTULO_DE_QUEM_VEIO, ROTULO_DO_ASSUNTO } from "@/lib/matriculas/relato";
 import { useDefinirSinal, useExcluirLead, useLead } from "@/lib/matriculas/use-funil";
@@ -43,8 +44,9 @@ export function PainelDoLead({
   id: string | null;
   titulos: Titulos;
   onFechar: () => void;
-  onMover: (lead: LeadDetalhe, para: EtapaDoFunil) => void;
-  onEditar: (lead: LeadDetalhe) => void;
+  /** Sem onMover e onEditar a ficha é só de leitura (a tela de anúncios abre assim). */
+  onMover?: (lead: LeadDetalhe, para: EtapaDoFunil) => void;
+  onEditar?: (lead: LeadDetalhe) => void;
 }) {
   return (
     <Dialog open={!!id} onOpenChange={(a) => !a && onFechar()}>
@@ -71,8 +73,8 @@ function Conteudo({
   id: string;
   titulos: Titulos;
   onFechar: () => void;
-  onMover: (lead: LeadDetalhe, para: EtapaDoFunil) => void;
-  onEditar: (lead: LeadDetalhe) => void;
+  onMover?: (lead: LeadDetalhe, para: EtapaDoFunil) => void;
+  onEditar?: (lead: LeadDetalhe) => void;
 }) {
   const { data: lead, isLoading, isError } = useLead(id);
   const definirSinal = useDefinirSinal();
@@ -152,7 +154,7 @@ function Conteudo({
 
         <div className="grid grid-cols-2 gap-2">
           <Seletor rotulo="Etapa">
-            <Select value={lead.etapa} onValueChange={(v) => v && v !== lead.etapa && onMover(lead, v as EtapaDoFunil)}>
+            <Select value={lead.etapa} disabled={!onMover} onValueChange={(v) => v && v !== lead.etapa && onMover?.(lead, v as EtapaDoFunil)}>
               <SelectTrigger className="w-full">
                 <SelectValue>
                   {() => (
@@ -212,6 +214,18 @@ function Conteudo({
           <Dado rotulo="Período">{lead.periodo ? ROTULOS_DO_PERIODO[lead.periodo] : "—"}</Dado>
           <Dado rotulo="Ano letivo">{lead.anoLetivo ?? "—"}</Dado>
           <Dado rotulo="Como chegou">{ROTULO_DA_ORIGEM[lead.origem]}</Dado>
+          <Dado rotulo="Anúncio" larga>
+            {textoDoAnuncio(lead) ? (
+              <span className="inline-flex items-start gap-1.5">
+                <Megaphone className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                <span>{textoDoAnuncio(lead)}</span>
+              </span>
+            ) : lead.anuncioId ? (
+              `Anúncio ${lead.anuncioId} (sem dados da Meta)`
+            ) : (
+              "—"
+            )}
+          </Dado>
           <Dado rotulo="Visita">{lead.visitaEm ? dataHoraCurta(lead.visitaEm) : "—"}</Dado>
           <Dado rotulo="Nesta etapa">{lead.diasNaEtapa === 0 ? "desde hoje" : `há ${lead.diasNaEtapa} ${lead.diasNaEtapa === 1 ? "dia" : "dias"}`}</Dado>
           <Dado rotulo="Entrou no funil">{dataHoraCurta(lead.criadoEm)}</Dado>
@@ -284,10 +298,12 @@ function Conteudo({
               <MessageCircle data-icon="inline-start" />
               Conversa
             </Link>
-            <Button variant="outline" className="flex-1" onClick={() => onEditar(lead)}>
-              <Pencil data-icon="inline-start" />
-              Editar dados
-            </Button>
+            {onEditar && (
+              <Button variant="outline" className="flex-1" onClick={() => onEditar(lead)}>
+                <Pencil data-icon="inline-start" />
+                Editar dados
+              </Button>
+            )}
             {ehGestao && (
               <Button variant="ghost" size="icon" aria-label="Apagar dados da família" onClick={() => setConfirmandoExclusao(true)}>
                 <Trash2 />
@@ -473,11 +489,12 @@ function Seletor({ rotulo, children }: { rotulo: string; children: ReactNode }) 
   );
 }
 
-function Dado({ rotulo, children }: { rotulo: string; children: ReactNode }) {
+/** `larga`: ocupa as duas colunas e quebra linha, para o que não cabe cortado (o nome de anúncio e campanha). */
+function Dado({ rotulo, children, larga }: { rotulo: string; children: ReactNode; larga?: boolean }) {
   return (
-    <div className="min-w-0 rounded-[14px] bg-card px-3 py-2.5">
+    <div className={cn("min-w-0 rounded-[14px] bg-card px-3 py-2.5", larga && "col-span-2")}>
       <span className="block text-[10.5px] font-bold uppercase tracking-[.1em] text-muted-foreground">{rotulo}</span>
-      <span className="block truncate text-[13.5px] font-medium">{children}</span>
+      <span className={cn("block text-[13.5px] font-medium", !larga && "truncate")}>{children}</span>
     </div>
   );
 }

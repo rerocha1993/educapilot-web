@@ -79,6 +79,10 @@ export interface LeadResumo {
   tentativa?: number | null;
   tentativasDoCiclo?: number | null;
   anuncioId?: string | null;
+  /** Do cache de anúncios da escola. Nulos: não veio de anúncio, ou o anúncio ainda não está no cache. */
+  anuncioNome?: string | null;
+  conjuntoNome?: string | null;
+  campanhaNome?: string | null;
   ultimaInteracaoEm?: string | null;
   /** A visita tem o relato de quem recebeu a família. */
   temRelato?: boolean;
@@ -554,30 +558,69 @@ export interface ContaMetaAds {
   contasDeAnuncios: OpcaoDaMeta[];
 }
 
-export interface ResultadoDoAnuncio {
-  anuncioId: string;
-  anuncio?: string | null;
-  conjunto?: string | null;
-  campanha?: string | null;
+/** Os números que campanha, conjunto e anúncio repetem. */
+export interface NumerosDeAnuncio {
   gasto: number;
   familias: number;
   visitas: number;
   matriculas: number;
   custoPorFamilia?: number | null;
   custoPorMatricula?: number | null;
+}
+
+/** Uma família que veio de um anúncio; o id abre a ficha dela. */
+export interface FamiliaDoAnuncio {
+  leadId: string;
+  nomeResponsavel: string;
+  nomeCrianca?: string | null;
+  etapa: EtapaDoFunil;
+  /** UTC. */
+  criadoEm: string;
+}
+
+export interface ResultadoDoAnuncio extends NumerosDeAnuncio {
+  anuncioId: string;
+  /** Nulo: a escola ainda não tem dados da Meta sobre o anúncio (veja semDadosDaMeta). */
+  anuncio?: string | null;
+  conjunto?: string | null;
+  campanha?: string | null;
+  titulo?: string | null;
+  texto?: string | null;
+  miniaturaUrl?: string | null;
   /** Como a Meta entrega: ACTIVE, PAUSED, CAMPAIGN_PAUSED... */
   situacao?: string | null;
   noAr: boolean;
+  semDadosDaMeta: boolean;
+  /** As mais recentes primeiro, até 100; `familias` conta todas. */
+  listaDeFamilias: FamiliaDoAnuncio[];
+}
+
+export interface ResultadoDoConjunto extends NumerosDeAnuncio {
+  conjuntoId?: string | null;
+  /** Nulo: anúncios sem conjunto conhecido. */
+  nome?: string | null;
+  /** Quem a Meta mira, em texto. */
+  publico?: string | null;
+  anuncios: ResultadoDoAnuncio[];
+}
+
+export interface ResultadoDaCampanha extends NumerosDeAnuncio {
+  campanhaId?: string | null;
+  /** Nulo: anúncios sem campanha conhecida. */
+  nome?: string | null;
+  conjuntos: ResultadoDoConjunto[];
 }
 
 export interface ResultadosDosAnuncios {
+  /** Zero: todo o período. */
   dias: number;
+  todoOPeriodo: boolean;
   gasto: number;
   familias: number;
   visitas: number;
   matriculas: number;
   custoPorMatricula?: number | null;
-  anuncios: ResultadoDoAnuncio[];
+  campanhas: ResultadoDaCampanha[];
   aviso?: string | null;
 }
 

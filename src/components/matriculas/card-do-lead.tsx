@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, type HTMLAttributes } from "react";
-import { Bot, CalendarClock, Headset, NotebookPen, RotateCw, Snowflake } from "lucide-react";
+import { Bot, CalendarClock, Headset, Megaphone, NotebookPen, RotateCw, Snowflake } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LeadResumo } from "@/lib/matriculas/tipos";
 import {
@@ -14,6 +14,7 @@ import {
   iniciais,
   partesDaVisita,
   tempoDesde,
+  textoDoAnuncio,
 } from "@/lib/matriculas/rotulos";
 
 // Cor do avatar: a mesma família tem sempre a mesma cor, em qualquer tela.
@@ -162,7 +163,15 @@ export const CardDoLead = forwardRef<HTMLDivElement, Props>(function CardDoLead(
       )}
 
       <div className="flex items-center gap-2 border-t border-foreground/[.06] pt-2 text-[11.5px] text-muted-foreground">
-        <span className="min-w-0 flex-1 truncate">{ROTULO_DA_ORIGEM[lead.origem]}</span>
+        {textoDoAnuncio(lead) ? (
+          // title: o nome inteiro, que o card corta.
+          <span className="flex min-w-0 flex-1 items-center gap-1" title={textoDoAnuncio(lead)!}>
+            <Megaphone className="size-3 shrink-0" aria-hidden />
+            <span className="truncate">{textoDoAnuncio(lead)}</span>
+          </span>
+        ) : (
+          <span className="min-w-0 flex-1 truncate">{ROTULO_DA_ORIGEM[lead.origem]}</span>
+        )}
         {podeReativar && (
           // Fora do gesto de arrastar e do clique que abre a ficha: o botão tem o próprio clique.
           <button

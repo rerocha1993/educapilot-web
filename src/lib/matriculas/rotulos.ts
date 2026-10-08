@@ -1,5 +1,5 @@
 import type { TipoDePeriodo } from "@/lib/reception/use-portaria";
-import type { EtapaDoFunil, OrigemDoLead, QuemAtende, SinalDaFamilia } from "./tipos";
+import type { EtapaDoFunil, LeadResumo, OrigemDoLead, QuemAtende, SinalDaFamilia } from "./tipos";
 
 export const ORDEM_DAS_ETAPAS: EtapaDoFunil[] = [
   "Novo",
@@ -50,6 +50,16 @@ export const ROTULO_DA_ORIGEM: Record<OrigemDoLead, string> = {
   Porta: "Veio à escola",
   Outro: "Outro",
 };
+
+/**
+ * De que anúncio a família veio, "anúncio · conjunto · campanha", só com o que a escola sabe. Nulo: a família
+ * não veio de anúncio, ou o anúncio ainda não está no cache e o chamador cai no rótulo da origem.
+ */
+export function textoDoAnuncio(lead: Pick<LeadResumo, "anuncioId" | "anuncioNome" | "conjuntoNome" | "campanhaNome">): string | null {
+  if (!lead.anuncioId) return null;
+  const partes = [lead.anuncioNome, lead.conjuntoNome, lead.campanhaNome].filter((p): p is string => !!p);
+  return partes.length > 0 ? partes.join(" · ") : null;
+}
 
 /** Opções fechadas: cada uma já é a resposta a "por que essa família está ou não fechando". */
 export const ROTULO_DO_SINAL: Record<SinalDaFamilia, string> = {
