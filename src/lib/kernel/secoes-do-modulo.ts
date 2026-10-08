@@ -1,6 +1,8 @@
 import {
   ArrowLeftRight,
   ArrowRightLeft,
+  Bot,
+  CalendarCheck,
   CalendarDays,
   CalendarOff,
   CalendarRange,
@@ -29,9 +31,11 @@ import {
   Map as MapIcon,
   Megaphone,
   MessageCircle,
+  MessageSquare,
   Package,
   PiggyBank,
   ReceiptText,
+  Rocket,
   Shapes,
   ShoppingCart,
   SlidersHorizontal,
@@ -89,6 +93,11 @@ export const GRUPO_JORNADA = "Jornada";
 /** Subtítulos do Relacionamento. */
 export const GRUPO_COMUNICACAO = "Comunicação";
 export const GRUPO_PAGAMENTOS = "Pagamentos";
+
+/** Subtítulos de Matrículas. */
+export const GRUPO_ATENDIMENTO = "Atendimento";
+export const GRUPO_DIVULGACAO = "Divulgação";
+export const GRUPO_ASSISTENTE = "Assistente";
 
 /**
  * Catálogo único das seções de cada ferramenta, indexado pelo href da ferramenta (o mesmo de
@@ -189,6 +198,22 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
 
   // Os cartões do índice de Administração. Contratos pertence a Fluxos para efeito de contratação:
   // a visibilidade dele pergunta também se a escola tem o módulo (rotaVisivel).
+  // Matrículas (2026-10): era uma faixa de abas no topo de cada tela, sem a barra lateral agrupada
+  // dos outros módulos. As áreas são as mesmas de pode-ver.ts (funil, conversas, configuracao).
+  "/matriculas": [
+    { href: "/matriculas", label: "Funil", icon: SquareKanban, area: "funil" },
+    { href: "/matriculas/conversas", label: "Conversas", icon: MessageCircle, area: "conversas", grupo: GRUPO_ATENDIMENTO },
+    { href: "/matriculas/visitas", label: "Visitas", icon: CalendarCheck, area: "funil", grupo: GRUPO_ATENDIMENTO },
+    { href: "/matriculas/agenda", label: "Agenda de visitas", icon: CalendarDays, area: "configuracao", grupo: GRUPO_ATENDIMENTO },
+    { href: "/matriculas/anuncios", label: "Anúncios", icon: Megaphone, area: "configuracao", grupo: GRUPO_DIVULGACAO },
+    { href: "/matriculas/materiais", label: "Materiais", icon: Images, area: "configuracao", grupo: GRUPO_DIVULGACAO },
+    { href: "/matriculas/assistente", label: "Assistente", icon: Bot, area: "configuracao", grupo: GRUPO_ASSISTENTE },
+    { href: "/matriculas/funcionamento", label: "Funcionamento", icon: SlidersHorizontal, area: "configuracao", grupo: GRUPO_ASSISTENTE },
+    { href: "/matriculas/whatsapp", label: "WhatsApp", icon: MessageSquare, area: "configuracao", grupo: GRUPO_ASSISTENTE },
+    { href: "/matriculas/configuracao", label: "Configuração", icon: SlidersHorizontal, area: "configuracao" },
+    { href: "/matriculas/comecar", label: "Primeiros passos", icon: Rocket, area: "configuracao" },
+  ],
+
   [ADMIN_HREF]: [
     { href: ADMIN_HREF, label: "Visão geral", area: null, icon: LayoutDashboard },
     { href: "/admin/contratos", label: "Contratos", icon: FileSignature },
