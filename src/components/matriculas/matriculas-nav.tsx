@@ -3,52 +3,37 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useMeuAcesso } from "@/lib/access/use-acessos";
-import { podeVerArea } from "@/lib/access/pode-ver";
+import { useSecoesVisiveis } from "@/lib/access/use-secoes-visiveis";
+import { secaoAtiva } from "@/lib/kernel/secoes-do-modulo";
 
 /**
- * Abas de Matrículas. Cada uma é uma área da permissão, com o mesmo slug do catálogo do backend
- * (RecursoDoModulo). Painel e Métricas leem o mesmo funil que a aba Funil mostra, e ficam na área dele.
+ * Abas de Matrículas, só no celular. No computador as seções vivem na barra lateral, agrupadas
+ * como nos outros módulos (catálogo em secoes-do-modulo.ts), e esta faixa não renderiza nada.
+ * Cada seção é uma área da permissão (funil, conversas, configuracao): quem não tem a área não vê a aba.
  */
-export const ABAS_DE_MATRICULAS = [
-  { href: "/matriculas", label: "Funil", area: "funil" },
-  { href: "/matriculas/conversas", label: "Conversas", area: "conversas" },
-  { href: "/matriculas/painel", label: "Painel", area: "funil" },
-  { href: "/matriculas/metricas", label: "Métricas", area: "funil" },
-  { href: "/matriculas/visitas", label: "Visitas", area: "funil" },
-  { href: "/matriculas/assistente", label: "Assistente", area: "configuracao" },
-  { href: "/matriculas/funcionamento", label: "Funcionamento", area: "configuracao" },
-  { href: "/matriculas/agenda", label: "Agenda", area: "configuracao" },
-  { href: "/matriculas/materiais", label: "Materiais", area: "configuracao" },
-  { href: "/matriculas/anuncios", label: "Anúncios", area: "configuracao" },
-  { href: "/matriculas/whatsapp", label: "WhatsApp", area: "configuracao" },
-  { href: "/matriculas/configuracao", label: "Configuração", area: "configuracao" },
-  { href: "/matriculas/comecar", label: "Primeiros passos", area: "configuracao" },
-] as const;
-
 export function MatriculasNav() {
   const pathname = usePathname();
-  const { data: meuAcesso } = useMeuAcesso();
-  const abas = ABAS_DE_MATRICULAS.filter((aba) => podeVerArea(meuAcesso, "matriculas", aba.area));
+  const itens = useSecoesVisiveis("/matriculas");
+  const ativa = secaoAtiva(itens, pathname);
 
   return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-0.5 print:hidden">
+    <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:hidden print:hidden">
       <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
-        {abas.map((aba) => {
-          const ativa =
-            pathname === aba.href || (aba.href !== "/matriculas" && pathname.startsWith(`${aba.href}/`));
+        {itens.map((item) => {
+          const active = ativa === item.href;
           return (
             <Link
-              key={aba.href}
-              href={aba.href}
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "shrink-0 rounded-[9px] px-3.5 py-2 text-sm whitespace-nowrap transition-colors max-md:inline-flex max-md:min-h-10 max-md:items-center",
-                ativa
+                "shrink-0 rounded-[9px] px-3.5 py-2 text-[13.5px] whitespace-nowrap transition-colors",
+                active
                   ? "bg-card font-semibold text-foreground shadow-[0_1px_3px_rgba(42,37,48,.12)]"
                   : "font-medium text-muted-foreground hover:text-foreground"
               )}
             >
-              {aba.label}
+              {item.label}
             </Link>
           );
         })}
