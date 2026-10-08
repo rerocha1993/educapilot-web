@@ -8,11 +8,13 @@ import { podeVerArea } from "@/lib/access/pode-ver";
 
 /**
  * Abas de Matrículas. Cada uma é uma área da permissão, com o mesmo slug do catálogo do backend
- * (RecursoDoModulo). Materiais e métricas entram aqui quando as fases deles chegarem.
+ * (RecursoDoModulo). Painel e Métricas leem o mesmo funil que a aba Funil mostra, e ficam na área dele.
  */
 export const ABAS_DE_MATRICULAS = [
   { href: "/matriculas", label: "Funil", area: "funil" },
   { href: "/matriculas/conversas", label: "Conversas", area: "conversas" },
+  { href: "/matriculas/painel", label: "Painel", area: "funil" },
+  { href: "/matriculas/metricas", label: "Métricas", area: "funil" },
   { href: "/matriculas/visitas", label: "Visitas", area: "funil" },
   { href: "/matriculas/assistente", label: "Assistente", area: "configuracao" },
   { href: "/matriculas/funcionamento", label: "Funcionamento", area: "configuracao" },
@@ -30,7 +32,7 @@ export function MatriculasNav() {
   const abas = ABAS_DE_MATRICULAS.filter((aba) => podeVerArea(meuAcesso, "matriculas", aba.area));
 
   return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
+    <div className="-mx-1 overflow-x-auto px-1 pb-0.5 print:hidden">
       <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
         {abas.map((aba) => {
           const ativa =

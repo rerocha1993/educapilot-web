@@ -775,3 +775,150 @@ export interface FuncionamentoDaAssistente {
   fluxos: FluxoDoFuncionamento[];
   estado: EstadoDoFuncionamento;
 }
+
+// ------------------------------------------------------------------ Painel e Métricas
+// Espelha EducaPilot.Domain/Modules/Admissions/DTOs/MetricasDtos.cs. Datas só-dia vão como "AAAA-MM-DD".
+
+export interface PeriodoDasMetricas {
+  de?: string | null;
+  ate?: string | null;
+  origem?: OrigemDoLead | null;
+  dias?: number | null;
+  anteriorDe?: string | null;
+  anteriorAte?: string | null;
+}
+
+export interface IndicadoresDasMetricas {
+  totalLeads: number;
+  totalRuido: number;
+  ativos: number;
+  totalPerdidos: number;
+  visitaram: number;
+  matricularam: number;
+  matriculasNoPeriodo: number;
+  tempoMedioPrimeiraRespostaHoras?: number | null;
+  taxaVisitaMatricula?: number | null;
+  taxaConversaoGeral?: number | null;
+  taxaComparecimento?: number | null;
+}
+
+export interface IndicadorComparado {
+  chave: string;
+  titulo: string;
+  unidade: "numero" | "percentual" | "horas";
+  atual?: number | null;
+  anterior?: number | null;
+  diferenca?: number | null;
+  variacaoPercentual?: number | null;
+  sentido?: "Subiu" | "Desceu" | "Igual" | null;
+  menorEhMelhor: boolean;
+  melhorou?: boolean | null;
+}
+
+export interface FatiaDoFunil {
+  etapa: EtapaDoFunil;
+  titulo: string;
+  total: number;
+  percentualDoTopo: number;
+  percentualDaAnterior: number;
+}
+
+export interface QuedaDoFunil {
+  deEtapa: EtapaDoFunil;
+  deTitulo: string;
+  paraEtapa: EtapaDoFunil;
+  paraTitulo: string;
+  quantidadePerdida: number;
+}
+
+export interface ContagemDasMetricas {
+  chave: string;
+  titulo: string;
+  total: number;
+  percentual: number;
+  taxaConversao?: number | null;
+}
+
+export interface ComparecimentoDasMetricas {
+  compareceram: number;
+  faltaram: number;
+  pendentes: number;
+  taxa?: number | null;
+}
+
+export interface MetaDoMes {
+  configurada: boolean;
+  mes: string;
+  meta: number;
+  feitas: number;
+  percentualAtingido: number;
+  faltam: number;
+  diasRestantes: number;
+}
+
+export interface CampanhaDeMatriculas {
+  anoLetivo: number;
+  inicio: string;
+  fim: string;
+  iniciada: boolean;
+  encerrada: boolean;
+  configurada: boolean;
+  meses: number;
+  metaTotal: number;
+  feitas: number;
+  percentualAtingido: number;
+  faltam: number;
+  fracaoEsperada: number;
+  ritmoNoAlvo?: boolean | null;
+}
+
+export interface FamiliaDaLista {
+  id: string;
+  nomeResponsavel: string;
+  nomeCrianca?: string | null;
+  turma?: string | null;
+  etapa: EtapaDoFunil;
+  horasSemInteracao: number;
+}
+
+export interface ListaDeFamilias {
+  total: number;
+  itens: FamiliaDaLista[];
+}
+
+export interface FamiliaNaFila {
+  id: string;
+  nomeResponsavel: string;
+  nomeCrianca?: string | null;
+  etapa: EtapaDoFunil;
+  minutosEsperando: number;
+  motivo?: string | null;
+}
+
+export interface FilaDeAtendimento {
+  total: number;
+  itens: FamiliaNaFila[];
+}
+
+export interface MetricasDoFunil {
+  periodo: PeriodoDasMetricas;
+  indicadores: IndicadoresDasMetricas;
+  comparacao: IndicadorComparado[];
+  funil: FatiaDoFunil[];
+  maiorQueda?: QuedaDoFunil | null;
+  porOrigem: ContagemDasMetricas[];
+  origemQueMaisConverte?: ContagemDasMetricas | null;
+  porSinal: ContagemDasMetricas[];
+  semSinal: number;
+  travadosEmPreco: number;
+  porPeriodo: ContagemDasMetricas[];
+  motivosPerda: ContagemDasMetricas[];
+  comparecimento: ComparecimentoDasMetricas;
+  metaDoMes: MetaDoMes;
+  campanha: CampanhaDeMatriculas;
+  quentes: ListaDeFamilias;
+  analisandoValor: ListaDeFamilias;
+  retomadasEsgotadas: ListaDeFamilias;
+  toquesEsgotados: ListaDeFamilias;
+  fila: FilaDeAtendimento;
+}

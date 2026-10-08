@@ -82,6 +82,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/matriculas\/agenda/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas\/materiais/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas\/visitas/, modulo: "matriculas", area: "funil" },
+  { padrao: /^\/matriculas\/painel/, modulo: "matriculas", area: "funil" },
+  { padrao: /^\/matriculas\/metricas/, modulo: "matriculas", area: "funil" },
   { padrao: /^\/matriculas\/anuncios/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas\/comecar/, modulo: "matriculas", area: "configuracao" },
   { padrao: /^\/matriculas\/configuracao/, modulo: "matriculas", area: "configuracao" },
