@@ -182,14 +182,21 @@ function Painel({ a }: { a: Assistente }) {
             <div className="flex justify-between text-[12.5px] text-muted-foreground">
               <span>Limite do plano</span>
               <span className="tabular-nums">
-                {numero.format(a.usoDoMes.respostas)} de {numero.format(limite)}
+                {numero.format(a.usoDoMes.respostas)} de {numero.format(limite)} respostas este mês
               </span>
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
               <div className={cn("h-full rounded-full", usado >= 90 ? "bg-destructive" : "bg-action")} style={{ width: `${usado}%` }} />
             </div>
+            <p className="mt-2 text-[12.5px] text-muted-foreground">
+              {a.aoEstourarOLimite === "Continuar"
+                ? "Ao chegar no limite, a assistente segue respondendo e as respostas acima dele são cobradas à parte."
+                : "Ao chegar no limite, as novas conversas passam para a sua equipe até o mês virar."}{" "}
+              Para ampliar o limite, fale com o suporte do EducaPilot.
+            </p>
           </div>
         )}
+        {limite == null && <p className="mt-4 text-[12.5px] text-muted-foreground">Sem limite de respostas no seu plano.</p>}
         {a.perguntasEmAberto > 0 && (
           <Link
             href="/matriculas/assistente/perguntas"

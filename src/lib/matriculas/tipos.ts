@@ -407,7 +407,10 @@ export type Assistente = {
   atendimentoInicio: number;
   atendimentoFim: number;
   esperaParaJuntarSegundos: number;
+  /** O teto que vale para a escola (o dela ou o padrão da plataforma), só para ler. Quem define é o Master. */
   limiteMensalDeRespostas: number | null;
+  /** "PassarParaEquipe" ou "Continuar". Só para ler. */
+  aoEstourarOLimite: "PassarParaEquipe" | "Continuar";
   /** O que impede de ligar. Vazio: pode ligar. */
   pendencias: string[];
   whatsAppConectado: boolean;
