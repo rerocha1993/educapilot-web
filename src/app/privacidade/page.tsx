@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 
 const RAZAO_SOCIAL = process.env.EDUCAPILOT_RAZAO_SOCIAL ?? "EducaPilot";
 const CNPJ = process.env.EDUCAPILOT_CNPJ ?? null;
-const EMAIL_PRIVACIDADE = process.env.EDUCAPILOT_EMAIL_PRIVACIDADE ?? "privacidade@educa-pilot.com";
+const EMAIL_PRIVACIDADE = process.env.EDUCAPILOT_EMAIL_PRIVACIDADE ?? "convite@educa-pilot.com";
 const ATUALIZADO_EM = "8 de outubro de 2026";
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
