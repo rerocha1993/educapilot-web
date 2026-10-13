@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "106364712364",
+    "project_id": "educapilot-app",
+    "storage_bucket": "educapilot-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106364712364:android:eef4a2a95fe6f06ce5b609",
+        "android_client_info": {
+          "package_name": "com.educapilot.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_BMgw-9gGbPd0hkhWHsJhJz_ic_-_Y-c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
