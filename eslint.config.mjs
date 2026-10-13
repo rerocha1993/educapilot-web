@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Casca nativa (Capacitor): projeto próprio, com dependências próprias, fora do site.
+    "mobile/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
