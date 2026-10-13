@@ -38,6 +38,7 @@ import { LancadorDeFerramentas } from "@/components/shell/lancador-de-ferramenta
 import { NavegacaoLateral } from "@/components/shell/navegacao-lateral";
 import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
 import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
+import { BuscaGlobal } from "@/components/shell/busca-global";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
 import { useMeuPontoDisponivel } from "@/lib/rh/use-meu-ponto";
@@ -337,6 +338,7 @@ export function AppShell({
           </div>
 
           <div className="ml-auto flex items-center gap-2.5">
+            {session.role !== "Responsavel" && <BuscaGlobal variante="campo" />}
             {moduloVisivel(ADMIN_HREF) && (
               <Link
                 href={ADMIN_HREF}
@@ -380,6 +382,7 @@ export function AppShell({
           </Link>
 
           <div className="flex items-center justify-end">
+            {session.role !== "Responsavel" && <BuscaGlobal variante="icone" />}
             <LancadorDeFerramentas grupos={grupos} atualHref={atualDoLancador} entradaDo={entradaDo} tamanho="lg" />
             {mostraSino && <SinoDeAvisos tamanho="lg" comRotina={comRotina} comChat={comChat} />}
             {menuDoUsuario("lg")}
