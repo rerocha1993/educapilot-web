@@ -256,11 +256,13 @@ export default function OcorrenciasPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+      {/* O gráfico por turma é curto (poucas turmas, uma barra cada): fica na coluna estreita. A lista de
+          alunos é o que se lê e se clica, e ocupa o resto da largura. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
         <div className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Ocorrências por turma</h2>
 
-          {isLoading && <Skeleton className="h-32 w-full" />}
+          {isLoading && <Skeleton className="h-16 w-full" />}
 
           {!isLoading && data?.byClass.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
@@ -285,8 +287,8 @@ export default function OcorrenciasPage() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4">
-          <h2 className="mb-3 font-heading text-[15.5px] font-semibold">Alunos com mais registros</h2>
-          <p className="mb-3 text-xs text-muted-foreground">
+          <h2 className="font-heading text-[15.5px] font-semibold">Alunos com mais registros</h2>
+          <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
             A cor do ponto é a categoria mais comum do aluno no período — o backend não tem um
             conceito de gravidade separado.
           </p>
@@ -297,12 +299,12 @@ export default function OcorrenciasPage() {
             <p className="py-8 text-center text-sm text-muted-foreground">Sem registros no período.</p>
           )}
 
-          <div className="flex flex-col gap-1">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-0.5 xl:grid-cols-2">
             {data?.topStudents.map((s) => (
               <button
                 key={s.studentId}
                 onClick={() => setSelectedStudent({ id: s.studentId, name: s.studentName })}
-                className="flex items-center justify-between gap-2 rounded-md px-1.5 py-2.5 text-left text-sm transition-colors hover:bg-accent md:py-1"
+                className="flex items-center justify-between gap-2 rounded-md px-2 py-2.5 text-left text-sm transition-colors hover:bg-accent"
               >
                 <div className="flex min-w-0 items-center gap-2 truncate">
                   <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[s.topCategoria])} />
