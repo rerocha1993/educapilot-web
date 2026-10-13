@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { destinoDoPerfil } from "@/lib/auth/destino";
 import { useLogin } from "@/lib/auth/use-login";
 import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
 
@@ -61,7 +62,7 @@ export default function LoginPage() {
       // vem necessariamente fazer chamada, e a tela de atalhos mostra o que tem para hoje em cada
       // módulo. Antes o computador caía direto na Chamada, e as outras telas ficavam escondidas
       // atrás do menu.
-      router.push(resultado.role === "Responsavel" ? "/responsavel" : "/inicio");
+      router.push(destinoDoPerfil(resultado.role));
     } catch {
       // erro exibido via login.error abaixo, como faixa acima do formulário (ver L1)
     }

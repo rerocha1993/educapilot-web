@@ -64,6 +64,25 @@ export function getToken(): string | null {
   return window.localStorage.getItem(STORAGE_KEY) ?? window.sessionStorage.getItem(STORAGE_KEY);
 }
 
+/**
+ * Atualiza campos da sessão já salva, no mesmo storage onde ela está (renovação do token).
+ * Não cria sessão: sem sessão salva, não faz nada.
+ */
+export function atualizarSessao(parcial: Partial<StoredSession>) {
+  if (typeof window === "undefined") return;
+  const storage =
+    window.localStorage.getItem(SESSION_KEY) !== null ? window.localStorage : window.sessionStorage;
+  const raw = storage.getItem(SESSION_KEY);
+  if (!raw) return;
+  try {
+    const nova = { ...(JSON.parse(raw) as StoredSession), ...parcial };
+    storage.setItem(SESSION_KEY, JSON.stringify(nova));
+    if (parcial.token) storage.setItem(STORAGE_KEY, parcial.token);
+  } catch {
+    // Sessão ilegível: quem usar a sessão vai tratá-la como ausente.
+  }
+}
+
 export function clearSession() {
   window.localStorage.removeItem(STORAGE_KEY);
   window.localStorage.removeItem(SESSION_KEY);

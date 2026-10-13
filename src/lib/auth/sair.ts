@@ -1,3 +1,4 @@
+import { revogarSessaoNoServidor } from "@/lib/auth/renovar-sessao";
 import { clearSession } from "@/lib/auth/session";
 import { cancelarPush } from "@/lib/push/registrar-push";
 import { desconectarChat } from "@/lib/relacionamento/chat-tempo-real";
@@ -10,5 +11,6 @@ import { desconectarChat } from "@/lib/relacionamento/chat-tempo-real";
 export function encerrarSessao() {
   void cancelarPush();
   void desconectarChat();
+  revogarSessaoNoServidor(); // lê o refresh token da sessão local: antes do clearSession
   clearSession();
 }

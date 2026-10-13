@@ -8,6 +8,10 @@ export interface LoginResponse {
   classIds: number[];
   name: string;
   tenantId: string;
+  // Só vêm quando o login pediu sessão longa (dentro do app): ver lib/auth/renovar-sessao.ts.
+  expiresAt?: string;
+  refreshToken?: string;
+  refreshExpiresAt?: string;
 }
 
 export interface StoredSession {
@@ -16,4 +20,7 @@ export interface StoredSession {
   userId: string;
   name: string;
   tenantId: string;
+  expiresAt?: string;
+  refreshToken?: string;
+  refreshExpiresAt?: string;
 }

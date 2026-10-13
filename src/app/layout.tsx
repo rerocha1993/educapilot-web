@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import { QueryProvider } from "@/lib/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { SessaoNativa } from "@/components/nativo/sessao-nativa";
 import "./globals.css";
 
 // Tipografia da direção visual 2026-09 (entrega "EducaPilot Sistema"): títulos em Outfit,
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <QueryProvider>
           {children}
+          <SessaoNativa />
           <Toaster />
         </QueryProvider>
       </body>
