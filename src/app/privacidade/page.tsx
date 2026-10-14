@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarcaEducaPilot } from "@/components/auth/marca";
+import { SecaoLegal as Secao } from "@/components/legal/secao-legal";
+import { CNPJ, EMAIL_PRIVACIDADE, RAZAO_SOCIAL } from "@/lib/legal/contato";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade · EducaPilot",
   description:
-    "Como o EducaPilot e as escolas que o usam tratam os dados das famílias que conversam pelo WhatsApp sobre matrículas.",
+    "Como o EducaPilot e as escolas que o usam tratam os dados no aplicativo, no portal e no atendimento de matrículas pelo WhatsApp.",
 };
 
 /**
@@ -30,21 +32,7 @@ export const metadata: Metadata = {
  * uma família depender dele.
  */
 
-const RAZAO_SOCIAL = process.env.EDUCAPILOT_RAZAO_SOCIAL ?? "EducaPilot";
-const CNPJ = process.env.EDUCAPILOT_CNPJ ?? null;
-const EMAIL_PRIVACIDADE = process.env.EDUCAPILOT_EMAIL_PRIVACIDADE ?? "convite@educa-pilot.com";
-const ATUALIZADO_EM = "8 de outubro de 2026";
-
-function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h2 className="font-heading text-xl font-semibold text-foreground">{titulo}</h2>
-      <div className="space-y-3 text-[15px] leading-relaxed text-foreground/85 [&_a]:text-primary [&_a]:underline [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_ul]:space-y-2">
-        {children}
-      </div>
-    </section>
-  );
-}
+const ATUALIZADO_EM = "14 de outubro de 2026";
 
 export default function PaginaPrivacidade() {
   return (
@@ -82,9 +70,50 @@ export default function PaginaPrivacidade() {
         </p>
       </Secao>
 
+      <Secao titulo="Aplicativo e portal do EducaPilot">
+        <p>
+          O <strong>aplicativo EducaPilot</strong> (Android e iPhone) e o portal na web são usados por famílias, professores e
+          equipe das escolas. As contas são criadas pela escola, por convite; ninguém se cadastra sozinho. Dentro do aplicativo
+          e do portal são tratados:
+        </p>
+        <ul>
+          <li>
+            <strong>Conta e acesso:</strong> nome, e-mail, perfil (responsável, professor ou equipe) e a escola a que a pessoa
+            pertence. A senha é guardada de forma protegida (apenas um resumo irreversível, nunca a senha).
+          </li>
+          <li>
+            <strong>Aparelho e sessão:</strong> um identificador do aparelho e do aplicativo, para manter você conectado com
+            segurança, e os dados necessários para enviar <strong>notificações</strong> (avisos, mensagens, cobranças).
+          </li>
+          <li>
+            <strong>Comunicação com a escola:</strong> as mensagens do chat entre família e escola, os avisos, a agenda e o
+            mural.
+          </li>
+          <li>
+            <strong>Fotos e arquivos:</strong> fotos de atividades e do mural publicadas pela escola, respeitando a autorização
+            de imagem de cada aluno, e arquivos que você mesmo envia.
+          </li>
+          <li>
+            <strong>Cobranças:</strong> valores, vencimentos e situação das mensalidades e dos itens da loja. O pagamento é feito
+            no ambiente do Asaas, fora do aplicativo.
+          </li>
+          <li>
+            <strong>Localização, só se você usar:</strong> quando um responsável toca em <strong>“Estou a caminho”</strong>, a
+            posição do aparelho é enviada à escola para avisar a chegada, e o sistema guarda apenas a última posição, sem
+            histórico de trajeto. O aviso automático de chegada, quando existir, só liga com o seu consentimento e pode ser
+            desligado a qualquer momento.
+          </li>
+        </ul>
+        <p>
+          Não há anúncios, não vendemos dados e o aplicativo não acompanha você em outros aplicativos ou sites. A escola é a{" "}
+          <strong>controladora</strong> desses dados e o EducaPilot é o <strong>operador</strong>, como explicado acima. Para
+          pedir a exclusão da conta e dos dados, veja <Link href="/excluir-conta">Excluir conta e dados</Link>.
+        </p>
+      </Secao>
+
       <Secao titulo="Quando esta política se aplica">
         <p>
-          Ela vale para o atendimento de <strong>matrículas pelo WhatsApp</strong>: quando uma família escreve para o número
+          Esta parte vale para o atendimento de <strong>matrículas pelo WhatsApp</strong>: quando uma família escreve para o número
           de uma escola que usa o EducaPilot, por um anúncio, pelo site, por indicação ou diretamente, e quando preenche um
           formulário de anúncio (Facebook ou Instagram) da escola.
         </p>
@@ -217,6 +246,10 @@ export default function PaginaPrivacidade() {
           família do sistema, com as mensagens e os arquivos que você enviou, e o sistema guarda apenas uma marca irreversível
           (não o número) para que uma mensagem antiga, reenviada pelo WhatsApp, não recrie o cadastro apagado. O prazo de
           resposta é de até 15 dias. Pedir para parar de receber mensagens tem efeito imediato.
+        </p>
+        <p>
+          Quem usa o aplicativo ou o portal pode pedir a exclusão da conta e dos dados pela página{" "}
+          <Link href="/excluir-conta">Excluir conta e dados</Link>.
         </p>
       </Secao>
 
