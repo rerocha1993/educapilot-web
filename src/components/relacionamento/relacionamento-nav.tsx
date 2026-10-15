@@ -1,63 +1,9 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-import { podeVerArea } from "@/lib/access/pode-ver";
-import { useMeuAcesso } from "@/lib/access/use-acessos";
-import { useSecoesVisiveis } from "@/lib/access/use-secoes-visiveis";
-import { secaoAtiva } from "@/lib/kernel/secoes-do-modulo";
-import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
-import { cn } from "@/lib/utils";
-
 /**
- * Abas do Relacionamento, só no celular. No computador as seções vivem na barra lateral
- * (catálogo em secoes-do-modulo.ts) e esta faixa não renderiza nada.
- *
- * Cada aba é uma área da permissão, com o mesmo slug do catálogo do backend. A aba Chat leva a
- * contagem de conversas não lidas.
+ * Antes: faixa de abas das seções de Relacionamento, só no celular. Saiu em 15/10/2026: as mesmas seções já
+ * estão no menu lateral (botão de três linhas do cabeçalho), então a faixa repetia o menu e ocupava
+ * a primeira dobra da tela. Fica o componente vazio para as páginas não precisarem mudar; o catálogo
+ * das seções continua em lib/kernel/secoes-do-modulo.ts.
  */
 export function RelacionamentoNav() {
-  const pathname = usePathname();
-  const { data: meuAcesso } = useMeuAcesso();
-  const { data: resumoDoChat } = useResumoDoChat(podeVerArea(meuAcesso, "relacionamento", "chat"));
-  const naoLidasDoChat = resumoDoChat?.conversasNaoLidas ?? 0;
-
-  // Filtra pela área, e não pela rota: quem só tem "Avisos" não vê as outras abas.
-  const abas = useSecoesVisiveis("/relacionamento");
-  const ativaHref = secaoAtiva(abas, pathname);
-
-  return (
-    // A faixa rola de lado no celular; o w-max mantém as pílulas do mesmo tamanho lá dentro.
-    <div className="-mx-1 overflow-x-auto px-1 pb-0.5 md:hidden print:hidden">
-      <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
-        {abas.map((aba) => {
-          const ativa = ativaHref === aba.href;
-          return (
-            <Link
-              key={aba.href}
-              href={aba.href}
-              aria-current={ativa ? "page" : undefined}
-              className={cn(
-                "shrink-0 rounded-[9px] px-3.5 py-2 text-sm whitespace-nowrap transition-colors max-md:inline-flex max-md:min-h-10 max-md:items-center",
-                ativa
-                  ? "bg-card font-semibold text-foreground shadow-[0_1px_3px_rgba(42,37,48,.12)]"
-                  : "font-medium text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {aba.label}
-              {aba.area === "chat" && naoLidasDoChat > 0 && (
-                <span className="ml-1.5 inline-grid min-w-4.5 place-items-center rounded-full bg-action px-1 text-[10.5px] leading-[18px] font-bold text-action-foreground tabular-nums">
-                  <span aria-hidden>{naoLidasDoChat > 99 ? "99+" : naoLidasDoChat}</span>
-                  <span className="sr-only">
-                    {naoLidasDoChat === 1 ? "conversa não lida" : "conversas não lidas"}
-                  </span>
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return null;
 }
