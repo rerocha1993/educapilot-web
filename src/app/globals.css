@@ -491,3 +491,8 @@
     backdrop-filter: none;
   }
 }
+
+/* A área de conteúdo da casca da equipe tem fundo próprio; no tema iPhone ela deixa as manchas de cor aparecerem. */
+.tema-ios main.bg-background {
+  background-color: transparent;
+}

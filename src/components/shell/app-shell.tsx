@@ -39,6 +39,7 @@ import { NavegacaoLateral } from "@/components/shell/navegacao-lateral";
 import { SinoDeAvisos } from "@/components/shell/sino-de-avisos";
 import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
 import { BuscaGlobal } from "@/components/shell/busca-global";
+import { useTemaIos } from "@/lib/nativo/use-tema-ios";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
 import { useMeuPontoDisponivel } from "@/lib/rh/use-meu-ponto";
@@ -99,6 +100,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const temaIos = useTemaIos();
   const [alterandoSenha, setAlterandoSenha] = useState(false);
   // Guarda a tela em que o menu do celular foi aberto: trocar de tela o fecha sozinho, sem ele
   // continuar cobrindo a página que acabou de abrir.
@@ -256,7 +258,7 @@ export function AppShell({
     // min-h-dvh + flex-1: o `min-h-full` daqui dependia de uma altura definida no body, que não
     // existe (ele só tem min-height). Sem isso o shell ficava do tamanho do conteúdo e a barra
     // escura terminava no meio da tela em página curta.
-    <div className="flex min-h-dvh flex-1">
+    <div className={cn("flex min-h-dvh flex-1", temaIos && "tema-ios")}>
       {/* Navegação escura da entrega de design: a barra é a tinta da interface, e o laranja marca
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
@@ -361,7 +363,7 @@ export function AppShell({
         {/* Cabeçalho do celular: menu, marca no centro, conta à direita. */}
         <header
           className={cn(
-            "sticky top-0 z-30 grid shrink-0 grid-cols-[2.75rem_1fr_auto] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!",
+            "portal-cabecalho sticky top-0 z-30 grid shrink-0 grid-cols-[2.75rem_1fr_auto] items-center border-b border-border bg-background/95 px-3 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden print:hidden!",
             telaLimpaNoCelular && "hidden"
           )}
         >
@@ -412,7 +414,7 @@ export function AppShell({
       <nav
         aria-label="Navegação principal"
         className={cn(
-          "fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden!",
+          "portal-abas fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden!",
           telaLimpaNoCelular && "hidden"
         )}
       >
