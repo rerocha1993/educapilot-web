@@ -16,8 +16,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Assinatura de release: caminho e senhas vêm de variáveis de ambiente (nunca do repositório).
+    // Sem elas o release sai sem assinatura e o Play Console recusa; use mobile/gerar-aab.ps1.
+    signingConfigs {
+        release {
+            def arquivo = System.getenv("EDUCAPILOT_KEYSTORE")
+            if (arquivo) {
+                storeFile file(arquivo)
+                storePassword System.getenv("EDUCAPILOT_KEYSTORE_SENHA")
+                keyAlias System.getenv("EDUCAPILOT_KEY_ALIAS") ?: "educapilot"
+                keyPassword System.getenv("EDUCAPILOT_KEY_SENHA") ?: System.getenv("EDUCAPILOT_KEYSTORE_SENHA")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv("EDUCAPILOT_KEYSTORE")) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
