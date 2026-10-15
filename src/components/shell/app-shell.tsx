@@ -58,11 +58,12 @@ const COLLAPSE_STORAGE_KEY = "educapilot_sidebar_collapsed";
 const MEU_PONTO_HREF = "/meu-ponto";
 
 // Celular (abaixo de md): a sidebar some e dá lugar a um cabeçalho com menu, uma barra de abas
-// embaixo e a tela Início com atalhos. A barra tem espaço para cinco abas: Início, três módulos e
-// "Mais", que abre o menu completo. Os módulos entram nesta ordem de preferência, pulando os que a
-// escola não contratou ou a pessoa não pode ver.
-const ABAS_PREFERIDAS = ["/", "/flow", "/finance", "/portaria", "/events"];
-const ROTULO_CURTO: Record<string, string> = { "/events": "Vendas" };
+// embaixo e a tela Início com atalhos. A barra tem a aba Início e até quatro módulos, divididos em
+// colunas iguais (escola com poucas ferramentas = barra com poucas abas, sem buraco). O menu completo
+// fica no botão do canto do cabeçalho e no lançador. Os módulos entram nesta ordem de preferência,
+// pulando os que a escola não contratou ou a pessoa não pode ver.
+const ABAS_PREFERIDAS = ["/", "/relacionamento", "/flow", "/finance", "/portaria", "/events"];
+const ROTULO_CURTO: Record<string, string> = { "/events": "Vendas", "/relacionamento": "Relação" };
 
 /** Título que o cabeçalho mostra depois do nome da escola, por módulo. */
 const TITULO_DO_MODULO: Record<string, string> = {
@@ -190,7 +191,7 @@ export function AppShell({
 
   const abas = ABAS_PREFERIDAS.map((href) => visibleItems.find((i) => i.href === href))
     .filter((i) => i !== undefined)
-    .slice(0, 3);
+    .slice(0, 4);
 
   function itemAtivo(href: string) {
     if (href === INICIO_HREF) return pathname === INICIO_HREF;
@@ -236,6 +237,13 @@ export function AppShell({
           {session.role}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {/* No computador a Administração é a engrenagem do cabeçalho; no celular ela mora aqui, na conta. */}
+        {tamanho === "lg" && moduloVisivel(ADMIN_HREF) && (
+          <DropdownMenuItem onClick={() => router.push(ADMIN_HREF)}>
+            <Settings className="size-4" />
+            Administração
+          </DropdownMenuItem>
+        )}
         {comMeuPonto && (
           <DropdownMenuItem onClick={() => router.push(MEU_PONTO_HREF)}>
             <Clock className="size-4" />
@@ -418,7 +426,7 @@ export function AppShell({
           telaLimpaNoCelular && "hidden"
         )}
       >
-        <ul className="grid grid-cols-5">
+        <ul className="grid" style={{ gridTemplateColumns: `repeat(${abas.length + 1}, minmax(0, 1fr))` }}>
           <AbaDoCelular
             href={INICIO_HREF}
             label="Início"
@@ -434,19 +442,6 @@ export function AppShell({
               ativa={itemAtivo(item.href)}
             />
           ))}
-          {Array.from({ length: 3 - abas.length }).map((_, i) => (
-            <li key={`vazia-${i}`} />
-          ))}
-          <li>
-            <button
-              type="button"
-              onClick={abrirMenu}
-              className="flex h-16 w-full flex-col items-center justify-center gap-1 text-muted-foreground active:text-foreground"
-            >
-              <Menu className="size-6" />
-              <span className="text-[11px] font-medium">Mais</span>
-            </button>
-          </li>
         </ul>
       </nav>
 
