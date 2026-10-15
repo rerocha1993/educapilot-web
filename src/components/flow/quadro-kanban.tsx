@@ -122,12 +122,15 @@ export function QuadroKanban({ quadro }: { quadro: Quadro }) {
           outra acabaria com a leitura de "em que etapa está cada coisa". */}
       {/* pb-5: a sombra difusa da coluna precisa de folga embaixo, senão o contêiner de rolagem
           corta justamente a parte que faz o painel parecer apoiado. */}
-      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-5 md:mx-0 md:px-0">
+      {/* Celular: scroll-px-4 faz o encaixe respeitar a margem da tela (sem ele a coluna gruda na borda e
+          perde o contorno), e a coluna é um pouco mais estreita que a tela para a próxima aparecer
+          pela direita e mostrar que há mais listas. De md para cima volta ao desenho de sempre. */}
+      <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-5 max-md:snap-mandatory md:mx-0 md:scroll-px-0 md:px-0">
         {quadro.listas.map((lista) => (
           <div
             key={lista.id}
             className={cn(
-              "flex w-72 shrink-0 snap-start flex-col gap-2 rounded-xl p-2",
+              "flex w-[calc(100vw-4.5rem)] max-w-80 shrink-0 snap-start flex-col gap-2 rounded-xl p-2 md:w-72 md:max-w-none",
               // Vidro: fundo com alpha + desfoque. O saturate é o que dá a "cor reflexiva" — ele
               // puxa a cor do que está atrás do painel, que é o truque de vibrância do macOS;
               // só borrar deixaria o painel cinza e morto.
