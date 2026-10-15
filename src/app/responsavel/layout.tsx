@@ -8,6 +8,7 @@ import { Ellipsis, House, MapPin, Megaphone, MessageCircle, Wallet, type LucideI
 import { MarcaEducaPilot } from "@/components/auth/marca";
 import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
 import { useSessaoLocal } from "@/lib/auth/use-sessao-local";
+import { useTemaIos } from "@/lib/nativo/use-tema-ios";
 import { RastreioContext } from "@/lib/reception/rastreio-context";
 import { useRastreioTrajeto } from "@/lib/reception/use-rastreio-trajeto";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
@@ -58,6 +59,7 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const sessao = useSessaoLocal();
+  const temaIos = useTemaIos();
   const ehResponsavel = sessao?.role === "Responsavel";
 
   useEffect(() => {
@@ -83,8 +85,8 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
 
   return (
     <RastreioContext.Provider value={rastreio}>
-      <div className="flex min-h-dvh flex-1 flex-col bg-background">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+      <div className={cn("flex min-h-dvh flex-1 flex-col bg-background", temaIos && "tema-ios")}>
+        <header className="portal-cabecalho sticky top-0 z-20 border-b border-border bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
           <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-4 py-2.5">
             <div className="flex items-center gap-2.5">
               <MarcaEducaPilot className="h-8" />
@@ -128,7 +130,7 @@ function PortalDaFamilia({ children }: { children: React.ReactNode }) {
 
         <nav
           aria-label="Seções do portal"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
+          className="portal-abas fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
         >
           <ul className="mx-auto grid max-w-md grid-cols-5">
             {ABAS.map((aba) => {

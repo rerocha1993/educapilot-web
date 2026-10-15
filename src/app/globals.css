@@ -336,3 +336,158 @@
   /* Reflexo reduzido a um fio: no escuro, 60% de branco viraria uma risca. */
   --kanban-brilho: rgb(255 255 255 / 0.08);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Tema "iPhone" do portal do responsável (acréscimo 2026-10).
+
+   Liga com a classe .tema-ios, que o layout do portal só põe no app do iOS (ou com ?tema=ios,
+   para capturas e revisão). Fora disso nada muda. Só acréscimo, sem alterar tokens acima.
+
+   Regras da Apple (HIG, "Materials") que guiam as escolhas:
+   - O vidro fica na camada de NAVEGAÇÃO (cabeçalho e barra de abas) e nos cartões em material
+     "regular" com blur e opacidade alta; texto nunca fica sobre vidro quase transparente.
+   - Para o vidro ter o que desfocar, o fundo ganha duas manchas de cor (roxo e laranja da
+     marca, bem diluídas) sobre o cinza agrupado do iOS (#F2F2F7 / preto).
+   - Respeita "Reduzir transparência" (prefers-reduced-transparency) e navegadores sem
+     backdrop-filter: nos dois casos cai para superfície opaca.
+   - Os raios do Tailwind estão inlinados no tema, então são trocados aqui por seletor.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.tema-ios {
+  --background: #F2F2F7;
+  --card: rgb(255 255 255 / 0.72);
+  --border: rgb(60 60 67 / 0.14);
+  --border-dashed: rgb(60 60 67 / 0.24);
+  --muted: rgb(120 120 128 / 0.12);
+  --vidro-nav: rgb(249 249 252 / 0.88);
+  --vidro-sombra: 0 8px 28px rgb(42 37 48 / 0.10), 0 1px 3px rgb(42 37 48 / 0.06);
+  --vidro-brilho: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --mancha-1: rgb(92 75 140 / 0.24);
+  --mancha-2: rgb(245 133 31 / 0.16);
+
+  position: relative;
+  isolation: isolate;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+}
+
+.dark .tema-ios {
+  --background: #0A0A0F;
+  --card: rgb(44 44 48 / 0.62);
+  --border: rgb(255 255 255 / 0.12);
+  --border-dashed: rgb(255 255 255 / 0.2);
+  --muted: rgb(120 120 128 / 0.24);
+  --vidro-nav: rgb(28 28 32 / 0.84);
+  --vidro-sombra: 0 10px 30px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
+  --vidro-brilho: inset 0 1px 0 rgb(255 255 255 / 0.1);
+  --mancha-1: rgb(120 100 190 / 0.34);
+  --mancha-2: rgb(245 133 31 / 0.18);
+}
+
+/* As manchas ficam presas à tela (fixed) e atrás de tudo: o conteúdo rola e o vidro desfoca a cor. */
+.tema-ios::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 38% at 12% 2%, var(--mancha-1), transparent 70%),
+    radial-gradient(60% 34% at 100% 46%, var(--mancha-2), transparent 70%),
+    var(--background);
+}
+
+.tema-ios .font-heading {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+}
+
+/* Cantos: cartões 22, controles e ícones 14. */
+.tema-ios .rounded-xl {
+  border-radius: 22px;
+}
+.tema-ios .rounded-lg {
+  border-radius: 14px;
+}
+
+/* Cartões: material "regular", fio de luz no topo, sombra em duas camadas. */
+.tema-ios .bg-card {
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  box-shadow: var(--vidro-brilho), var(--vidro-sombra);
+  border-width: 0.5px;
+}
+
+/* Cabeçalho: material fino, linha de 0,5 px como a separação do iOS. */
+.tema-ios .portal-cabecalho {
+  background: var(--vidro-nav);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  border-bottom-width: 0.5px;
+}
+
+/* Barra de abas flutuante em cápsula, afastada das bordas e da barra inicial. */
+.tema-ios .portal-abas {
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 8px);
+  padding-bottom: 0;
+  border: 0.5px solid var(--border);
+  border-radius: 30px;
+  background: var(--vidro-nav);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
+  box-shadow: var(--vidro-brilho), 0 12px 32px rgb(0 0 0 / 0.16), 0 1px 3px rgb(0 0 0 / 0.08);
+}
+.tema-ios .portal-abas ul {
+  padding: 2px 4px;
+}
+/* O traço de cima da aba ativa não combina com a cápsula: a aba ativa vira uma pílula. */
+.tema-ios .portal-abas a[aria-current="page"] {
+  background: rgb(92 75 140 / 0.12);
+  border-radius: 24px;
+}
+.tema-ios .portal-abas a > span[aria-hidden="true"].absolute {
+  display: none;
+}
+.dark .tema-ios .portal-abas a[aria-current="page"] {
+  background: rgb(185 174 221 / 0.18);
+}
+
+/* Toque com resposta, sem exagero. */
+.tema-ios a,
+.tema-ios button {
+  transition:
+    transform 0.16s ease,
+    opacity 0.16s ease,
+    background-color 0.16s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tema-ios a:active,
+  .tema-ios button:active {
+    transform: scale(0.985);
+  }
+}
+
+/* Sem backdrop-filter, ou com "Reduzir transparência" ligado: superfícies opacas e legíveis. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tema-ios {
+    --card: #FFFFFF;
+    --vidro-nav: #F9F9FC;
+  }
+  .dark .tema-ios {
+    --card: #232328;
+    --vidro-nav: #1C1C20;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tema-ios,
+  .dark .tema-ios {
+    --card: Canvas;
+    --vidro-nav: Canvas;
+  }
+  .tema-ios .bg-card,
+  .tema-ios .portal-cabecalho,
+  .tema-ios .portal-abas {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
