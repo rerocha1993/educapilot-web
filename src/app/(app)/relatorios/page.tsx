@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { FileBarChart, Settings } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,9 +30,12 @@ import { dataLocalIso, formatarData, formatarSoData } from "@/lib/format/date";
 // relatorio, precisamos bolar o formato". Cada tipo cadastrado em /relatorios/config
 // aponta pra um DataSource — um relatório que já existe no sistema (Ocorrências,
 // Faltas, Observação semanal, indicadores de Reunião). Aqui a tela lista os tipos e,
-// ao escolher um, pede os filtros que ele define (turma/período) e renderiza os
+// ao gerar um, usa os filtros que ele define (turma/período) e renderiza os
 // dados reais na hora — não é geração de arquivo, é a mesma ideia de "relatório na
 // tela" já usada no resto do sistema (Ocorrências, Reuniões).
+//
+// Redesenhado (2026-10, auditoria de telas): os filtros saíram do painel de baixo e moraram em
+// cada tipo, com o botão "Gerar" na mesma linha; o resultado aparece embaixo, sem o vazio.
 
 function defaultRange() {
   const end = new Date();
@@ -41,18 +44,17 @@ function defaultRange() {
   return { start: dataLocalIso(start), end: dataLocalIso(end) };
 }
 
+/** O que foi pedido ao apertar "Gerar": o tipo e os filtros daquele momento. */
+interface Geracao {
+  type: ReportTypeDto;
+  classId: number | null;
+  start: string;
+  end: string;
+}
+
 export default function RelatoriosPage() {
   const { data: reports, isLoading, isError } = useAvailableReports();
-  const { data: classes } = useClasses();
-
-  const [selected, setSelected] = useState<ReportTypeDto | null>(null);
-  const [classId, setClassId] = useState<number | null>(null);
-  const [{ start, end }, setRange] = useState(defaultRange());
-
-  function selectType(r: ReportTypeDto) {
-    setSelected(r);
-    setClassId(null);
-  }
+  const [geracao, setGeracao] = useState<Geracao | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
@@ -61,7 +63,7 @@ export default function RelatoriosPage() {
       <CabecalhoDaPagina
         eyebrow="Rotina"
         titulo="Central de relatórios"
-        apoio="Escolha um tipo de relatório pra gerar na hora."
+        apoio="Escolha o período e a turma e gere o relatório na hora."
         acoes={
           <Link href="/relatorios/config" className={buttonVariants({ variant: "outline" })}>
             <Settings className="size-3.5" />
@@ -76,13 +78,13 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {isLoading &&
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
 
         {!isLoading && (reports?.length ?? 0) === 0 && (
           <EstadoVazio
-            className="sm:col-span-2"
+            className="md:col-span-2"
             icone={<FileBarChart />}
             titulo="Nenhum tipo de relatório cadastrado ainda."
             acao={
@@ -94,77 +96,119 @@ export default function RelatoriosPage() {
         )}
 
         {reports?.map((r) => (
-          <button
+          <CartaoDoRelatorio
             key={r.id}
-            onClick={() => selectType(r)}
-            className={cn(
-              "flex items-center gap-3 rounded-xl border bg-card p-4 text-left transition-colors",
-              selected?.id === r.id ? "border-primary ring-1 ring-primary/30" : "border-border hover:border-primary/40"
-            )}
-          >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              <FileBarChart className="size-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="break-words text-sm font-medium">{r.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {REPORT_DATA_SOURCE_LABELS[r.dataSource] ?? r.dataSource} ·{" "}
-                {[r.requiresClass && "por turma", r.requiresDateRange && "por período"]
-                  .filter(Boolean)
-                  .join(" · ") || "sem filtros"}
-              </p>
-            </div>
-          </button>
+            type={r}
+            gerado={geracao?.type.id === r.id}
+            onGerar={(filtros) => setGeracao({ type: r, ...filtros })}
+          />
         ))}
       </div>
 
-      {selected && (
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-heading text-[15.5px] font-semibold">{selected.name}</h2>
-            <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
-              {selected.requiresClass && (
-                <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
-                  <SelectTrigger className="h-9 w-full md:w-44">
-                    <SelectValue placeholder="Turma">
-                      {() => classes?.find((c) => c.id === classId)?.className ?? "Turma"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes?.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.className}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {selected.requiresDateRange && (
-                <>
-                  <Input
-                    type="date"
-                    value={start}
-                    onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
-                    className="h-10 w-[calc(50%-0.25rem)] font-numeric md:h-9 md:w-40"
-                  />
-                  <Input
-                    type="date"
-                    value={end}
-                    onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
-                    className="h-10 w-[calc(50%-0.25rem)] font-numeric md:h-9 md:w-40"
-                  />
-                </>
-              )}
-            </div>
+      {geracao && (
+        <section
+          aria-label={`Relatório: ${geracao.type.name}`}
+          className="rounded-xl border border-border bg-card p-4"
+        >
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 className="font-heading text-[15.5px] font-semibold">{geracao.type.name}</h2>
+            {geracao.type.requiresDateRange && (
+              <span className="font-numeric text-xs text-muted-foreground">
+                {formatarSoData(geracao.start)} – {formatarSoData(geracao.end)}
+              </span>
+            )}
           </div>
-
-          {selected.requiresClass && classId === null ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Selecione uma turma pra gerar.</p>
-          ) : (
-            <ReportBody type={selected} classId={classId} start={start} end={end} />
-          )}
-        </div>
+          <ReportBody type={geracao.type} classId={geracao.classId} start={geracao.start} end={geracao.end} />
+        </section>
       )}
+    </div>
+  );
+}
+
+// Um tipo de relatório: nome e origem no alto, os filtros que ele pede e o "Gerar" na mesma linha.
+// Os filtros são do cartão (cada tipo pede os seus); o resultado só muda quando se aperta "Gerar".
+function CartaoDoRelatorio({
+  type,
+  gerado,
+  onGerar,
+}: {
+  type: ReportTypeDto;
+  gerado: boolean;
+  onGerar: (filtros: { classId: number | null; start: string; end: string }) => void;
+}) {
+  const { data: classes } = useClasses();
+  const [classId, setClassId] = useState<number | null>(null);
+  const [{ start, end }, setRange] = useState(defaultRange);
+
+  const faltaTurma = type.requiresClass && classId === null;
+  const periodoInvalido = type.requiresDateRange && (!start || !end || start > end);
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border bg-card p-3.5",
+        gerado ? "border-primary ring-1 ring-primary/30" : "border-border"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+          <FileBarChart aria-hidden className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="break-words text-sm font-medium">{type.name}</p>
+          <p className="text-xs text-muted-foreground">
+            {REPORT_DATA_SOURCE_LABELS[type.dataSource] ?? type.dataSource} ·{" "}
+            {[type.requiresClass && "por turma", type.requiresDateRange && "por período"]
+              .filter(Boolean)
+              .join(" · ") || "sem filtros"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {type.requiresClass && (
+          <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
+            <SelectTrigger className="h-10 w-full sm:w-40 md:h-9" aria-label="Turma">
+              <SelectValue placeholder="Turma">
+                {() => classes?.find((c) => c.id === classId)?.className ?? "Turma"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {classes?.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.className}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {type.requiresDateRange && (
+          <>
+            <Input
+              type="date"
+              aria-label="Início do período"
+              value={start}
+              onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
+              className="h-10 w-[calc(50%-0.25rem)] font-numeric sm:w-36 md:h-9"
+            />
+            <Input
+              type="date"
+              aria-label="Fim do período"
+              value={end}
+              onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
+              className="h-10 w-[calc(50%-0.25rem)] font-numeric sm:w-36 md:h-9"
+            />
+          </>
+        )}
+        <Button
+          className="w-full sm:ml-auto sm:w-auto"
+          onClick={() => onGerar({ classId, start, end })}
+          disabled={faltaTurma || periodoInvalido}
+          title={faltaTurma ? "Escolha uma turma para gerar" : undefined}
+        >
+          Gerar
+        </Button>
+      </div>
     </div>
   );
 }
