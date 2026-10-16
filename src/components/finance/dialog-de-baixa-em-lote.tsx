@@ -20,7 +20,9 @@ import { financeiroJson } from "@/lib/finance/financeiro-api";
 import { invalidarFinanceiro } from "@/lib/finance/invalidar-financeiro";
 import { executarEmLote, type ResultadoDoLote } from "@/lib/finance/lote";
 import { useContas } from "@/lib/finance/use-tesouraria";
+import { FORMAS_DE_PAGAMENTO, ROTULO_DA_FORMA } from "@/lib/finance/use-recibos";
 import { hojeIsoBrasilia } from "@/lib/format/date";
+import { relacionamentoJson } from "@/lib/relacionamento/api";
 import { formatarMoeda } from "@/lib/rh/formatar";
 
 const CADA_UMA = "__cada__";
@@ -36,6 +38,9 @@ const FORMAS: { valor: string; rotulo: string }[] = [
   { valor: "Outro", rotulo: "Outro" },
 ];
 
+/** As formas de pagamento das cobranças, com os nomes que a rota de "marcar paga" espera. */
+const FORMAS_DA_COBRANCA = FORMAS_DE_PAGAMENTO.map((f) => ({ valor: f as string, rotulo: ROTULO_DA_FORMA[f] }));
+
 export interface ItemDoLote {
   id: string;
   /** Descrição curta, para a lista de falhas. */
@@ -46,7 +51,8 @@ export interface ItemDoLote {
 }
 
 /**
- * Baixa de vários lançamentos de uma vez ("Registrar recebimento de N" e "Registrar pagamento de N").
+ * Baixa de vários lançamentos de uma vez ("Registrar recebimento de N", "Registrar pagamento de N" e, nas
+ * Cobranças, "Marcar N como pagas").
  *
  * Cada item é baixado pelo valor previsto, na mesma data e forma, com a conta escolhida ou a conta
  * própria de cada lançamento. Juros e multa por atraso seguem a configuração da escola, como na
@@ -59,19 +65,22 @@ export function DialogDeBaixaEmLote({
   onConcluir,
   onFechar,
 }: {
-  tipo: "receita" | "despesa";
+  tipo: "receita" | "despesa" | "cobranca";
   itens: ItemDoLote[];
   onConcluir: (baixados: string[]) => void;
   onFechar: () => void;
 }) {
   const receita = tipo === "receita";
+  const cobranca = tipo === "cobranca";
+  const formas = cobranca ? FORMAS_DA_COBRANCA : FORMAS;
+  const substantivo = receita ? "receita" : cobranca ? "cobrança" : "despesa";
   const hoje = hojeIsoBrasilia();
   const queryClient = useQueryClient();
   const { data: contas } = useContas();
 
   const [data, setData] = useState(hoje);
   const [conta, setConta] = useState(CADA_UMA);
-  const [forma, setForma] = useState(NENHUMA);
+  const [forma, setForma] = useState(cobranca ? "Pix" : NENHUMA);
   const [erro, setErro] = useState<string | null>(null);
   const [progresso, setProgresso] = useState<{ feitos: number; total: number } | null>(null);
   const [resultado, setResultado] = useState<ResultadoDoLote | null>(null);
@@ -89,7 +98,11 @@ export function DialogDeBaixaEmLote({
     setProgresso({ feitos: 0, total: itens.length });
 
     const caminho = receita ? "/api/RevenueEntries" : "/api/Expenses";
-    const falha = receita ? "Não foi possível registrar o recebimento." : "Não foi possível registrar o pagamento.";
+    const falha = receita
+      ? "Não foi possível registrar o recebimento."
+      : cobranca
+        ? "Não foi possível marcar a cobrança como paga."
+        : "Não foi possível registrar o pagamento.";
 
     const r = await executarEmLote(
       itens.map((i) => i.id),
@@ -97,6 +110,17 @@ export function DialogDeBaixaEmLote({
         const item = porId.get(id);
         const contaFinanceiraId =
           conta === CADA_UMA ? (item?.contaId ?? undefined) : conta === NENHUMA ? undefined : conta;
+        // Cobrança: a rota é a do Relacionamento; conta nula vale a conta da própria cobrança.
+        if (cobranca) {
+          return relacionamentoJson<void>(
+            `/cobrancas/${id}/marcar-paga`,
+            {
+              method: "POST",
+              body: JSON.stringify({ data, formaDePagamento: forma, contaFinanceiraId: contaFinanceiraId ?? null }),
+            },
+            falha
+          );
+        }
         return financeiroJson(
           `${caminho}/${id}/baixar`,
           {
@@ -119,7 +143,11 @@ export function DialogDeBaixaEmLote({
     onConcluir(r.feitos);
   }
 
-  const titulo = receita ? `Registrar recebimento de ${itens.length}` : `Registrar pagamento de ${itens.length}`;
+  const titulo = receita
+    ? `Registrar recebimento de ${itens.length}`
+    : cobranca
+      ? `Marcar ${itens.length} ${itens.length === 1 ? "como paga" : "como pagas"}`
+      : `Registrar pagamento de ${itens.length}`;
   const feitos = resultado?.feitos.length ?? 0;
   const falhas = resultado?.falhas.length ?? 0;
 
@@ -131,7 +159,7 @@ export function DialogDeBaixaEmLote({
           <DialogDescription>
             {resultado
               ? "Veja como ficou."
-              : `Cada uma é baixada pelo valor previsto, somando ${formatarMoeda(soma)}. Juros e multa por atraso seguem a regra da escola.`}
+              : `Cada uma é baixada pelo valor${cobranca ? " da cobrança" : " previsto"}, somando ${formatarMoeda(soma)}. Juros e multa por atraso seguem a regra da escola.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -157,12 +185,12 @@ export function DialogDeBaixaEmLote({
                   <SelectTrigger id="lote-conta" className="w-full">
                     <SelectValue>
                       {() =>
-                        conta === CADA_UMA ? "A de cada lançamento" : conta === NENHUMA ? "Não informar" : (nomeDaConta ?? "—")
+                        conta === CADA_UMA ? `A de cada ${substantivo}` : conta === NENHUMA ? "Não informar" : (nomeDaConta ?? "—")
                       }
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent alignItemWithTrigger={false}>
-                    <SelectItem value={CADA_UMA}>A de cada lançamento</SelectItem>
+                    <SelectItem value={CADA_UMA}>A de cada {substantivo}</SelectItem>
                     {(contas ?? []).map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.nome}
@@ -175,11 +203,11 @@ export function DialogDeBaixaEmLote({
               <Campo id="lote-forma" rotulo="Forma de pagamento">
                 <Select value={forma} onValueChange={(v) => v && setForma(String(v))} disabled={executando}>
                   <SelectTrigger id="lote-forma" className="w-full">
-                    <SelectValue>{() => FORMAS.find((f) => f.valor === forma)?.rotulo ?? "Não informar"}</SelectValue>
+                    <SelectValue>{() => formas.find((f) => f.valor === forma)?.rotulo ?? "Não informar"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent alignItemWithTrigger={false}>
-                    <SelectItem value={NENHUMA}>Não informar</SelectItem>
-                    {FORMAS.map((f) => (
+                    {!cobranca && <SelectItem value={NENHUMA}>Não informar</SelectItem>}
+                    {formas.map((f) => (
                       <SelectItem key={f.valor} value={f.valor}>
                         {f.rotulo}
                       </SelectItem>
@@ -223,9 +251,13 @@ export function DialogDeBaixaEmLote({
                 ? feitos === 1
                   ? "recebimento registrado"
                   : "recebimentos registrados"
-                : feitos === 1
-                  ? "pagamento registrado"
-                  : "pagamentos registrados"}
+                : cobranca
+                  ? feitos === 1
+                    ? "cobrança marcada como paga"
+                    : "cobranças marcadas como pagas"
+                  : feitos === 1
+                    ? "pagamento registrado"
+                    : "pagamentos registrados"}
               {falhas > 0 && (
                 <>
                   {" "}e <span className="font-numeric font-semibold text-destructive">{falhas}</span> com problema
