@@ -176,6 +176,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/rh/ponto", label: "Ponto", area: "ponto", icon: Clock, grupo: GRUPO_JORNADA },
     { href: "/rh/atestados", label: "Atestados", area: "atestados", icon: Stethoscope, grupo: GRUPO_JORNADA },
     { href: "/rh/afastamentos", label: "Afastamentos", area: "afastamentos", icon: CalendarOff, grupo: GRUPO_JORNADA },
+    { href: "/rh/desempenho", label: "Desempenho", area: "desempenho", icon: TrendingUp },
     { href: "/rh/relatorios", label: "Relatórios", area: "relatorios", icon: ChartColumn },
     { href: "/rh/configuracao", label: "Configuração", area: "configuracao", icon: SlidersHorizontal },
   ],

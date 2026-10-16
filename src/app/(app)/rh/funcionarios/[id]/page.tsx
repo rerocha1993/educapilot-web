@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Pencil, RotateCcw, Trash2, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { Campo, ErroDeCarga } from "@/components/rh/campo";
 import { Confirmacao } from "@/components/rh/confirmacao";
 import { DialogFuncionario } from "@/components/rh/dialog-funcionario";
+import { PainelDeDesempenho } from "@/components/rh/desempenho/painel-de-desempenho";
 import { PainelDeAfastamentos } from "@/components/rh/painel-de-afastamentos";
 import { PainelDeAtestados } from "@/components/rh/painel-de-atestados";
 import { PainelDeDocumentos } from "@/components/rh/painel-de-documentos";
@@ -47,6 +48,8 @@ type Dialogo = "editar" | "desligar" | "reativar" | "excluir";
 export default function FichaDoFuncionarioPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  // /rh/desempenho leva para cá com ?aba=desempenho.
+  const abaPedida = useSearchParams().get("aba");
   const podeEscrever = usePodeEscreverNoRh();
   const { data: meuAcesso } = useMeuAcesso();
   const { data: funcionario, isLoading, isError, refetch } = useFuncionario(id);
@@ -136,7 +139,7 @@ export default function FichaDoFuncionarioPage() {
             }
           />
 
-          <Tabs defaultValue="dados">
+          <Tabs defaultValue={abaPedida === "desempenho" && ver("desempenho") ? "desempenho" : "dados"}>
             <TabsList className="w-full justify-start md:w-fit">
               <TabsTrigger value="dados" className="px-3">
                 Dados
@@ -159,6 +162,11 @@ export default function FichaDoFuncionarioPage() {
               {ver("documentos") && (
                 <TabsTrigger value="documentos" className="px-3">
                   Documentos
+                </TabsTrigger>
+              )}
+              {ver("desempenho") && (
+                <TabsTrigger value="desempenho" className="px-3">
+                  Desempenho
                 </TabsTrigger>
               )}
             </TabsList>
@@ -184,6 +192,11 @@ export default function FichaDoFuncionarioPage() {
             {ver("documentos") && (
               <TabsContent value="documentos" className="pt-3">
                 <PainelDeDocumentos funcionarioFixo={id} />
+              </TabsContent>
+            )}
+            {ver("desempenho") && (
+              <TabsContent value="desempenho" className="pt-3">
+                <PainelDeDesempenho funcionarioId={id} />
               </TabsContent>
             )}
           </Tabs>

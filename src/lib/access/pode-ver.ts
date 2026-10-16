@@ -97,6 +97,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/rh\/documentos/, modulo: "rh", area: "documentos" },
   { padrao: /^\/rh\/relatorios/, modulo: "rh", area: "relatorios" },
   { padrao: /^\/rh\/configuracao/, modulo: "rh", area: "configuracao" },
+  // Desempenho e feedback (nota, avaliação, advertência): área própria, nunca herdada de funcionários nem de relatórios.
+  { padrao: /^\/rh\/desempenho/, modulo: "rh", area: "desempenho" },
   { padrao: /^\/rh/, modulo: "rh", area: null },
 
   // Relacionamento (avisos, cronograma, famílias, atividades e mural). A entrada do módulo só redireciona.
