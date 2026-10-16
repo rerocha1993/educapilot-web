@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { BotaoDeExportar } from "@/components/finance/botao-de-exportar";
 import { DialogDeImportacao } from "@/components/finance/dialog-de-importacao";
+import { FaixaDeTotais } from "@/components/finance/faixa-de-totais";
 import { FinanceNav } from "@/components/finance/finance-nav";
 import {
   SeletorDeCentroDeCusto,
@@ -107,6 +108,15 @@ export default function OrcamentoPage() {
     }
   }
 
+  // Números antes da lista: o ano inteiro, receitas e despesas separadas.
+  const linhas = comparativo ?? [];
+  const soma = (tipo: string, campo: "planejado" | "realizado") =>
+    linhas.filter((c) => c.tipo === tipo).reduce((total, c) => total + c[campo], 0);
+  const receitaPlanejada = soma("Receita", "planejado");
+  const receitaRealizada = soma("Receita", "realizado");
+  const despesaPlanejada = soma("Despesa", "planejado");
+  const despesaRealizada = soma("Despesa", "realizado");
+
   return (
     <div className="flex flex-col gap-[18px]">
       <FinanceNav />
@@ -118,7 +128,7 @@ export default function OrcamentoPage() {
             Orçamento <span className="font-mono tabular-nums">{ano}</span>
           </>
         }
-        apoio="Planejado x realizado por categoria — realizado é sempre dinheiro que efetivamente entrou/saiu (recebido/pago), não o previsto."
+        apoio="Planejado e realizado por categoria. Realizado é o que de fato entrou ou saiu (recebido ou pago), não o previsto."
         acoes={
           <>
             <Button variant="outline" className="flex-1 md:flex-none" onClick={() => setImportando(true)}>
@@ -137,6 +147,40 @@ export default function OrcamentoPage() {
         <div className="rounded-lg border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
           Não foi possível carregar o comparativo.
         </div>
+      )}
+
+      {linhas.length > 0 && (
+        <FaixaDeTotais
+          rotulo={`Totais do orçamento de ${ano}`}
+          itens={[
+            {
+              chave: "receita",
+              rotulo: "Receita realizada",
+              valor: formatCurrency(receitaRealizada),
+              detalhe: `de ${formatCurrency(receitaPlanejada)} planejados`,
+              tom: receitaRealizada > 0 ? "success" : undefined,
+            },
+            {
+              chave: "despesa",
+              rotulo: "Despesa realizada",
+              valor: formatCurrency(despesaRealizada),
+              detalhe: `de ${formatCurrency(despesaPlanejada)} planejados`,
+              tom: despesaRealizada > despesaPlanejada && despesaPlanejada > 0 ? "danger" : undefined,
+            },
+            {
+              chave: "planejado",
+              rotulo: "Resultado planejado",
+              valor: formatCurrency(receitaPlanejada - despesaPlanejada),
+              tom: receitaPlanejada - despesaPlanejada < 0 ? "danger" : undefined,
+            },
+            {
+              chave: "realizado",
+              rotulo: "Resultado realizado",
+              valor: formatCurrency(receitaRealizada - despesaRealizada),
+              tom: receitaRealizada - despesaRealizada < 0 ? "danger" : undefined,
+            },
+          ]}
+        />
       )}
 
       <div className="flex flex-col gap-2 md:hidden">
