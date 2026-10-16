@@ -178,15 +178,26 @@ export default function ChecklistFillPage() {
         }
       />
 
-      {/* Guia (Estatística): barra fina de 6px, roxa — laranja enquanto falta muito. */}
+      {/* Guia (Estatística): barra fina de 6px, roxa — laranja enquanto falta muito. O "3 de 7"
+          acompanha a barra para a professora ver quanto falta sem contar os itens. */}
       {items.length > 0 && (
-        <Progress
-          value={(doneCount / items.length) * 100}
-          className={cn(
-            "[&_[data-slot=progress-track]]:h-1.5",
-            doneCount / items.length < 0.5 && "[&_[data-slot=progress-indicator]]:bg-action"
-          )}
-        />
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <Progress
+            value={(doneCount / items.length) * 100}
+            className={cn(
+              "gap-2 [&_[data-slot=progress-track]]:h-1.5",
+              doneCount / items.length < 0.5 && "[&_[data-slot=progress-indicator]]:bg-action"
+            )}
+          >
+            <span className="text-sm font-medium">
+              <span className="font-numeric">{doneCount}</span> de <span className="font-numeric">{items.length}</span>{" "}
+              concluídos
+            </span>
+            <span className="ml-auto font-numeric text-sm text-muted-foreground">
+              {Math.round((doneCount / items.length) * 100)}%
+            </span>
+          </Progress>
+        </div>
       )}
 
       {isError && (
@@ -206,49 +217,61 @@ export default function ChecklistFillPage() {
           }
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        // Itens em duas colunas em tela larga: item curto não merece a largura inteira. Cada item é
+        // um cartão clicável (o rótulo envolve o campo), com a hora da marcação à direita.
+        <ul className="grid grid-cols-1 gap-2 lg:grid-cols-2">
           {(classesLoading || templatesLoading || fillLoading) &&
-            Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="border-b border-border px-4 py-3 last:border-0">
-                <Skeleton className="h-5 w-full" />
-              </div>
+            Array.from({ length: 6 }).map((_, i) => (
+              <li key={i}>
+                <Skeleton className="h-14 w-full rounded-xl" />
+              </li>
             ))}
 
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 last:border-0"
-            >
-              <label className="flex min-w-0 flex-1 items-center gap-3">
-                {item.tipo === "Contagem" ? (
-                  <Input
-                    type="number"
-                    min={0}
-                    value={marks[item.id]?.countValue ?? ""}
-                    onChange={(e) => setCount(item.id, Number(e.target.value))}
-                    className="h-10 w-20 shrink-0 font-numeric md:h-8"
-                  />
-                ) : (
-                  <Checkbox
-                    className="size-[18px]"
-                    checked={marks[item.id]?.isChecked ?? false}
-                    onCheckedChange={(v) => toggle(item.id, v === true)}
-                  />
+          {items.map((item) => {
+            const feito = marks[item.id]?.isChecked ?? false;
+            return (
+              <li
+                key={item.id}
+                className={cn(
+                  "flex items-center justify-between gap-3 rounded-xl border bg-card px-3.5 py-3 transition-colors",
+                  feito ? "border-success-soft bg-success-soft/40" : "border-border"
                 )}
-                <span
-                  className={marks[item.id]?.isChecked ? "text-muted-foreground line-through" : ""}
-                >
-                  {item.description}
-                </span>
-              </label>
-              {item.checkedAt && (
-                <span className="shrink-0 font-numeric text-xs text-muted-foreground">
-                  {formatarHora(item.checkedAt)}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
+              >
+                <label className="flex min-w-0 flex-1 items-center gap-3">
+                  {item.tipo === "Contagem" ? (
+                    <span className="flex shrink-0 flex-col gap-0.5">
+                      <span className="text-[10.5px] font-bold uppercase tracking-[.1em] text-muted-foreground">
+                        Quantidade
+                      </span>
+                      <Input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={marks[item.id]?.countValue ?? ""}
+                        onChange={(e) => setCount(item.id, Number(e.target.value))}
+                        className="h-10 w-20 font-numeric md:h-8"
+                      />
+                    </span>
+                  ) : (
+                    <Checkbox
+                      className="size-[18px]"
+                      checked={feito}
+                      onCheckedChange={(v) => toggle(item.id, v === true)}
+                    />
+                  )}
+                  <span className={cn("min-w-0 break-words text-sm", feito && "text-muted-foreground line-through")}>
+                    {item.description}
+                  </span>
+                </label>
+                {item.checkedAt && (
+                  <span className="shrink-0 font-numeric text-xs text-muted-foreground">
+                    {formatarHora(item.checkedAt)}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       <div className="flex items-center justify-between gap-3">
