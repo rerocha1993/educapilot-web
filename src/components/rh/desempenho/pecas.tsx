@@ -34,8 +34,9 @@ type Tom = "success" | "waiting" | "pending" | "overdue" | "secondary";
  * A cor da faixa vem da POSIÇÃO dela na lista da escola (a de cima é verde, a de baixo chama atenção), e não do
  * nome nem de um número fixo: a escola renomeia e move as faixas à vontade.
  */
-export function useTomDaFaixa() {
-  const { data } = useConfiguracaoDeDesempenho();
+export function useTomDaFaixa(semConfiguracao = false) {
+  // O funcionário (autoatendimento) não tem a área que lê a configuração: sem ela a faixa fica na cor neutra.
+  const { data } = useConfiguracaoDeDesempenho(!semConfiguracao);
   const nomes = [...(data?.faixas ?? [])].sort((a, b) => b.minimo - a.minimo).map((f) => f.nome);
 
   return (faixa: string | null | undefined): Tom => {
@@ -48,8 +49,8 @@ export function useTomDaFaixa() {
   };
 }
 
-export function FaixaBadge({ faixa }: { faixa: string | null | undefined }) {
-  const tom = useTomDaFaixa();
+export function FaixaBadge({ faixa, semConfiguracao = false }: { faixa: string | null | undefined; semConfiguracao?: boolean }) {
+  const tom = useTomDaFaixa(semConfiguracao);
   if (!faixa) return <Badge variant="outline">Sem nota</Badge>;
   return <Badge variant={tom(faixa)}>{faixa}</Badge>;
 }

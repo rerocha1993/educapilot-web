@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  TrendingUp,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +42,7 @@ import { BannerDeNotificacoes } from "@/components/push/banner-de-notificacoes";
 import { BuscaGlobal } from "@/components/shell/busca-global";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
+import { useMeuDesempenhoDisponivel } from "@/lib/rh/use-meu-desempenho";
 import { useMeuPontoDisponivel } from "@/lib/rh/use-meu-ponto";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
@@ -55,6 +57,7 @@ const COLLAPSE_STORAGE_KEY = "educapilot_sidebar_collapsed";
  * da tela. O caminho de volta é a seta da própria página.
  */
 const MEU_PONTO_HREF = "/meu-ponto";
+const MEU_DESEMPENHO_HREF = "/meu-desempenho";
 
 // Celular (abaixo de md): a sidebar some e dá lugar a um cabeçalho com menu, uma barra de abas
 // embaixo e a tela Início com atalhos. A barra tem espaço para cinco abas: Início, três módulos e
@@ -110,6 +113,8 @@ export function AppShell({
   const { data: modulosAtivos } = useActiveModules();
   // O atalho só existe para quem tem ficha de funcionário e a escola ligou o ponto pelo celular.
   const comMeuPonto = useMeuPontoDisponivel(session.role !== "Responsavel");
+  // Idem para o desempenho: o atalho só existe para quem tem ficha de funcionário ligada ao login.
+  const comMeuDesempenho = useMeuDesempenhoDisponivel(session.role !== "Responsavel");
   const telaLimpaNoCelular = pathname === MEU_PONTO_HREF;
 
   const [collapsed, setCollapsed] = useState(false);
@@ -216,7 +221,9 @@ export function AppShell({
         ? TITULO_DO_MODULO.admin
         : pathname === MEU_PONTO_HREF
           ? "Meu ponto"
-          : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
+          : pathname === MEU_DESEMPENHO_HREF || pathname.startsWith(`${MEU_DESEMPENHO_HREF}/`)
+            ? "Meu desempenho"
+            : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
 
   const menuDoUsuario = (tamanho: "sm" | "lg") => (
     <DropdownMenu>
@@ -238,6 +245,12 @@ export function AppShell({
           <DropdownMenuItem onClick={() => router.push(MEU_PONTO_HREF)}>
             <Clock className="size-4" />
             Meu ponto
+          </DropdownMenuItem>
+        )}
+        {comMeuDesempenho && (
+          <DropdownMenuItem onClick={() => router.push(MEU_DESEMPENHO_HREF)}>
+            <TrendingUp className="size-4" />
+            Meu desempenho
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={() => setAlterandoSenha(true)}>
@@ -506,6 +519,16 @@ export function AppShell({
                 >
                   <Clock className="size-5 text-sidebar-muted" />
                   Meu ponto
+                </Link>
+              )}
+              {comMeuDesempenho && (
+                <Link
+                  href={MEU_DESEMPENHO_HREF}
+                  onClick={fecharMenu}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-sidebar-foreground active:bg-sidebar-accent"
+                >
+                  <TrendingUp className="size-5 text-sidebar-muted" />
+                  Meu desempenho
                 </Link>
               )}
               <button

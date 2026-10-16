@@ -341,9 +341,10 @@ export function useDesempenhoDoFuncionario(id: string) {
   });
 }
 
-export function useConfiguracaoDeDesempenho() {
+export function useConfiguracaoDeDesempenho(habilitada = true) {
   return useQuery({
     queryKey: [CHAVE, "configuracao"],
+    enabled: habilitada,
     queryFn: () =>
       rhJson<ConfiguracaoDeDesempenho>(
         "/desempenho/configuracao",

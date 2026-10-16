@@ -44,7 +44,16 @@ export function BarrasDeComponentes({ componentes }: { componentes: ComponenteDa
  * "Como chegamos nessa nota": cada componente com o dado bruto, a nota de 0 a 100, o peso e quanto contribui. É o que
  * torna a nota explicável (e contestável); sem esta tabela ela não deve ser mostrada.
  */
-export function ComoChegamosNessaNota({ nota, className }: { nota: NotaDeDesempenho; className?: string }) {
+export function ComoChegamosNessaNota({
+  nota,
+  className,
+  proprio = false,
+}: {
+  nota: NotaDeDesempenho;
+  className?: string;
+  /** Autoatendimento: o funcionário vendo a própria nota (sem a área, não lê a configuração da escola). */
+  proprio?: boolean;
+}) {
   const bonus = nota.componentes.find((c) => c.chave === "Reconhecimentos");
   const ponderados = nota.componentes.filter((c) => c.chave !== "Reconhecimentos");
 
@@ -125,7 +134,7 @@ export function ComoChegamosNessaNota({ nota, className }: { nota: NotaDeDesempe
               <TableCell colSpan={2}>Nota final</TableCell>
               <TableCell colSpan={3} className="text-right">
                 <span className="inline-flex items-center gap-2">
-                  <FaixaBadge faixa={nota.faixa} />
+                  <FaixaBadge faixa={nota.faixa} semConfiguracao={proprio} />
                   <span className="font-mono tabular-nums">{formatarNota(nota.nota)}</span>
                 </span>
               </TableCell>
@@ -144,10 +153,12 @@ export function ResumoDaNota({
   nota,
   variacao,
   children,
+  proprio = false,
 }: {
   nota: NotaDeDesempenho;
   variacao: React.ReactNode;
   children?: React.ReactNode;
+  proprio?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-border bg-card px-4 py-3">
@@ -159,7 +170,7 @@ export function ResumoDaNota({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <FaixaBadge faixa={nota.faixa} />
+        <FaixaBadge faixa={nota.faixa} semConfiguracao={proprio} />
         {nota.poucosDados && <Badge variant="pending">Poucos dados</Badge>}
         {nota.bonus > 0 && <Badge variant="success">+{formatarNota(nota.bonus)} de reconhecimentos</Badge>}
       </div>
