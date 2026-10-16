@@ -94,6 +94,10 @@ function Recibos() {
   const lista = useMemo(() => (data ?? []).filter((r) => bate(r, busca)), [data, busca]);
   const temFiltro = busca.trim() !== "";
 
+  // Números antes da lista: seguem a busca; recibo cancelado não entra na soma.
+  const validos = lista.filter((r) => !r.cancelado);
+  const somaEmitida = validos.reduce((soma, r) => soma + r.valor, 0);
+
   async function abrirPdf(recibo: ReciboResumo) {
     // A aba abre agora, no clique: depois da espera da rede o navegador a bloquearia.
     const aba = window.open("", "_blank");
@@ -183,6 +187,26 @@ function Recibos() {
         </div>
       </div>
 
+      {!isError && !isLoading && lista.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground" aria-live="polite">
+          <span>
+            <span className="font-numeric font-medium text-foreground">{validos.length}</span>{" "}
+            {validos.length === 1 ? "recibo" : "recibos"} em {ano}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            <span className="font-mono font-medium text-foreground tabular-nums">{formatarMoeda(somaEmitida)}</span>{" "}
+            emitidos
+          </span>
+          {lista.length > validos.length && (
+            <>
+              <span aria-hidden>·</span>
+              <span>{lista.length - validos.length} cancelados</span>
+            </>
+          )}
+        </p>
+      )}
+
       {isError ? (
         <ErroDeCarga texto="Não foi possível carregar os recibos." onTentar={() => refetch()} />
       ) : isLoading ? (
@@ -258,7 +282,7 @@ function Recibos() {
                   <TableRow
                     key={r.id}
                     ref={destacar(r.id)}
-                    className={cn(r.id === destaque && "bg-action-soft/40", r.cancelado && "text-muted-foreground")}
+                    className={cn("[&>td]:py-1.5", r.id === destaque && "bg-action-soft/40", r.cancelado && "text-muted-foreground")}
                   >
                     <TableCell className="font-mono text-sm tabular-nums">{r.numeroFormatado}</TableCell>
                     <TableCell className="font-mono text-sm tabular-nums">{formatarSoData(r.dataDoPagamento)}</TableCell>
