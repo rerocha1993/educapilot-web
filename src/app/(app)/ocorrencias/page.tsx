@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Printer } from "lucide-react";
+import Link from "next/link";
+import { FileText, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -132,6 +133,11 @@ export default function OcorrenciasPage() {
     const created = new Date(o.createdAt);
     return created >= startDate && created < new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
   });
+
+  // Resumo do ano: o caminho "procurar o aluno" para quem não está olhando o ranking do relatório.
+  const [resumoTurmaId, setResumoTurmaId] = useState<number | null>(null);
+  const [resumoAlunoId, setResumoAlunoId] = useState<number | null>(null);
+  const { data: alunosDoResumo, isLoading: alunosDoResumoLoading } = useStudentsByClass(resumoTurmaId);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -319,6 +325,77 @@ export default function OcorrenciasPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 print:hidden">
+        <h2 className="font-heading text-[15.5px] font-semibold">Resumo do ano de um aluno</h2>
+        <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
+          De 1º de janeiro até hoje: faltas, ocorrências, pais avisados, reuniões e portaria numa folha só, pronta para imprimir.
+        </p>
+        <div className="flex flex-col gap-2 md:flex-row md:items-end">
+          <div className="flex flex-col gap-[5px] md:w-56">
+            <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Turma</span>
+            <Select
+              value={resumoTurmaId?.toString() ?? ""}
+              onValueChange={(v) => {
+                if (!v) return;
+                setResumoTurmaId(Number(v));
+                setResumoAlunoId(null);
+              }}
+            >
+              <SelectTrigger className="h-10 w-full md:h-9">
+                <SelectValue placeholder="Selecione">
+                  {() => classes?.find((c) => c.id === resumoTurmaId)?.className ?? "Selecione"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {classes?.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.className}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-[5px] md:w-72">
+            <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Aluno</span>
+            <Select
+              value={resumoAlunoId?.toString() ?? ""}
+              onValueChange={(v) => v && setResumoAlunoId(Number(v))}
+              disabled={resumoTurmaId === null || alunosDoResumoLoading}
+            >
+              <SelectTrigger className="h-10 w-full md:h-9">
+                <SelectValue placeholder={resumoTurmaId === null ? "Escolha a turma primeiro" : "Selecione"}>
+                  {() =>
+                    alunosDoResumo?.find((a) => a.id === resumoAlunoId)?.fullName ??
+                    (resumoTurmaId === null ? "Escolha a turma primeiro" : "Selecione")
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {alunosDoResumo?.map((a) => (
+                  <SelectItem key={a.id} value={String(a.id)}>
+                    {a.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {resumoAlunoId !== null ? (
+            <Link
+              href={`/ocorrencias/aluno/${resumoAlunoId}`}
+              className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
+            >
+              <FileText className="size-4" />
+              Abrir resumo do ano
+            </Link>
+          ) : (
+            <Button variant="outline" className="w-full md:w-auto" disabled>
+              <FileText className="size-4" />
+              Abrir resumo do ano
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 print:hidden">
         <h2 className="font-heading text-[15.5px] font-semibold">Observação semanal da turma</h2>
         <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">Resumo da semana enviado à coordenação.</p>
 
@@ -399,6 +476,16 @@ export default function OcorrenciasPage() {
           <DialogHeader>
             <DialogTitle>Ocorrências de {selectedStudent?.name}</DialogTitle>
           </DialogHeader>
+
+          {selectedStudent && (
+            <Link
+              href={`/ocorrencias/aluno/${selectedStudent.id}`}
+              className={buttonVariants({ variant: "outline", className: "w-full sm:w-fit" })}
+            >
+              <FileText className="size-4" />
+              Resumo do ano
+            </Link>
+          )}
 
           {studentOccurrencesLoading && <Skeleton className="h-24 w-full" />}
 
