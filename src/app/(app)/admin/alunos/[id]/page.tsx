@@ -22,24 +22,6 @@ function calcularIdade(birthDate: string) {
   return idade;
 }
 
-// Responsáveis saiu daqui em 2026-09: a justificativa ("não existe entidade de responsável no
-// backend") deixou de valer quando o módulo Financeiro entrou com Guardian/StudentGuardian, e a
-// importação do Agenda Edu passou a trazer esses dados. A aba continuava avisando que não dava.
-const NOT_AVAILABLE_TABS = [
-  {
-    value: "frequencia",
-    label: "Frequência",
-    reason:
-      "Não existe endpoint de histórico de presença por aluno (só por turma+data) — não dá pra calcular o % dos últimos 30 dias sem buscar dezenas de dias um por um.",
-  },
-  {
-    value: "documentos",
-    label: "Documentos",
-    reason:
-      "Não existe entidade de documento nem upload de arquivo genérico em nenhum lugar do backend.",
-  },
-];
-
 export default function FichaAlunoPage() {
   const params = useParams<{ id: string }>();
   const studentId = Number(params.id);
@@ -103,12 +85,6 @@ export default function FichaAlunoPage() {
           <TabsTrigger value="ocorrencias">Ocorrências</TabsTrigger>
           <TabsTrigger value="saude">Saúde</TabsTrigger>
           <TabsTrigger value="responsaveis">Responsáveis</TabsTrigger>
-
-        {NOT_AVAILABLE_TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value}>
-              {t.label}
-            </TabsTrigger>
-          ))}
         </TabsList>
 
         <TabsContent value="dados" className="mt-4">
@@ -126,10 +102,6 @@ export default function FichaAlunoPage() {
               <p className="font-mono text-sm font-medium tabular-nums">{formatarData(student.createdAt)}</p>
             </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            CPF, matrícula, turno e &quot;autorizado a sair só&quot; do wireframe não
-            existem no backend (Student não tem esses campos).
-          </p>
         </TabsContent>
 
         <TabsContent value="ocorrencias" className="mt-4">
@@ -183,8 +155,7 @@ export default function FichaAlunoPage() {
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Editável na lista de Alunos. Mostra só o estado atual — não existe timeline
-            de registros de saúde no backend.
+            Editável na lista de Alunos. Mostra só a informação mais recente.
           </p>
         </TabsContent>
 
@@ -252,14 +223,6 @@ export default function FichaAlunoPage() {
             })}
           </div>
         </TabsContent>
-
-        {NOT_AVAILABLE_TABS.map((t) => (
-          <TabsContent key={t.value} value={t.value} className="mt-4">
-            <div className="rounded-xl border border-dashed border-border-dashed bg-card p-4 text-[13px] leading-[1.55] text-pretty text-muted-foreground">
-              {t.reason}
-            </div>
-          </TabsContent>
-        ))}
       </Tabs>
     </div>
   );
