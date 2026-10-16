@@ -173,10 +173,9 @@ export default function NovoPedidoPage() {
             </div>
             {formaPagamento === "Pix" && (
               <p className="text-xs text-muted-foreground">
-                O pedido é criado normalmente, mas a geração de QR/copia-e-cola e a
-                confirmação automática via webhook Asaas não estão conectadas ao pedido
-                no backend hoje (dois caminhos desconectados) — o pagamento Pix precisa
-                ser confirmado manualmente por fora, por enquanto.
+                O pedido é criado normalmente, mas o Pix ainda não gera QR nem copia-e-cola, e o
+                pagamento não é reconhecido sozinho: confirme-o manualmente quando o dinheiro
+                chegar.
               </p>
             )}
           </div>

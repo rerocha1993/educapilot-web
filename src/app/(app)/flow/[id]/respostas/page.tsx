@@ -147,8 +147,8 @@ export default function FormResponsesPage() {
                 )}
               </div>
               <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
-                Nenhuma automação foi disparada — o backend ainda não tem motor de
-                execução de automações (ver aba Automações do formulário).
+                Nenhuma automação foi disparada: as regras da aba Automações do formulário ainda não
+                são executadas.
               </div>
               {selected.status !== "Concluída" && (
                 <Button

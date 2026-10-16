@@ -124,11 +124,6 @@ export default function ModuleCatalogPage() {
         </Table>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Versão e Depende (colunas do wireframe) não existem no backend — Module só tem
-        chave/nome/descrição/preço/status.
-      </p>
-
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>

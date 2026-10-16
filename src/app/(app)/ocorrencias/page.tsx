@@ -289,8 +289,7 @@ export default function OcorrenciasPage() {
         <div className="rounded-xl border border-border bg-card p-4">
           <h2 className="font-heading text-[15.5px] font-semibold">Alunos com mais registros</h2>
           <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
-            A cor do ponto é a categoria mais comum do aluno no período — o backend não tem um
-            conceito de gravidade separado.
+            A cor do ponto é a categoria mais comum do aluno no período.
           </p>
 
           {isLoading && <Skeleton className="h-32 w-full" />}
