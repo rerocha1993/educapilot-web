@@ -232,7 +232,7 @@ export function DemandasDaReuniao({
                 <div className="flex flex-col gap-1 @xl:block">
                   <Label className="text-xs text-muted-foreground @xl:sr-only">Quem vai fazer</Label>
                   <Select
-                    value={responsavelDe(r) || undefined}
+                    value={responsavelDe(r) || null}
                     onValueChange={(v) => v && alterar(r.chave, { responsavelUserId: String(v) })}
                   >
                     <SelectTrigger className="w-full" aria-label="Quem vai fazer">
