@@ -67,10 +67,10 @@ function PainelDeVisitantes() {
         </div>
       )}
 
-      <div className="flex flex-col gap-2 md:hidden">
-        {isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
+      {!isLoading && !isError && lista.length === 0 && <NenhumVisitante />}
 
-        {!isLoading && lista.length === 0 && <NenhumVisitante />}
+      <div className={cn("flex flex-col gap-2 md:hidden", !isLoading && lista.length === 0 && "hidden")}>
+        {isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
 
         {lista.map((v) => (
           <div key={v.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
@@ -107,7 +107,7 @@ function PainelDeVisitantes() {
         ))}
       </div>
 
-      <div className="hidden rounded-xl border border-border bg-card md:block">
+      <div className={cn("hidden rounded-xl border border-border bg-card", (isLoading || lista.length > 0) && "md:block")}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -128,14 +128,6 @@ function PainelDeVisitantes() {
                   </TableCell>
                 </TableRow>
               ))}
-
-            {!isLoading && lista.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="p-0">
-                  <NenhumVisitante semBorda />
-                </TableCell>
-              </TableRow>
-            )}
 
             {lista.map((v) => (
               <TableRow key={v.id}>
@@ -175,21 +167,12 @@ function PainelDeVisitantes() {
   );
 }
 
-/** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
-function NenhumVisitante({ semBorda = false }: { semBorda?: boolean }) {
+/** Estado vazio de uma linha: o quadro grande dizia só isto e empurrava o resto da tela. */
+function NenhumVisitante() {
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center px-5 py-9 text-center",
-        !semBorda && "rounded-xl border border-dashed border-border-dashed bg-card"
-      )}
-    >
-      <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
-        <UserRound className="size-4" />
-      </span>
-      <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
-        Nenhum visitante na escola agora.
-      </p>
+    <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-border-dashed bg-card px-4 py-3 text-sm text-muted-foreground">
+      <UserRound aria-hidden className="size-4 shrink-0" />
+      <p>Nenhum visitante na escola agora. Use &quot;Registrar entrada&quot; quando alguém chegar.</p>
     </div>
   );
 }
