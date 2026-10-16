@@ -12,11 +12,13 @@ import {
   MapPin,
   MessageCircle,
   NotebookPen,
+  Salad,
   ShoppingBag,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
 
+import { ResumoDoCardapioDeHoje } from "@/components/relacionamento/portal/cardapio";
 import { CartaoDeAlbum, CartaoDeAtividade } from "@/components/relacionamento/portal/conteudo";
 import {
   ErroDoPortal,
@@ -27,6 +29,7 @@ import {
 } from "@/components/relacionamento/portal/comum";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInicioDoPortal } from "@/lib/relacionamento/use-portal-familia";
+import { useCardapioDoPortal } from "@/lib/relacionamento/use-portal-cardapio";
 import { useDiariosDoPortal } from "@/lib/relacionamento/use-portal-diario";
 import { usePagamentosDoPortal } from "@/lib/relacionamento/use-portal-pagamentos";
 import { hojeIsoBrasilia } from "@/lib/format/date";
@@ -41,6 +44,8 @@ export default function InicioDoResponsavelPage() {
   // O diário de hoje de cada filho: quando a escola publica, o cartão abaixo leva direto a ele.
   const { data: diarios } = useDiariosDoPortal(hojeIsoBrasilia());
   const diariosDeHoje = (diarios?.filhos ?? []).filter((f) => f.diario);
+  // O cardápio da semana (a mesma consulta da tela Cardápio): o cartão de hoje só aparece se a escola publicou.
+  const { data: cardapio } = useCardapioDoPortal();
 
   if (isLoading) {
     return (
@@ -100,6 +105,8 @@ export default function InicioDoResponsavelPage() {
           <ChevronRight aria-hidden className="size-5 shrink-0" />
         </Link>
       ))}
+
+      <ResumoDoCardapioDeHoje cardapios={cardapio?.cardapios ?? []} />
 
       {data.mensagensNaoLidas > 0 && (
         <Link
@@ -239,6 +246,7 @@ export default function InicioDoResponsavelPage() {
         <div className="grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
           <Atalho href="/responsavel/agenda" icone={CalendarDays} titulo="Agenda" texto="Eventos e calendário" />
           <Atalho href="/responsavel/diario" icone={NotebookPen} titulo="Diário" texto="O dia do seu filho" />
+          <Atalho href="/responsavel/cardapio" icone={Salad} titulo="Cardápio" texto="O que a escola serve" />
           <Atalho href="/responsavel/agenda?aba=rotina" icone={CalendarClock} titulo="Rotina da semana" texto="Horários da turma" />
           <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Entrada, saída e visitas" />
           <Atalho href="/responsavel/mural" icone={Images} titulo="Fotos" texto="Álbuns da escola" />
