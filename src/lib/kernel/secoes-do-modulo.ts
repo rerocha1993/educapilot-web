@@ -160,7 +160,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/finance/orcamento", label: "Orçamento anual", icon: PiggyBank, grupo: GRUPO_PLANEJAMENTO },
     { href: "/finance/projetos", label: "Projetos e eventos", icon: FolderKanban, grupo: GRUPO_PLANEJAMENTO },
     { href: "/finance/precificacao", label: "Precificação", icon: Tag, grupo: GRUPO_PLANEJAMENTO },
-    { href: "/finance/contas", label: "Contas", icon: Landmark, grupo: GRUPO_TESOURARIA },
+    { href: "/finance/contas", label: "Contas e carteiras", icon: Landmark, grupo: GRUPO_TESOURARIA },
     { href: "/finance/conciliacao", label: "Conciliação", icon: ArrowLeftRight, grupo: GRUPO_TESOURARIA },
     { href: "/finance/plano-de-contas", label: "Plano de contas", icon: ListTree, grupo: GRUPO_TESOURARIA },
     { href: "/finance/fechamento", label: "Fechamento", icon: Lock, grupo: GRUPO_TESOURARIA },

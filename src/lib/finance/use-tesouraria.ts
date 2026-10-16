@@ -37,6 +37,12 @@ export interface SaldoDaConta {
   saldoAtual: number;
   aReceber: number;
   aPagar: number;
+  /** Parte do "a receber" que já venceu. Ausente enquanto a API não devolver o campo. */
+  emAtraso?: number;
+  /** Último extrato importado para a conta (arquivo ou sincronização). */
+  ultimoExtratoEm?: string | null;
+  /** Última linha de extrato conciliada na conta. */
+  ultimaConciliacaoEm?: string | null;
 }
 
 export interface EntradaDeConta {
