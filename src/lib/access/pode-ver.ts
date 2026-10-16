@@ -106,6 +106,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relacionamento\/atividades/, modulo: "relacionamento", area: "atividades" },
   { padrao: /^\/relacionamento\/mural/, modulo: "relacionamento", area: "mural" },
   { padrao: /^\/relacionamento\/diario/, modulo: "relacionamento", area: "diario" },
+  { padrao: /^\/relacionamento\/cardapio/, modulo: "relacionamento", area: "cardapio" },
   { padrao: /^\/relacionamento\/chat/, modulo: "relacionamento", area: "chat" },
   // Mensalidades e inadimplência (antes em /finance) são da área Pagamentos, como cobranças e
   // planos; o backend aceita relacionamento:pagamentos nas APIs delas. As duas linhas abaixo
