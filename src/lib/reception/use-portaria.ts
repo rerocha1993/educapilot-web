@@ -153,6 +153,91 @@ export interface RelatorioDeMultas {
   linhas: LinhaDeMulta[];
 }
 
+// ------------------------------------------------------------------ permanência por criança
+
+export interface LinhaDePermanencia {
+  studentId: number;
+  alunoNome: string;
+  classId: number;
+  turmaNome?: string | null;
+  periodo?: TipoDePeriodo | null;
+  entradaPrevista?: string | null;
+  saidaPrevista?: string | null;
+  periodoMudou: boolean;
+  diasComPresenca: number;
+  diasCompletos: number;
+  minutosNaEscola: number;
+  mediaMinutosPorDia: number;
+  minutosPrevistos: number;
+  minutosAlemDoPrevisto: number;
+  diasComExcesso: number;
+  maiorExcessoNoDiaMinutos: number;
+  maiorExcessoData?: string | null;
+  horasCobradas: number;
+  horasCobradasDobradas: number;
+  valorMulta: number;
+  diasSemSaida: number;
+  diasSemChegada: number;
+  diasInconsistentes: number;
+  diasSemPeriodo: number;
+  pendente: boolean;
+  avisos: string[];
+}
+
+export interface TotaisDePermanencia {
+  criancas: number;
+  criancasComExcesso: number;
+  minutosDeExcesso: number;
+  valorTotalDeMultas: number;
+  diasSemSaida: number;
+  criancasComPendencia: number;
+}
+
+export interface RelatorioDePermanencia {
+  de: string;
+  ate: string;
+  totais: TotaisDePermanencia;
+  linhas: LinhaDePermanencia[];
+}
+
+export type SituacaoDoDia = "ok" | "tolerancia" | "excesso" | "sem-saida" | "sem-chegada" | "sem-periodo" | "em-andamento" | "inconsistente";
+
+export interface DiaDePermanencia {
+  data: string;
+  chegadaEm?: string | null;
+  saidaEm?: string | null;
+  periodo?: TipoDePeriodo | null;
+  entradaPrevista?: string | null;
+  saidaPrevista?: string | null;
+  minutosPrevistos?: number | null;
+  minutosNaEscola?: number | null;
+  minutosAlemDoPrevisto: number;
+  horasCobradas: number;
+  horasCobradasDobradas: number;
+  valorMulta: number;
+  retiradoPor?: string | null;
+  situacao: SituacaoDoDia;
+}
+
+export interface PermanenciaDaCrianca {
+  studentId: number;
+  alunoNome: string;
+  turmaNome?: string | null;
+  de: string;
+  ate: string;
+  resumo?: LinhaDePermanencia | null;
+  dias: DiaDePermanencia[];
+}
+
+export interface FiltroDePermanencia {
+  de: string;
+  ate: string;
+  classId: number | null;
+  /** Nome do tipo de período, "sem" (sem período contratado) ou vazio (todos). */
+  periodo: string;
+  somenteComExcesso: boolean;
+}
+
 export interface ConfiguracaoPortaria {
   escolaNome: string;
   endereco?: string | null;
@@ -376,6 +461,41 @@ export function useRelatorioDeMultas(filtro: { de: string; ate: string; classId:
       if (filtro.ate) params.set("ate", filtro.ate);
       if (filtro.classId) params.set("classId", String(filtro.classId));
       return portariaJson<RelatorioDeMultas>(`/multas?${params}`, {}, "Não foi possível gerar o relatório de multas.");
+    },
+  });
+}
+
+export function useRelatorioDePermanencia(filtro: FiltroDePermanencia) {
+  return useQuery({
+    queryKey: [CHAVE, "permanencia", filtro],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (filtro.de) params.set("de", filtro.de);
+      if (filtro.ate) params.set("ate", filtro.ate);
+      if (filtro.classId) params.set("classId", String(filtro.classId));
+      if (filtro.periodo) params.set("periodo", filtro.periodo);
+      if (filtro.somenteComExcesso) params.set("somenteComExcesso", "true");
+      return portariaJson<RelatorioDePermanencia>(
+        `/relatorios/permanencia?${params}`,
+        {},
+        "Não foi possível gerar o relatório de permanência."
+      );
+    },
+    enabled: !!filtro.de && !!filtro.ate && filtro.ate >= filtro.de,
+  });
+}
+
+export function useDetalheDePermanencia(studentId: number | null, de: string, ate: string) {
+  return useQuery({
+    queryKey: [CHAVE, "permanencia", "crianca", studentId, de, ate],
+    enabled: studentId != null,
+    queryFn: () => {
+      const params = new URLSearchParams({ de, ate });
+      return portariaJson<PermanenciaDaCrianca>(
+        `/relatorios/permanencia/${studentId}?${params}`,
+        {},
+        "Não foi possível abrir os dias da criança."
+      );
     },
   });
 }
