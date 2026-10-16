@@ -36,7 +36,7 @@ const ABAS: { href: string; rotulo: string; icone: LucideIcon; exata?: boolean; 
     href: "/responsavel/mais",
     rotulo: "Mais",
     icone: Ellipsis,
-    tambem: [PORTARIA, "/responsavel/agenda", "/responsavel/atividades", "/responsavel/mural", "/responsavel/loja"],
+    tambem: [PORTARIA, "/responsavel/agenda", "/responsavel/diario", "/responsavel/atividades", "/responsavel/mural", "/responsavel/loja"],
   },
 ];
 
