@@ -76,7 +76,20 @@ export function PautaDaSemana({
   carregandoPlanejamento: boolean;
   className?: string;
 }) {
-  const [aba, setAba] = useState<AbaDaPauta>("faltas");
+  // Enquanto a pessoa não escolhe, abre a primeira aba que tem alguma coisa: abrir numa aba vazia faz a pauta
+  // parecer vazia com dado logo ao lado.
+  const [abaEscolhida, setAba] = useState<AbaDaPauta | null>(null);
+  const aba: AbaDaPauta =
+    abaEscolhida ??
+    (faltas.length > 0
+      ? "faltas"
+      : ocorrencias.length > 0
+        ? "ocorrencias"
+        : observacoes.length > 0
+          ? "observacao"
+          : planejamentos.length > 0
+            ? "planejamento"
+            : "faltas");
 
   // Quantos alunos faltaram e quantas vezes: "quem falta mais" é o que a diretora bate o olho.
   const porAluno = new Map<string, number>();
@@ -97,17 +110,17 @@ export function PautaDaSemana({
         onValueChange={(v) => setAba(v as AbaDaPauta)}
         className="min-h-0 flex-1 gap-0 px-4 pb-4 pt-2.5"
       >
-        <TabsList className="group-data-horizontal/tabs:h-auto w-full justify-start">
-          <TabsTrigger value="faltas" className="min-h-9 shrink-0 flex-1 px-2.5">
+        <TabsList className="group-data-horizontal/tabs:h-auto grid w-full grid-cols-4 gap-0.5">
+          <TabsTrigger value="faltas" className="min-h-11 min-w-0 flex-col gap-0.5 px-1 text-[12.5px] leading-tight">
             Faltas <Contador valor={faltas.length} />
           </TabsTrigger>
-          <TabsTrigger value="ocorrencias" className="min-h-9 shrink-0 flex-1 px-2.5">
+          <TabsTrigger value="ocorrencias" className="min-h-11 min-w-0 flex-col gap-0.5 px-1 text-[12.5px] leading-tight">
             Ocorrências <Contador valor={ocorrencias.length} />
           </TabsTrigger>
-          <TabsTrigger value="observacao" className="min-h-9 shrink-0 flex-1 px-2.5">
+          <TabsTrigger value="observacao" className="min-h-11 min-w-0 flex-col gap-0.5 px-1 text-[12.5px] leading-tight">
             Observação <Contador valor={observacoes.length} />
           </TabsTrigger>
-          <TabsTrigger value="planejamento" className="min-h-9 shrink-0 flex-1 px-2.5">
+          <TabsTrigger value="planejamento" className="min-h-11 min-w-0 flex-col gap-0.5 px-1 text-[12.5px] leading-tight">
             Planejamento <Contador valor={planejamentos.length} />
           </TabsTrigger>
         </TabsList>
