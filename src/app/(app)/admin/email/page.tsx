@@ -78,7 +78,7 @@ export default function EmailEscolaPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6">
+    <div className="mx-auto flex max-w-xl flex-col gap-6 lg:max-w-5xl">
       <CabecalhoDaPagina
         eyebrow="Administração"
         titulo="E-mail da escola"
@@ -94,7 +94,8 @@ export default function EmailEscolaPage() {
       )}
 
       {!isLoading && !isError && (
-        <>
+        // Configuração à esquerda e teste de envio ao lado: em tela larga as duas cabem sem rolar.
+        <div className="grid items-start gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
             <div className="flex gap-3">
               <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
@@ -218,7 +219,7 @@ export default function EmailEscolaPage() {
               </p>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
