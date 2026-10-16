@@ -1,118 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useBulkImport, type ImportTipo } from "@/lib/kernel/use-bulk-import";
 import { AgendaEduCard } from "@/components/integrations/agenda-edu-card";
 import { PreCadastrosCard } from "@/components/integrations/pre-cadastros-card";
 import { TuitionImportCard } from "@/components/finance/tuition-import-card";
-
-const TIPOS: { value: ImportTipo; label: string; formato: string; accept: string }[] = [
-  {
-    value: "alunos",
-    label: "Alunos",
-    formato: "Arquivo .csv com ponto-e-vírgula, codificação Windows-1252, colunas: Nome completo; Data de nascimento; Nome da turma (turma precisa já existir).",
-    accept: ".csv",
-  },
-  {
-    value: "turmas",
-    label: "Turmas",
-    formato: "Planilha .xlsx, nome da turma na coluna A a partir da linha 2.",
-    accept: ".xlsx",
-  },
-];
+import { ImportacaoDeCadastros } from "@/components/registry/importacao-de-cadastros";
 
 export default function ImportarPage() {
-  const [tipo, setTipo] = useState<ImportTipo>("alunos");
-  const [file, setFile] = useState<File | null>(null);
-  const [resultMessage, setResultMessage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const bulkImport = useBulkImport();
-
-  const tipoInfo = TIPOS.find((t) => t.value === tipo)!;
-
-  async function handleImport() {
-    if (!file) return;
-    setResultMessage(null);
-    try {
-      const result = await bulkImport.mutateAsync({ tipo, file });
-      setResultMessage(result.message);
-      toast.success("Importação concluída.");
-      setFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao importar.");
-    }
-  }
-
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-4">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <CabecalhoDaPagina
         eyebrow="Administração"
         titulo="Importação em massa"
-        apoio="Envio direto de arquivo — sem preview de linhas nem validação (ver disclaimer abaixo)."
+        apoio="Alunos, responsáveis e turmas por planilha Excel, com conferência antes de gravar."
       />
 
-      <AgendaEduCard />
+      <ImportacaoDeCadastros />
 
-      <PreCadastrosCard />
-
-      <TuitionImportCard />
-
-      <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
-        <h2 className="font-heading text-[15.5px] font-semibold">Importar de arquivo</h2>
-        <div className="flex flex-col gap-[5px]">
-          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">O que importar</label>
-          <Select value={tipo} onValueChange={(v) => v && setTipo(v as ImportTipo)}>
-            <SelectTrigger className="w-full">
-              <SelectValue>{() => tipoInfo.label}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {TIPOS.map((t) => (
-                <SelectItem key={t.value} value={t.value}>
-                  {t.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">{tipoInfo.formato}</p>
-        </div>
-
-        <div className="flex flex-col gap-[5px]">
-          <label className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Arquivo</label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={tipoInfo.accept}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full min-w-0 rounded-lg border border-input bg-card px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-2 file:py-1 file:text-xs file:font-medium"
-          />
-        </div>
-
-        <Button onClick={handleImport} disabled={!file || bulkImport.isPending} className="w-full sm:w-auto sm:self-start">
-          {bulkImport.isPending ? "Importando..." : `Importar ${tipoInfo.label.toLowerCase()}`}
-        </Button>
-
-        {resultMessage && (
-          <div className="rounded-md border border-success-border bg-success-soft px-3 py-2 text-sm text-success-soft-foreground">
-            {resultMessage}
-          </div>
-        )}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <AgendaEduCard />
+        <PreCadastrosCard />
+        <TuitionImportCard />
       </div>
 
       <p className="text-xs text-muted-foreground">
-        O arquivo é lido por inteiro e, ao final, aparece um resumo do que foi importado.
-        Alunos repetidos (mesmo nome e mesma data de nascimento) são ignorados, e a lista
-        deles não é mostrada: confira a turma depois da importação.
+        Na planilha de alunos, aluno que já existe (mesmo nome e data de nascimento) é ignorado, ou atualizado se você
+        marcar &quot;Atualizar os existentes&quot;. Responsável que já existe (mesmo CPF) só recebe o que estava vazio. As linhas com
+        erro ficam de fora e podem ser baixadas para corrigir. A importação não envia convite: o acesso ao portal continua
+        sendo pelo convite normal.
       </p>
     </div>
   );

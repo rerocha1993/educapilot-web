@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound, Camera } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound, Camera, FileSpreadsheet } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -246,15 +246,21 @@ export default function AlunosPage() {
         titulo="Alunos"
         apoio="Cadastro com data de nascimento, período e turma."
         acoes={
-          <Button
-            variant="action"
-            onClick={() => abrirCadastro("new")}
-            disabled={selectedClassId === null}
-            className="w-full md:w-auto"
-          >
-            <Plus className="size-4" />
-            Novo aluno
-          </Button>
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
+            <Link href="/admin/importar" className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}>
+              <FileSpreadsheet className="size-4" />
+              Importar planilha
+            </Link>
+            <Button
+              variant="action"
+              onClick={() => abrirCadastro("new")}
+              disabled={selectedClassId === null}
+              className="w-full md:w-auto"
+            >
+              <Plus className="size-4" />
+              Novo aluno
+            </Button>
+          </div>
         }
       />
 
