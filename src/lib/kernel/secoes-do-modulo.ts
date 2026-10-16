@@ -92,6 +92,7 @@ export const GRUPO_JORNADA = "Jornada";
 
 /** Subtítulos do Relacionamento. */
 export const GRUPO_COMUNICACAO = "Comunicação";
+export const GRUPO_GESTAO = "Gestão";
 export const GRUPO_PAGAMENTOS = "Pagamentos";
 
 /** Subtítulos de Matrículas. */
@@ -180,11 +181,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
 
   // A seção Chat leva a contagem de conversas não lidas (ver app-shell).
   "/relacionamento": [
-    { href: "/relacionamento/avisos", label: "Avisos e eventos", area: "avisos", icon: Megaphone, grupo: GRUPO_COMUNICACAO },
-    { href: "/relacionamento/cronograma", label: "Cronograma", area: "cronograma", icon: CalendarDays, grupo: GRUPO_COMUNICACAO },
-    { href: "/relacionamento/atividades", label: "Atividades", area: "atividades", icon: Shapes, grupo: GRUPO_COMUNICACAO },
-    { href: "/relacionamento/mural", label: "Mural", area: "mural", icon: Images, grupo: GRUPO_COMUNICACAO },
-    { href: "/relacionamento/chat", label: "Chat", area: "chat", icon: MessageCircle, grupo: GRUPO_COMUNICACAO },
+    // Mesma ordem do Agenda Edu, que as escolas já conhecem: Pagamentos, Comunicação, Gestão.
     // Cobranças reúne tudo que se cobra da família (individual, recorrente e por família); a
     // mensalidade e os planos recorrentes moram na aba Recorrente. As rotas antigas
     // (/pagamentos/mensalidades e /pagamentos/planos) redirecionam para lá. Todas são da área
@@ -193,7 +190,12 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/relacionamento/pagamentos", label: "Cobranças", area: "pagamentos", icon: CreditCard, grupo: GRUPO_PAGAMENTOS },
     { href: "/relacionamento/pagamentos/inadimplencia", label: "Inadimplência", area: "pagamentos", icon: CircleAlert, grupo: GRUPO_PAGAMENTOS },
     { href: "/relacionamento/loja", label: "Loja", area: "loja", icon: Store, grupo: GRUPO_PAGAMENTOS },
-    { href: "/relacionamento/familias", label: "Famílias", area: "familias", icon: UsersRound },
+    { href: "/relacionamento/chat", label: "Chat", area: "chat", icon: MessageCircle, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/avisos", label: "Avisos e eventos", area: "avisos", icon: Megaphone, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/atividades", label: "Atividades", area: "atividades", icon: Shapes, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/cronograma", label: "Cronograma", area: "cronograma", icon: CalendarDays, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/mural", label: "Mural", area: "mural", icon: Images, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/familias", label: "Famílias", area: "familias", icon: UsersRound, grupo: GRUPO_GESTAO },
     { href: "/relacionamento/configuracao", label: "Configuração", area: "configuracao", icon: SlidersHorizontal },
   ],
 
