@@ -188,6 +188,14 @@ export const baixarFotoDaAtividade: BaixarFoto = async (fotoId, variante) =>
 export const baixarFotoDoMural: BaixarFoto = async (fotoId, variante) =>
   blobDe(await relacionamentoFetch(`/mural/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
 
+/** Foto do diário de um aluno, pelo lado da escola (o servidor confere a turma do professor). */
+export const baixarFotoDoDiario: BaixarFoto = async (fotoId, variante) =>
+  blobDe(await relacionamentoFetch(`/diario/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
+
+/** Foto do diário, pelo lado dos pais (o servidor confere que é de um filho deste responsável). */
+export const baixarFotoDoDiarioDaFamilia: BaixarFoto = async (fotoId, variante) =>
+  blobDe(await responsavelFetch(`/diario/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
+
 /** Foto de atividade ou de álbum, pelo lado dos pais (o servidor confere o vínculo com a turma). */
 export const baixarFotoDaFamilia: BaixarFoto = async (fotoId, variante) =>
   blobDe(await responsavelFetch(`/fotos/${fotoId}/arquivo${consulta({ variante })}`), FALHA_DA_FOTO);
