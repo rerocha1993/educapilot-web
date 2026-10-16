@@ -96,10 +96,6 @@ export default function TenantsPage() {
         </Table>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Subdomínio, plano e contagem de alunos do wireframe não existem no backend hoje
-        (Tenant não tem esses campos) — não estão nesta tela.
-      </p>
     </div>
   );
 }

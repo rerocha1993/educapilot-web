@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Copy, FileSignature, FileText, Trash2 } from "lucide-react";
+import { Copy, ExternalLink, FileSignature, FileText, MoreHorizontal, Search, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import {
   useForms,
@@ -41,8 +48,28 @@ const STATUS_VARIANTE = {
   Arquivado: "secondary",
 } as const;
 
+const SITUACOES: { valor: keyof typeof STATUS_VARIANTE | null; rotulo: string }[] = [
+  { valor: null, rotulo: "Todos" },
+  { valor: "Ativo", rotulo: "Ativos" },
+  { valor: "Rascunho", rotulo: "Rascunhos" },
+  { valor: "Arquivado", rotulo: "Arquivados" },
+];
+
 export default function FormulariosPage() {
   const { data: forms, isLoading, isError } = useForms();
+  const [busca, setBusca] = useState("");
+  const [situacao, setSituacao] = useState<keyof typeof STATUS_VARIANTE | null>(null);
+  const todos = useMemo(() => forms ?? [], [forms]);
+  const contagem = useMemo(() => {
+    const c = { Rascunho: 0, Ativo: 0, Arquivado: 0 };
+    for (const f of todos) if (f.status in c) c[f.status as keyof typeof c]++;
+    return c;
+  }, [todos]);
+  const comContrato = todos.filter((f) => f.campos?.some((c) => c.tipo === "contrato")).length;
+  const termo = busca.trim().toLowerCase();
+  const filtrados = todos.filter(
+    (f) => (situacao === null || f.status === situacao) && f.nome.toLowerCase().includes(termo)
+  );
   const createForm = useCreateForm();
   const duplicateForm = useDuplicateForm();
 
@@ -149,15 +176,80 @@ export default function FormulariosPage() {
         </div>
       )}
 
-      {isLoading && (
-        <div className="flex flex-col gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
+      {/* Números antes da lista: quantos formulários, quantos em uso e quantos geram contrato. */}
+      {!isLoading && todos.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span>
+            <span className="font-numeric font-medium text-foreground">{todos.length}</span>{" "}
+            {todos.length === 1 ? "formulário" : "formulários"}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            <span className="font-numeric font-medium text-foreground">{contagem.Ativo}</span>{" "}
+            {contagem.Ativo === 1 ? "ativo" : "ativos"}
+          </span>
+          {comContrato > 0 && (
+            <>
+              <span aria-hidden>·</span>
+              <span>
+                <span className="font-numeric font-medium text-foreground">{comContrato}</span> com contrato
+              </span>
+            </>
+          )}
+        </p>
+      )}
+
+      {todos.length > 0 && (
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-4">
+          <div className="relative w-full md:w-72 md:shrink-0">
+            <Search aria-hidden className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              aria-label="Buscar formulário"
+              placeholder="Buscar por nome"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="h-10 pl-8 md:h-9"
+            />
+          </div>
+          <div
+            role="group"
+            aria-label="Filtrar por situação"
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0 md:pb-0"
+          >
+            {SITUACOES.map((s) => (
+              <button
+                key={s.valor ?? "todos"}
+                type="button"
+                aria-pressed={situacao === s.valor}
+                onClick={() => setSituacao(s.valor)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:py-1",
+                  situacao === s.valor
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-transparent text-foreground hover:bg-accent"
+                )}
+              >
+                {s.rotulo}
+                <span className="font-numeric ml-1.5 opacity-75">
+                  {s.valor === null ? todos.length : contagem[s.valor]}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {!isLoading && forms?.length === 0 && (
+      {isLoading && (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <li key={i}>
+              <Skeleton className="h-[132px] w-full rounded-xl" />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!isLoading && todos.length === 0 && (
         <EstadoVazio
           icone={<FileText />}
           titulo="Nenhum formulário criado ainda."
@@ -165,71 +257,88 @@ export default function FormulariosPage() {
         />
       )}
 
-      <div className="flex flex-col gap-2">
-        {forms?.map((form) => (
-          <Link
-            key={form.id}
-            href={`/flow/${form.id}`}
-            className="flex flex-col gap-2 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/60 md:flex-row md:items-center md:justify-between"
-          >
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium break-words">{form.nome}</p>
-                <TagDoTipo tipo={tipoDoFormulario(form)} />
-                {/* Dado neutro, não situação: só diz de que espécie é o formulário. Quem decide
-                    é o campo de contrato — ver InterruptorDeContrato. */}
-                {form.campos?.some((c) => c.tipo === "contrato") && (
-                  <Badge variant="outline">
-                    <FileSignature />
-                    Gera contrato
+      {!isLoading && todos.length > 0 && filtrados.length === 0 && (
+        <EstadoVazio icone={<Search />} titulo="Nenhum formulário encontrado." />
+      )}
+
+      {filtrados.length > 0 && (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtrados.map((form) => {
+            const campos = form.campos?.length ?? 0;
+            const geraContratoDoForm = form.campos?.some((c) => c.tipo === "contrato");
+            return (
+              <li
+                key={form.id}
+                className="relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3.5 transition-colors focus-within:ring-2 focus-within:ring-ring hover:bg-muted/60"
+              >
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    {/* O título é o link e estica por cima do cartão inteiro; o menu fica acima dele. */}
+                    <Link
+                      href={`/flow/${form.id}`}
+                      className="block break-words text-sm font-medium leading-snug outline-none after:absolute after:inset-0 after:rounded-xl"
+                    >
+                      {form.nome}
+                    </Link>
+                    <p className="mt-1 line-clamp-2 min-h-[2.5rem] break-words text-[13px] leading-snug text-muted-foreground">
+                      {form.descricao || "Sem descrição."}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      aria-label={`Ações de ${form.nome}`}
+                      className="relative z-10 -mr-1 -mt-1 grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors max-md:size-10 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem render={<Link href={`/flow/${form.id}`} />}>
+                        <ExternalLink className="size-4" /> Abrir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setDuplicando({ id: form.id!, nome: form.nome });
+                          setNomeCopia(`${form.nome} (cópia)`);
+                          setTipoCopia("");
+                        }}
+                      >
+                        <Copy className="size-4" /> Duplicar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                          setRecusa(null);
+                          setExcluindo(form);
+                        }}
+                      >
+                        <Trash2 className="size-4" /> Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="mt-auto flex flex-wrap items-center gap-1.5">
+                  <Badge variant={STATUS_VARIANTE[form.status as keyof typeof STATUS_VARIANTE] ?? "secondary"}>
+                    {form.status}
                   </Badge>
-                )}
-              </div>
-              {form.descricao && <p className="text-sm break-words text-muted-foreground">{form.descricao}</p>}
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">
-                <span className="font-mono tabular-nums">{form.campos?.length ?? 0}</span> campo
-                {form.campos?.length === 1 ? "" : "s"}
-              </span>
-              <Badge
-                variant={STATUS_VARIANTE[form.status as keyof typeof STATUS_VARIANTE] ?? "secondary"}
-              >
-                {form.status}
-              </Badge>
-              {/* O card inteiro é um link: sem preventDefault, duplicar navegaria para o
-                  formulário de origem no mesmo clique. */}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Duplicar"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDuplicando({ id: form.id!, nome: form.nome });
-                  setNomeCopia(`${form.nome} (cópia)`);
-                  setTipoCopia("");
-                }}
-              >
-                <Copy className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Excluir"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setRecusa(null);
-                  setExcluindo(form);
-                }}
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </div>
-          </Link>
-        ))}
-      </div>
+                  <TagDoTipo tipo={tipoDoFormulario(form)} />
+                  {/* Dado neutro, não situação: só diz de que espécie é o formulário. Quem decide
+                      é o campo de contrato — ver InterruptorDeContrato. */}
+                  {geraContratoDoForm && (
+                    <Badge variant="outline">
+                      <FileSignature />
+                      Gera contrato
+                    </Badge>
+                  )}
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    <span className="font-numeric tabular-nums">{campos}</span> campo{campos === 1 ? "" : "s"}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <Dialog open={!!excluindo} onOpenChange={(open) => !open && fecharExclusao()}>
         <DialogContent>

@@ -66,8 +66,7 @@ export default function NovoTenantPage() {
         </Link>
         <h1 className="font-heading text-xl font-bold">Nova escola</h1>
         <p className="text-sm text-muted-foreground">
-          Dados da escola e do administrador inicial (o backend cria os dois numa
-          transação só).
+          Dados da escola e do administrador inicial. Os dois são criados juntos.
         </p>
       </div>
 
@@ -192,9 +191,7 @@ export default function NovoTenantPage() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Subdomínio, etapas de ensino e seleção de módulos na criação (steps 1-2 do
-        wireframe A2) não existem no backend — módulos são configurados depois, na
-        tela de Módulos da escola.
+        Os módulos da escola são escolhidos depois de criá-la, na tela de Módulos da escola.
       </p>
 
       <Button onClick={handleCreate} disabled={createTenant.isPending || !canSubmit} className="self-start">

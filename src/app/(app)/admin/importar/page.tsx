@@ -110,12 +110,9 @@ export default function ImportarPage() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        O wireframe A8 mostra um assistente de 3 passos (arquivo → conferir linha a
-        linha com avisos/duplicados → confirmar → baixar erros). O backend não tem
-        nada disso — só recebe o arquivo inteiro e devolve uma mensagem única de
-        sucesso/erro no final, sem relatório por linha. Alunos duplicados (mesmo nome
-        + data de nascimento) são ignorados silenciosamente pelo backend, sem aparecer
-        em lugar nenhum da resposta.
+        O arquivo é lido por inteiro e, ao final, aparece um resumo do que foi importado.
+        Alunos repetidos (mesmo nome e mesma data de nascimento) são ignorados, e a lista
+        deles não é mostrada: confira a turma depois da importação.
       </p>
     </div>
   );

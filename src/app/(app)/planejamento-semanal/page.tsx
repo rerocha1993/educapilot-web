@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarRange, Settings } from "lucide-react";
+import { CalendarRange, ChevronDown, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +27,14 @@ import {
 import { RotinaNav } from "@/components/tasks/rotina-nav";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
+import { cn } from "@/lib/utils";
 import { useClasses } from "@/lib/kernel/use-classes";
 import {
   useWeeklyPlanTemplates,
   useWeeklyPlans,
   useSaveWeeklyPlan,
   type TaskExecutionStatus,
+  type WeeklyPlanDto,
 } from "@/lib/tasks/use-weekly-plans";
 import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 
@@ -118,6 +120,7 @@ export default function PlanejamentoSemanalPage() {
   }
 
   const selectedClass = classes?.find((c) => c.id === classId);
+  const hojeIso = hojeIsoBrasilia();
   const sorted = (plans ?? [])
     .slice()
     .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
@@ -191,13 +194,13 @@ export default function PlanejamentoSemanalPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {isLoading &&
           Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-lg" />)}
 
         {!isLoading && sorted.length === 0 && (templates?.length ?? 0) > 0 && (
           <EstadoVazio
-            className="sm:col-span-2"
+            className="sm:col-span-2 xl:col-span-3"
             icone={<CalendarRange />}
             titulo="Nenhum planejamento registrado no período."
             acao={
@@ -209,36 +212,12 @@ export default function PlanejamentoSemanalPage() {
         )}
 
         {sorted.map((p) => (
-          <div key={p.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-numeric text-xs text-muted-foreground">
-                {formatarSoData(p.startDate)} – {formatarSoData(p.endDate)}
-              </span>
-              <Badge
-                variant={
-                  STATUS_BADGE_VARIANT[
-                    p.previousWeekTasksExecutionStatus as keyof typeof STATUS_BADGE_VARIANT
-                  ] ?? "secondary"
-                }
-              >
-                {p.previousWeekTasksExecutionStatus === "Sim"
-                  ? "Semana anterior concluída"
-                  : p.previousWeekTasksExecutionStatus === "Parcial"
-                    ? "Parcialmente concluída"
-                    : "Semana anterior pendente"}
-              </Badge>
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">{p.weeklyPlanTemplate?.name}</span>
-            <div className="flex flex-col gap-1">
-              {p.fieldValues
-                .filter((v) => v.value?.trim())
-                .map((v) => (
-                  <p key={v.weeklyPlanFieldId} className="text-sm">
-                    <span className="font-medium">{v.weeklyPlanField?.label ?? "Campo"}:</span> {v.value}
-                  </p>
-                ))}
-            </div>
-          </div>
+          <CartaoDoPlanejamento
+            key={p.id}
+            plano={p}
+            turma={selectedClass?.className}
+            hoje={hojeIso}
+          />
         ))}
       </div>
 
@@ -326,5 +305,96 @@ export default function PlanejamentoSemanalPage() {
         Configurar modelos e campos
       </Link>
     </div>
+  );
+}
+
+// Cartão de uma semana: o resumo cabe em duas linhas (turma, semana, modelo, situação) e o texto dos
+// campos só aparece em "Ver planejamento" — antes cada cartão despejava todos os campos, e a tela
+// parecia um documento colado. A semana de hoje ganha a borda roxa e a etiqueta.
+function CartaoDoPlanejamento({
+  plano,
+  turma,
+  hoje,
+}: {
+  plano: WeeklyPlanDto;
+  turma?: string | null;
+  hoje: string;
+}) {
+  const [aberto, setAberto] = useState(false);
+
+  const inicio = plano.startDate.slice(0, 10);
+  const fim = plano.endDate.slice(0, 10);
+  const atual = inicio <= hoje && hoje <= fim;
+
+  const preenchidos = plano.fieldValues.filter((v) => v.value?.trim());
+  const primeiro = preenchidos[0];
+  const situacao = plano.previousWeekTasksExecutionStatus;
+
+  return (
+    <article
+      className={cn(
+        "flex flex-col gap-2.5 rounded-xl border bg-card p-3.5",
+        atual ? "border-primary ring-1 ring-primary/30" : "border-border"
+      )}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <span className="font-numeric text-sm font-semibold">
+          {formatarSoData(plano.startDate)} – {formatarSoData(plano.endDate)}
+        </span>
+        {atual && <Badge>Semana atual</Badge>}
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        {turma && <span className="font-medium text-foreground">{turma}</span>}
+        {turma && plano.weeklyPlanTemplate?.name && " · "}
+        {plano.weeklyPlanTemplate?.name}
+      </p>
+
+      <div>
+        <Badge
+          variant={STATUS_BADGE_VARIANT[situacao as keyof typeof STATUS_BADGE_VARIANT] ?? "secondary"}
+        >
+          {situacao === "Sim"
+            ? "Semana anterior concluída"
+            : situacao === "Parcial"
+              ? "Parcialmente concluída"
+              : "Semana anterior pendente"}
+        </Badge>
+      </div>
+
+      {!aberto && (
+        <p className="line-clamp-2 break-words text-[13px] text-muted-foreground">
+          {primeiro
+            ? `${primeiro.weeklyPlanField?.label ?? "Campo"}: ${primeiro.value}`
+            : "Nenhum campo preenchido."}
+        </p>
+      )}
+
+      {aberto && (
+        <dl className="flex flex-col divide-y divide-border rounded-lg border border-border">
+          {preenchidos.length === 0 && (
+            <p className="px-3 py-2 text-[13px] text-muted-foreground">Nenhum campo preenchido.</p>
+          )}
+          {preenchidos.map((v) => (
+            <div key={v.weeklyPlanFieldId} className="px-3 py-2">
+              <dt className="text-xs font-medium text-muted-foreground">{v.weeklyPlanField?.label ?? "Campo"}</dt>
+              <dd className="mt-0.5 whitespace-pre-line break-words text-sm">{v.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {preenchidos.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setAberto((v) => !v)}
+          aria-expanded={aberto}
+          className="flex min-h-9 w-fit items-center gap-1 rounded-md text-[13px] font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          {aberto ? "Ocultar planejamento" : "Ver planejamento"}
+          <ChevronDown aria-hidden className={cn("size-4 transition-transform", aberto && "rotate-180")} />
+        </button>
+      )}
+    </article>
   );
 }

@@ -79,11 +79,6 @@ export default function TenantModulosPage() {
           ))}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Estado &quot;Roadmap&quot; (módulo ainda não disponível pra contratar, do
-        wireframe) não existe no backend — só liga/desliga entre os módulos ativos do
-        catálogo (A4).
-      </p>
     </div>
   );
 }

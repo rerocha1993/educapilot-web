@@ -221,11 +221,9 @@ export default function OrdersPage() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Status &quot;Expirado&quot; do wireframe não existe no backend (só Aguardando/
-        Pago/Cancelado) — pedidos Pix não confirmados ficam como Aguardando
-        indefinidamente. &quot;Produção&quot; é um status separado do backend (Em
-        Produção/Finalizado) sem equivalente direto no wireframe, mostrado aqui pra não
-        esconder informação real.
+        Pedidos Pix não confirmados ficam como Aguardando até alguém marcar o pagamento.
+        &quot;Produção&quot; (Em produção ou Finalizado) é a etapa de preparo do pedido, separada
+        do pagamento.
       </p>
     </div>
   );

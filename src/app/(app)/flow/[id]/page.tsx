@@ -821,10 +821,8 @@ export default function FormBuilderPage() {
             ))}
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            As regras aqui são só configuração — o backend ainda não tem um motor que
-            realmente execute nada quando uma resposta é enviada (não dispara
-            notificação, não cria ocorrência, etc.). Salvamos a intenção pra quando esse
-            motor existir.
+            Por enquanto estas regras só ficam registradas: quando uma resposta chega, elas ainda
+            não enviam aviso nem criam ocorrência.
           </p>
         </TabsContent>
       </Tabs>

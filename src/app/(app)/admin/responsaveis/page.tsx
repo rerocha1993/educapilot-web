@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
-import { Contact, Trash2 } from "lucide-react";
+import { Contact, Search, Trash2 } from "lucide-react";
+import { iniciais } from "@/lib/matriculas/rotulos";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -47,11 +48,31 @@ import { EnderecosDoResponsavel } from "@/components/registry/enderecos-do-respo
 import { AcessoDoResponsavel } from "@/components/reception/acesso-do-responsavel";
 import { formatarSoData } from "@/lib/format/date";
 
+type Recorte = "sem-email" | "sem-aluno";
+
+/** Sem acento e em minúsculas, para a busca achar "Jose" em "José". */
+const normalizar = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+
+function Avatar({ nome }: { nome: string }) {
+  return (
+    <span
+      aria-hidden
+      className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground"
+    >
+      {iniciais(nome)}
+    </span>
+  );
+}
+
 const EMPTY_FORM = { fullName: "", cpf: "", email: "", phone: "", dataDeNascimento: "" };
 const EMPTY_VINCULO_FORM = { studentId: "", parentesco: "", responsavelFinanceiro: true };
 
 /** Estado vazio no padrão do guia: cartão tracejado, ícone num quadrado e texto curto. */
-function SemResponsaveis({ semBorda = false }: { semBorda?: boolean }) {
+function SemResponsaveis({ semBorda = false, filtrando = false }: { semBorda?: boolean; filtrando?: boolean }) {
   return (
     <div
       className={cn(
@@ -63,7 +84,7 @@ function SemResponsaveis({ semBorda = false }: { semBorda?: boolean }) {
         <Contact className="size-4" />
       </span>
       <p className="mt-3 max-w-[280px] font-heading text-[15px] font-semibold text-pretty">
-        Nenhum responsável cadastrado ainda.
+        {filtrando ? "Nenhum responsável encontrado." : "Nenhum responsável cadastrado ainda."}
       </p>
     </div>
   );
@@ -155,8 +176,26 @@ export default function ResponsaveisPage() {
   }
   const [vinculoForm, setVinculoForm] = useState(EMPTY_VINCULO_FORM);
 
-  const list = guardians ?? [];
-  const detail = list.find((g) => g.id === detailId) ?? null;
+  const todos = guardians ?? [];
+  const [busca, setBusca] = useState("");
+  const [recorte, setRecorte] = useState<Recorte | null>(null);
+  const termo = normalizar(busca.trim());
+  const digitos = busca.replace(/\D/g, "");
+  const semEmail = (g: GuardianDto) => !g.email?.trim();
+  const semAluno = (g: GuardianDto) => (g.vinculos?.length ?? 0) === 0;
+  // A busca vale para nome, e-mail, telefone e CPF; os totais seguem a busca.
+  const daBusca = todos.filter(
+    (g) =>
+      !termo ||
+      normalizar([g.fullName, g.email, g.phone].filter(Boolean).join(" ")).includes(termo) ||
+      (digitos.length > 2 && (g.cpf ?? "").replace(/\D/g, "").includes(digitos))
+  );
+  const totalSemEmail = daBusca.filter(semEmail).length;
+  const totalSemAluno = daBusca.filter(semAluno).length;
+  const list = daBusca.filter(
+    (g) => recorte === null || (recorte === "sem-email" ? semEmail(g) : semAluno(g))
+  );
+  const detail = todos.find((g) => g.id === detailId) ?? null;
 
   async function handleCreate() {
     if (!form.fullName.trim()) return;
@@ -231,10 +270,56 @@ export default function ResponsaveisPage() {
         </div>
       )}
 
+      {!isLoading && todos.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span>
+            <span className="font-numeric font-medium text-foreground">{daBusca.length}</span>{" "}
+            {daBusca.length === 1 ? "responsável" : "responsáveis"}
+          </span>
+          {([
+            ["sem-email", totalSemEmail, "sem e-mail"],
+            ["sem-aluno", totalSemAluno, "sem aluno vinculado"],
+          ] as const).map(
+            ([chave, n, rotulo]) =>
+              n > 0 && (
+                <span key={chave} className="inline-flex items-center gap-x-2">
+                  <span aria-hidden>·</span>
+                  <button
+                    type="button"
+                    aria-pressed={recorte === chave}
+                    onClick={() => setRecorte((r) => (r === chave ? null : chave))}
+                    className={cn(
+                      "inline-flex min-h-8 items-center rounded-md px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                      recorte === chave ? "font-semibold text-foreground underline" : "hover:text-foreground hover:underline"
+                    )}
+                  >
+                    <span className="font-numeric mr-1 font-medium text-foreground">{n}</span>
+                    {rotulo}
+                    {recorte === chave && " (só estes)"}
+                  </button>
+                </span>
+              )
+          )}
+        </p>
+      )}
+
+      {todos.length > 10 && (
+        <div className="relative w-full md:w-72">
+          <Search aria-hidden className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            aria-label="Buscar responsável"
+            placeholder="Buscar por nome, e-mail, telefone ou CPF"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="h-10 pl-8 md:h-9"
+          />
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 md:hidden">
         {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
 
-        {!isLoading && list.length === 0 && <SemResponsaveis />}
+        {!isLoading && list.length === 0 && <SemResponsaveis filtrando={todos.length > 0} />}
 
         {list.map((g) => (
           <div
@@ -243,7 +328,10 @@ export default function ResponsaveisPage() {
             onClick={() => setDetailId(g.id)}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <p className="font-medium break-words">{g.fullName}</p>
+              <p className="flex items-center gap-2.5 font-medium break-words">
+                <Avatar nome={g.fullName} />
+                <span className="min-w-0">{g.fullName}</span>
+              </p>
               <p className="text-sm break-words text-muted-foreground">
                 <span className="font-mono tabular-nums">{g.cpf ?? "—"}</span> · {g.email ?? g.phone ?? "—"}
               </p>
@@ -297,14 +385,19 @@ export default function ResponsaveisPage() {
             {!isLoading && list.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} className="p-0">
-                  <SemResponsaveis semBorda />
+                  <SemResponsaveis semBorda filtrando={todos.length > 0} />
                 </TableCell>
               </TableRow>
             )}
 
             {list.map((g) => (
-              <TableRow key={g.id} className="cursor-pointer" onClick={() => setDetailId(g.id)}>
-                <TableCell className="font-medium">{g.fullName}</TableCell>
+              <TableRow key={g.id} className="cursor-pointer [&>td]:py-1.5" onClick={() => setDetailId(g.id)}>
+                <TableCell className="font-medium">
+                  <span className="flex items-center gap-2.5">
+                    <Avatar nome={g.fullName} />
+                    {g.fullName}
+                  </span>
+                </TableCell>
                 <TableCell className="font-mono text-sm tabular-nums text-muted-foreground">{g.cpf ?? "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {g.email ?? g.phone ?? "—"}

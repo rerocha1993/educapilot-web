@@ -83,20 +83,26 @@ export default function TurmasPage() {
 
       <div className="flex flex-col gap-4 md:flex-row">
         {/* Lista à esquerda — ver A7 no handoff de design */}
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        {/* Turma é objeto pequeno: grade de cartões, e com o painel aberto sobram duas colunas. */}
+        <div
+          className={cn(
+            "grid min-w-0 flex-1 content-start items-start gap-2.5 sm:grid-cols-2",
+            selectedId ? "xl:grid-cols-2" : "xl:grid-cols-3"
+          )}
+        >
           {isLoading &&
-            Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg" />
+            Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-[72px] w-full rounded-xl" />
             ))}
 
           {isError && (
-            <div className="rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
+            <div className="col-span-full rounded-md border border-destructive-border bg-destructive-soft px-4 py-3 text-sm text-destructive-soft-foreground">
               Não foi possível carregar as turmas.
             </div>
           )}
 
           {!isLoading && classes?.length === 0 && (
-            <div className="flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
+            <div className="col-span-full flex flex-col items-center rounded-xl border border-dashed border-border-dashed bg-card px-5 py-9 text-center">
               <span className="grid size-10 place-items-center rounded-xl bg-muted text-muted-foreground">
                 <Users className="size-4" />
               </span>
@@ -120,13 +126,13 @@ export default function TurmasPage() {
                 key={c.id}
                 onClick={() => setSelectedId(c.id ?? null)}
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-xl border bg-card px-4 md:gap-0 py-3 text-left transition-colors hover:border-primary",
+                  "flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   selectedId === c.id ? "border-primary bg-accent/40" : "border-border"
                 )}
               >
                 <div className="flex min-w-0 flex-col gap-1">
-                  <span className="font-heading text-sm font-semibold">{c.className}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="truncate font-heading text-sm font-semibold">{c.className}</span>
+                  <span className="line-clamp-1 text-xs text-muted-foreground">
                     {professores.length > 0 ? professores.join(", ") : "Sem professor vinculado"}
                   </span>
                 </div>
@@ -164,14 +170,6 @@ export default function TurmasPage() {
                   autoFocus
                 />
               </div>
-
-              {/* Etapa/turno, professor regente e capacidade fazem parte do wireframe
-                  A7, mas o backend ainda não tem esses campos em Class — ver
-                  design/handoff/README.md. Adicionar quando o campo existir. */}
-              <p className="text-xs text-muted-foreground">
-                Etapa/turno, professor regente e capacidade ainda não são suportados pelo
-                backend — próxima etapa.
-              </p>
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 md:flex-nowrap">
                 {selectedId !== "new" ? (
