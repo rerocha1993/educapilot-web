@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Info, Landmark, Pencil, Plus, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowRight, Landmark, Pencil, Plus, Trash2, Wallet } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,9 @@ import { ConexoesDasContas } from "@/components/finance/conexoes-das-contas";
 import { CredenciaisDeBanco } from "@/components/finance/credenciais-de-banco";
 import { RecebimentoDaConta } from "@/components/finance/recebimento-da-conta";
 import { BANCOS, banco } from "@/lib/finance/bancos";
+import { formatarData } from "@/lib/format/date";
 import { useCarteiras, type CarteiraDeRecebimento } from "@/lib/finance/use-carteiras";
+import { useConexoes, type ConexaoBancaria } from "@/lib/finance/use-conexoes";
 import {
   TIPOS_DE_CONTA,
   useContas,
@@ -69,6 +71,7 @@ export default function ContasPage() {
   const { data: contas, isLoading, isError } = useContas(true);
   const { data: transferencias } = useTransferencias();
   const { data: carteiras, isSuccess: carteirasCarregadas } = useCarteiras();
+  const { data: conexoes } = useConexoes();
   const salvarConta = useSalvarConta();
   const excluirConta = useExcluirConta();
   const transferir = useTransferir();
@@ -97,9 +100,20 @@ export default function ContasPage() {
     [carteiras]
   );
 
+  const conexaoDaConta = useMemo(
+    () => new Map((conexoes ?? []).filter((c) => c.ativa).map((c) => [c.contaId, c])),
+    [conexoes]
+  );
+
   const total = ativas.reduce((soma, c) => soma + c.saldoAtual, 0);
   const totalAReceber = ativas.reduce((soma, c) => soma + c.aReceber, 0);
   const totalAPagar = ativas.reduce((soma, c) => soma + c.aPagar, 0);
+  const totalEmAtraso = ativas.reduce((soma, c) => soma + (c.emAtraso ?? 0), 0);
+
+  // Carteiras padrão: quem recebe as mensalidades e quem recebe as demais cobranças.
+  const padraoDeMensalidades = (carteiras ?? []).find((c) => c.padraoParaMensalidades);
+  const padraoDeCobrancas = (carteiras ?? []).find((c) => c.padraoParaCobrancas);
+  const contaDe = (id: string) => (contas ?? []).find((c) => c.id === id);
 
   function abrirNova() {
     setEditando(null);
@@ -187,8 +201,8 @@ export default function ContasPage() {
 
       <CabecalhoDaPagina
         eyebrow="Financeiro"
-        titulo="Contas"
-        apoio="Onde o dinheiro da escola está. O saldo é o inicial mais o que já entrou, menos o que já saiu."
+        titulo="Contas e carteiras"
+        apoio="Onde o dinheiro da escola está e por qual conta cada cobrança chega. O saldo é o inicial mais o que já entrou, menos o que já saiu."
         acoes={
           <div className="flex flex-wrap gap-2">
             {ativas.length > 1 && (
@@ -225,7 +239,7 @@ export default function ContasPage() {
 
       {ativas.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-border bg-card p-[18px]">
               <p className="text-[12.5px] font-medium text-muted-foreground">Saldo somado</p>
               <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
@@ -239,6 +253,16 @@ export default function ContasPage() {
               </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-[18px]">
+              <p className="text-[12.5px] font-medium text-muted-foreground">Em atraso</p>
+              <p
+                className={`mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums ${
+                  totalEmAtraso > 0 ? "text-destructive-soft-foreground" : ""
+                }`}
+              >
+                {dinheiro(totalEmAtraso)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-[18px]">
               <p className="text-[12.5px] font-medium text-muted-foreground">Ainda a pagar</p>
               <p className="mt-2 font-heading font-mono text-[clamp(22px,2.4vw,30px)] leading-none font-semibold tracking-[-.03em] whitespace-nowrap tabular-nums">
                 {dinheiro(totalAPagar)}
@@ -246,12 +270,32 @@ export default function ContasPage() {
             </div>
           </div>
 
-          {carteirasCarregadas && carteiras.length === 0 && (
-            <p className="flex items-start gap-2 rounded-lg border border-border bg-muted px-3.5 py-2.5 text-[12.5px] text-muted-foreground">
-              <Info className="mt-px size-4 shrink-0" />
-              Nenhuma conta recebe pagamentos das famílias ainda. Configure o recebimento em uma conta
-              para gerar cobranças.
-            </p>
+          {carteirasCarregadas && (
+            <section
+              aria-label="Carteiras padrão"
+              className="grid gap-x-6 gap-y-3 rounded-xl border border-border bg-card p-3.5 sm:grid-cols-2"
+            >
+              <CarteiraPadrao
+                titulo="Carteira padrão das mensalidades"
+                carteira={padraoDeMensalidades}
+                nomeDaConta={padraoDeMensalidades ? contaDe(padraoDeMensalidades.contaId)?.nome : undefined}
+                semNenhuma={carteiras.length === 0}
+                onAbrir={() => {
+                  const conta = padraoDeMensalidades ? contaDe(padraoDeMensalidades.contaId) : undefined;
+                  if (conta) setContaDoRecebimento(conta);
+                }}
+              />
+              <CarteiraPadrao
+                titulo="Carteira padrão das cobranças"
+                carteira={padraoDeCobrancas}
+                nomeDaConta={padraoDeCobrancas ? contaDe(padraoDeCobrancas.contaId)?.nome : undefined}
+                semNenhuma={carteiras.length === 0}
+                onAbrir={() => {
+                  const conta = padraoDeCobrancas ? contaDe(padraoDeCobrancas.contaId) : undefined;
+                  if (conta) setContaDoRecebimento(conta);
+                }}
+              />
+            </section>
           )}
 
           <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
@@ -260,6 +304,7 @@ export default function ContasPage() {
                 key={conta.id}
                 conta={conta}
                 carteira={carteiraDaConta.get(conta.id)}
+                conexao={conexaoDaConta.get(conta.id)}
                 onEditar={() => abrirEdicao(conta)}
                 onApagar={() => apagar(conta)}
                 onRecebimento={() => setContaDoRecebimento(conta)}
@@ -278,6 +323,7 @@ export default function ContasPage() {
                 key={conta.id}
                 conta={conta}
                 carteira={carteiraDaConta.get(conta.id)}
+                conexao={conexaoDaConta.get(conta.id)}
                 onEditar={() => abrirEdicao(conta)}
                 onApagar={() => apagar(conta)}
                 onRecebimento={() => setContaDoRecebimento(conta)}
@@ -554,15 +600,89 @@ export default function ContasPage() {
   );
 }
 
+/** Uma das duas carteiras padrão, ou o aviso de que ainda não há nenhuma definida. */
+function CarteiraPadrao({
+  titulo,
+  carteira,
+  nomeDaConta,
+  semNenhuma,
+  onAbrir,
+}: {
+  titulo: string;
+  carteira?: CarteiraDeRecebimento;
+  nomeDaConta?: string;
+  semNenhuma: boolean;
+  onAbrir: () => void;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[12.5px] text-muted-foreground md:text-xs">{titulo}</p>
+      {carteira ? (
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <button
+            type="button"
+            onClick={onAbrir}
+            title="Abrir o recebimento desta carteira"
+            className="min-h-8 rounded-md text-left text-[15px] font-semibold underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {nomeDaConta ?? carteira.contaNome}
+          </button>
+          <SeloDoRecebimento carteira={carteira} />
+        </div>
+      ) : (
+        <p className="mt-0.5 flex items-start gap-1.5 text-[13px] text-action-soft-foreground">
+          <AlertTriangle aria-hidden className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Nenhuma definida.{" "}
+            {semNenhuma
+              ? "Configure o recebimento de uma conta abaixo."
+              : "Abra o recebimento de uma conta e marque como padrão."}
+          </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Como a carteira recebe, em uma etiqueta que diz a situação (a cor nunca vai sozinha). */
+function SeloDoRecebimento({ carteira }: { carteira?: CarteiraDeRecebimento }) {
+  if (!carteira) return <Badge variant="outline">Sem recebimento configurado</Badge>;
+  if (!carteira.ativa) return <Badge variant="outline">Recebimento pausado</Badge>;
+  if (carteira.provedor === "manual") return <Badge variant="secondary">Manual (Pix e dinheiro)</Badge>;
+  if (!carteira.temChave) return <Badge variant="pending">Asaas · falta a chave</Badge>;
+  return carteira.ultimoTesteOk ? (
+    <Badge variant="success">Asaas conectado</Badge>
+  ) : (
+    <Badge variant="pending">Asaas · teste pendente</Badge>
+  );
+}
+
+/** "Extrato de 31/03/2026 · conciliado em 02/04/2026", ou o que falta fazer. */
+function SituacaoDoExtrato({ conta, conexao }: { conta: SaldoDaConta; conexao?: ConexaoBancaria }) {
+  const ultimo = [conta.ultimoExtratoEm, conexao?.ultimaSincronizacao].filter(Boolean).sort().pop();
+  if (!ultimo && !conta.ultimaConciliacaoEm) {
+    return <p className="text-xs text-muted-foreground">Nenhum extrato importado ainda.</p>;
+  }
+  return (
+    <p className="text-xs text-muted-foreground">
+      {ultimo ? <>Extrato de {formatarData(ultimo)}</> : "Sem extrato"}
+      {conta.ultimaConciliacaoEm ? <> · conciliado em {formatarData(conta.ultimaConciliacaoEm)}</> : " · nada conciliado"}
+      {conexao?.ultimoErro && <span className="text-destructive"> · a sincronização falhou</span>}
+    </p>
+  );
+}
+
 function CartaoDaConta({
   conta,
   carteira,
+  conexao,
   onEditar,
   onApagar,
   onRecebimento,
 }: {
   conta: SaldoDaConta;
   carteira?: CarteiraDeRecebimento;
+  conexao?: ConexaoBancaria;
   onEditar: () => void;
   onApagar: () => void;
   onRecebimento: () => void;
@@ -618,25 +738,33 @@ function CartaoDaConta({
           A receber <span className="font-mono tabular-nums text-foreground">{dinheiro(conta.aReceber)}</span>
         </span>
         <span>
+          Em atraso{" "}
+          <span
+            className={`font-mono tabular-nums ${(conta.emAtraso ?? 0) > 0 ? "font-semibold text-destructive-soft-foreground" : "text-foreground"}`}
+          >
+            {dinheiro(conta.emAtraso ?? 0)}
+          </span>
+        </span>
+        <span>
           A pagar <span className="font-mono tabular-nums text-foreground">{dinheiro(conta.aPagar)}</span>
         </span>
       </div>
 
-      <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-border pt-3.5">
-        {carteira?.provedor === "asaas" &&
-          (carteira.ultimoTesteOk ? (
-            <Badge variant="success">Asaas conectado</Badge>
-          ) : (
-            <Badge variant="pending">Asaas · teste pendente</Badge>
-          ))}
-        {carteira?.provedor === "manual" && <Badge variant="secondary">Recebimento manual</Badge>}
-        {carteira && !carteira.ativa && <Badge variant="outline">Recebimento pausado</Badge>}
-        {carteira?.padraoParaMensalidades && <Badge variant="outline">Recebe mensalidades</Badge>}
-        {carteira?.padraoParaCobrancas && <Badge variant="outline">Recebe cobranças</Badge>}
-
-        <Button variant="outline" size="sm" className="ml-auto" onClick={onRecebimento}>
+      <div className="mt-3.5 grid gap-2.5 border-t border-border pt-3.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <SeloDoRecebimento carteira={carteira} />
+          {carteira?.padraoParaMensalidades && <Badge variant="outline">Recebe mensalidades</Badge>}
+          {carteira?.padraoParaCobrancas && <Badge variant="outline">Recebe cobranças</Badge>}
+        </div>
+        <SituacaoDoExtrato conta={conta} conexao={conexao} />
+        <Button
+          variant={carteira ? "outline" : "action"}
+          size="sm"
+          className="w-full sm:w-auto sm:self-start"
+          onClick={onRecebimento}
+        >
           <Wallet className="size-4" />
-          {carteira ? "Recebimento" : "Configurar recebimento"}
+          Configurar recebimento
         </Button>
       </div>
     </div>
