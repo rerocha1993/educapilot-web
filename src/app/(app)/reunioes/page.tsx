@@ -203,7 +203,7 @@ export default function ReunioesPage() {
       <CabecalhoDaPagina
         eyebrow="Rotina"
         titulo="Reuniões"
-        apoio="Escolha a turma e a semana: o registro da reunião fica à esquerda e a pauta, à direita."
+        apoio="Escolha a turma e a semana, consulte a pauta e registre a reunião."
         acoes={
           <Select value={classId?.toString() ?? ""} onValueChange={(v) => v && setClassId(Number(v))}>
             <SelectTrigger className="w-full md:w-44" aria-label="Turma">

@@ -110,7 +110,7 @@ export function PautaDaSemana({
         onValueChange={(v) => setAba(v as AbaDaPauta)}
         className="min-h-0 flex-1 gap-0 px-4 pb-4 pt-2.5"
       >
-        <TabsList className="group-data-horizontal/tabs:h-auto grid w-full grid-cols-4 gap-0.5">
+        <TabsList className="group-data-horizontal/tabs:h-auto grid w-full grid-cols-2 gap-0.5 sm:grid-cols-4">
           <TabsTrigger value="faltas" className="min-h-11 min-w-0 flex-col gap-0.5 px-1 text-[12.5px] leading-tight">
             Faltas <Contador valor={faltas.length} />
           </TabsTrigger>
