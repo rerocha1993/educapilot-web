@@ -1,19 +1,34 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // No domínio próprio a raiz é o site institucional (public/site) para quem chega de fora, e a
-// Chamada para quem já está logado. O endereço do Azure continua abrindo o sistema direto.
+// Chamada para quem já está logado. O endereço do Azure abre o sistema direto, a menos que esteja em
+// REDIRECIONAR_PARA_DOMINIO_DE (abaixo).
 //
 // A sessão mora no storage do navegador, que o servidor não enxerga; quem diz "está logado" é o
 // cookie que session.ts grava junto. Ele só escolhe a página: as telas continuam exigindo token.
 const DOMINIO = "educa-pilot.com";
 const COOKIE_LOGADO = "educapilot_logado";
 
+// Endereços que mandam o visitante para o domínio próprio, separados por vírgula (configuração do App Service,
+// lida em tempo de execução): "educapilot-web.azurewebsites.net" no dia em que o sistema passa a ser só
+// educa-pilot.com, e o endereço *.azurewebsites.net do app novo quando a hospedagem mudar de conta. Vazio: não
+// redireciona (o staging nunca deve ter). Ligar junto com Ponto__RpId=educa-pilot.com na API: as passkeys do ponto
+// só valem no domínio em que foram cadastradas.
+const HOSTS_REDIRECIONADOS = (process.env["REDIRECIONAR_PARA_DOMINIO_DE"] ?? "")
+  .split(",")
+  .map((h) => h.trim().toLowerCase())
+  .filter(Boolean);
+
+// "false" deixa o www abrir o sistema direto, sem mandar para o domínio sem www. Usado quando o domínio sem www ainda
+// não está ligado ao App Service (ex.: TXT de verificação pendente no DNS). Padrão: manda para o domínio sem www.
+const WWW_VAI_PARA_DOMINIO = (process.env["REDIRECIONAR_WWW_PARA_DOMINIO"] ?? "true").toLowerCase() !== "false";
+
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "")
     .split(":")[0]
     .toLowerCase();
 
-  if (host === `www.${DOMINIO}`) {
+  if ((host === `www.${DOMINIO}` && WWW_VAI_PARA_DOMINIO) || HOSTS_REDIRECIONADOS.includes(host)) {
     const destino = new URL(request.nextUrl.pathname + request.nextUrl.search, `https://${DOMINIO}`);
     return NextResponse.redirect(destino, 308);
   }
