@@ -28,6 +28,8 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $apiUrl   = $ApiUrl.TrimEnd('/')
 $zipPath  = "$env:TEMP\educapilot-frontend-deploy.zip"
 
+# PowerShell 5.1 não liga TLS 1.2 sozinho: sem isso a conferência falha com certificados novos.
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 Write-Host "==> Conferindo a API em $apiUrl..." -ForegroundColor Cyan
 try {
     Invoke-WebRequest -Uri "$apiUrl/api/Class" -Method Get -UseBasicParsing -TimeoutSec 240 | Out-Null

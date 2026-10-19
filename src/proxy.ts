@@ -19,12 +19,16 @@ const HOSTS_REDIRECIONADOS = (process.env["REDIRECIONAR_PARA_DOMINIO_DE"] ?? "")
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean);
 
+// "false" deixa o www abrir o sistema direto, sem mandar para o domínio sem www. Usado quando o domínio sem www ainda
+// não está ligado ao App Service (ex.: TXT de verificação pendente no DNS). Padrão: manda para o domínio sem www.
+const WWW_VAI_PARA_DOMINIO = (process.env["REDIRECIONAR_WWW_PARA_DOMINIO"] ?? "true").toLowerCase() !== "false";
+
 export function proxy(request: NextRequest) {
   const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "")
     .split(":")[0]
     .toLowerCase();
 
-  if (host === `www.${DOMINIO}` || HOSTS_REDIRECIONADOS.includes(host)) {
+  if ((host === `www.${DOMINIO}` && WWW_VAI_PARA_DOMINIO) || HOSTS_REDIRECIONADOS.includes(host)) {
     const destino = new URL(request.nextUrl.pathname + request.nextUrl.search, `https://${DOMINIO}`);
     return NextResponse.redirect(destino, 308);
   }
