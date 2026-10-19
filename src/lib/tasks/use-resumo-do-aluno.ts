@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
+import type { QuemFaz, ReuniaoComPais } from "@/lib/tasks/use-reunioes-com-pais";
 
 /**
- * Resumo anual do aluno (Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
+ * Dossiê do aluno (antes "resumo anual", em Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
  *
  * Tipado à mão: o Swagger gerado ainda não conhece este endpoint. Depois do deploy dá para regenerar
  * `src/lib/api/generated/tasks.d.ts` e trocar o cast por uma chamada tipada.
@@ -17,9 +18,11 @@ export type TipoDeEventoDoResumo =
   | "Falta"
   | "Atraso"
   | "Ocorrencia"
+  | "ReuniaoComPais"
   | "Reuniao"
   | "Visita"
   | "ObservacaoSemanal"
+  | "Diario"
   | "Portaria";
 
 export interface ResponsavelDoResumo {
@@ -39,6 +42,19 @@ export interface AlunoDoResumo {
   dataDeNascimento: string | null;
   periodoContratado: string | null;
   responsaveis: ResponsavelDoResumo[];
+  /** Dia do cadastro do aluno na escola. */
+  cadastradoEm: string | null;
+  /** Nulo/ausente = a escola ainda não perguntou. Só "true" libera fotos do aluno. */
+  autorizaUsoDeImagem?: boolean | null;
+  /** Ausente para quem não tem acesso a dados de saúde (ver `ocultos`). O servidor omite o que está vazio. */
+  saude?: SaudeDoAluno | null;
+}
+
+export interface SaudeDoAluno {
+  alergias?: string | null;
+  medicacaoContinua?: string | null;
+  restricaoAlimentar?: string | null;
+  convenio?: string | null;
 }
 
 export interface PeriodoDoResumo {
@@ -64,6 +80,11 @@ export interface TotaisDoResumo {
   visitasDeResponsaveis: number | null;
   diasComAtrasoNaSaida: number | null;
   multaTotal: number | null;
+  reunioesComPaisRealizadas: number | null;
+  reunioesComPaisAgendadas: number | null;
+  /** Combinados de reunião ainda não cumpridos, de qualquer data. */
+  combinadosEmAberto: number | null;
+  combinadosVencidos: number | null;
 }
 
 export interface FaltasDoMes {
@@ -148,6 +169,60 @@ export interface EventoDaLinhaDoTempo {
   detalhe: string | null;
 }
 
+export interface PendenciaDoDossie {
+  reuniaoId: string;
+  dataDaReuniao: string;
+  tipoDaReuniao: string;
+  descricao: string;
+  responsavel: QuemFaz;
+  prazo: string | null;
+  vencido: boolean;
+}
+
+export interface ReunioesComPaisDoDossie {
+  realizadas: number;
+  agendadas: number;
+  responsavelNaoCompareceu: number;
+  canceladas: number;
+  combinadosEmAberto: number;
+  combinadosVencidos: number;
+  pendencias: PendenciaDoDossie[];
+  /** Da mais antiga para a mais nova; traz a ata (registro interno). */
+  itens: ReuniaoComPais[];
+}
+
+export interface ContagemPorRotulo {
+  rotulo: string;
+  total: number;
+}
+
+export interface DiarioDoDossie {
+  diasComDiario: number;
+  registrosDeAlimentacao: number;
+  aceitacaoDosAlimentos: ContagemPorRotulo[];
+  percentualDeBoaAceitacao: number | null;
+  sonecas: number;
+  minutosDeSonoPorDia: number | null;
+  humor: ContagemPorRotulo[];
+  registrosDeHigiene: number;
+  reposicoes: number;
+  registrosDeSaude: number;
+  ultimosRegistrosDeSaude: { data: string; tipo: string; texto: string }[];
+}
+
+export interface ValorEQuantidade {
+  quantidade: number;
+  valor: number;
+}
+
+export interface FinanceiroDoDossie {
+  emAberto: ValorEQuantidade;
+  vencidas: ValorEQuantidade;
+  maiorAtrasoEmDias: number;
+  pagasNoPeriodo: ValorEQuantidade;
+  emDia: boolean;
+}
+
 export interface ResumoDoAluno {
   aluno: AlunoDoResumo;
   periodo: PeriodoDoResumo;
@@ -161,6 +236,15 @@ export interface ResumoDoAluno {
     paisAvisados: OcorrenciaDoResumo[] | null;
   };
   portaria: PortariaDoResumo | null;
+  /** Nulo sem a área "Reunião com os pais". */
+  reunioesComPais: ReunioesComPaisDoDossie | null;
+  /** Nulo sem a área do diário. */
+  diario: DiarioDoDossie | null;
+  /** Nulo sem acesso a pagamentos. */
+  financeiro: FinanceiroDoDossie | null;
+  /** O que o sistema não registra sobre o aluno (notas, avaliação pedagógica etc.). */
+  naoRegistrado: { assunto: string; explicacao: string }[];
+  emitidoPor: string | null;
   linhaDoTempo: EventoDaLinhaDoTempo[];
   /** Blocos que ficaram de fora porque o acesso de quem pediu não inclui a área deles. */
   ocultos: string[];
@@ -186,7 +270,7 @@ export function useResumoDoAluno(studentId: number | null, ano?: number) {
         "/api/Occurrence/student/{studentId}/summary",
         { params: { path: { studentId: studentId! }, query: ano ? { ano } : undefined } }
       );
-      const data = unwrapApiResponse(result, "Não foi possível carregar o resumo do aluno.");
+      const data = unwrapApiResponse(result, "Não foi possível carregar o dossiê do aluno.");
       return data as unknown as ResumoDoAluno;
     },
     enabled: studentId !== null && Number.isFinite(studentId),

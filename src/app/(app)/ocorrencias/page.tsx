@@ -325,9 +325,9 @@ export default function OcorrenciasPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 print:hidden">
-        <h2 className="font-heading text-[15.5px] font-semibold">Resumo do ano de um aluno</h2>
+        <h2 className="font-heading text-[15.5px] font-semibold">Dossiê do aluno</h2>
         <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
-          De 1º de janeiro até hoje: faltas, ocorrências, pais avisados, reuniões e portaria numa folha só, pronta para imprimir.
+          Tudo o que a escola registrou sobre o aluno: ficha, frequência, ocorrências, reuniões com os pais, diário e linha do tempo, pronto para imprimir.
         </p>
         <div className="flex flex-col gap-2 md:flex-row md:items-end">
           <div className="flex flex-col gap-[5px] md:w-56">
@@ -384,12 +384,12 @@ export default function OcorrenciasPage() {
               className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
             >
               <FileText className="size-4" />
-              Abrir resumo do ano
+              Abrir dossiê
             </Link>
           ) : (
             <Button variant="outline" className="w-full md:w-auto" disabled>
               <FileText className="size-4" />
-              Abrir resumo do ano
+              Abrir dossiê
             </Button>
           )}
         </div>
@@ -483,7 +483,7 @@ export default function OcorrenciasPage() {
               className={buttonVariants({ variant: "outline", className: "w-full sm:w-fit" })}
             >
               <FileText className="size-4" />
-              Resumo do ano
+              Dossiê do aluno
             </Link>
           )}
 

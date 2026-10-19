@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Printer } from "lucide-react";
+import Link from "next/link";
+import { Plus, Printer } from "lucide-react";
 
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { ErroDeCarga } from "@/components/rh/campo";
 import { ResumoDoAlunoFolha } from "@/components/tasks/resumo-do-aluno";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
 import { competenciaDeIso, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
@@ -18,9 +19,10 @@ import { useResumoDoAluno } from "@/lib/tasks/use-resumo-do-aluno";
 const ANOS_NA_LISTA = 3;
 
 /**
- * Resumo anual do aluno: do 1º de janeiro até hoje, com frequência, ocorrências, reuniões, portaria e a
- * linha do tempo. Abre a partir de Ocorrências e imprime em A4 (o menu e os controles levam
- * `print:hidden`; a folha cuida do resto).
+ * Dossiê do aluno (evolução do resumo anual): ficha, frequência, ocorrências, reuniões com os pais,
+ * diário, portaria e a linha do tempo, de 1º de janeiro até hoje. Abre a partir de Ocorrências e imprime
+ * em A4 com capa (o menu e os controles levam `print:hidden`; a folha cuida do resto). A rota continua
+ * /ocorrencias/aluno/[id] para não quebrar os atalhos que já existem.
  *
  * O ano vem de ?ano= e pode ser trocado aqui; sem ele, vale o ano corrente (até hoje). Ano passado vem
  * fechado, de 1º de janeiro a 31 de dezembro.
@@ -53,7 +55,7 @@ export default function ResumoDoAlunoPage() {
         <CabecalhoDaPagina
           eyebrow="← Ocorrências"
           eyebrowHref="/ocorrencias"
-          titulo={data ? `Resumo do ano · ${data.aluno.nome}` : "Resumo do ano do aluno"}
+          titulo={data ? `Dossiê · ${data.aluno.nome}` : "Dossiê do aluno"}
           apoio={
             data ? (
               <>
@@ -61,7 +63,7 @@ export default function ResumoDoAlunoPage() {
                 {data.periodo.ateHoje ? "hoje" : <span className="font-numeric">{formatarSoData(data.periodo.fim)}</span>}.
               </>
             ) : (
-              "Frequência, ocorrências, reuniões, portaria e linha do tempo do ano."
+              "Ficha, frequência, ocorrências, reuniões com os pais, diário e linha do tempo do ano."
             )
           }
           acoesClassName="w-full md:w-auto"
@@ -81,6 +83,15 @@ export default function ResumoDoAlunoPage() {
                   ))}
                 </select>
               </label>
+              {data && !data.ocultos.includes("Reuniões com os pais") && (
+                <Link
+                  href={`/reunioes-pais/nova?turma=${data.aluno.classId}&aluno=${data.aluno.id}`}
+                  className={buttonVariants({ variant: "action", className: "w-full md:w-auto" })}
+                >
+                  <Plus className="size-4" />
+                  Registrar reunião
+                </Link>
+              )}
               <Button
                 variant="outline"
                 className="w-full md:w-auto"
@@ -88,7 +99,7 @@ export default function ResumoDoAlunoPage() {
                 disabled={!data}
               >
                 <Printer className="size-4" />
-                Imprimir
+                Imprimir dossiê
               </Button>
             </div>
           }
@@ -99,14 +110,14 @@ export default function ResumoDoAlunoPage() {
 
       {isError && (
         <ErroDeCarga
-          texto={error instanceof Error ? error.message : "Não foi possível carregar o resumo do aluno."}
+          texto={error instanceof Error ? error.message : "Não foi possível carregar o dossiê do aluno."}
           onTentar={() => void refetch()}
         />
       )}
 
       {isLoading && (
         <div role="status" aria-live="polite" className="mx-auto flex w-full max-w-[210mm] flex-col gap-4">
-          <span className="sr-only">Carregando o resumo do aluno…</span>
+          <span className="sr-only">Carregando o dossiê do aluno…</span>
           <Skeleton className="h-36 w-full rounded-xl" />
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {Array.from({ length: 4 }, (_, i) => (
