@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +39,16 @@ export function SeletorDeAcesso({
 }) {
   const { data: catalogo, isLoading } = useCatalogoDeAcesso();
   const { data: turmas } = useClasses();
+
+  // O catálogo só traz o que a escola contratou. A sugestão do perfil (e acessos antigos) pode citar módulo que
+  // esta escola não tem: some daqui, para o que está marcado ser sempre o que aparece na tela, e para o aviso
+  // "marque ao menos um módulo" valer de verdade.
+  useEffect(() => {
+    if (!catalogo) return;
+    const disponiveis = new Set(catalogo.map((m) => m.slug));
+    if (valor.modulos.every((m) => disponiveis.has(m.moduloSlug))) return;
+    onChange({ ...valor, modulos: valor.modulos.filter((m) => disponiveis.has(m.moduloSlug)) });
+  }, [catalogo, valor, onChange]);
 
   // Só o professor trabalha por turma: é dele a lista que limita quais alunos aparecem. Secretaria
   // e coordenação atendem a escola inteira, e a pergunta "quais turmas?" só confundia ali.
@@ -95,7 +106,8 @@ export function SeletorDeAcesso({
    */
   function escolherPerfil(perfil: string) {
     const emBranco = valor.modulos.length === 0;
-    const sugestao = AREAS_SUGERIDAS[perfil] ?? [];
+    const disponiveis = new Set((catalogo ?? []).map((m) => m.slug));
+    const sugestao = (AREAS_SUGERIDAS[perfil] ?? []).filter((m) => disponiveis.has(m.moduloSlug));
 
     onChange({
       ...valor,
