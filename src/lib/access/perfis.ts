@@ -85,7 +85,7 @@ export const AREAS_SUGERIDAS: Record<string, { moduloSlug: string; areas: string
   // Em Fluxos, o professor leva só a área "quadro": ela dá o quadro de tarefas pessoal sem abrir
   // formulário, contrato nem caixa de envios. Lista vazia aqui abriria o módulo inteiro.
   Teacher: [
-    { moduloSlug: "tasks", areas: ["chamada", "ocorrencias", "checklist", "planejamento", "materiais", "calendario"] },
+    { moduloSlug: "tasks", areas: ["chamada", "ocorrencias", "checklist", "planejamento", "materiais", "calendario", "reunioes-pais"] },
     { moduloSlug: "flow", areas: ["quadro"] },
     // Professor publica só para as turmas dele (o servidor recorta), com fotos das atividades e do mural;
     // famílias e configuração são da escola.

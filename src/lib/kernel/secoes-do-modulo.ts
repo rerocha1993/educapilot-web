@@ -118,6 +118,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/ocorrencias", label: "Ocorrências", icon: TriangleAlert },
     { href: "/materiais", label: "Materiais", icon: Package },
     { href: "/reunioes", label: "Reuniões", icon: Handshake },
+    { href: "/reunioes-pais", label: "Reunião com os pais", icon: UsersRound },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
     { href: "/planejamento-semanal", label: "Planejamento semanal", icon: CalendarRange },
     { href: "/relatorios", label: "Relatórios", icon: ChartColumn },
