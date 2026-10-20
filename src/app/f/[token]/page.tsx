@@ -37,6 +37,7 @@ import { valorDaParte, type EnderecoCep } from "@/lib/flow/cep";
 import type { DadosRematricula } from "@/lib/integrations/use-rematricula";
 import {
   usePublicForm,
+  useConvitePublico,
   useSubmitPublicForm,
   useUploadPublicFormFile,
   PublicFormLoadError,
@@ -421,7 +422,8 @@ export default function PublicFormFillPage() {
   const convite = busca.get("convite")?.trim() || null;
   const noNavegador = useSyncExternalStore(semAssinatura, () => true, () => false);
 
-  const { data: form, isLoading, isError, error, refetch, isFetching } = usePublicForm(token, convite, noNavegador);
+  const { data: form, isLoading, isError, error, refetch, isFetching } = usePublicForm(token);
+  const conviteConferido = useConvitePublico(token, convite, noNavegador);
   const submitForm = useSubmitPublicForm(token);
   const loadErrorKind = error instanceof PublicFormLoadError ? error.kind : "unavailable";
 
@@ -433,6 +435,7 @@ export default function PublicFormFillPage() {
   const [autoPreenchido, setAutoPreenchido] = useState(false);
   // Aluno achado na identificação: o formulário vinculado à ficha grava a resposta nele.
   const [alunoId, setAlunoId] = useState<number | null>(null);
+  const [responsavelId, setResponsavelId] = useState<string | null>(null);
 
   // Valores que o campo já nasce trazendo (Config.valorPadrao). Aplicados uma vez, quando os
   // campos chegam: depois disso a resposta é do respondente, e reaplicar apagaria o que digitou.
@@ -473,14 +476,16 @@ export default function PublicFormFillPage() {
   // Formulário vinculado à ficha do aluno (anamnese): a resposta precisa gravar o aluno, então a
   // identificação é obrigatória e não há "preencher sem encontrar". O convite já traz o aluno.
   const vinculadoAFicha = fichaDoFormulario(regras) !== null;
-  const porConvite = convite !== null;
+  const porConvite = convite !== null && conviteConferido.data?.valido === true;
+  const conviteInvalido = convite !== null && conviteConferido.data?.valido === false;
   const precisaIdentificar = vinculadoAFicha && !porConvite;
-  const mostrarBusca = !porConvite && (usaAutoPreenchimento || precisaIdentificar);
+  const conviteCarregando = convite !== null && conviteConferido.isLoading;
+  const mostrarBusca = !conviteCarregando && !porConvite && (usaAutoPreenchimento || precisaIdentificar);
 
   // Com a regra ligada, o formulário só aparece depois da busca. Sem ela, tudo à mostra desde
   // o início — que é como os formulários existentes já funcionam.
   const exigeIdentificacao = !porConvite && ((usaAutoPreenchimento && !!regras.exigirIdentificacao) || precisaIdentificar);
-  const mostrarCampos = !exigeIdentificacao || autoPreenchido || (preenchendoManualmente && !precisaIdentificar);
+  const mostrarCampos = !conviteCarregando && (!exigeIdentificacao || autoPreenchido || (preenchendoManualmente && !precisaIdentificar));
 
   // Há contrato quando um campo de contrato foi (ou vai ser) respondido. Campo escondido por
   // condição não é enviado e não gera contrato nenhum — por isso a conta sai dos campos visíveis,
@@ -538,6 +543,7 @@ export default function PublicFormFillPage() {
       return proximos;
     });
     setAlunoId(dados.alunoId ?? null);
+    setResponsavelId(dados.responsavelId ?? null);
     setAutoPreenchido(true);
   }
 
@@ -546,8 +552,9 @@ export default function PublicFormFillPage() {
       const criada = await submitForm.mutateAsync({
         nomeReferencia: nomeReferencia.trim() || null,
         observacoes: observacoes.trim() || null,
-        convite,
+        convite: porConvite ? convite : null,
         alunoId,
+        responsavelId,
         itens: camposVisiveis.map((c) => ({ fieldId: c.id, valor: answers[c.id] ?? null })),
       });
       setRespostaId((criada as { id?: string } | undefined)?.id ?? null);
@@ -617,14 +624,22 @@ export default function PublicFormFillPage() {
               <div className="flex items-center gap-2 rounded-xl border border-success-border bg-success-soft px-4 py-3 text-sm text-success-soft-foreground">
                 <CheckCircle2 className="size-4 shrink-0" />
                 <span className="min-w-0 break-words">
-                  {form.convite?.alunoNome ? (
+                  {conviteConferido.data?.alunoNome ? (
                     <>
-                      Este formulário é sobre <strong>{form.convite.alunoNome}</strong>. A escola já sabe de quem são as respostas.
+                      Respondendo por <strong>{conviteConferido.data.alunoNome}</strong>
+                      {conviteConferido.data.turma ? ` (${conviteConferido.data.turma})` : ""}. Não precisa se identificar.
                     </>
                   ) : (
                     "Este link foi gerado pela escola para um aluno. Não precisa se identificar."
                   )}
                 </span>
+              </div>
+            )}
+
+            {conviteInvalido && (
+              <div role="alert" className="rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-soft-foreground">
+                {conviteConferido.data?.mensagem ?? "Este link não é mais válido."} Você ainda pode se identificar abaixo
+                {vinculadoAFicha ? "." : " e preencher."}
               </div>
             )}
 

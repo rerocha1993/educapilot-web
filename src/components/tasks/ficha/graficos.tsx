@@ -111,7 +111,7 @@ function EixoX({ meses, rotulo }: { meses: string[]; rotulo: (m: string) => stri
 
 function Svg({ descricao, children }: { descricao: string; children: ReactNode }) {
   return (
-    <svg viewBox={`0 0 ${LARGURA} ${ALTURA}`} role="img" aria-label={descricao} className="block h-auto w-full max-w-full">
+    <svg viewBox={`0 0 ${LARGURA} ${ALTURA}`} role="img" aria-label={descricao} className="mx-auto block h-auto w-full max-w-[560px]">
       {children}
     </svg>
   );

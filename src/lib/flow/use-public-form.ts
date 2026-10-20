@@ -26,11 +26,36 @@ export interface PublicFormDto {
   /** Regras do formulário inteiro, em JSON. Ver lib/flow/form-config.ts. */
   config: string | null;
   campos: PublicFormFieldDto[];
-  /**
-   * Só quando o link veio com ?convite= válido: o aluno para quem o convite foi gerado. A família não
-   * precisa se identificar; o servidor grava a resposta com este aluno.
-   */
-  convite?: { alunoNome?: string | null } | null;
+}
+
+export interface ConvitePublico {
+  valido: boolean;
+  mensagem?: string | null;
+  alunoNome?: string | null;
+  turma?: string | null;
+}
+
+/** Confere o convite do link (?convite=): GET /api/PublicForms/{token}/convite/{convite}. Tipado à mão. */
+export function useConvitePublico(token: string | undefined, convite: string | null, habilitado = true) {
+  return useQuery({
+    queryKey: ["public-form", token, "convite", convite],
+    enabled: !!token && !!convite && habilitado,
+    retry: 0,
+    queryFn: async () => {
+      const cliente = flowApi as unknown as {
+        GET: (c: string, o: { params: { path: { token: string; convite: string } } }) => Promise<{ data?: unknown; response: Response }>;
+      };
+      try {
+        const r = await cliente.GET("/api/PublicForms/{token}/convite/{convite}", {
+          params: { path: { token: token!, convite: convite! } },
+        });
+        if (!r.response.ok) return { valido: false, mensagem: "Este link não é mais válido. Peça outro à escola." } as ConvitePublico;
+        return r.data as ConvitePublico;
+      } catch {
+        return { valido: false, mensagem: "Não foi possível conferir o link agora. Tente novamente em instantes." } as ConvitePublico;
+      }
+    },
+  });
 }
 
 // Correção (2026-08): achado ao vivo testando o link com um usuário real — a tela
@@ -47,17 +72,16 @@ export class PublicFormLoadError extends Error {
   }
 }
 
-export function usePublicForm(token: string | undefined, convite?: string | null, habilitado = true) {
+export function usePublicForm(token: string | undefined) {
   return useQuery({
-    queryKey: ["public-form", token, convite ?? null],
-    enabled: !!token && habilitado,
+    queryKey: ["public-form", token],
+    enabled: !!token,
     retry: 1,
     queryFn: async () => {
       let result;
       try {
-        // `convite` ainda não consta no openapi gerado (Ficha v2, seção 3).
         result = await flowApi.GET("/api/PublicForms/{token}", {
-          params: { path: { token: token! }, query: convite ? { convite } : undefined } as { path: { token: string } },
+          params: { path: { token: token! } },
         });
       } catch {
         // fetch() lança (não retorna response nenhuma) quando a rede falha ou o
@@ -90,6 +114,8 @@ export interface PublicSubmissionInput {
   convite?: string | null;
   /** Aluno achado na identificação (formulário vinculado à ficha sem convite). */
   alunoId?: number | null;
+  /** Responsável achado na identificação (vai junto com o aluno). */
+  responsavelId?: string | null;
 }
 
 export function useSubmitPublicForm(token: string) {
@@ -103,6 +129,7 @@ export function useSubmitPublicForm(token: string) {
           nomeReferencia: dto.nomeReferencia ?? null,
           observacoes: dto.observacoes ?? null,
           alunoId: dto.convite ? null : (dto.alunoId ?? null),
+          responsavelId: dto.convite ? null : (dto.responsavelId ?? null),
           itens: dto.itens,
           // `convite` ainda não consta no openapi gerado; o servidor ignora o que não conhece.
           ...(dto.convite ? { convite: dto.convite } : {}),

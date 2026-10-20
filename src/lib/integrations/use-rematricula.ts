@@ -19,6 +19,8 @@ export interface DadosRematricula {
   encontrado: boolean;
   /** Id do aluno achado. Formulário vinculado à ficha grava a resposta neste aluno. */
   alunoId?: number | null;
+  /** Responsável achado (vai junto com o aluno no envio do formulário vinculado). */
+  responsavelId?: string | null;
   /** Por que não achou, em linguagem que ajuda a corrigir. */
   mensagem?: string | null;
   nomeAluno?: string | null;

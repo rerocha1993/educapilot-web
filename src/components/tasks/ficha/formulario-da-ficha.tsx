@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { copiarTexto } from "@/lib/copiar";
-import { formatarData, formatarSoData } from "@/lib/format/date";
+import { formatarData } from "@/lib/format/date";
 import { useCriarConvite, type ConviteCriado } from "@/lib/flow/use-convites";
 import type { CampoRespondido, FormularioNaFicha, RespostaNaFicha } from "@/lib/tasks/use-resumo-do-aluno";
 import { cn } from "@/lib/utils";
@@ -37,14 +37,14 @@ const VARIANTE_DO_STATUS: Record<string, "success" | "pending" | "waiting"> = {
 const ROTULO_DA_ORIGEM: Record<string, string> = { Familia: "pela família", Equipe: "pela equipe" };
 
 function quando(r: RespostaNaFicha) {
-  return `${formatarSoData(r.data)}${r.hora ? ` às ${r.hora}` : ""}`;
+  return `${r.data}${r.hora ? ` às ${r.hora}` : ""}`;
 }
 
 /** Texto curto para o cabeçalho da seção recolhida. */
 export function resumoDoFormulario(f: FormularioNaFicha): string {
   if (!f.ultima) return "Ainda não preenchido";
   const anteriores = f.anteriores?.length ?? 0;
-  return `Preenchido em ${formatarSoData(f.ultima.data)}${anteriores > 0 ? ` · ${anteriores} ${anteriores === 1 ? "anterior" : "anteriores"}` : ""}`;
+  return `Preenchido em ${f.ultima.data}${anteriores > 0 ? ` · ${anteriores} ${anteriores === 1 ? "anterior" : "anteriores"}` : ""}`;
 }
 
 function Anexo({ valor }: { valor: string }) {

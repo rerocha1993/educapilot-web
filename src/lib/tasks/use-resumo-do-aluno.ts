@@ -333,7 +333,7 @@ export interface CampoRespondido {
 
 export interface RespostaNaFicha {
   id: string;
-  /** Dia de Brasília, "yyyy-MM-dd". */
+  /** Dia já formatado pelo servidor, "dd/MM/yyyy". */
   data: string;
   hora?: string | null;
   status: string;
