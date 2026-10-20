@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
+        allow: ["/", "/privacidade", "/site/assets/", "/icon-512.png"],
         disallow: [
           "/site/index.html",
           "/login",
