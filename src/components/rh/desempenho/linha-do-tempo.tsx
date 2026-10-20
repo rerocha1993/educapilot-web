@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Award, BriefcaseBusiness, CalendarOff, ClipboardCheck, DoorOpen, TriangleAlert, UsersRound } from "lucide-react";
+import { Award, BriefcaseBusiness, CalendarOff, ClipboardCheck, DoorOpen, Gavel, TriangleAlert, UsersRound } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +20,7 @@ const ICONE: Record<string, ReactNode> = {
   Reconhecimento: <Award />,
   Afastamento: <CalendarOff />,
   Reuniao: <UsersRound />,
+  Decisao: <Gavel />,
 };
 
 const COR: Record<string, string> = {
@@ -28,6 +29,7 @@ const COR: Record<string, string> = {
   Avaliacao: "bg-secondary text-secondary-foreground",
   Afastamento: "bg-accent text-accent-foreground",
   Reuniao: "bg-action-soft text-action-soft-foreground",
+  Decisao: "bg-accent text-accent-foreground",
 };
 
 /**

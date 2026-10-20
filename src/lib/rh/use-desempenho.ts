@@ -65,6 +65,7 @@ export const TIPOS_DA_LINHA_DO_TEMPO = [
   "Reconhecimento",
   "Afastamento",
   "Reuniao",
+  "Decisao",
 ] as const;
 export const ROTULO_DA_LINHA_DO_TEMPO: Record<string, string> = {
   Admissao: "Admissão",
@@ -74,6 +75,7 @@ export const ROTULO_DA_LINHA_DO_TEMPO: Record<string, string> = {
   Reconhecimento: "Reconhecimentos",
   Afastamento: "Afastamentos",
   Reuniao: "Reuniões",
+  Decisao: "Decisões",
 };
 
 export const JANELAS = ["AnoLetivo", "Ciclo", "Ultimos12Meses"] as const;
@@ -162,6 +164,10 @@ export interface LinhaDoDesempenho {
   componenteMaisBaixoNota: number | null;
   avaliacaoNoCiclo: "SemAvaliacao" | "Rascunho" | "Concluida" | null;
   poucosDados: boolean;
+  /** Parecer de permanência (a API omite o nulo). */
+  recomendacao?: string | null;
+  revisaoVencida?: boolean;
+  temPlanoEmAndamento?: boolean;
 }
 
 export interface DesempenhoDaEquipe {

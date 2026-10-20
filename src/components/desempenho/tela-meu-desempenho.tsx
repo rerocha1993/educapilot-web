@@ -9,6 +9,7 @@ import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { ErroDeCarga } from "@/components/rh/campo";
 import { BarrasDeComponentes, ComoChegamosNessaNota, ResumoDaNota } from "@/components/rh/desempenho/nota-explicada";
+import { CartaoDoPlano } from "@/components/rh/desempenho/painel-do-plano";
 import { AvisoDeApoio } from "@/components/rh/desempenho/pecas";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatarSoData } from "@/lib/format/date";
 import { formatarNota } from "@/lib/rh/use-desempenho";
 import { useIniciarAutoavaliacao, useMeuDesempenho } from "@/lib/rh/use-meu-desempenho";
+import { useMeuPlano } from "@/lib/rh/use-parecer";
 import { useMinhasReunioes } from "@/lib/tasks/use-reunioes-e-atendimentos";
 
 /**
@@ -29,6 +31,7 @@ export function TelaMeuDesempenho() {
   const iniciar = useIniciarAutoavaliacao();
   // Só pede depois de saber que há ficha; falha da lista não derruba a tela inteira.
   const reunioes = useMinhasReunioes(data?.status === "ok");
+  const plano = useMeuPlano(data?.status === "ok");
 
   async function fazerAutoavaliacao() {
     try {
@@ -110,6 +113,18 @@ export function TelaMeuDesempenho() {
             <ComoChegamosNessaNota nota={meu.nota} proprio className="lg:col-span-3" />
           </div>
         </>
+      )}
+
+      {plano.data != null && (
+        <section className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4" aria-label="Plano de melhoria">
+          <h3 className="font-heading text-base font-semibold">
+            {plano.data.status === "EmAndamento" ? "Seu plano de melhoria" : "Seu último plano de melhoria"}
+          </h3>
+          <p className="text-[12.5px] text-muted-foreground">
+            As metas, o prazo e os acompanhamentos combinados com a gestão. Em caso de dúvida, converse com a gestão ou peça a revisão.
+          </p>
+          <CartaoDoPlano plano={plano.data} gestao={false} />
+        </section>
       )}
 
       <section className="rounded-xl border border-border bg-card p-4" aria-label="Reuniões e atendimentos">
