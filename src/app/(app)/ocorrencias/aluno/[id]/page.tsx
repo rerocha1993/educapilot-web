@@ -123,16 +123,21 @@ export default function ResumoDoAlunoPage() {
       )}
 
       {isLoading && (
-        <div role="status" aria-live="polite" className="mx-auto flex w-full max-w-[210mm] flex-col gap-4">
+        <div role="status" aria-live="polite" className="mx-auto flex w-full max-w-[1280px] flex-col gap-4">
           <span className="sr-only">Carregando a ficha do aluno…</span>
           <Skeleton className="h-36 w-full rounded-xl" />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} className="h-28 rounded-xl" />
+          <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 lg:grid-cols-[repeat(6,minmax(0,1fr))]">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={i} className="h-20 rounded-xl" />
             ))}
           </div>
-          <Skeleton className="h-48 w-full rounded-xl" />
-          <Skeleton className="h-48 w-full rounded-xl" />
+          <div className="grid grid-cols-[repeat(1,minmax(0,1fr))] gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))]">
+            {Array.from({ length: 3 }, (_, i) => (
+              <Skeleton key={i} className="h-56 rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
         </div>
       )}
 

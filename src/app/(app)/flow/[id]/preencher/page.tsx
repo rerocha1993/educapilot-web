@@ -28,6 +28,11 @@ import { CepInput } from "@/components/flow/cep-input";
 import { valorDaParte, type EnderecoCep } from "@/lib/flow/cep";
 import { useReferenceOptions } from "@/lib/flow/use-reference-data";
 import { useSubmitForm, useUploadFormFile } from "@/lib/flow/use-form-fill";
+import { decodeFormConfig, fichaDoFormulario } from "@/lib/flow/form-config";
+import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
+import { useClasses } from "@/lib/kernel/use-classes";
+import { useStudentsByClass } from "@/lib/kernel/use-students";
+import { useStudent } from "@/lib/kernel/use-student-ficha";
 
 // Novo (2026-08): item 2 do gap analysis de Formulários — até este ponto não existia
 // NENHUMA tela de preenchimento, nem pra staff nem pra ninguém (FormResponsesController/
@@ -298,13 +303,105 @@ function FieldInput({
   }
 }
 
+/**
+ * Formulário vinculado à ficha do aluno: a resposta precisa gravar o aluno. Vem da ficha já com ele
+ * (?aluno=ID, botão "Preencher aqui"); aberto direto, a pessoa escolhe a turma e o aluno.
+ */
+function EscolhaDoAluno({
+  alunoId,
+  fixo,
+  onEscolher,
+  secao,
+}: {
+  alunoId: number | null;
+  /** Veio da ficha: o aluno não se troca aqui. */
+  fixo: boolean;
+  onEscolher: (id: number | null) => void;
+  secao: string;
+}) {
+  const { data: turmas } = useClasses();
+  const [turmaId, setTurmaId] = useState<number | null>(null);
+  const { data: alunos } = useStudentsByClass(fixo ? null : turmaId);
+  const { data: aluno } = useStudent(fixo ? alunoId : null);
+
+  if (fixo) {
+    return (
+      <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
+        <span className="text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">Aluno</span>
+        <p className="mt-0.5 font-medium break-words">{aluno?.fullName ?? `Aluno ${alunoId}`}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">A resposta entra na ficha do aluno, na seção “{secao}”.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+      <div>
+        <h2 className="font-heading text-[15.5px] font-semibold">De qual aluno é esta resposta?</h2>
+        <p className="text-sm text-muted-foreground">
+          Este formulário aparece na ficha do aluno (seção “{secao}”), então é preciso escolher o aluno antes de preencher.
+        </p>
+      </div>
+      <div className="grid grid-cols-[repeat(1,minmax(0,1fr))] gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+        <div className="flex flex-col gap-1.5">
+          <Label className={rotulo}>Turma</Label>
+          <Select
+            value={turmaId?.toString() ?? ""}
+            onValueChange={(v) => {
+              if (!v) return;
+              setTurmaId(Number(v));
+              onEscolher(null);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>{() => turmas?.find((t) => t.id === turmaId)?.className ?? "Selecione"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {turmas?.map((t) => (
+                <SelectItem key={t.id} value={String(t.id)}>
+                  {t.className}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label className={rotulo}>Aluno</Label>
+          <Select value={alunoId?.toString() ?? ""} onValueChange={(v) => v && onEscolher(Number(v))} disabled={turmaId === null}>
+            <SelectTrigger className="w-full">
+              <SelectValue>{() => alunos?.find((a) => a.id === alunoId)?.fullName ?? "Selecione"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {alunos?.map((a) => (
+                <SelectItem key={a.id} value={String(a.id)}>
+                  {a.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FormFillPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const formId = params.id;
 
+  // ?aluno= e ?volta= vêm da ficha do aluno. "volta" só aceita caminho do próprio sistema.
+  const busca = useQueryStringLocal();
+  const alunoDaFicha = Number(busca.get("aluno"));
+  const alunoDaUrl = Number.isInteger(alunoDaFicha) && alunoDaFicha > 0 ? alunoDaFicha : null;
+  const voltaBruta = busca.get("volta");
+  const volta = voltaBruta && voltaBruta.startsWith("/") && !voltaBruta.startsWith("//") ? voltaBruta : null;
+  const [alunoEscolhido, setAlunoEscolhido] = useState<number | null>(null);
+  const alunoId = alunoDaUrl ?? alunoEscolhido;
+
   const { data: form, isLoading, isError } = useForm(formId);
   const submitForm = useSubmitForm(formId);
+  const fichaDoForm = fichaDoFormulario(decodeFormConfig(form?.config));
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [nomeReferencia, setNomeReferencia] = useState("");
@@ -339,14 +436,19 @@ export default function FormFillPage() {
   );
 
   async function handleSubmit() {
+    if (fichaDoForm && alunoId === null) {
+      toast.error("Escolha o aluno antes de enviar.");
+      return;
+    }
     try {
       await submitForm.mutateAsync({
         nomeReferencia: nomeReferencia.trim() || null,
         observacoes: observacoes.trim() || null,
+        alunoId: fichaDoForm ? alunoId : null,
         itens: camposVisiveis.map((c) => ({ fieldId: c.id, valor: answers[c.id] ?? null })),
       });
       toast.success("Resposta enviada com sucesso.");
-      router.push(`/flow/${formId}/respostas`);
+      router.push(volta ?? `/flow/${formId}/respostas`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao enviar resposta.");
     }
@@ -386,8 +488,8 @@ export default function FormFillPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
       <div>
-        <Link href={`/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
-          ← {form.nome}
+        <Link href={volta ?? `/flow/${formId}`} className="text-xs text-muted-foreground hover:underline">
+          ← {volta ? "Voltar para a ficha do aluno" : form.nome}
         </Link>
         <h1 className="font-heading text-[clamp(24px,3vw,32px)] font-semibold tracking-[-.03em] break-words">
           {form.nome}
@@ -396,6 +498,10 @@ export default function FormFillPage() {
           <p className="mt-1 text-sm break-words text-muted-foreground">{form.descricao}</p>
         )}
       </div>
+
+      {fichaDoForm && (
+        <EscolhaDoAluno alunoId={alunoId} fixo={alunoDaUrl !== null} onEscolher={setAlunoEscolhido} secao={fichaDoForm.secao} />
+      )}
 
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 md:p-5">
         <div className="flex flex-col gap-1.5">
@@ -433,7 +539,7 @@ export default function FormFillPage() {
       <Button
         variant="action"
         onClick={handleSubmit}
-        disabled={submitForm.isPending || camposVisiveis.length === 0}
+        disabled={submitForm.isPending || camposVisiveis.length === 0 || (fichaDoForm !== null && alunoId === null)}
         className="h-12 w-full text-base md:h-10 md:text-sm"
       >
         {submitForm.isPending ? "Enviando..." : "Enviar resposta"}

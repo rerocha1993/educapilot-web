@@ -14,6 +14,8 @@ export interface FormSubmissionInput {
   referenciaId?: string | null;
   nomeReferencia?: string | null;
   observacoes?: string | null;
+  /** Aluno da resposta. Obrigatório quando o formulário está vinculado à ficha do aluno. */
+  alunoId?: number | null;
   itens: FormSubmissionItemInput[];
 }
 
@@ -32,6 +34,7 @@ export function useSubmitForm(formId: string) {
           referenciaId: dto.referenciaId ?? null,
           nomeReferencia: dto.nomeReferencia ?? null,
           observacoes: dto.observacoes ?? null,
+          alunoId: dto.alunoId ?? null,
           itens: dto.itens,
         },
       });

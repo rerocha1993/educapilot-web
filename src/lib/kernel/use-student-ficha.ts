@@ -18,6 +18,7 @@ export function useStudent(id: number | null) {
 export interface StudentOccurrenceDto {
   id: number;
   categoria: string | null;
+  gravidade?: string | null;
   observation: string | null;
   parentsNotified: boolean;
   createdAt: string;

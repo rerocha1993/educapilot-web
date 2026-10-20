@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { ErroDeCarga } from "@/components/rh/campo";
 import { useBlocosDaTurma, useSalvarBlocosDaTurma, type BlocosDaTurma } from "@/lib/relacionamento/use-diario";
+import { MODELOS_DO_DIARIO, nomeDoModelo } from "@/lib/relacionamento/diario-modelos";
+import { cn } from "@/lib/utils";
 
 const LINHAS: { campo: keyof BlocosDaTurma; rotulo: string; dica?: string; filhoDe?: keyof BlocosDaTurma }[] = [
   { campo: "alimentacao", rotulo: "Alimentação", dica: "Refeições e como a criança aceitou." },
@@ -40,8 +42,10 @@ export function DialogDeBlocos({
     <Dialog open={aberto} onOpenChange={(a) => !a && onFechar()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Blocos do diário · {turma}</DialogTitle>
-          <DialogDescription>O que a equipe lança no dia desta turma. As outras turmas não mudam.</DialogDescription>
+          <DialogTitle>Formato do diário · {turma}</DialogTitle>
+          <DialogDescription>
+            Escolha um modelo pronto ou ligue e desligue cada parte. É o que a equipe lança no dia desta turma; as outras turmas não mudam.
+          </DialogDescription>
         </DialogHeader>
         {aberto && classId !== null && <Corpo key={classId} classId={classId} onFechar={onFechar} />}
       </DialogContent>
@@ -74,8 +78,39 @@ function Formulario({ classId, inicial, onFechar }: { classId: number; inicial: 
     }
   }
 
+  const modelo = nomeDoModelo(blocos);
+
   return (
     <>
+      <div>
+        <p className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Modelos prontos</p>
+        <div className="mt-1.5 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
+          {MODELOS_DO_DIARIO.map((m) => {
+            const aplicado = modelo.split(" ou ").includes(m.nome);
+            return (
+              <button
+                key={m.id}
+                type="button"
+                aria-pressed={aplicado}
+                disabled={salvar.isPending}
+                onClick={() => setBlocos(m.blocos)}
+                className={cn(
+                  "rounded-lg border px-3 py-2 text-left transition-colors",
+                  aplicado ? "border-primary bg-primary/10" : "border-input bg-card hover:bg-muted"
+                )}
+              >
+                <span className="block text-sm font-medium">{m.nome}</span>
+                <span className="block text-xs text-muted-foreground">{m.descricao}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-sm">
+          <span className="text-muted-foreground">Formato atual: </span>
+          <strong className="font-semibold">{modelo}</strong>
+        </p>
+      </div>
+
       <ul className="flex flex-col divide-y divide-border">
         {LINHAS.map((l) => {
           const desligadaPeloPai = l.filhoDe ? !blocos[l.filhoDe] : false;
