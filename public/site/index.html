@@ -1,29 +1,32 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head>
-<script>window.__resources = {"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"/site/assets/react.production.min.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"/site/assets/react-dom.production.min.js"};</script>
+<html lang="pt-BR">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EducaPilot · Sistema de gestão escolar: chamada, rematrícula, financeiro e portaria</title>
-<meta name="description" content="Sistema de gestão escolar com chamada, rematrícula online com contrato assinado, mensalidades, portaria e eventos. Tudo em um só lugar, módulo a módulo.">
+<title>EducaPilot · Sistema de gestão escolar: financeiro, matrículas, contratos e rotina</title>
+<meta name="description" content="Sistema de gestão escolar com financeiro, alunos, matrículas e contratos assinados online, portaria e rotina escolar em um só lugar. Acesse pelo computador ou celular.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://educa-pilot.com/">
 <link rel="icon" type="image/png" href="/site/favicon.png">
 <link rel="apple-touch-icon" href="/site/apple-touch-icon.png">
-<meta name="theme-color" content="#5C4B8C">
+<meta name="theme-color" content="#3B2F63">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="EducaPilot">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:url" content="https://educa-pilot.com/">
-<meta property="og:title" content="EducaPilot · Sistema de gestão escolar: chamada, rematrícula, financeiro e portaria">
-<meta property="og:description" content="Sistema de gestão escolar com chamada, rematrícula online com contrato assinado, mensalidades, portaria e eventos. Tudo em um só lugar, módulo a módulo.">
+<meta property="og:title" content="EducaPilot · Sua escola organizada. Mais tempo para você.">
+<meta property="og:description" content="Financeiro, alunos, contratos e rotina escolar em um só lugar. Acesse pelo computador ou celular, onde estiver.">
 <meta property="og:image" content="https://educa-pilot.com/site/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="EducaPilot: a escola inteira em um só lugar">
+<meta property="og:image:alt" content="EducaPilot: sistema de gestão escolar">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="EducaPilot · Sistema de gestão escolar: chamada, rematrícula, financeiro e portaria">
-<meta name="twitter:description" content="Sistema de gestão escolar com chamada, rematrícula online com contrato assinado, mensalidades, portaria e eventos. Tudo em um só lugar, módulo a módulo.">
+<meta name="twitter:title" content="EducaPilot · Sua escola organizada. Mais tempo para você.">
+<meta name="twitter:description" content="Financeiro, alunos, contratos e rotina escolar em um só lugar. Acesse pelo computador ou celular, onde estiver.">
 <meta name="twitter:image" content="https://educa-pilot.com/site/assets/og.png">
+<link rel="preload" href="/site/assets/135cd6a0.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/site/assets/a111674b.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="modulepreload" href="/site/assets/three.core.min.js">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -35,6 +38,7 @@
       "url": "https://educa-pilot.com/",
       "logo": "https://educa-pilot.com/icon-512.png",
       "email": "privacidade@educa-pilot.com",
+      "telephone": "+55-11-94295-0778",
       "areaServed": "BR"
     },
     {
@@ -54,336 +58,332 @@
       "applicationSubCategory": "Sistema de gestão escolar",
       "operatingSystem": "Web, Android, iOS",
       "inLanguage": "pt-BR",
-      "description": "Sistema de gestão escolar com chamada, rematrícula online com contrato assinado, mensalidades, portaria e eventos. Tudo em um só lugar, módulo a módulo.",
+      "description": "Sistema de gestão escolar com financeiro, alunos, matrículas e contratos assinados online, portaria e rotina escolar em um só lugar.",
       "image": "https://educa-pilot.com/site/assets/og.png",
       "provider": { "@id": "https://educa-pilot.com/#organizacao" },
       "featureList": [
-        "Chamada por turma com relatório de faltas",
-        "Checklist, ocorrências, planejamento semanal e reuniões",
-        "Rematrícula online com formulário sob medida e contrato gerado automaticamente",
-        "Assinatura eletrônica com validade jurídica (Autentique)",
-        "Mensalidades, receitas, despesas e orçamento",
-        "Portaria: entradas, saídas, visitantes e multa por atraso",
-        "Área do responsável",
-        "Eventos e vendas: festa junina, rifas e campanhas",
-        "Turmas, alunos, responsáveis e permissões por módulo",
-        "Integração com o Agenda Edu"
+        "Financeiro: mensalidades, receitas e despesas",
+        "Matrículas e contratos com assinatura online",
+        "Rotina escolar: chamada, ocorrências e planejamento",
+        "Portaria: entradas, saídas e retiradas",
+        "Cadastro de alunos e responsáveis",
+        "Eventos e vendas: pedidos e arrecadação",
+        "Permissões de acesso por usuário"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://educa-pilot.com/#duvidas",
+      "mainEntity": [
+        { "@type": "Question", "name": "Preciso contratar todos os módulos?", "acceptedAnswer": { "@type": "Answer", "text": "Não. Você pode começar pelos módulos que precisa e adicionar outros depois." } },
+        { "@type": "Question", "name": "Consigo acessar fora da escola?", "acceptedAnswer": { "@type": "Answer", "text": "Sim. Você pode acessar pelo computador ou celular com conexão à internet." } },
+        { "@type": "Question", "name": "Minha equipe também pode usar?", "acceptedAnswer": { "@type": "Answer", "text": "Sim. Você define as permissões de acesso de cada usuário." } },
+        { "@type": "Question", "name": "Como descubro se atende à minha escola?", "acceptedAnswer": { "@type": "Answer", "text": "Na demonstração, nós conhecemos sua rotina, apresentamos as ferramentas e esclarecemos suas dúvidas." } }
       ]
     }
   ]
 }
 </script>
-<script src="/site/assets/dc-runtime.js"></script>
+<style>
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 300 800; font-display: swap; src: url("/site/assets/135cd6a0.woff2") format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 300 800; font-display: swap; src: url("/site/assets/fb6ce937.woff2") format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/site/assets/a111674b.woff2") format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Plus Jakarta Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/site/assets/f5963df6.woff2") format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+/* Direção "quadro de horários": cores chapadas da marca, linhas de tinta, cantos retos. Sem degradê, sem sombra. */
+:root {
+  --chao: #F7F5F1;        /* fundo da página */
+  --papel: #FFFFFF;
+  --tinta: #1E1A24;       /* texto e linhas */
+  --tinta-2: #57505F;     /* texto secundário (7:1 no chão) */
+  --roxo: #5C4B8C;
+  --roxo-fundo: #34295A;  /* blocos roxos chapados */
+  --roxo-linha: rgba(255,255,255,.10);
+  --lilas: #ECE8F5;
+  --laranja: #F5851F;     /* só preenchimento: nunca texto em fundo claro */
+  --laranja-texto: #A24A00;
+  --sobre-roxo: #F3EFFA;
+  --sobre-roxo-2: #C9C0DD;
+  --linha: 2px solid var(--tinta);
+  --titulo: 'Outfit', system-ui, sans-serif;
+  --corpo: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--chao); color: var(--tinta); font-family: var(--corpo); -webkit-font-smoothing: antialiased; line-height: 1.55; overflow-x: hidden; }
+a { color: inherit; }
+img, video { display: block; max-width: 100%; }
+::selection { background: var(--laranja); color: var(--tinta); }
+:focus-visible { outline: 3px solid var(--laranja); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--titulo); margin: 0; font-weight: 700; letter-spacing: -.035em; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+
+.miolo { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+/* Botões: retângulos de tinta */
+.botao { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 24px; border: var(--linha); border-radius: 6px; font: 600 16px/1 var(--corpo); text-decoration: none; transition: background .15s, color .15s, transform .15s; }
+.botao svg { width: 20px; height: 20px; flex: none; }
+.botao-laranja { background: var(--laranja); color: var(--tinta); }
+.botao-laranja:hover { background: var(--tinta); color: var(--papel); }
+.botao-vazado { background: transparent; color: var(--tinta); }
+.botao-vazado:hover { background: var(--tinta); color: var(--papel); }
+.botao-tinta { background: var(--tinta); color: var(--papel); }
+.botao-tinta:hover { background: var(--papel); color: var(--tinta); }
+.botao:active { transform: translateY(1px); }
+
+/* Etiqueta: como a de caderno escolar */
+.etiqueta { display: inline-flex; align-items: center; gap: 10px; border: var(--linha); border-radius: 4px; background: var(--papel); padding: 6px 12px; font: 700 12.5px/1 var(--corpo); letter-spacing: .14em; text-transform: uppercase; }
+.etiqueta i { width: 10px; height: 10px; background: var(--laranja); border: 2px solid var(--tinta); border-radius: 50%; }
+
+/* ===== Topo ===== */
+header { position: sticky; top: 0; z-index: 50; background: var(--chao); border-bottom: var(--linha); }
+header .miolo { display: flex; align-items: center; gap: 32px; height: 72px; }
+.marca { display: flex; align-items: center; gap: 10px; margin-right: auto; text-decoration: none; font: 700 21px/1 var(--titulo); letter-spacing: -.02em; }
+.marca img { height: 34px; width: auto; }
+.marca .educa { color: var(--laranja-texto); }
+.marca .pilot { color: var(--roxo); }
+header nav { display: flex; gap: 4px; }
+header nav a { padding: 10px 12px; border-radius: 4px; font-size: 15px; font-weight: 500; text-decoration: none; color: var(--tinta-2); }
+header nav a:hover { color: var(--tinta); background: var(--lilas); }
+.entrar { font-weight: 700; font-size: 15px; text-decoration: none; padding: 10px 6px; }
+.entrar:hover { text-decoration: underline; text-underline-offset: 4px; }
+header .botao { min-height: 44px; padding: 0 16px; font-size: 15px; }
+@media (max-width: 960px) { header nav { display: none; } }
+@media (max-width: 520px) { header .miolo { gap: 14px; padding: 0 16px; } .marca { font-size: 19px; } .marca img { height: 30px; } header .texto-longo { display: none; } }
+@media (min-width: 521px) { header .texto-curto { display: none; } }
+
+/* ===== 1. Banner ===== */
+.banner { border-bottom: var(--linha); }
+.banner .grade { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); min-height: min(760px, calc(100svh - 72px)); }
+.banner .texto { padding: 72px 56px 72px max(32px, calc(50vw - 588px)); display: flex; flex-direction: column; justify-content: center; }
+.banner h1 { isolation: isolate; margin-top: 28px; font-size: clamp(46px, 6.6vw, 92px); line-height: .98; }
+.banner h1 .linha-2 { display: block; color: var(--roxo); }
+.banner h1 .marca-texto { position: relative; white-space: nowrap; }
+.banner h1 .marca-texto::after { content: ""; position: absolute; left: 0; right: 0; bottom: .02em; height: .16em; background: var(--laranja); z-index: -1; }
+.banner .descricao { margin-top: 28px; max-width: 520px; font-size: clamp(17px, 1.6vw, 19.5px); color: var(--tinta-2); }
+.banner .acoes { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+.banner .palco { position: relative; border-left: var(--linha); background-color: var(--roxo-fundo); background-image: linear-gradient(var(--roxo-linha) 1px, transparent 1px), linear-gradient(90deg, var(--roxo-linha) 1px, transparent 1px); background-size: 48px 48px; overflow: hidden; }
+.banner phone-3d { position: absolute; inset: 56px 0 56px; display: block; width: 100%; height: auto; }
+.banner .legenda { position: absolute; left: 24px; bottom: 22px; display: flex; align-items: center; gap: 10px; color: var(--sobre-roxo-2); font-size: 13.5px; }
+.banner .legenda b { color: var(--sobre-roxo); font-weight: 600; }
+.banner .carimbo-hora { position: absolute; top: 22px; left: 24px; font: 600 13px/1 ui-monospace, 'SFMono-Regular', Consolas, monospace; color: var(--sobre-roxo-2); letter-spacing: .06em; }
+@media (max-width: 900px) {
+  .banner .grade { grid-template-columns: 1fr; min-height: 0; }
+  .banner .texto { padding: 48px 32px 40px; }
+  .banner .palco { border-left: 0; border-top: var(--linha); height: 480px; }
+}
+
+/* Cabeçalho de seção: régua com rótulo à esquerda e número à direita */
+.regua { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: var(--linha); font: 700 13px/1 var(--corpo); letter-spacing: .14em; text-transform: uppercase; }
+.regua span:last-child { font-family: var(--titulo); letter-spacing: 0; font-size: 15px; }
+.secao { padding: 0 0 112px; }
+.secao h2 { font-size: clamp(36px, 5.2vw, 68px); line-height: 1; }
+.secao .abertura { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: end; padding: 56px 0 48px; }
+.secao .abertura p { font-size: clamp(17px, 1.6vw, 19.5px); color: var(--tinta-2); max-width: 500px; justify-self: end; }
+@media (max-width: 800px) { .secao .abertura { grid-template-columns: 1fr; gap: 20px; padding: 40px 0 32px; } .secao .abertura p { justify-self: start; } .secao { padding-bottom: 80px; } }
+
+/* ===== 2. Sistema funcionando ===== */
+.quadro { position: relative; max-width: 1040px; margin: 0 auto; }
+.quadro::before { content: ""; position: absolute; inset: 14px -14px -14px 14px; background: var(--laranja); border: var(--linha); border-radius: 8px; }
+.quadro > * { position: relative; }
+.quadro video { width: 100%; border: var(--linha); border-radius: 8px; background: var(--tinta); }
+.quadro[data-tem-video] .tela { display: none; }
+.quadro:not([data-tem-video]) video { display: none; }
+@media (max-width: 700px) { .quadro::before { inset: 8px -8px -8px 8px; } }
+
+/* Reprodução da tela de chamada do sistema */
+.tela { border: var(--linha); border-radius: 8px; overflow: hidden; background: var(--papel); }
+.tela .barra { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: var(--linha); background: var(--chao); }
+.tela .barra i { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--tinta); }
+.tela .barra i:first-child { background: var(--laranja); }
+.tela .barra span { margin-left: 10px; font: 500 12.5px/1 ui-monospace, Consolas, monospace; color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tela .corpo { display: grid; grid-template-columns: 210px minmax(0, 1fr); }
+.tela aside { border-right: 2px solid var(--tinta); padding: 18px 12px; font-size: 14px; }
+.tela aside .logo { display: flex; align-items: center; gap: 8px; padding: 0 8px 18px; font: 700 15px/1 var(--titulo); }
+.tela aside .logo img { height: 22px; width: auto; }
+.tela aside div.item { padding: 9px 10px; border-radius: 4px; color: var(--tinta-2); }
+.tela aside div.item.ativo { background: var(--lilas); color: var(--roxo); font-weight: 700; }
+.tela .conteudo { padding: 20px 24px 24px; min-width: 0; }
+.tela .abas { display: flex; gap: 20px; font-size: 13.5px; color: var(--tinta-2); border-bottom: 1px solid #DDD8E3; white-space: nowrap; overflow: hidden; }
+.tela .abas span { padding-bottom: 10px; }
+.tela .abas b { padding-bottom: 8px; color: var(--roxo); border-bottom: 3px solid var(--roxo); }
+.tela .topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 18px 0 14px; }
+.tela .topo strong { display: block; font: 700 18px/1.2 var(--titulo); }
+.tela .topo small { color: var(--tinta-2); font-size: 13px; }
+.tela .todos { font-size: 13px; font-weight: 700; padding: 8px 12px; border: 2px solid var(--tinta); border-radius: 4px; background: var(--chao); }
+.tela .aluno { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid #DDD8E3; border-radius: 6px; margin-top: 8px; font-size: 14px; }
+.tela .aluno > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tela .marcas { display: flex; gap: 6px; flex: none; }
+.tela .marcas span { font-size: 12.5px; font-weight: 600; padding: 5px 11px; border-radius: 4px; border: 1px solid #CFC9D6; color: var(--tinta-2); transition: background .3s, color .3s, border-color .3s; }
+.tela .marcas span.sim { background: var(--roxo); border-color: var(--roxo); color: #fff; }
+.tela .marcas span.falta.sim { background: var(--laranja); border-color: var(--tinta); color: var(--tinta); }
+@media (max-width: 760px) { .tela .corpo { grid-template-columns: 1fr; } .tela aside { display: none; } .tela .marcas span:last-child { display: none; } .tela .conteudo { padding: 14px; } }
+
+/* ===== 3. Grade de módulos ===== */
+.horario { border-top: var(--linha); }
+.horario li { list-style: none; display: grid; grid-template-columns: 120px minmax(0, 1.1fr) minmax(0, 1fr) 40px; align-items: center; gap: 24px; padding: 26px 0; border-bottom: var(--linha); transition: background .2s, padding .2s; }
+.horario li:hover { background: var(--papel); padding-left: 16px; padding-right: 16px; }
+.horario ol { margin: 0; padding: 0; }
+.horario .num { font: 700 56px/1 var(--titulo); letter-spacing: -.04em; color: var(--roxo); }
+.horario li:nth-child(even) .num { color: var(--laranja-texto); }
+.horario h3 { font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -.025em; }
+.horario p { color: var(--tinta-2); font-size: 17px; }
+.horario svg { width: 30px; height: 30px; justify-self: end; color: var(--tinta); }
+.nota-modulos { display: flex; align-items: center; gap: 16px; margin-top: 36px; font-size: 18px; }
+.nota-modulos b { font-family: var(--titulo); font-weight: 700; }
+.nota-modulos::before { content: ""; flex: none; width: 48px; height: 2px; background: var(--tinta); }
+@media (max-width: 800px) {
+  .horario li { grid-template-columns: 64px minmax(0, 1fr); gap: 6px 16px; padding: 22px 0; }
+  .horario li:hover { padding-left: 0; padding-right: 0; background: transparent; }
+  .horario .num { font-size: 34px; grid-row: span 2; align-self: start; }
+  .horario p { font-size: 16px; }
+  .horario svg { display: none; }
+}
+
+/* ===== 4. Quem está por trás ===== */
+.quem { background: var(--roxo-fundo); color: var(--sobre-roxo); border-top: var(--linha); border-bottom: var(--linha); padding: 0 0 112px; }
+.quem .regua { border-bottom-color: var(--sobre-roxo-2); color: var(--sobre-roxo-2); border-bottom-width: 1px; }
+.quem .grade { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: 64px; align-items: center; padding-top: 64px; }
+.quem h2 { font-size: clamp(38px, 5.4vw, 72px); line-height: 1; color: #fff; }
+.quem h2 em { font-style: normal; color: var(--laranja); }
+.quem .descricao { margin-top: 28px; font-size: clamp(17px, 1.6vw, 20px); color: var(--sobre-roxo-2); max-width: 600px; }
+.quem .destaque { margin-top: 36px; display: inline-flex; align-items: center; gap: 14px; padding: 16px 20px; border: 2px solid var(--laranja); border-radius: 6px; font-weight: 600; font-size: 16.5px; color: #fff; }
+.quem .destaque svg { width: 24px; height: 24px; color: var(--laranja); flex: none; }
+.quem .lado { position: relative; justify-self: center; width: 100%; max-width: 360px; }
+.quem figure { margin: 0; display: none; }
+.quem[data-tem-foto] figure { display: block; }
+.quem figure img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border: 2px solid var(--sobre-roxo); border-radius: 8px; }
+.quem figcaption { margin-top: 14px; font-size: 15px; color: var(--sobre-roxo-2); }
+.quem figcaption:empty { display: none; }
+.selo { display: block; width: 100%; max-width: 320px; aspect-ratio: 1; margin: 0 auto; color: var(--laranja); }
+.selo .gira { transform-origin: 160px 160px; animation: girar 38s linear infinite; }
+.quem[data-tem-foto] .selo { position: absolute; width: 150px; right: -40px; top: -48px; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (max-width: 860px) { .quem .grade { grid-template-columns: 1fr; gap: 48px; padding-top: 44px; } .quem .lado { max-width: 260px; } .quem[data-tem-foto] .lado { max-width: 320px; } .quem[data-tem-foto] .selo { right: -16px; width: 120px; } .quem { padding-bottom: 80px; } }
+
+/* ===== 5. Dúvidas ===== */
+.duvidas .grade { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 64px; padding-top: 56px; align-items: start; }
+.duvidas .grade > div:first-child { position: sticky; top: 112px; }
+.duvidas .grade > div:first-child p { margin-top: 20px; color: var(--tinta-2); font-size: 17px; max-width: 360px; }
+.duvidas .grade > div:first-child a { font-weight: 700; text-underline-offset: 4px; }
+.perguntas { border-top: var(--linha); }
+.perguntas details { border-bottom: var(--linha); }
+.perguntas summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 44px minmax(0, 1fr) 32px; align-items: center; gap: 12px; padding: 24px 0; font: 600 clamp(19px, 1.9vw, 23px)/1.25 var(--titulo); letter-spacing: -.015em; }
+.perguntas summary::-webkit-details-marker { display: none; }
+.perguntas summary .n { font: 700 14px/1 var(--corpo); color: var(--tinta-2); letter-spacing: .06em; }
+.perguntas summary .mais { position: relative; width: 28px; height: 28px; border: 2px solid var(--tinta); border-radius: 50%; justify-self: end; transition: background .2s, transform .25s; }
+.perguntas summary .mais::before, .perguntas summary .mais::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px; margin: -1px 0 0 -6px; background: var(--tinta); }
+.perguntas summary .mais::after { transform: rotate(90deg); }
+.perguntas details[open] summary .mais { background: var(--laranja); transform: rotate(45deg); }
+.perguntas summary:hover .mais { background: var(--lilas); }
+.perguntas details[open] summary:hover .mais { background: var(--laranja); }
+.perguntas details p { padding: 0 44px 26px 56px; font-size: 17px; color: var(--tinta-2); }
+@media (max-width: 860px) { .duvidas .grade { grid-template-columns: 1fr; gap: 32px; padding-top: 40px; } .duvidas .grade > div:first-child { position: static; } .perguntas summary { grid-template-columns: 32px minmax(0, 1fr) 32px; } .perguntas details p { padding: 0 0 22px 44px; } }
+
+/* ===== 6. Convite final ===== */
+.convite { background: var(--laranja); border-top: var(--linha); }
+.convite .miolo { padding-top: 104px; padding-bottom: 104px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 48px; align-items: end; }
+.convite h2 { font-size: clamp(38px, 5.6vw, 76px); line-height: 1; }
+.convite p { margin-top: 24px; font-size: clamp(17px, 1.6vw, 20px); max-width: 560px; }
+.convite .acao { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.convite .botao { min-height: 60px; padding: 0 28px; font-size: 17px; }
+.convite small { font-size: 15px; font-weight: 500; }
+@media (max-width: 800px) { .convite .miolo { grid-template-columns: 1fr; padding-top: 72px; padding-bottom: 72px; gap: 32px; } .convite .botao { width: 100%; } }
+
+footer { background: var(--tinta); color: #CFC9D6; font-size: 14.5px; }
+footer .miolo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-top: 32px; padding-bottom: 40px; }
+footer .marca { margin: 0; color: #fff; font-size: 18px; }
+footer .marca img { height: 28px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 20px; }
+footer a { color: #fff; text-underline-offset: 4px; }
+
+@media (max-width: 600px) { .miolo { padding: 0 16px; } .banner .texto { padding-left: 16px; padding-right: 16px; } .banner .acoes .botao { width: 100%; } }
+
+/* Entrada ao rolar: só abaixo do banner, só com JavaScript, nunca com movimento reduzido */
+.js [data-surge] { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.js [data-surge].visivel { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .js [data-surge] { opacity: 1; transform: none; transition: none; } .selo .gira { animation: none; } }
+</style>
+<script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
-<x-dc>
-<helmet>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<style>/* latin-ext */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url("/site/assets/fb6ce937.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url("/site/assets/135cd6a0.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/site/assets/fb6ce937.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/site/assets/135cd6a0.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/site/assets/fb6ce937.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/site/assets/135cd6a0.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/site/assets/fb6ce937.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/site/assets/135cd6a0.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/site/assets/fb6ce937.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("/site/assets/135cd6a0.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/site/assets/718cbf25.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/site/assets/0b854cfb.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/site/assets/f5963df6.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/site/assets/a111674b.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/site/assets/718cbf25.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/site/assets/0b854cfb.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/site/assets/f5963df6.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("/site/assets/a111674b.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* cyrillic-ext */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/site/assets/718cbf25.woff2") format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-/* vietnamese */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/site/assets/0b854cfb.woff2") format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
-}
-/* latin-ext */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/site/assets/f5963df6.woff2") format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/site/assets/a111674b.woff2") format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-</style>
 
-<script src="/site/assets/image-slot.js"></script>
-<script type="module" src="/site/assets/phone-3d.js"></script>
-<style>
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: #FBFAF8; color: #2A2530; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-  a { color: #5C4B8C; text-decoration: none; }
-  a:hover { color: #B85C00; }
-  ::selection { background: #FFD9B3; }
-  header a { white-space: nowrap; }
-  @media (max-width: 860px) { header nav { display: none !important; } }
-  @media (max-width: 420px) { header > div { gap: 14px !important; padding: 12px 16px !important; } header a[href="#demo"] { padding: 9px 12px !important; font-size: 13.5px !important; } }
-  @keyframes ep-float { 0%,100% { transform: translate3d(0,0,0) } 50% { transform: translate3d(0,-18px,0) } }
-  @keyframes ep-marquee { from { transform: translate3d(0,0,0) } to { transform: translate3d(-50%,0,0) } }
-  @keyframes ep-pulse { 0%,100% { opacity: .35 } 50% { opacity: .9 } }
-</style>
-</helmet>
-
-<div style="position:fixed; top:0; left:0; right:0; height:3px; z-index:120">
-  <div ref="{{ bar }}" style="height:100%; width:0%; background:linear-gradient(90deg,#5C4B8C,#F5851F)"></div>
-</div>
-
-<header style="position:fixed; top:0; left:0; right:0; z-index:100; backdrop-filter:blur(14px); background:rgba(251,250,248,.82); border-bottom:1px solid #EDE9E3">
-  <div style="max-width:1200px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:28px">
-    <div style="display:flex; align-items:center; gap:10px; margin-right:auto">
-      <img src="/site/assets/logo-marca.png" alt="" width="18" height="34" style="display:block; height:34px; width:auto">
-      <span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:19px; letter-spacing:-.01em"><span style="color:#F5851F">Educa</span><span style="color:#5C4B8C">Pilot</span></span>
-    </div>
-    <nav style="display:flex; gap:26px; font-size:14.5px; color:#6F6879">
-      <a href="#ferramentas" style="color:#6F6879">Ferramentas</a>
-      <a href="#porque" style="color:#6F6879">Por que</a>
-      <a href="#demo" style="color:#6F6879">Demonstração</a>
+<header>
+  <div class="miolo">
+    <a class="marca" href="/" aria-label="EducaPilot, início">
+      <img src="/site/assets/logo-marca.png" alt="" width="18" height="34">
+      <span><span class="educa">Educa</span><span class="pilot">Pilot</span></span>
+    </a>
+    <nav aria-label="Seções">
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#o-que-organiza">O que organiza</a>
+      <a href="#quem-somos">Quem somos</a>
+      <a href="#duvidas">Dúvidas</a>
     </nav>
-    <a href="/login" style="color:#5C4B8C; font-size:14.5px; font-weight:600">Entrar</a>
-    <a href="#demo" style="background:#5C4B8C; color:#fff; padding:10px 18px; border-radius:10px; font-size:14.5px; font-weight:600" style-hover="background:#B85C00; color:#fff">Agende uma demo</a>
+    <a class="entrar" href="/login">Entrar</a>
+    <a class="botao botao-laranja" data-whatsapp href="#contato"><span class="texto-longo">Fale pelo WhatsApp</span><span class="texto-curto">WhatsApp</span></a>
   </div>
 </header>
 
-<section style="position:relative; padding:150px 24px 40px; overflow:hidden">
-  <div ref="{{ orbA }}" style="position:absolute; top:-140px; left:-120px; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #DCD3F0, rgba(220,211,240,0) 70%); animation:ep-float 11s ease-in-out infinite; pointer-events:none"></div>
-  <div ref="{{ orbB }}" style="position:absolute; top:120px; right:-160px; width:480px; height:480px; border-radius:50%; background:radial-gradient(circle at 60% 40%, #FFD9B3, rgba(255,217,179,0) 70%); animation:ep-float 14s ease-in-out infinite; pointer-events:none"></div>
+<main>
 
-  <div style="position:relative; max-width:1000px; margin:0 auto; text-align:center">
-    <div data-reveal="" style="display:inline-flex; align-items:center; gap:9px; border:1px solid #FBD8B4; background:#FFF4E8; color:#B85C00; padding:7px 14px; border-radius:999px; font-size:13.5px; font-weight:600">
-      <span style="width:7px; height:7px; border-radius:50%; background:#F5851F; animation:ep-pulse 2.4s ease-in-out infinite"></span>
-      Sistema de gestão escolar: rotina, rematrícula, financeiro, portaria e eventos
-    </div>
-    <h1 data-reveal="" data-delay="60" style="font-family:'Outfit',sans-serif; font-weight:600; font-size:clamp(40px,7vw,82px); line-height:1.02; letter-spacing:-.035em; margin:22px 0 0; text-wrap:balance">
-      A escola inteira<br><span style="color:#5C4B8C">em um só lugar</span><span style="color:#F5851F">.</span>
-    </h1>
-    <p data-reveal="" data-delay="120" style="max-width:640px; margin:26px auto 0; font-size:clamp(16px,2vw,19px); line-height:1.6; color:#6F6879; text-wrap:pretty">
-      Chamada, rematrícula com contrato assinado, financeiro, portaria e eventos. O EducaPilot junta o dia a dia da escola em um sistema só, feito para quem cuida de escola e não tem tempo a perder.
-    </p>
-    <div data-reveal="" data-delay="180" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:32px">
-      <a href="#demo" style="background:#B85C00; color:#fff; padding:15px 26px; border-radius:12px; font-weight:600; font-size:15.5px; box-shadow:0 14px 30px -14px rgba(184,92,0,.7)" style-hover="background:#8F4700; color:#fff">Agende uma demonstração</a>
-      <a href="#ferramentas" style="background:#fff; color:#2A2530; padding:15px 26px; border-radius:12px; font-weight:600; font-size:15.5px; border:1px solid #E4DFD8" style-hover="border-color:#F5851F; color:#B85C00">Conheça as ferramentas</a>
+<!-- 1. BANNER PRINCIPAL -->
+<section class="banner">
+  <div>
+    <div class="grade">
+      <div class="texto">
+        <div><span class="etiqueta"><i></i>Sistema de gestão escolar</span></div>
+        <h1>Sua escola <span class="marca-texto">organizada.</span><span class="linha-2">Mais tempo para você.</span></h1>
+        <p class="descricao">Financeiro, alunos, contratos e rotina escolar em um só lugar. Acesse pelo computador ou celular, onde estiver.</p>
+        <div class="acoes">
+          <a class="botao botao-laranja" data-whatsapp href="#contato">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2Zm5.8 14.13c-.24.68-1.42 1.3-1.95 1.36-.5.06-1.13.09-1.82-.11a16.6 16.6 0 0 1-1.65-.61c-2.9-1.25-4.79-4.17-4.94-4.36-.14-.2-1.17-1.56-1.17-2.98s.74-2.12 1.01-2.41c.26-.29.57-.36.77-.36h.55c.18 0 .42-.07.65.5.24.58.82 2 .89 2.15.07.14.12.31.02.5-.1.2-.14.31-.29.48l-.43.5c-.14.14-.3.3-.13.6.17.29.76 1.25 1.63 2.02 1.12 1 2.06 1.31 2.35 1.45.29.15.46.12.63-.07.17-.2.72-.84.92-1.13.19-.29.38-.24.65-.14.26.1 1.68.79 1.97.94.29.14.48.21.55.33.07.12.07.7-.17 1.37Z"/></svg>
+            Quero conhecer pelo WhatsApp
+          </a>
+          <a class="botao botao-vazado" href="#como-funciona">Ver como funciona</a>
+        </div>
+      </div>
+      <div class="palco">
+        <span class="carimbo-hora" aria-hidden="true">07:30 · ENTRADA</span>
+        <phone-3d data-mode="panel" style="position:absolute" role="img" aria-label="Celular com a tela inicial do aplicativo EducaPilot"></phone-3d>
+        <span class="legenda"><b>App EducaPilot</b> · tela inicial</span>
+      </div>
     </div>
   </div>
+</section>
 
-  <div ref="{{ mock }}" style="position:relative; max-width:1120px; margin:64px auto 0; transform-origin:50% 0%; will-change:transform">
-    <div style="border-radius:20px; overflow:hidden; background:#fff; border:1px solid #E8E4DE; box-shadow:0 60px 120px -50px rgba(42,37,48,.45)">
-      <div style="display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid #EFECE6; background:#FCFBF9">
-        <span style="width:10px; height:10px; border-radius:50%; background:#F5851F"></span>
-        <span style="width:10px; height:10px; border-radius:50%; background:#E8E4DE"></span>
-        <span style="width:10px; height:10px; border-radius:50%; background:#E8E4DE"></span>
-        <span style="margin-left:12px; font-size:12px; color:#9A93A3; font-family:ui-monospace,monospace">educapilot.app / rotina / chamada</span>
-      </div>
-      <div style="display:flex; flex-wrap:wrap; align-items:stretch">
-        <aside style="flex:0 0 200px; border-right:1px solid #EFECE6; padding:16px 12px; background:#fff; display:flex; flex-direction:column; gap:4px">
-          <div style="display:flex; align-items:center; gap:8px; padding:6px 8px 14px">
-            <img src="/site/assets/logo-marca.png" alt="" style="display:block; height:24px; width:auto">
-            <span style="font-family:'Outfit',sans-serif; font-weight:600; font-size:14.5px">EducaPilot</span>
-          </div>
-          <div style="padding:9px 12px; border-radius:9px; background:#5C4B8C; color:#fff; font-size:13.5px; font-weight:600">Rotina</div>
-          <div style="padding:9px 12px; border-radius:9px; color:#6F6879; font-size:13.5px">Portaria</div>
-          <div style="padding:9px 12px; border-radius:9px; color:#6F6879; font-size:13.5px">Formulários</div>
-          <div style="padding:9px 12px; border-radius:9px; color:#6F6879; font-size:13.5px">Financeiro</div>
-        </aside>
-        <div style="flex:1 1 320px; padding:18px 22px 24px; min-width:0">
-          <div style="display:flex; flex-wrap:wrap; gap:10px 18px; font-size:13px; color:#9A93A3; border-bottom:1px solid #EFECE6; padding-bottom:10px">
-            <span style="color:#2A2530; font-weight:600; border-bottom:2px solid #F5851F; padding-bottom:10px; margin-bottom:-11px">Chamada</span>
-            <span>Checklist</span><span>Ocorrências</span><span>Reuniões</span><span>Planejamento semanal</span>
-          </div>
-          <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:16px 0 14px; flex-wrap:wrap">
-            <div>
-              <div style="font-family:'Outfit',sans-serif; font-weight:600; font-size:21px">Chamada · Pré</div>
-              <div style="font-size:12.5px; color:#9A93A3; margin-top:2px">12 alunos · <span ref="{{ presentesTxt }}">0</span> presentes</div>
+<!-- 2. MOSTRAR O SISTEMA FUNCIONANDO -->
+<!-- O vídeo entra quando existir public/site/assets/demo.mp4: a página detecta o arquivo e troca a animação por ele. -->
+<section class="secao" id="como-funciona">
+  <div class="miolo">
+    <div class="regua"><span>Como funciona</span><span>01</span></div>
+    <div class="abertura">
+      <h2 data-surge>Menos procura. Mais controle.</h2>
+      <p data-surge>Veja como acompanhar as informações da sua escola sem procurar em várias planilhas e conversas.</p>
+    </div>
+    <div class="quadro" data-surge>
+      <video controls playsinline preload="none" aria-label="Vídeo: o EducaPilot em uso"><source data-src="/site/assets/demo.mp4" type="video/mp4"></video>
+      <div class="tela" id="demo-chamada" role="img" aria-label="Animação: a chamada da turma sendo feita no EducaPilot">
+        <div class="barra"><i></i><i></i><i></i><span>educa-pilot.com / rotina / chamada</span></div>
+        <div class="corpo">
+          <aside>
+            <div class="logo"><img src="/site/assets/logo-marca.png" alt="">EducaPilot</div>
+            <div class="item ativo">Rotina</div>
+            <div class="item">Portaria</div>
+            <div class="item">Formulários</div>
+            <div class="item">Financeiro</div>
+          </aside>
+          <div class="conteudo">
+            <div class="abas"><b>Chamada</b><span>Checklist</span><span>Ocorrências</span><span>Reuniões</span><span>Planejamento semanal</span></div>
+            <div class="topo">
+              <div><strong>Chamada · Maternal</strong><small>5 alunos · <span id="presentes">0</span> presentes</small></div>
+              <span class="todos">Marcar todos presentes</span>
             </div>
-            <div style="display:flex; gap:8px; align-items:center">
-              <div style="border:1px solid #E4DFD8; border-radius:9px; padding:8px 12px; font-size:12.5px; color:#6F6879">Turma: Pré</div>
-              <div style="background:#FFF4E8; color:#B85C00; border-radius:9px; padding:8px 12px; font-size:12.5px; font-weight:600">Marcar todos presentes</div>
-            </div>
-          </div>
-          <div ref="{{ rows }}" style="display:flex; flex-direction:column; border:1px solid #EFECE6; border-radius:12px; overflow:hidden">
-            <sc-for list="{{ alunos }}" as="aluno" hint-placeholder-count="5">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; border-bottom:1px solid #F3F1EC; font-size:13.5px">
-                <span>{{ aluno.nome }}</span>
-                <span style="display:flex; gap:6px; font-size:12px; color:#6F6879">
-                  <span style="border:1px solid #E4DFD8; border-radius:7px; padding:5px 11px">Presente</span>
-                  <span style="border:1px solid #E4DFD8; border-radius:7px; padding:5px 11px">Falta</span>
-                  <span style="border:1px solid #E4DFD8; border-radius:7px; padding:5px 11px">Atraso</span>
-                </span>
-              </div>
-            </sc-for>
+            <div class="aluno"><span>Davi Lima Prado</span><span class="marcas"><span>Presente</span><span class="falta">Falta</span><span>Atraso</span></span></div>
+            <div class="aluno"><span>Isabela Fontes</span><span class="marcas"><span>Presente</span><span class="falta">Falta</span><span>Atraso</span></span></div>
+            <div class="aluno"><span>Lucas Andrade Moura</span><span class="marcas"><span>Presente</span><span class="falta">Falta</span><span>Atraso</span></span></div>
+            <div class="aluno"><span>Manuela Couto</span><span class="marcas"><span>Presente</span><span class="falta">Falta</span><span>Atraso</span></span></div>
+            <div class="aluno"><span>Theo Ramos Vidal</span><span class="marcas"><span>Presente</span><span class="falta">Falta</span><span>Atraso</span></span></div>
           </div>
         </div>
       </div>
@@ -391,363 +391,185 @@
   </div>
 </section>
 
-<sc-if value="{{ showTrust }}" hint-placeholder-val="{{ true }}">
-  <section style="padding:48px 24px 10px">
-    <div data-reveal="" style="max-width:900px; margin:0 auto; text-align:center; font-size:15.5px; color:#6F6879; line-height:1.6; border-top:2px solid #FFD9B3; padding-top:26px">
-      Em uso no <strong style="color:#2A2530; font-weight:600">Colégio Aprender &amp; Saber</strong> (Osasco/SP), com rematrículas e contratos reais assinados pelo sistema.
+<!-- 3. O QUE VOCÊ PODE ORGANIZAR -->
+<section class="secao" id="o-que-organiza">
+  <div class="miolo">
+    <div class="regua"><span>O que organiza</span><span>02</span></div>
+    <div class="abertura">
+      <h2 data-surge>O que sua escola precisa, reunido.</h2>
     </div>
-  </section>
-</sc-if>
-
-<section style="padding:80px 24px 30px">
-  <div style="max-width:1120px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:clamp(28px,5vw,64px); align-items:center">
-    <div data-reveal="">
-      <div style="font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#B85C00; font-weight:600">Quem usa</div>
-      <h2 style="font-family:'Outfit',sans-serif; font-weight:600; font-size:clamp(28px,4vw,44px); letter-spacing:-.03em; line-height:1.08; margin:14px 0 0">Feito para a rotina<br>de quem cuida da escola<span style="color:#F5851F">.</span></h2>
-      <p style="color:#6F6879; font-size:16.5px; line-height:1.6; margin:16px 0 0; max-width:440px; text-wrap:pretty">Coordenação, secretaria e portaria usam o mesmo sistema — no computador da escola ou no celular, entre uma sala e outra.</p>
-      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:26px">
-        <span style="border:1px solid #FBD8B4; background:#FFF8F0; color:#B85C00; border-radius:999px; padding:8px 15px; font-size:13.5px; font-weight:500">Chamada no celular</span>
-        <span style="border:1px solid #FBD8B4; background:#FFF8F0; color:#B85C00; border-radius:999px; padding:8px 15px; font-size:13.5px; font-weight:500">Aprovação de rematrícula</span>
-        <span style="border:1px solid #FBD8B4; background:#FFF8F0; color:#B85C00; border-radius:999px; padding:8px 15px; font-size:13.5px; font-weight:500">Avisos do portão</span>
-      </div>
+    <div class="horario">
+      <ol>
+        <li data-surge><span class="num">01</span><h3>Financeiro</h3><p>Acompanhe mensalidades, receitas e despesas.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></li>
+        <li data-surge><span class="num">02</span><h3>Matrículas e contratos</h3><p>Receba informações e assinaturas online.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 17c1.5-2 2.5-2 3.5 0s2 2 4.5-1"/></svg></li>
+        <li data-surge><span class="num">03</span><h3>Rotina escolar</h3><p>Registre chamadas, ocorrências e planejamentos.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></li>
+        <li data-surge><span class="num">04</span><h3>Portaria</h3><p>Consulte entradas, saídas e retiradas.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.56v16.16a.5.5 0 0 1-.63.48L5 19V5.56a2 2 0 0 1 1.51-1.94l4-1A2 2 0 0 1 13 4.56Z"/></svg></li>
+        <li data-surge><span class="num">05</span><h3>Alunos e responsáveis</h3><p>Encontre os dados que precisa em um só lugar.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></li>
+        <li data-surge><span class="num">06</span><h3>Eventos e vendas</h3><p>Organize pedidos e acompanhe a arrecadação.</p><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></li>
+      </ol>
     </div>
-    <div data-reveal="" data-delay="90" style="position:relative; border-radius:26px; background:linear-gradient(150deg,#F4F1FB 0%,#FFF4E8 100%); border:1px solid #EDE6F5; overflow:hidden; min-height:520px">
-      <div style="position:absolute; left:50%; top:10%; width:80%; aspect-ratio:1; margin-left:-40%; border-radius:50%; background:radial-gradient(circle,rgba(245,133,31,.28),rgba(245,133,31,0) 70%)"></div>
-      <div style="position:absolute; left:14%; right:14%; bottom:34px; height:38px; border-radius:50%; background:radial-gradient(ellipse at center,rgba(42,37,48,.26),rgba(42,37,48,0) 70%); filter:blur(7px)"></div>
-      <phone-3d data-mode="panel" style="position:relative; display:block; width:100%; height:520px"></phone-3d>
-    </div>
-    </div>
-  
-</section>
-
-<div style="padding:40px 0 10px; overflow:hidden; mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)">
-  <div style="display:flex; width:max-content; animation:ep-marquee 34s linear infinite">
-    <div style="display:flex; gap:44px; padding-right:44px; font-family:'Outfit',sans-serif; font-size:15px; color:#B5AEBF; letter-spacing:.06em; text-transform:uppercase">
-      <span>Chamada</span><span style="color:#F5851F">·</span><span>Ocorrências</span><span style="color:#F5851F">·</span><span>Rematrícula</span><span style="color:#F5851F">·</span><span>Assinatura eletrônica</span><span style="color:#F5851F">·</span><span>Mensalidades</span><span style="color:#F5851F">·</span><span>Portaria</span><span style="color:#F5851F">·</span><span>Eventos</span><span style="color:#F5851F">·</span><span>Relatórios</span><span style="color:#F5851F">·</span>
-    </div>
-    <div style="display:flex; gap:44px; padding-right:44px; font-family:'Outfit',sans-serif; font-size:15px; color:#B5AEBF; letter-spacing:.06em; text-transform:uppercase">
-      <span>Chamada</span><span style="color:#F5851F">·</span><span>Ocorrências</span><span style="color:#F5851F">·</span><span>Rematrícula</span><span style="color:#F5851F">·</span><span>Assinatura eletrônica</span><span style="color:#F5851F">·</span><span>Mensalidades</span><span style="color:#F5851F">·</span><span>Portaria</span><span style="color:#F5851F">·</span><span>Eventos</span><span style="color:#F5851F">·</span><span>Relatórios</span><span style="color:#F5851F">·</span>
-    </div>
-  </div>
-</div>
-
-<section id="ferramentas" style="padding:90px 24px 0">
-  <div style="max-width:1120px; margin:0 auto">
-    <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; border-bottom:1px solid #EAE6E0; padding-bottom:26px">
-      <h2 data-reveal="" style="font-family:'Outfit',sans-serif; font-weight:600; font-size:clamp(30px,4.5vw,50px); letter-spacing:-.03em; margin:0; line-height:1.05">As ferramentas<span style="color:#F5851F">.</span></h2>
-      <p data-reveal="" data-delay="80" style="max-width:420px; margin:0; color:#6F6879; font-size:16px; line-height:1.6">Seis módulos que funcionam juntos. Você contrata só o que usa e ativa o resto quando a escola precisar.</p>
-    </div>
-  </div>
-
-  <div style="max-width:1120px; margin:0 auto">
-    <sc-for list="{{ modulos }}" as="m" hint-placeholder-count="3">
-      <div data-stack="" style="position:relative">
-        <div data-stack-card="" style="position:sticky; top:104px; will-change:transform">
-          <div style="background:#fff; border:1px solid #E8E4DE; border-radius:24px; padding:clamp(24px,3.4vw,44px); box-shadow:0 40px 80px -60px rgba(42,37,48,.55); display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:clamp(24px,4vw,56px)">
-            <div>
-              <div style="display:flex; align-items:center; gap:12px">
-                <span data-num="" style="font-family:'Outfit',sans-serif; font-size:13px; font-weight:600; color:#fff; background:#5C4B8C; width:30px; height:30px; border-radius:10px; display:grid; place-items:center">{{ m.n }}</span>
-                <span style="font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#B5AEBF">{{ m.tag }}</span>
-              </div>
-              <h3 style="font-family:'Outfit',sans-serif; font-weight:600; font-size:clamp(26px,3.2vw,38px); letter-spacing:-.025em; line-height:1.08; margin:20px 0 0">{{ m.titulo }}</h3>
-              <p style="color:#6F6879; font-size:16.5px; line-height:1.6; margin:14px 0 0; text-wrap:pretty">{{ m.resumo }}</p>
-              <div style="margin-top:26px; display:flex; gap:10px; flex-wrap:wrap">
-                <sc-for list="{{ m.chips }}" as="c" hint-placeholder-count="2">
-                  <span style="border:1px solid #FBD8B4; background:#FFF8F0; color:#B85C00; border-radius:999px; padding:7px 14px; font-size:13px; font-weight:500">{{ c }}</span>
-                </sc-for>
-              </div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:2px; align-self:start">
-              <sc-for list="{{ m.itens }}" as="it" hint-placeholder-count="5">
-                <div style="display:grid; grid-template-columns:18px minmax(0,1fr); gap:14px; padding:14px 0; border-bottom:1px solid #F3F1EC; align-items:start">
-                  <span style="width:8px; height:8px; border-radius:50%; background:#F5851F; margin-top:7px"></span>
-                  <span style="font-size:15.5px; line-height:1.55; color:#413B49; text-wrap:pretty">{{ it }}</span>
-                </div>
-              </sc-for>
-            </div>
-          </div>
-        </div>
-      </div>
-    </sc-for>
+    <p class="nota-modulos" data-surge><span><b>Comece pelos módulos que sua escola precisa.</b> Amplie quando fizer sentido.</span></p>
   </div>
 </section>
 
-<section style="padding:20px 24px 50px">
-  <div style="max-width:1120px; margin:0 auto">
-    <div data-reveal="" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr)); gap:clamp(24px,4vw,48px); align-items:center; background:linear-gradient(140deg,#F4F1FB,#FFF4E8); border:1px solid #EDE6F5; border-radius:26px; padding:clamp(24px,3.2vw,40px)">
-      <div style="display:flex; flex-direction:column; gap:18px">
-        <div style="font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#B85C00; font-weight:600">Na escola</div>
-        <p style="margin:0; font-family:'Outfit',sans-serif; font-weight:500; font-size:clamp(21px,2.6vw,30px); line-height:1.28; letter-spacing:-.02em; color:#2A2530; text-wrap:pretty">“A rematrícula que levava semanas de papel agora fecha no mesmo dia, com contrato assinado.”</p>
-        <div style="font-size:14.5px; color:#6F6879; line-height:1.5">Coordenação · Colégio Aprender &amp; Saber<br><span style="color:#9A93A3">Osasco/SP</span></div>
+<!-- 4. QUEM ESTÁ POR TRÁS -->
+<!-- A foto entra quando existir public/site/assets/equipe.jpg (retrato 4:5); o depoimento com nome e função vai no figcaption. -->
+<section class="quem" id="quem-somos">
+  <div class="miolo">
+    <div class="regua"><span>Quem está por trás</span><span>03</span></div>
+    <div class="grade">
+      <div>
+        <h2 data-surge>Nós também somos <em>donos de escola.</em></h2>
+        <p class="descricao" data-surge>O EducaPilot nasceu para organizar a nossa própria rotina. Reunimos a experiência de quem administra uma escola com o desenvolvimento de tecnologia para facilitar o dia a dia.</p>
+        <p class="destaque" data-surge>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+          Criado e utilizado no Colégio Aprender e Saber, em Osasco.
+        </p>
       </div>
-      <div style="position:relative; border-radius:20px; overflow:hidden; border:1px solid #E6DFF2; box-shadow:0 34px 64px -40px rgba(42,37,48,.6)">
-        <img src="/site/assets/escola.png" alt="Coordenadora recebendo a confirmação de rematrícula no EducaPilot" style="display:block; width:100%; height:100%; object-fit:cover; aspect-ratio:3/2">
-        <div style="position:absolute; left:14px; bottom:14px; background:rgba(255,255,255,.94); border-radius:10px; padding:8px 12px; font-size:12px; font-weight:600; color:#2A2530">Rematrícula assinada · contrato a caminho do e-mail</div>
+      <div class="lado" data-surge>
+        <figure>
+          <img id="foto-equipe" alt="Equipe do EducaPilot no Colégio Aprender e Saber" width="800" height="1000" loading="lazy">
+          <figcaption></figcaption>
+        </figure>
+        <svg class="selo" viewBox="0 0 320 320" aria-hidden="true">
+          <defs><path id="circulo" d="M160,160 m-122,0 a122,122 0 1,1 244,0 a122,122 0 1,1 -244,0"/></defs>
+          <circle cx="160" cy="160" r="156" fill="#34295A" stroke="currentColor" stroke-width="3"/>
+          <circle cx="160" cy="160" r="96" fill="none" stroke="currentColor" stroke-width="2"/>
+          <g class="gira"><text fill="currentColor" font-family="Outfit, sans-serif" font-weight="700" font-size="19"><textPath href="#circulo" textLength="760" lengthAdjust="spacing">CRIADO E USADO NO COLÉGIO APRENDER E SABER · OSASCO · </textPath></text></g>
+          <text x="160" y="150" text-anchor="middle" fill="#FFFFFF" font-family="Outfit, sans-serif" font-weight="700" font-size="34" letter-spacing="-1">Educa<tspan fill="#F5851F">Pilot</tspan></text>
+          <text x="160" y="186" text-anchor="middle" fill="#C9C0DD" font-family="Plus Jakarta Sans, sans-serif" font-weight="600" font-size="15" letter-spacing="2">FEITO NA ESCOLA</text>
+        </svg>
       </div>
     </div>
   </div>
 </section>
 
-<section id="porque" style="padding:110px 24px 90px; background:#2A2530; color:#F7F5F2; margin-top:60px">
-  <div style="max-width:1120px; margin:0 auto">
-    <h2 data-reveal="" style="font-family:'Outfit',sans-serif; font-weight:600; font-size:clamp(30px,4.5vw,50px); letter-spacing:-.03em; margin:0 0 48px; line-height:1.05; color:#F7F5F2">Por que o Educa<span style="color:#F5851F">Pilot</span></h2>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:1px; background:#3B3545">
-      <sc-for list="{{ motivos }}" as="r" hint-placeholder-count="5">
-        <div data-reveal="" style="background:#2A2530; padding:30px 26px 34px; display:flex; flex-direction:column; gap:12px; border-top:2px solid #F5851F">
-          <span style="font-family:'Outfit',sans-serif; font-size:13px; color:#F5851F; letter-spacing:.1em">{{ r.n }}</span>
-          <div style="font-family:'Outfit',sans-serif; font-weight:600; font-size:20px; letter-spacing:-.015em; color:#F7F5F2; line-height:1.25">{{ r.titulo }}</div>
-          <p style="margin:0; color:#B2AABC; font-size:15px; line-height:1.6; text-wrap:pretty">{{ r.texto }}</p>
-        </div>
-      </sc-for>
+<!-- 5. DÚVIDAS ANTES DE COMEÇAR -->
+<section class="secao duvidas" id="duvidas">
+  <div class="miolo">
+    <div class="regua"><span>Dúvidas antes de começar</span><span>04</span></div>
+    <div class="grade">
+      <div>
+        <h2>Vamos esclarecer?</h2>
+        <p>Ficou alguma outra dúvida? <a data-whatsapp href="#contato">Pergunte pelo WhatsApp.</a></p>
+      </div>
+      <div class="perguntas">
+        <details><summary><span class="n">01</span><span>Preciso contratar todos os módulos?</span><span class="mais" aria-hidden="true"></span></summary><p>Não. Você pode começar pelos módulos que precisa e adicionar outros depois.</p></details>
+        <details><summary><span class="n">02</span><span>Consigo acessar fora da escola?</span><span class="mais" aria-hidden="true"></span></summary><p>Sim. Você pode acessar pelo computador ou celular com conexão à internet.</p></details>
+        <details><summary><span class="n">03</span><span>Minha equipe também pode usar?</span><span class="mais" aria-hidden="true"></span></summary><p>Sim. Você define as permissões de acesso de cada usuário.</p></details>
+        <details><summary><span class="n">04</span><span>Como descubro se atende à minha escola?</span><span class="mais" aria-hidden="true"></span></summary><p>Na demonstração, nós conhecemos sua rotina, apresentamos as ferramentas e esclarecemos suas dúvidas.</p></details>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="demo" style="position:relative; padding:120px 24px 130px; overflow:hidden">
-  <div ref="{{ orbC }}" style="position:absolute; left:50%; top:20px; width:640px; height:640px; margin-left:-320px; border-radius:50%; background:radial-gradient(circle,#FFE6CC,rgba(255,230,204,0) 68%); pointer-events:none"></div>
-  <div style="position:relative; max-width:760px; margin:0 auto; text-align:center">
-    <h2 data-reveal="" style="font-family:'Outfit',sans-serif; font-weight:600; font-size:clamp(34px,6vw,66px); letter-spacing:-.035em; line-height:1.03; margin:0">Menos planilha,<br><span style="color:#F5851F">mais escola.</span></h2>
-    <p data-reveal="" data-delay="80" style="color:#6F6879; font-size:18px; line-height:1.6; margin:22px 0 0">Veja o EducaPilot funcionando com os dados da sua escola.</p>
-    <div data-reveal="" data-delay="140" style="margin-top:30px; display:flex; justify-content:center">
-      <a href="#demo" style="background:#B85C00; color:#fff; padding:17px 32px; border-radius:13px; font-weight:600; font-size:16.5px; box-shadow:0 18px 40px -16px rgba(184,92,0,.7)" style-hover="background:#8F4700; color:#fff">Quero uma demonstração</a>
+<!-- 6. CONVITE FINAL -->
+<section class="convite" id="contato">
+  <div class="miolo">
+    <div>
+      <h2 data-surge>Veja o que pode ficar mais simples na sua escola.</h2>
+      <p data-surge>Conte o que mais toma seu tempo hoje. Nós mostramos como o EducaPilot pode ajudar.</p>
+    </div>
+    <div class="acao" data-surge>
+      <a class="botao botao-tinta" data-whatsapp href="#contato">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2Zm5.8 14.13c-.24.68-1.42 1.3-1.95 1.36-.5.06-1.13.09-1.82-.11a16.6 16.6 0 0 1-1.65-.61c-2.9-1.25-4.79-4.17-4.94-4.36-.14-.2-1.17-1.56-1.17-2.98s.74-2.12 1.01-2.41c.26-.29.57-.36.77-.36h.55c.18 0 .42-.07.65.5.24.58.82 2 .89 2.15.07.14.12.31.02.5-.1.2-.14.31-.29.48l-.43.5c-.14.14-.3.3-.13.6.17.29.76 1.25 1.63 2.02 1.12 1 2.06 1.31 2.35 1.45.29.15.46.12.63-.07.17-.2.72-.84.92-1.13.19-.29.38-.24.65-.14.26.1 1.68.79 1.97.94.29.14.48.21.55.33.07.12.07.7-.17 1.37Z"/></svg>
+        Quero uma demonstração
+      </a>
+      <small>Fale com nossa equipe pelo WhatsApp.</small>
     </div>
   </div>
 </section>
 
-<footer style="border-top:1px solid #EAE6E0; padding:30px 24px 44px">
-  <div style="max-width:1120px; margin:0 auto; display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; font-size:14px; color:#9A93A3">
-    <div style="display:flex; align-items:center; gap:9px">
-      <img src="/site/assets/logo-marca.png" alt="" style="display:block; height:28px; width:auto">
-      <span style="font-family:'Outfit',sans-serif; font-weight:600; color:#2A2530; font-size:15px">EducaPilot</span>
-    </div>
+</main>
+
+<footer>
+  <div class="miolo">
+    <a class="marca" href="/"><img src="/site/assets/logo-marca.png" alt="" width="15" height="28"><span>EducaPilot</span></a>
     <span>Integração com Agenda Edu · Assinatura eletrônica Autentique</span>
-    <nav aria-label="Links legais" style="display:flex; gap:16px">
-      <a href="/privacidade" style="color:#9A93A3">Política de privacidade</a>
-      
-      <a href="/login" style="color:#9A93A3">Entrar</a>
+    <nav aria-label="Links legais">
+      <a href="/privacidade">Política de privacidade</a>
+      <a href="/login">Entrar</a>
     </nav>
   </div>
 </footer>
 
-</x-dc>
-<script type="text/x-dc" data-dc-script="" data-props="{&quot;motion&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:1.6,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimento&quot;},&quot;showTrust&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Conteúdo&quot;}}">
-class Component extends DCLogic {
-  constructor(p) {
-    super(p);
-    ['bar', 'mock', 'orbA', 'orbB', 'orbC', 'rows', 'presentesTxt'].forEach(k => { this[k] = React.createRef(); });
-  }
+<script type="module" src="/site/assets/phone-3d.js"></script>
+<script>
+(function () {
+  // WhatsApp da equipe: só dígitos, com 55 e DDD. Vazio = os botões levam ao e-mail.
+  var WHATSAPP = '5511942950778';
+  var MENSAGEM = 'Olá! Quero conhecer o EducaPilot para a minha escola.';
+  var EMAIL = 'admin@educa-pilot.com';
+  var destino = WHATSAPP
+    ? 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(MENSAGEM)
+    : 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('Quero conhecer o EducaPilot') + '&body=' + encodeURIComponent(MENSAGEM);
+  document.querySelectorAll('[data-whatsapp]').forEach(function (a) {
+    a.href = destino;
+    if (WHATSAPP) { a.target = '_blank'; a.rel = 'noopener'; }
+  });
 
-  componentDidMount() {
-    const k = this.props.motion ?? 1;
-    const root = this.bar.current ? this.bar.current.getRootNode() : document;
-    const q = s => Array.from(root.querySelectorAll(s));
+  // Foto da equipe: só aparece se o arquivo existir.
+  var quem = document.getElementById('quem-somos');
+  var foto = document.getElementById('foto-equipe');
+  foto.onload = function () { quem.setAttribute('data-tem-foto', ''); };
+  foto.src = '/site/assets/equipe.jpg';
 
-    const reveals = q('[data-reveal]');
-    reveals.forEach(el => {
-      const d = Number(el.dataset.delay || 0);
-      el.style.opacity = '0';
-      el.style.transform = 'translate3d(0,' + (26 * k) + 'px,0)';
-      el.style.transition = 'opacity .7s cubic-bezier(.2,.7,.2,1) ' + d + 'ms, transform .9s cubic-bezier(.2,.7,.2,1) ' + d + 'ms';
-    });
-    this.reveals = reveals;
-    this.show = el => { el.style.opacity = '1'; el.style.transform = 'translate3d(0,0,0)'; el.dataset.shown = '1'; };
-    this.safety = setTimeout(() => reveals.forEach(this.show), 2500);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'hidden' && this.onScroll) this.onScroll(); });
-
-    this.stacks = q('[data-stack]');
-    q('[data-num]').forEach((el, i) => { if (i % 2) el.style.background = '#F5851F'; });
-    this.orbs = [[this.orbA.current, 0.12], [this.orbB.current, -0.16], [this.orbC.current, 0.08]];
-
-
-    let queued = false;
-    this.onScroll = () => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(() => { queued = false; this.frame(k); });
-    };
-    window.addEventListener('scroll', this.onScroll, { passive: true });
-    window.addEventListener('resize', this.onScroll);
-    this.frame(k);
-
-    this.mockIo = new IntersectionObserver(es => {
-      es.forEach(e => { if (e.isIntersecting) { this.tickRows(); this.mockIo.disconnect(); } });
-    }, { threshold: 0.4 });
-    if (this.mock.current) this.mockIo.observe(this.mock.current);
-  }
-
-  tickRows() {
-    const wrap = this.rows.current;
-    if (!wrap) return;
-    let n = 0;
-    Array.from(wrap.children).forEach((row, i) => {
-      setTimeout(() => {
-        const btn = row.querySelector('span:last-child > span');
-        if (btn) {
-          btn.style.transition = 'background .35s ease, color .35s ease, border-color .35s ease';
-          btn.style.background = '#FFF4E8';
-          btn.style.borderColor = '#FBD8B4';
-          btn.style.color = '#B85C00';
-        }
-        n += 1;
-        if (this.presentesTxt.current) this.presentesTxt.current.textContent = String(n);
-      }, 420 + i * 170);
-    });
-  }
-
-  frame(k) {
-    const sy = window.scrollY || 0;
-    const vh = window.innerHeight || 1;
-    const doc = document.documentElement.scrollHeight - vh;
-    if (this.bar.current) this.bar.current.style.width = Math.min(100, (sy / Math.max(doc, 1)) * 100) + '%';
-
-    const m = this.mock.current;
-    if (m) {
-      const p = Math.max(0, Math.min(1, sy / (vh * 0.7)));
-      m.style.transform = 'perspective(1400px) rotateX(' + (9 * (1 - p) * k).toFixed(2) + 'deg) scale(' + (0.945 + 0.055 * p).toFixed(3) + ')';
+  // Vídeo: só troca a animação se o arquivo existir.
+  var quadro = document.querySelector('.quadro');
+  var fonte = quadro.querySelector('source');
+  fetch(fonte.getAttribute('data-src'), { method: 'HEAD' }).then(function (r) {
+    if (r.ok && (r.headers.get('content-type') || '').indexOf('video') === 0) {
+      fonte.src = fonte.getAttribute('data-src');
+      quadro.querySelector('video').load();
+      quadro.setAttribute('data-tem-video', '');
     }
+  }).catch(function () {});
 
-    this.orbs.forEach(([el, f]) => {
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      el.style.transform = 'translate3d(0,' + ((r.top + r.height / 2 - vh / 2) * -f * k).toFixed(1) + 'px,0)';
-    });
+  var semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    (this.reveals || []).forEach(el => {
-      if (el.dataset.shown) return;
-      if (el.getBoundingClientRect().top < vh * 0.92) this.show(el);
-    });
-
-    (this.stacks || []).forEach(wrap => {
-      const card = wrap.firstElementChild;
-      if (!card) return;
-      const h = card.offsetHeight;
-      if (h > vh - 40) {
-        card.style.position = 'relative';
-        card.style.top = 'auto';
-        card.style.transform = 'none';
-        card.style.opacity = '1';
-        wrap.style.height = '';
-        wrap.style.marginBottom = '28px';
-        return;
-      }
-      card.style.position = 'sticky';
-      wrap.style.marginBottom = '';
-      const top = Math.max(16, Math.min(104, vh - h - 24));
-      card.style.top = top + 'px';
-      const overlap = Math.round(Math.min(340, vh * 0.55));
-      wrap.style.height = (h + overlap) + 'px';
-      const p = Math.max(0, Math.min(1, (top - wrap.getBoundingClientRect().top) / overlap));
-      card.style.transform = 'scale(' + (1 - 0.06 * p * k).toFixed(3) + ') translate3d(0,' + (-10 * p * k).toFixed(1) + 'px,0)';
-      card.style.opacity = String(1 - 0.15 * p);
-    });
+  // Entrada ao rolar, com rede de segurança: nada fica escondido se o observador falhar.
+  var surgem = document.querySelectorAll('[data-surge]');
+  function mostrarTudo() { surgem.forEach(function (el) { el.classList.add('visivel'); }); }
+  if (semMovimento || !('IntersectionObserver' in window)) { mostrarTudo(); }
+  else {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('visivel'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -6% 0px' });
+    surgem.forEach(function (el) { io.observe(el); });
+    setTimeout(mostrarTudo, 4000);
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('scroll', this.onScroll);
-    window.removeEventListener('resize', this.onScroll);
-    clearTimeout(this.safety);
-
+  // Animação da chamada enquanto não há vídeo: marca um aluno por vez e recomeça.
+  var demo = document.getElementById('demo-chamada');
+  var contador = document.getElementById('presentes');
+  var linhas = demo.querySelectorAll('.aluno');
+  var plano = [0, 0, 1, 0, 0]; // 0 = presente, 1 = falta
+  var timer = null, rodando = false;
+  function marcar(i) { linhas[i].querySelectorAll('.marcas span')[plano[i]].classList.add('sim'); }
+  function rodar() {
+    var i = 0, presentes = 0;
+    linhas.forEach(function (l) { l.querySelectorAll('.marcas span').forEach(function (s) { s.classList.remove('sim'); }); });
+    contador.textContent = '0';
+    (function passo() {
+      if (i >= linhas.length) { timer = setTimeout(rodar, 2600); return; }
+      marcar(i);
+      if (plano[i] === 0) { presentes += 1; contador.textContent = String(presentes); }
+      i += 1;
+      timer = setTimeout(passo, 650);
+    })();
   }
-
-  renderVals() {
-    return {
-      bar: this.bar, mock: this.mock, orbA: this.orbA, orbB: this.orbB, orbC: this.orbC,
-      rows: this.rows, presentesTxt: this.presentesTxt,
-      showTrust: this.props.showTrust ?? true,
-      alunos: [
-        { nome: 'Alice Quevedo' },
-        { nome: 'Benjamin de Souza Rodrigues' },
-        { nome: 'Carolina Silva Cravo' },
-        { nome: 'Helena Mayumi Vieira' },
-        { nome: 'Júlia Nascimento' }
-      ],
-      modulos: [
-        {
-          n: '1', tag: 'Rotina', titulo: 'O dia a dia pedagógico',
-          resumo: 'Tudo o que acontece em sala, registrado na hora e fácil de consultar depois.',
-          chips: ['Por turma', 'Relatórios na hora'],
-          itens: [
-            'Chamada: presença por turma, com o relatório de faltas pronto.',
-            'Checklist: listas de rotina por turma que a própria escola configura.',
-            'Ocorrências: registro individual ou coletivo, com ranking e observação semanal para a coordenação.',
-            'Planejamento semanal: o professor planeja a semana e marca o que foi feito na anterior.',
-            'Reuniões: a pauta já chega com faltas pendentes de justificativa e ocorrências.',
-            'Materiais: cadastro e controle de estoque da escola.',
-            'Central de relatórios: faltas, ocorrências e indicadores por turma e período.'
-          ]
-        },
-        {
-          n: '2', tag: 'Formulários e contratos', titulo: 'Rematrícula sem papel',
-          resumo: 'Um link só para todas as famílias. O sistema faz o resto.',
-          chips: ['Assinatura Autentique', 'Validade jurídica'],
-          itens: [
-            'Formulários sob medida: a escola monta campos, ordem e obrigatoriedade.',
-            'Preenchimento automático: responsável, endereço, turma atual, turma do próximo ano e mensalidade já vêm prontos.',
-            'Campos travados: valores, turmas e descontos não podem ser alterados pela família.',
-            'Contrato gerado com os dados — nunca sai com informação faltando.',
-            'Assinatura eletrônica na própria página, com IP, data, hora e certificado.',
-            'Aprovação da gestão: nenhuma matrícula entra sem revisão.',
-            'Via assinada enviada pelo e-mail da própria escola.',
-            'Relatórios com colunas à escolha, filtro por período e download em Excel.'
-          ]
-        },
-        {
-          n: '3', tag: 'Financeiro', titulo: 'O dinheiro da escola à vista',
-          resumo: 'Mensalidades, receitas, despesas e orçamento no mesmo painel.',
-          chips: ['Importação por planilha', 'EduPay'],
-          itens: [
-            'Mensalidades com reajuste geral e valor específico por aluno quando preciso.',
-            'Receitas e despesas, com importação por planilha.',
-            'Painel de entradas e saídas por mês.',
-            'Orçamento: planejado contra realizado.',
-            'Inadimplência atualizada automaticamente a partir dos pagamentos do Agenda Edu (EduPay).'
-          ]
-        },
-        {
-          n: '4', tag: 'Portaria', titulo: 'Quem entra, quem sai e quem busca',
-          resumo: 'O movimento do portão registrado, com a família avisando a chegada.',
-          chips: ['Multa configurável', 'Área do responsável'],
-          itens: [
-            'Entradas e saídas do dia, com horário de retirada e multa por atraso configurável.',
-            'Visitantes com foto.',
-            'Mapa com a localização da escola.',
-            'Área do responsável: a família entra com login próprio e avisa “Estou a caminho”.',
-            'Relatórios de visitas e de multas.'
-          ]
-        },
-        {
-          n: '5', tag: 'Eventos e vendas', titulo: 'Festa junina, rifas e campanhas',
-          resumo: 'Arrecadação organizada, com meta e responsável por grupo.',
-          chips: ['Painel de vendas'],
-          itens: [
-            'Produtos e pedidos, com painel de vendas.',
-            'Grupos de venda com meta de arrecadação e um responsável.'
-          ]
-        },
-        {
-          n: '6', tag: 'Administração', titulo: 'A base da escola',
-          resumo: 'Turmas, alunos, responsáveis e permissões em um cadastro só.',
-          chips: ['Agenda Edu', 'Permissões por módulo'],
-          itens: [
-            'Turmas, alunos e responsáveis em um só cadastro, com endereço e período.',
-            'Importação do Agenda Edu (turmas, alunos e responsáveis) e importação por planilha.',
-            'Progressão de turma automática de um ano para o outro (Berçário → Maternal → Jardim → Pré).',
-            'Usuários e permissões: quem convida define o que cada pessoa vê, por módulo e por área.',
-            'E-mail da própria escola para toda a comunicação, guardado com criptografia.'
-          ]
-        }
-      ],
-      motivos: [
-        { n: '01', titulo: 'Você contrata só o que usa', texto: 'Cada módulo é vendido separado e pode ser ativado quando a escola precisar.' },
-        { n: '02', titulo: 'Contrato que vale na Justiça', texto: 'A assinatura eletrônica com trilha independente torna o contrato um título executivo, sem precisar de testemunhas.' },
-        { n: '03', titulo: 'Nada some por engano', texto: 'A resposta da família fica registrada como foi enviada, e um contrato assinado não pode ser excluído.' },
-        { n: '04', titulo: 'Dados separados por escola', texto: 'Cada escola tem seus dados isolados, com testes automáticos que garantem isso.' },
-        { n: '05', titulo: 'Integração com o Agenda Edu', texto: 'Turmas, alunos e responsáveis entram sem digitar tudo de novo.' }
-      ]
-    };
+  if (semMovimento || !('IntersectionObserver' in window)) {
+    linhas.forEach(function (l, i) { marcar(i); });
+    contador.textContent = '4';
+  } else {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting && !rodando) { rodando = true; rodar(); }
+        if (!e.isIntersecting && rodando) { rodando = false; clearTimeout(timer); }
+      });
+    }, { threshold: 0.35 }).observe(demo);
   }
-}
+})();
 </script>
-
-
-</body></html>
+</body>
+</html>

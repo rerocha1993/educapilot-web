@@ -156,8 +156,9 @@ export function acessoDaRota(pathname: string): AcessoDaRota | null {
  *
  * Três regras, nesta ordem:
  *
- * 1. Sem nenhuma permissão gravada, vê tudo. É o caso de quem já usava o sistema antes de as
- *    permissões existirem; sem isso, a publicação teria esvaziado o menu de todo mundo.
+ * 1. Sem nenhuma permissão, só a gestão vê tudo. Desde a auditoria de 10/2026 o servidor devolve,
+ *    para conta antiga sem permissão gravada, as áreas sugeridas do perfil; lista vazia que chegue
+ *    aqui para quem não é gestão é "nada", igual ao PodeVer da API.
  * 2. Módulo fora da lista: não vê nada dele.
  * 3. Módulo sem área marcada significa módulo inteiro — uma área criada amanhã já entra para quem
  *    tinha o módulo completo, em vez de sumir do acesso.
@@ -167,8 +168,10 @@ export function podeVerArea(
   modulo: string,
   area: string | null
 ): boolean {
-  const modulos = acesso?.modulos ?? [];
-  if (modulos.length === 0) return true;
+  // Sem acesso carregado ainda: não esconde nada (a API é quem barra de verdade).
+  if (!acesso) return true;
+  const modulos = acesso.modulos ?? [];
+  if (modulos.length === 0) return acesso.userType === "Admin" || acesso.userType === "Master";
 
   const doModulo = modulos.find((m) => (m.moduloSlug ?? "").trim().toLowerCase() === modulo.toLowerCase());
   if (!doModulo) return false;
