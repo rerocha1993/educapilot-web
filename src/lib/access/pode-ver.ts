@@ -38,6 +38,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/admin\/responsaveis/, modulo: "admin", area: "responsaveis" },
   { padrao: /^\/admin\/usuarios/, modulo: "admin", area: "usuarios" },
   { padrao: /^\/admin\/progressao/, modulo: "admin", area: "progressao" },
+  // Matérias e avaliação: cadastro de anos, matérias e configuração por turma. Só a gestão; o backend confere.
+  { padrao: /^\/admin\/avaliacao/, modulo: "admin", area: null },
   { padrao: /^\/admin\/email/, modulo: "admin", area: "email" },
   { padrao: /^\/admin\/importar/, modulo: "admin", area: "importar" },
   { padrao: /^\/admin/, modulo: "admin", area: null },
@@ -125,6 +127,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   // Ficha do aluno: a lista de entrada do dossiê, que mora em /ocorrencias/aluno/[id]; mesma área.
   { padrao: /^\/dossie/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
+  // Notas e boletim (lançamento, comportamento, publicação): área própria da Rotina.
+  { padrao: /^\/notas/, modulo: "tasks", area: "notas" },
   { padrao: /^\/planejamento-semanal/, modulo: "tasks", area: "planejamento" },
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
