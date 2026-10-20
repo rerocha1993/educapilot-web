@@ -2,12 +2,12 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Circle, CircleCheck, Info, Lock } from "lucide-react";
+import { Circle, CircleCheck, Lock } from "lucide-react";
 
-import { Estatistica } from "@/components/padroes/estatistica";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatarDataHora, formatarSoData } from "@/lib/format/date";
+import { formatarDataHora, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 import type {
   EventoDaLinhaDoTempo,
   OcorrenciaDoResumo,
@@ -15,15 +15,24 @@ import type {
   TipoDeEventoDoResumo,
 } from "@/lib/tasks/use-resumo-do-aluno";
 import { ROTULO_DE_QUEM_FAZ, ROTULO_DO_STATUS, VARIANTE_DO_STATUS, textoDasNotas } from "@/lib/tasks/use-reunioes-e-atendimentos";
+import { useSecoesAbertas } from "@/lib/tasks/use-secoes-abertas";
+import { GraficoDeConvivencia, GraficoDeNotas, GraficoDePresenca, GraficoDoDiario } from "@/components/tasks/ficha/graficos";
+import { SecaoRecolhivel } from "@/components/tasks/ficha/secao-recolhivel";
+import { FormularioDaFichaConteudo, resumoDoFormulario } from "@/components/tasks/ficha/formulario-da-ficha";
+import { SeloDeGravidade } from "@/components/tasks/selo-de-gravidade";
 import { cn } from "@/lib/utils";
 
 /**
- * A folha da ficha do aluno. Serve a tela e o papel: na impressão (A4 retrato) o menu e os controles
- * somem (print:hidden na página), a primeira folha é a capa e cada bloco evita quebrar no meio.
+ * A folha da ficha do aluno. Serve a tela e o papel.
+ *
+ * Na tela: topo compacto (quem é o aluno e uma faixa de números), gráficos lado a lado e as seções
+ * RECOLHIDAS em duas colunas, cada uma com um resumo de uma linha; a pessoa abre só o que quer e o
+ * navegador lembra. No papel (A4 retrato): capa, tudo aberto e em uma coluna; o menu e os controles
+ * somem (print:hidden na página) e cada bloco evita quebrar no meio.
  *
  * Cada bloco diz de onde vem o dado. Bloco que o acesso de quem abriu não cobre nem aparece vazio:
  * o aviso "Não incluído" nomeia o que ficou de fora, para ninguém ler "zero faltas" onde não há leitura.
- * O que o sistema não registra (notas, avaliação pedagógica) também é dito, em vez de ficar em branco.
+ * O que o sistema não registra também é dito, em vez de ficar em branco.
  */
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -54,41 +63,6 @@ const VARIANTE_DO_TIPO: Record<TipoDeEventoDoResumo, "overdue" | "pending" | "de
   Diario: "outline",
   Portaria: "pending",
 };
-
-function Bloco({
-  id,
-  titulo,
-  fonte,
-  children,
-  quebraLivre = false,
-}: {
-  id: string;
-  titulo: string;
-  fonte: string;
-  children: ReactNode;
-  /** Blocos longos (linha do tempo, reuniões) podem quebrar de página; os curtos, não. */
-  quebraLivre?: boolean;
-}) {
-  return (
-    <section
-      aria-labelledby={id}
-      className={cn(
-        "rounded-xl border border-border bg-card p-4 md:p-5 print:rounded-none print:border-x-0 print:border-b print:border-t-0 print:px-0 print:py-3",
-        !quebraLivre && "print:break-inside-avoid"
-      )}
-    >
-      <h2 id={id} className="font-heading text-[16px] font-semibold print:text-[13pt]">
-        {titulo}
-      </h2>
-      <p className="mb-3 mt-0.5 flex items-start gap-1.5 text-[12px] leading-snug text-muted-foreground print:text-[8.5pt]">
-        <Info aria-hidden className="mt-px size-3.5 shrink-0 print:hidden" />
-        <span>{fonte}</span>
-      </p>
-      {children}
-    </section>
-  );
-}
-
 function Vazio({ children }: { children: ReactNode }) {
   return <p className="py-2 text-sm text-muted-foreground">{children}</p>;
 }
@@ -116,6 +90,7 @@ function OcorrenciaItem({ o }: { o: OcorrenciaDoResumo }) {
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
           {o.categoria}
+          <SeloDeGravidade gravidade={o.gravidade} />
           {o.paisAvisados && <Badge variant="success">Pais avisados</Badge>}
         </span>
         <span className="font-numeric text-xs text-muted-foreground">
@@ -193,12 +168,81 @@ function minutosParaTexto(minutos: number) {
 
 const ROTULO_DA_SAUDE: Record<string, string> = { Temperatura: "Temperatura", Medicamento: "Medicamento", Observacao: "Observação" };
 
+function plural(n: number, singular: string, plural: string) {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+/** Idade em texto ("3 anos e 4 meses") a partir de dois dias "yyyy-MM-dd" (sem passar por Date: fuso). */
+function idadeEmTexto(nascimento: string | null, hoje: string) {
+  if (!nascimento) return null;
+  const [a, m, d] = nascimento.slice(0, 10).split("-").map(Number);
+  const [A, M, D] = hoje.split("-").map(Number);
+  if ([a, m, d, A, M, D].some((n) => !Number.isFinite(n))) return null;
+  let meses = (A - a) * 12 + (M - m);
+  if (D < d) meses -= 1;
+  if (meses < 0) return null;
+  const anos = Math.floor(meses / 12);
+  const resto = meses % 12;
+  if (anos === 0) return plural(resto, "mês", "meses");
+  return resto === 0 ? plural(anos, "ano", "anos") : `${plural(anos, "ano", "anos")} e ${plural(resto, "mês", "meses")}`;
+}
+
+function iniciaisDe(nome: string) {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  const primeira = partes[0][0] ?? "";
+  const ultima = partes.length > 1 ? (partes[partes.length - 1][0] ?? "") : "";
+  return (primeira + ultima).toUpperCase();
+}
+
+/** Um número da faixa do topo: rótulo, valor grande e uma linha de apoio. */
+function Numero({
+  rotulo,
+  valor,
+  apoio,
+  tom,
+}: {
+  rotulo: string;
+  valor: ReactNode;
+  apoio?: ReactNode;
+  tom?: "danger" | "alerta";
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border border-border bg-card px-3.5 py-3 print:break-inside-avoid print:px-2 print:py-1.5">
+      <p className="text-[11.5px] font-medium leading-snug text-muted-foreground print:text-[8pt]">{rotulo}</p>
+      <p
+        className={cn(
+          "mt-1 font-heading text-[24px] font-semibold leading-none tracking-[-.02em] tabular-nums print:text-[15pt]",
+          tom === "danger" && "text-destructive",
+          tom === "alerta" && "text-action"
+        )}
+      >
+        {valor}
+      </p>
+      {apoio && <p className="mt-1.5 text-[11.5px] leading-snug text-muted-foreground print:text-[8pt]">{apoio}</p>}
+    </div>
+  );
+}
+
+interface DefinicaoDeSecao {
+  id: string;
+  titulo: string;
+  resumo: ReactNode;
+  fonte?: string;
+  larga?: boolean;
+  quebraLivre?: boolean;
+  corpo: ReactNode;
+}
+
 export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; escola: string | null }) {
   const { aluno, periodo, totais, frequencia, ocorrencias, portaria, reunioes, reunioesComPais, diario, financeiro } = resumo;
+  const graficos = resumo.graficos ?? null;
+  const formularios = resumo.formularios ?? [];
   const fonte = (bloco: string) => resumo.fontes.find((f) => f.bloco.startsWith(bloco))?.origem ?? "";
   const maiorMes = Math.max(1, ...(frequencia?.porMes.map((m) => m.faltas) ?? [1]));
   const percentual = totais.percentualDeFrequencia;
   const [mostrarAtas, setMostrarAtas] = useState(true);
+  const { abertas, alternar, abrirTudo, fecharTudo } = useSecoesAbertas();
 
   const intervalo = (
     <>
@@ -215,210 +259,22 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
 
   const saude = aluno.saude;
   const saudeVazia = !saude || (!saude.alergias && !saude.medicacaoContinua && !saude.restricaoAlimentar && !saude.convenio);
+  const idade = idadeEmTexto(aluno.dataDeNascimento, hojeIsoBrasilia());
+  const indice = totais.indiceDeConvivencia;
+  const atrasosPorMes = graficos?.atrasos?.filter((a) => (a.chegada ?? 0) > 0 || (a.saidaMinutos ?? 0) > 0) ?? [];
+  const periodoDoResumo = periodo.ateHoje ? "no ano" : "no período";
 
-  return (
-    <article className="mx-auto flex w-full max-w-[210mm] flex-col gap-4 text-foreground print:max-w-none print:gap-3">
-      <style media="print">{"@page { size: A4 portrait; margin: 12mm; }"}</style>
+  // ---- As seções. Cada uma só entra se o acesso de quem abriu cobre o dado.
+  const secoes: DefinicaoDeSecao[] = [];
 
-      {/* Capa: só no papel. Escola, aluno, período, quando e por quem foi emitido. */}
-      <section
-        aria-label="Capa da ficha"
-        className="hidden print:flex print:min-h-[250mm] print:flex-col print:justify-between print:break-after-page"
-      >
-        <div>
-          {escola && <p className="text-[12pt] font-bold uppercase tracking-[.16em]">{escola}</p>}
-          <div className="mt-[60mm]">
-            <p className="text-[14pt] uppercase tracking-[.2em]">Ficha do aluno</p>
-            <h1 className="mt-3 break-words font-heading text-[34pt] font-semibold leading-tight">{aluno.nome}</h1>
-            <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-5">
-              <Dado rotulo="Turma">{aluno.turma ?? "—"}</Dado>
-              <Dado rotulo="Período">{intervalo}</Dado>
-              <Dado rotulo="Emitido em">
-                <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span>
-              </Dado>
-              <Dado rotulo="Emitido por">{resumo.emitidoPor ?? "Não identificado"}</Dado>
-            </dl>
-          </div>
-        </div>
-        <p className="border-t border-black pt-3 text-[9pt]">{AVISO_DE_SIGILO}</p>
-      </section>
-
-      {/* Cabeçalho da ficha: escola, aluno e período. É o que identifica o papel. */}
-      <header className="rounded-xl border border-border bg-card p-4 md:p-5 print:rounded-none print:border-0 print:border-b-2 print:border-black print:px-0 print:pt-0">
-        {escola && (
-          <p className="text-[11.5px] font-bold uppercase tracking-[.16em] text-action print:text-[10pt] print:text-black">{escola}</p>
-        )}
-        <p className="mt-0.5 text-sm text-muted-foreground print:text-[10pt]">Ficha do aluno</p>
-        <h1 className="mt-1 break-words font-heading text-[26px] font-semibold leading-tight tracking-[-.02em] print:text-[20pt]">
-          {aluno.nome}
-        </h1>
-        <p className="mt-1.5 flex items-start gap-1.5 text-[12px] leading-snug text-muted-foreground print:text-[8.5pt]">
-          <Lock aria-hidden className="mt-px size-3.5 shrink-0" />
-          <span>{AVISO_DE_SIGILO}</span>
-        </p>
-
-        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-          <Dado rotulo="Turma">{aluno.turma ?? "—"}</Dado>
-          <Dado rotulo="Período contratado">{aluno.periodoContratado ?? "Não cadastrado"}</Dado>
-          <Dado rotulo="Nascimento">{aluno.dataDeNascimento ? formatarSoData(aluno.dataDeNascimento) : "—"}</Dado>
-          <Dado rotulo="Na escola desde">{aluno.cadastradoEm ? formatarSoData(aluno.cadastradoEm) : "—"}</Dado>
-          <Dado rotulo="Uso de imagem">
-            {aluno.autorizaUsoDeImagem === true ? "Autorizado" : aluno.autorizaUsoDeImagem === false ? "Não autorizado" : "Não informado"}
-          </Dado>
-          <Dado rotulo="Período da ficha">{intervalo}</Dado>
-        </dl>
-
-        {aluno.responsaveis.length > 0 && (
-          <div className="mt-3 border-t border-border pt-3">
-            <h2 className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground print:text-[7.5pt]">
-              Responsáveis
-            </h2>
-            <ul className="mt-1 flex flex-col gap-1 text-sm print:text-[10pt]">
-              {aluno.responsaveis.map((r) => (
-                <li key={`${r.nome}-${r.parentesco ?? ""}`} className="break-words">
-                  <span className="font-medium">{r.nome}</span>
-                  {r.parentesco && <span className="text-muted-foreground"> ({r.parentesco})</span>}
-                  {r.responsavelFinanceiro && <span className="text-muted-foreground"> · financeiro</span>}
-                  {(r.telefone || r.email) && (
-                    <span className="text-muted-foreground">
-                      {" · "}
-                      {[r.telefone, r.email].filter(Boolean).join(" · ")}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </header>
-
-      {/* Totais no topo. Número nulo é área sem acesso: o cartão nem aparece, em vez de mostrar zero. */}
-      <section aria-label="Totais do período" className="grid grid-cols-2 gap-3 md:grid-cols-4 print:grid-cols-4 print:gap-2">
-        {percentual !== null && totais.diasLetivos !== null && (
-          <Estatistica
-            rotulo="Frequência"
-            valor={`${PERCENTUAL.format(percentual)}%`}
-            proporcao={percentual}
-            alertarAbaixoDe={75}
-            rodape={
-              <>
-                <span className="font-numeric">{totais.presencas}</span> presenças em{" "}
-                <span className="font-numeric">{totais.diasLetivos}</span> dias com chamada
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.faltas !== null && (
-          <Estatistica
-            rotulo="Faltas"
-            valor={totais.faltas}
-            tom={totais.faltasSemJustificativa ? "danger" : undefined}
-            rodape={
-              <>
-                <span className="font-numeric">{totais.faltasJustificadas}</span>{" "}
-                {totais.faltasJustificadas === 1 ? "justificada" : "justificadas"} ·{" "}
-                <span className="font-numeric">{totais.faltasSemJustificativa}</span> sem justificativa
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.ocorrencias !== null && (
-          <Estatistica
-            rotulo="Ocorrências"
-            valor={totais.ocorrencias}
-            rodape={
-              <>
-                <span className="font-numeric">{totais.ocorrenciasComPaisAvisados}</span> com pais avisados
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.reunioesComPaisRealizadas !== null && (
-          <Estatistica
-            rotulo="Reuniões e atendimentos"
-            valor={totais.reunioesComPaisRealizadas}
-            rodape={
-              <>
-                feitas · <span className="font-numeric">{totais.reunioesComPaisAgendadas}</span>{" "}
-                {totais.reunioesComPaisAgendadas === 1 ? "agendada" : "agendadas"}
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.combinadosEmAberto !== null && (
-          <Estatistica
-            rotulo="Encaminhamentos em aberto"
-            valor={totais.combinadosEmAberto}
-            tom={totais.combinadosVencidos ? "danger" : undefined}
-            rodape={
-              <>
-                <span className="font-numeric">{totais.combinadosVencidos}</span>{" "}
-                {totais.combinadosVencidos === 1 ? "vencido" : "vencidos"}
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.atrasosNaChegada !== null && (
-          <Estatistica
-            rotulo="Atrasos na chegada"
-            valor={totais.atrasosNaChegada}
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.reunioesDaTurma !== null && (
-          <Estatistica
-            rotulo="Reuniões da turma"
-            valor={totais.reunioesDaTurma}
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.visitasNaPortaria !== null && (
-          <Estatistica
-            rotulo="Visitas na portaria"
-            valor={totais.visitasNaPortaria}
-            rodape={
-              <>
-                <span className="font-numeric">{totais.visitasDeResponsaveis}</span> de responsáveis
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-        {totais.multaTotal !== null && (
-          <Estatistica
-            rotulo="Multa por atraso na saída"
-            valor={BRL.format(totais.multaTotal)}
-            rodape={
-              <>
-                <span className="font-numeric">{totais.diasComAtrasoNaSaida}</span> dias com atraso
-              </>
-            }
-            className="print:break-inside-avoid print:px-3 print:py-2"
-          />
-        )}
-      </section>
-
-      {resumo.ocultos.length > 0 && (
-        <div
-          role="note"
-          className="rounded-xl border border-border-dashed bg-muted/50 px-4 py-3 text-[13px] leading-snug text-muted-foreground print:rounded-none print:px-0"
-        >
-          <span className="font-semibold text-foreground">Não incluído no seu acesso:</span> {resumo.ocultos.join(", ")}.
-          Peça à direção da escola se precisar desses dados.
-        </div>
-      )}
-
-      {!resumo.ocultos.includes("Dados de saúde da ficha") && (
-        <Bloco
-          id="bloco-saude"
-          titulo="Ficha de saúde"
-          fonte="Cadastro do aluno (Administração › Alunos). Dado sensível de criança: só quem cuida do cadastro, do diário ou do cardápio vê."
-        >
+  if (!resumo.ocultos.includes("Dados de saúde da ficha")) {
+    secoes.push({
+      id: "saude",
+      titulo: "Saúde",
+      resumo: saudeVazia ? "Nada informado no cadastro" : saude?.alergias ? `Alergias: ${saude.alergias}` : "Há informações de saúde no cadastro",
+      fonte: "Cadastro do aluno (Administração › Alunos). Dado sensível de criança: só quem cuida do cadastro, do diário ou do cardápio vê.",
+      corpo: (
+        <>
           {saudeVazia ? (
             <Vazio>Nada informado no cadastro (alergias, medicação, restrição alimentar, convênio).</Vazio>
           ) : (
@@ -429,11 +285,23 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               <Dado rotulo="Convênio">{saude?.convenio ?? "Nada informado"}</Dado>
             </dl>
           )}
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {frequencia && (
-        <Bloco id="bloco-frequencia" titulo="Frequência" fonte={fonte("Frequência")}>
+  if (frequencia) {
+    secoes.push({
+      id: "frequencia",
+      titulo: "Frequência",
+      resumo:
+        frequencia.diasLetivos === 0
+          ? "Nenhuma chamada registrada"
+          : `${plural(frequencia.faltas, "falta", "faltas")}${frequencia.faltasSemJustificativa > 0 ? ` (${frequencia.faltasSemJustificativa} sem justificativa)` : ""}` +
+            (percentual !== null ? ` · ${PERCENTUAL.format(percentual)}% de presença` : ""),
+      fonte: fonte("Frequência"),
+      corpo: (
+        <>
           {frequencia.diasLetivos === 0 ? (
             <Vazio>Nenhuma chamada registrada para este aluno no período.</Vazio>
           ) : (
@@ -484,11 +352,54 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               </div>
             </div>
           )}
-        </Bloco>
-      )}
+          {atrasosPorMes.length > 0 && (
+            <div className="mt-5">
+              <Subtitulo>Atrasos por mês</Subtitulo>
+              <ul className="flex flex-col text-sm print:text-[9.5pt]">
+                {atrasosPorMes.map((a) => (
+                  <li key={a.mes} className="flex flex-wrap items-baseline gap-x-3 border-t border-border py-1.5 first:border-t-0">
+                    <span className="font-numeric">{a.mes.slice(5, 7)}/{a.mes.slice(0, 4)}</span>
+                    {a.chegada != null && a.chegada > 0 && <span>{plural(a.chegada, "atraso na chegada", "atrasos na chegada")}</span>}
+                    {a.saidaMinutos != null && a.saidaMinutos > 0 && (
+                      <span className="text-muted-foreground">{a.saidaMinutos} min de atraso na saída</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      ),
+    });
+  }
 
-      {ocorrencias && (
-        <Bloco id="bloco-ocorrencias" titulo="Ocorrências" fonte={fonte("Ocorrências")} quebraLivre>
+  if (ocorrencias) {
+    const g = ocorrencias.porGravidade;
+    secoes.push({
+      id: "ocorrencias",
+      titulo: "Ocorrências",
+      resumo:
+        ocorrencias.total === 0
+          ? `Nenhuma ${periodoDoResumo}`
+          : `${ocorrencias.total} ${periodoDoResumo}` + (g && g.grave > 0 ? `, ${plural(g.grave, "grave", "graves")}` : ""),
+      fonte: fonte("Ocorrências"),
+      larga: true,
+      quebraLivre: true,
+      corpo: (
+        <>
+          {ocorrencias.total > 0 && g && (
+            <ul aria-label="Ocorrências por gravidade" className="mb-3 flex flex-wrap gap-2">
+              {([["Leve", g.leve], ["Moderada", g.moderada], ["Grave", g.grave], ["Não informada", g.semGravidade]] as const)
+                .filter(([, n]) => n > 0)
+                .map(([rotulo, n]) => (
+                  <li key={rotulo}>
+                    <Badge variant="outline" className="h-7 gap-1.5 px-2.5">
+                      {rotulo} <span className="font-numeric">{n}</span>
+                    </Badge>
+                  </li>
+                ))}
+            </ul>
+          )}
           {ocorrencias.total === 0 ? (
             <Vazio>Nenhuma ocorrência registrada no período.</Vazio>
           ) : (
@@ -509,16 +420,27 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               </ol>
             </>
           )}
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {reunioesComPais && (
-        <Bloco
-          id="bloco-reunioes-pais"
-          titulo="Reuniões e atendimentos"
-          fonte={fonte("Reuniões e atendimentos") || fonte("Reuniões com os pais")}
-          quebraLivre
-        >
+  if (reunioesComPais) {
+    secoes.push({
+      id: "reunioes",
+      titulo: "Reuniões e atendimentos",
+      resumo: [
+        plural(reunioesComPais.realizadas, "realizada", "realizadas"),
+        plural(reunioesComPais.agendadas, "agendada", "agendadas"),
+        reunioesComPais.combinadosEmAberto > 0 ? plural(reunioesComPais.combinadosEmAberto, "encaminhamento em aberto", "encaminhamentos em aberto") : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      fonte: fonte("Reuniões e atendimentos") || fonte("Reuniões com os pais"),
+      larga: true,
+      quebraLivre: true,
+      corpo: (
+        <>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
             <Dado rotulo="Realizadas">{reunioesComPais.realizadas}</Dado>
             <Dado rotulo="Agendadas">{reunioesComPais.agendadas}</Dado>
@@ -665,14 +587,22 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               </ol>
             )}
           </div>
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      <Bloco
-        id="bloco-familia"
-        titulo="Pais avisados, reuniões da turma e visitas"
-        fonte="Ocorrências em que a escola marcou “pais avisados”, reuniões da turma (da equipe, não são reuniões com os pais) e visitas registradas na portaria para este aluno."
-      >
+  secoes.push({
+    id: "visitas",
+    titulo: "Visitas",
+    resumo:
+      reunioes.visitas === null
+        ? "Não incluído no seu acesso"
+        : `${plural(reunioes.visitas.length, "visita", "visitas")} na portaria` +
+          (reunioes.daTurma ? ` · ${plural(reunioes.daTurma.length, "reunião da turma", "reuniões da turma")}` : ""),
+    fonte:
+      "Visitas registradas na portaria para este aluno, reuniões da turma (da equipe, não são reuniões com os pais) e ocorrências em que a escola marcou “pais avisados”.",
+    corpo: (
         <div className="flex flex-col gap-4">
           <div>
             <Subtitulo>Ocorrências com pais avisados</Subtitulo>
@@ -742,10 +672,20 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
             )}
           </div>
         </div>
-      </Bloco>
+    ),
+  });
 
-      {resumo.observacoesSemanais && (
-        <Bloco id="bloco-semanais" titulo="Observações semanais da turma" fonte={fonte("Observações semanais")}>
+  if (resumo.observacoesSemanais) {
+    secoes.push({
+      id: "observacoes",
+      titulo: "Observações",
+      resumo:
+        resumo.observacoesSemanais.length === 0
+          ? "Nenhuma observação semanal cita o aluno"
+          : plural(resumo.observacoesSemanais.length, "observação semanal", "observações semanais"),
+      fonte: fonte("Observações semanais"),
+      corpo: (
+        <>
           {resumo.observacoesSemanais.length === 0 ? (
             <Vazio>Nenhuma observação semanal cita este aluno pelo nome.</Vazio>
           ) : (
@@ -761,11 +701,23 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               ))}
             </ul>
           )}
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {diario && (
-        <Bloco id="bloco-diario" titulo="Dia a dia: diário do aluno" fonte={fonte("Diário")}>
+  if (diario) {
+    secoes.push({
+      id: "diario",
+      titulo: "Diário",
+      resumo:
+        diario.diasComDiario === 0
+          ? "Nenhum diário registrado"
+          : `${plural(diario.diasComDiario, "dia", "dias")} com diário` +
+            (diario.percentualDeBoaAceitacao !== null ? ` · ${PERCENTUAL.format(diario.percentualDeBoaAceitacao)}% comeu bem ou tudo` : ""),
+      fonte: fonte("Diário"),
+      corpo: (
+        <>
           {diario.diasComDiario === 0 ? (
             <Vazio>Nenhum diário registrado para este aluno no período.</Vazio>
           ) : (
@@ -838,11 +790,21 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               </div>
             </div>
           )}
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {financeiro && (
-        <Bloco id="bloco-financeiro" titulo="Pagamentos (resumo)" fonte={fonte("Financeiro")}>
+  if (financeiro) {
+    secoes.push({
+      id: "pagamentos",
+      titulo: "Pagamentos",
+      resumo: financeiro.emDia
+        ? "Sem atraso"
+        : `${plural(financeiro.vencidas.quantidade, "vencida", "vencidas")} · ${BRL.format(financeiro.vencidas.valor)}`,
+      fonte: fonte("Financeiro"),
+      corpo: (
+        <>
           <p className="mb-3">
             {financeiro.emDia ? <Badge variant="success">Sem atraso</Badge> : <Badge variant="overdue">Com atraso</Badge>}
           </p>
@@ -862,11 +824,23 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               {financeiro.pagasNoPeriodo.quantidade} · {BRL.format(financeiro.pagasNoPeriodo.valor)}
             </Dado>
           </dl>
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      {portaria && (
-        <Bloco id="bloco-portaria" titulo="Portaria: atraso na saída e multa" fonte={fonte("Portaria")}>
+  if (portaria) {
+    secoes.push({
+      id: "portaria",
+      titulo: "Portaria",
+      resumo:
+        portaria.diasComRegistro === 0
+          ? "Nenhum registro na portaria"
+          : `${plural(portaria.diasComAtrasoNaSaida, "dia", "dias")} com atraso na saída` +
+            (portaria.multaTotal > 0 ? ` · multa ${BRL.format(portaria.multaTotal)}` : ""),
+      fonte: fonte("Portaria"),
+      corpo: (
+        <>
           {portaria.diasComRegistro === 0 ? (
             <Vazio>Nenhuma chegada ou saída registrada na portaria no período.</Vazio>
           ) : (
@@ -890,24 +864,45 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               )}
             </>
           )}
-        </Bloco>
-      )}
+        </>
+      ),
+    });
+  }
 
-      <Bloco
-        id="bloco-linha-do-tempo"
-        titulo="Linha do tempo"
-        fonte="Tudo o que aparece acima, junto e em ordem de data. A reunião com os pais entra sem o texto da ata."
-        quebraLivre
-      >
-        <LinhaDoTempo eventos={resumo.linhaDoTempo} />
-      </Bloco>
+  // Um formulário vinculado, uma seção (o título é o que a escola escolheu no construtor).
+  for (const f of formularios) {
+    secoes.push({
+      id: `form-${f.formId}`,
+      titulo: f.secao,
+      resumo: resumoDoFormulario(f),
+      fonte:
+        f.quemVe === "Gestao"
+          ? "Formulário vinculado à ficha. Visível só para a gestão. Pode ter dado de saúde: trate com sigilo."
+          : "Formulário vinculado à ficha. Visível para a gestão e para as professoras da turma. Pode ter dado de saúde: trate com sigilo.",
+      larga: true,
+      quebraLivre: true,
+      corpo: <FormularioDaFichaConteudo f={f} studentId={aluno.id} voltaPara={`/ocorrencias/aluno/${aluno.id}`} />,
+    });
+  }
 
-      {resumo.naoRegistrado.length > 0 && (
-        <Bloco
-          id="bloco-lacunas"
-          titulo="O que o sistema não registra"
-          fonte="Sobre o desempenho do aluno, o EducaPilot só guarda o que está nos blocos acima. Estes assuntos não existem hoje: se a escola quiser acompanhá-los, é preciso criar o registro."
-        >
+  secoes.push({
+    id: "linha-do-tempo",
+    titulo: "Linha do tempo",
+    resumo: plural(resumo.linhaDoTempo.length, "evento", "eventos"),
+    fonte: "Tudo o que aparece acima, junto e em ordem de data. A reunião com os pais entra sem o texto da ata.",
+    larga: true,
+    quebraLivre: true,
+    corpo: <LinhaDoTempo eventos={resumo.linhaDoTempo} />,
+  });
+
+  if (resumo.naoRegistrado.length > 0) {
+    secoes.push({
+      id: "lacunas",
+      titulo: "O que o sistema não registra",
+      resumo: plural(resumo.naoRegistrado.length, "assunto", "assuntos"),
+      fonte:
+        "Sobre o desempenho do aluno, o EducaPilot só guarda o que está nas seções acima. Estes assuntos não existem hoje: se a escola quiser acompanhá-los, é preciso criar o registro.",
+      corpo: (
           <ul className="flex flex-col gap-2 text-sm print:text-[9.5pt]">
             {resumo.naoRegistrado.map((l) => (
               <li key={l.assunto} className="print:break-inside-avoid">
@@ -915,8 +910,241 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               </li>
             ))}
           </ul>
-        </Bloco>
+      ),
+    });
+  }
+
+  const ids = secoes.map((s) => s.id);
+  const todasAbertas = ids.every((id) => abertas.has(id));
+
+  const temGrafico =
+    (graficos?.frequencia != null) || (graficos?.convivencia != null) || (graficos?.diario != null) || (graficos?.notas != null);
+
+  return (
+    <article className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-foreground print:max-w-none print:gap-3">
+      <style media="print">{"@page { size: A4 portrait; margin: 12mm; }"}</style>
+
+      {/* Capa: só no papel. Escola, aluno, período, quando e por quem foi emitido. */}
+      <section
+        aria-label="Capa da ficha"
+        className="hidden print:flex print:min-h-[250mm] print:flex-col print:justify-between print:break-after-page"
+      >
+        <div>
+          {escola && <p className="text-[12pt] font-bold uppercase tracking-[.16em]">{escola}</p>}
+          <div className="mt-[60mm]">
+            <p className="text-[14pt] uppercase tracking-[.2em]">Ficha do aluno</p>
+            <h1 className="mt-3 break-words font-heading text-[34pt] font-semibold leading-tight">{aluno.nome}</h1>
+            <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-5">
+              <Dado rotulo="Turma">{aluno.turma ?? "—"}</Dado>
+              <Dado rotulo="Período">{intervalo}</Dado>
+              <Dado rotulo="Emitido em">
+                <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span>
+              </Dado>
+              <Dado rotulo="Emitido por">{resumo.emitidoPor ?? "Não identificado"}</Dado>
+            </dl>
+          </div>
+        </div>
+        <p className="border-t border-black pt-3 text-[9pt]">{AVISO_DE_SIGILO}</p>
+      </section>
+
+      {/* Topo compacto: quem é o aluno, em poucas linhas. É o que identifica o papel. */}
+      <header className="rounded-xl border border-border bg-card p-4 md:p-5 print:rounded-none print:border-0 print:border-b-2 print:border-black print:px-0 print:pt-0">
+        <div className="flex items-start gap-3.5">
+          <span
+            aria-hidden
+            className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 font-heading text-[17px] font-semibold text-primary print:hidden"
+          >
+            {iniciaisDe(aluno.nome)}
+          </span>
+          <div className="min-w-0 flex-1">
+            {escola && (
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-action print:text-[10pt] print:text-black">{escola}</p>
+            )}
+            <h1 className="break-words font-heading text-[24px] font-semibold leading-tight tracking-[-.02em] print:text-[20pt]">
+              {aluno.nome}
+            </h1>
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground print:text-[10pt]">
+              <span className="font-medium text-foreground">{aluno.turma ?? "Sem turma"}</span>
+              {idade && <span>· {idade}</span>}
+              {aluno.periodoContratado && <span>· {aluno.periodoContratado}</span>}
+              {aluno.dataDeNascimento && (
+                <span>
+                  · nasc. <span className="font-numeric">{formatarSoData(aluno.dataDeNascimento)}</span>
+                </span>
+              )}
+              {aluno.cadastradoEm && (
+                <span>
+                  · na escola desde <span className="font-numeric">{formatarSoData(aluno.cadastradoEm)}</span>
+                </span>
+              )}
+              <span>
+                · imagem: {aluno.autorizaUsoDeImagem === true ? "autorizada" : aluno.autorizaUsoDeImagem === false ? "não autorizada" : "não informada"}
+              </span>
+            </p>
+            {aluno.responsaveis.length > 0 && (
+              <p className="mt-1.5 text-sm print:text-[10pt]">
+                <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground print:text-[7.5pt]">
+                  Responsáveis{" "}
+                </span>
+                {aluno.responsaveis.map((r, i) => (
+                  <span key={`${r.nome}-${r.parentesco ?? ""}-${i}`} className="break-words">
+                    {i > 0 && <span className="text-muted-foreground"> · </span>}
+                    <span className="font-medium">{r.nome}</span>
+                    {r.parentesco && <span className="text-muted-foreground"> ({r.parentesco})</span>}
+                    {r.responsavelFinanceiro && <span className="text-muted-foreground"> financeiro</span>}
+                    {(r.telefone || r.email) && (
+                      <span className="text-muted-foreground"> {[r.telefone, r.email].filter(Boolean).join(" · ")}</span>
+                    )}
+                  </span>
+                ))}
+              </p>
+            )}
+          </div>
+        </div>
+        <p className="mt-3 flex items-start gap-1.5 text-[12px] leading-snug text-muted-foreground print:text-[8.5pt]">
+          <Lock aria-hidden className="mt-px size-3.5 shrink-0" />
+          <span>
+            Período <span className="font-numeric">{intervalo}</span>. {AVISO_DE_SIGILO}
+          </span>
+        </p>
+      </header>
+
+      {/* Faixa de números: uma linha no computador, quebra no celular. Número nulo é área sem acesso:
+          o cartão nem aparece, em vez de mostrar zero. */}
+      <section
+        aria-label="Totais do período"
+        className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-cols-[repeat(6,minmax(0,1fr))] print:grid-cols-[repeat(6,minmax(0,1fr))] print:gap-2"
+      >
+        {percentual !== null && totais.diasLetivos !== null && (
+          <Numero
+            rotulo="Presença"
+            valor={`${PERCENTUAL.format(percentual)}%`}
+            tom={percentual < 75 ? "alerta" : undefined}
+            apoio={
+              <>
+                <span className="font-numeric">{totais.presencas}</span> de <span className="font-numeric">{totais.diasLetivos}</span> dias
+              </>
+            }
+          />
+        )}
+        {totais.faltas !== null && (
+          <Numero
+            rotulo="Faltas"
+            valor={totais.faltas}
+            tom={totais.faltasSemJustificativa ? "danger" : undefined}
+            apoio={
+              <>
+                <span className="font-numeric">{totais.faltasSemJustificativa}</span> sem justificativa
+              </>
+            }
+          />
+        )}
+        {totais.ocorrencias !== null && (
+          <Numero
+            rotulo="Ocorrências"
+            valor={totais.ocorrencias}
+            apoio={
+              <>
+                <span className="font-numeric">{totais.ocorrenciasComPaisAvisados}</span> com pais avisados
+              </>
+            }
+          />
+        )}
+        {indice != null && (
+          <Numero
+            rotulo="Índice de convivência"
+            valor={indice}
+            tom={ocorrencias?.porGravidade && ocorrencias.porGravidade.grave > 0 ? "danger" : undefined}
+            apoio="Leve 1, moderada 3, grave 5. Menor é melhor."
+          />
+        )}
+        {totais.reunioesComPaisRealizadas !== null && (
+          <Numero
+            rotulo="Reuniões e atendimentos"
+            valor={totais.reunioesComPaisRealizadas}
+            tom={totais.combinadosVencidos ? "danger" : undefined}
+            apoio={
+              <>
+                <span className="font-numeric">{totais.reunioesComPaisAgendadas}</span> {totais.reunioesComPaisAgendadas === 1 ? "agendada" : "agendadas"}
+                {totais.combinadosEmAberto ? (
+                  <>
+                    {" "}· <span className="font-numeric">{totais.combinadosEmAberto}</span> em aberto
+                  </>
+                ) : null}
+              </>
+            }
+          />
+        )}
+        {totais.atrasosNaChegada !== null && (
+          <Numero
+            rotulo="Atrasos na chegada"
+            valor={totais.atrasosNaChegada}
+            apoio={
+              totais.diasComAtrasoNaSaida
+                ? (
+                    <>
+                      <span className="font-numeric">{totais.diasComAtrasoNaSaida}</span> na saída
+                    </>
+                  )
+                : undefined
+            }
+          />
+        )}
+      </section>
+
+      {resumo.ocultos.length > 0 && (
+        <div
+          role="note"
+          className="rounded-xl border border-border-dashed bg-muted/50 px-4 py-3 text-[13px] leading-snug text-muted-foreground print:rounded-none print:px-0"
+        >
+          <span className="font-semibold text-foreground">Não incluído no seu acesso:</span> {resumo.ocultos.join(", ")}.
+          Peça à direção da escola se precisar desses dados.
+        </div>
       )}
+
+      {temGrafico && (
+        <section
+          aria-label="Gráficos do período"
+          className="grid grid-cols-[repeat(1,minmax(0,1fr))] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))] print:grid-cols-[repeat(3,minmax(0,1fr))] print:gap-2"
+        >
+          {graficos?.frequencia != null && <GraficoDePresenca pontos={graficos.frequencia} />}
+          {graficos?.convivencia != null && <GraficoDeConvivencia pontos={graficos.convivencia} indice={indice} />}
+          {graficos?.diario != null && <GraficoDoDiario pontos={graficos.diario} />}
+          {graficos?.notas != null && (
+            <GraficoDeNotas notas={graficos.notas} className="md:col-span-2 xl:col-span-3 print:col-span-3" />
+          )}
+        </section>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
+        <p className="text-[12.5px] text-muted-foreground">Toque numa seção para abrir. O que você abrir fica lembrado neste navegador.</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => abrirTudo(ids)} disabled={todasAbertas}>
+            Abrir tudo
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => fecharTudo(ids)} disabled={ids.every((id) => !abertas.has(id))}>
+            Fechar tudo
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[repeat(1,minmax(0,1fr))] items-start gap-3 lg:grid-cols-[repeat(2,minmax(0,1fr))] print:grid-cols-[repeat(1,minmax(0,1fr))] print:gap-0">
+        {secoes.map((s) => (
+          <SecaoRecolhivel
+            key={s.id}
+            id={s.id}
+            titulo={s.titulo}
+            resumo={s.resumo}
+            fonte={s.fonte}
+            aberta={abertas.has(s.id)}
+            onAlternar={() => alternar(s.id)}
+            larga={s.larga}
+            quebraLivre={s.quebraLivre}
+          >
+            {s.corpo}
+          </SecaoRecolhivel>
+        ))}
+      </div>
 
       <p className="text-[12px] text-muted-foreground print:text-[8pt]">
         Emitido em <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span>

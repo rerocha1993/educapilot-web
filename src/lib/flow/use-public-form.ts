@@ -26,6 +26,11 @@ export interface PublicFormDto {
   /** Regras do formulário inteiro, em JSON. Ver lib/flow/form-config.ts. */
   config: string | null;
   campos: PublicFormFieldDto[];
+  /**
+   * Só quando o link veio com ?convite= válido: o aluno para quem o convite foi gerado. A família não
+   * precisa se identificar; o servidor grava a resposta com este aluno.
+   */
+  convite?: { alunoNome?: string | null } | null;
 }
 
 // Correção (2026-08): achado ao vivo testando o link com um usuário real — a tela
@@ -42,16 +47,17 @@ export class PublicFormLoadError extends Error {
   }
 }
 
-export function usePublicForm(token: string | undefined) {
+export function usePublicForm(token: string | undefined, convite?: string | null, habilitado = true) {
   return useQuery({
-    queryKey: ["public-form", token],
-    enabled: !!token,
+    queryKey: ["public-form", token, convite ?? null],
+    enabled: !!token && habilitado,
     retry: 1,
     queryFn: async () => {
       let result;
       try {
+        // `convite` ainda não consta no openapi gerado (Ficha v2, seção 3).
         result = await flowApi.GET("/api/PublicForms/{token}", {
-          params: { path: { token: token! } },
+          params: { path: { token: token! }, query: convite ? { convite } : undefined } as { path: { token: string } },
         });
       } catch {
         // fetch() lança (não retorna response nenhuma) quando a rede falha ou o
@@ -80,6 +86,10 @@ export interface PublicSubmissionInput {
   nomeReferencia?: string | null;
   observacoes?: string | null;
   itens: { fieldId: string; valor: string | null }[];
+  /** Código do convite (?convite= do link): uso único, o servidor confere e define o aluno. */
+  convite?: string | null;
+  /** Aluno achado na identificação (formulário vinculado à ficha sem convite). */
+  alunoId?: number | null;
 }
 
 export function useSubmitPublicForm(token: string) {
@@ -92,7 +102,10 @@ export function useSubmitPublicForm(token: string) {
           referenciaId: null,
           nomeReferencia: dto.nomeReferencia ?? null,
           observacoes: dto.observacoes ?? null,
+          alunoId: dto.convite ? null : (dto.alunoId ?? null),
           itens: dto.itens,
+          // `convite` ainda não consta no openapi gerado; o servidor ignora o que não conhece.
+          ...(dto.convite ? { convite: dto.convite } : {}),
         },
       });
       if (!result.response.ok || result.error) {

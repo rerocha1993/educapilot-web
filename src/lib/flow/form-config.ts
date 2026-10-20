@@ -31,6 +31,30 @@ export interface FormConfig {
    * enviar nada e a escola descobre pelo telefone.
    */
   permitirSemEncontrar?: boolean;
+
+  /**
+   * Vincula o formulário à ficha do aluno (2026-10): a última resposta vira uma seção da ficha e as
+   * anteriores ficam no histórico. Formulário vinculado EXIGE identificar o aluno ao preencher, porque
+   * a resposta precisa gravar o aluno (FormResponse.AlunoId).
+   */
+  ficha?: FichaDoFormulario;
+}
+
+export type QuemVeOFormularioDaFicha = "Gestao" | "GestaoEProfessores";
+
+export interface FichaDoFormulario {
+  mostrar: boolean;
+  /** Título da seção na ficha (até 40 caracteres), ex.: "Anamnese". */
+  secao: string;
+  /** Gestao = quem tem acesso à ficha e não é professor; GestaoEProfessores = também as professoras das turmas do aluno. */
+  quemVe: QuemVeOFormularioDaFicha;
+}
+
+export const LIMITE_DO_TITULO_DA_SECAO = 40;
+
+/** O formulário aparece na ficha do aluno? Só vale com a caixa ligada. */
+export function fichaDoFormulario(config: FormConfig): FichaDoFormulario | null {
+  return config.ficha?.mostrar ? config.ficha : null;
 }
 
 export function decodeFormConfig(config: string | null | undefined): FormConfig {
