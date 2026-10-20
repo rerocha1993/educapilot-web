@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClasses } from "@/lib/kernel/use-classes";
+import { SeloDeGravidade } from "@/components/tasks/selo-de-gravidade";
 import { useStudent, useStudentOccurrences } from "@/lib/kernel/use-student-ficha";
 import { useGuardiansByStudent } from "@/lib/finance/use-guardians";
 import { formatarData, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
@@ -118,7 +119,10 @@ export default function FichaAlunoPage() {
             {occurrences?.map((o) => (
               <div key={o.id} className="rounded-xl border border-border bg-card px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 md:flex-nowrap md:gap-0">
-                  <Badge variant="secondary">{o.categoria ?? "—"}</Badge>
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="secondary">{o.categoria ?? "—"}</Badge>
+                    <SeloDeGravidade gravidade={o.gravidade} />
+                  </span>
                   <span className="font-mono text-xs tabular-nums text-muted-foreground">
                     {formatarData(o.createdAt)}
                   </span>

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
 import { dataLocalIso } from "@/lib/format/date";
+import type { Gravidade } from "@/lib/tasks/gravidade";
 
 // Chips de categoria única do wireframe R8 — não existiam no backend antes desta
 // sessão (campo Occurrence.Categoria, string solta, sem enum).
@@ -16,6 +17,8 @@ export interface CreateOccurrencesInput {
   childIds: number[];
   classId: number;
   categoria: OccurrenceCategoria;
+  /** Obrigatória ao registrar (Leve, Moderada ou Grave). */
+  gravidade: Gravidade;
   observation: string;
   solution?: string;
   parentsNotified: boolean;
@@ -30,6 +33,7 @@ export function useCreateOccurrences() {
           childId,
           classId: input.classId,
           categoria: input.categoria,
+          gravidade: input.gravidade,
           observation: input.observation,
           solution: input.solution || null,
           parentsNotified: input.parentsNotified,
@@ -39,6 +43,7 @@ export function useCreateOccurrences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["occurrences-report"] });
+      queryClient.invalidateQueries({ queryKey: ["occurrences-by-student"] });
     },
   });
 }
@@ -68,15 +73,23 @@ export function useOccurrencesReport(
   startDate: Date,
   endDate: Date,
   classId: number | null,
-  enabled = true
+  enabled = true,
+  gravidade: Gravidade | null = null
 ) {
   const start = toDateParam(startDate);
   const end = toDateParam(endDate);
   return useQuery({
-    queryKey: ["occurrences-report", start, end, classId],
+    queryKey: ["occurrences-report", start, end, classId, gravidade],
     queryFn: async () => {
       const result = await tasksApi.GET("/api/Occurrence/report", {
-        params: { query: { startDate: start, endDate: end, classId: classId ?? undefined } },
+        // `gravidade` é filtro opcional do relatório (contrato, seção 1); ainda não consta no openapi gerado.
+        params: {
+          query: { startDate: start, endDate: end, classId: classId ?? undefined, gravidade: gravidade ?? undefined } as {
+            startDate: string;
+            endDate: string;
+            classId?: number;
+          },
+        },
       });
       const data = unwrapApiResponse(result, "Não foi possível carregar o relatório.");
       return data as unknown as OccurrenceReportDto;
@@ -93,6 +106,8 @@ export function useOccurrencesReport(
 export interface OccurrenceDetailDto {
   id: number;
   categoria: OccurrenceCategoria;
+  /** Ausente nas ocorrências antigas. */
+  gravidade?: Gravidade | null;
   observation: string | null;
   solution: string | null;
   parentsNotified: boolean;
