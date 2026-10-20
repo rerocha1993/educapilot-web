@@ -53,8 +53,8 @@ export default function ResumoDoAlunoPage() {
 
       <div className="print:hidden">
         <CabecalhoDaPagina
-          eyebrow="← Ocorrências"
-          eyebrowHref="/ocorrencias"
+          eyebrow="← Dossiê do aluno"
+          eyebrowHref="/dossie"
           titulo={data ? `Dossiê · ${data.aluno.nome}` : "Dossiê do aluno"}
           apoio={
             data ? (

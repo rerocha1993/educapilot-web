@@ -1,4 +1,5 @@
 import {
+  FileUser,
   ArrowLeftRight,
   ArrowRightLeft,
   Bot,
@@ -116,6 +117,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/", label: "Chamada", icon: ClipboardCheck },
     { href: "/checklist", label: "Checklist", icon: ListChecks },
     { href: "/ocorrencias", label: "Ocorrências", icon: TriangleAlert },
+    { href: "/dossie", label: "Dossiê do aluno", icon: FileUser },
     { href: "/materiais", label: "Materiais", icon: Package },
     { href: "/reunioes", label: "Reuniões", icon: Handshake },
     { href: "/reunioes-e-atendimentos", label: "Reuniões e atendimentos", icon: UsersRound },

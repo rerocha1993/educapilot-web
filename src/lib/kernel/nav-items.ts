@@ -74,6 +74,7 @@ export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
   "/": [
     "/",
     "/ocorrencias",
+    "/dossie",
     "/checklist",
     "/planejamento-semanal",
     "/materiais",

@@ -27,6 +27,7 @@ const SINONIMOS: Record<string, string> = {
   "/admin/alunos": "estudante crianca",
   "/admin/turmas": "classe sala",
   "/ocorrencias": "incidente registro comportamento",
+  "/dossie": "relatorio crianca aluno ficha historico resumo imprimir",
   "/rh/ponto": "ponto batida horario",
   "/matriculas": "funil leads familias interessados",
   "/matriculas/anuncios": "meta facebook instagram campanha",
