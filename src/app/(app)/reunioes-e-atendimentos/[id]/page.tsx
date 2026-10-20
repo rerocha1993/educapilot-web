@@ -57,7 +57,7 @@ function BlocoDeNotas({ reuniao }: { reuniao: ReuniaoDetalhada }) {
   return (
     <Bloco id="bloco-notas" titulo="Notas (só a gestão)">
       <p className="mb-3 text-[13px] text-muted-foreground">
-        Opcional. Quem esteve na reunião não vê o que você escreve, mas a média das duas notas entra no Desempenho dos funcionários que participaram.
+        Opcional. A família não vê as notas. Os funcionários que participaram veem as duas notas no Meu desempenho, e a média entra na nota de mérito deles.
         {ehAdvertenciaVerbal(reuniao.assunto) && " Advertência verbal conta em Advertências, não nesta média."}
       </p>
       <EscalasDeNota notaDoAssunto={a} notaDoDesfecho={d} aoMudarAssunto={setA} aoMudarDesfecho={setD} desabilitada={salvar.isPending} />

@@ -237,6 +237,11 @@ export function ReuniaoForm({
     const salva = await salvar.mutateAsync({ id: idAtual, entrada });
     setIdAtual(salva.id);
 
+    // A API só aceita nota em reunião realizada: numa agendada as notas esperam o "Finalizar".
+    return salva.status === "Realizada" ? await gravarNotas(salva) : salva;
+  }
+
+  async function gravarNotas<T extends { id: string }>(salva: T) {
     const mudouNota = (reuniao?.notaDoAssunto ?? null) !== notaDoAssunto || (reuniao?.notaDoDesfecho ?? null) !== notaDoDesfecho;
     if (podeDarNota && mudouNota) {
       return await salvarNotas.mutateAsync({ id: salva.id, notaDoAssunto, notaDoDesfecho });
@@ -272,7 +277,7 @@ export function ReuniaoForm({
   async function concluir() {
     try {
       const salva = await persistir();
-      const final = await finalizar.mutateAsync(salva.id);
+      const final = await gravarNotas(await finalizar.mutateAsync(salva.id));
       setConfirmando(false);
       toast.success("Reunião finalizada. Ela já está no histórico de quem participou.");
       aoSalvar(final);
@@ -554,7 +559,7 @@ export function ReuniaoForm({
         <fieldset className="grid gap-3 rounded-xl border border-border bg-card p-4 md:p-5">
           <legend className="px-1 font-heading text-[15px] font-semibold">Notas (só a gestão)</legend>
           <p className="text-[13px] text-muted-foreground">
-            Opcional. Quem esteve na reunião não vê o que você escreve, mas a média das duas notas entra no Desempenho dos funcionários que participaram.
+            Opcional. A família não vê as notas. Os funcionários que participaram veem as duas notas no Meu desempenho, e a média entra na nota de mérito deles.
           </p>
           <EscalasDeNota
             notaDoAssunto={notaDoAssunto}
