@@ -44,7 +44,7 @@ export default function NovaReuniaoPage() {
       </div>
 
       <CabecalhoDaPagina
-        eyebrow={aluno ? "← Dossiê do aluno" : "← Reuniões e atendimentos"}
+        eyebrow={aluno ? "← Ficha do aluno" : "← Reuniões e atendimentos"}
         eyebrowHref={voltar}
         titulo="Nova reunião ou atendimento"
         apoio="Agende uma reunião ou registre uma que já aconteceu. A ata é interna da escola: a família não vê."

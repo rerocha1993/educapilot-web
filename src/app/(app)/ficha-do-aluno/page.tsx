@@ -13,7 +13,7 @@ import { useClasses } from "@/lib/kernel/use-classes";
 import { useAllStudents } from "@/lib/kernel/use-students";
 
 /**
- * Entrada do Dossiê do aluno: a lista das crianças com busca por nome e filtro de turma. Antes o dossiê só abria a partir
+ * Entrada do Ficha do aluno: a lista das crianças com busca por nome e filtro de turma. Antes o dossiê só abria a partir
  * de Ocorrências (escolher o aluno num seletor) ou de uma reunião, e a direção não achava onde ficava.
  *
  * A lista vem de GET /api/Student, que já devolve só os alunos das turmas do professor; o dossiê em si continua em
@@ -36,7 +36,7 @@ function idade(nascimento: string | null | undefined): string | null {
   return `${anos} anos`;
 }
 
-export default function DossiePage() {
+export default function FichaDoAlunoPage() {
   const { data: alunos, isLoading, isError } = useAllStudents();
   const { data: turmas } = useClasses();
   const [busca, setBusca] = useState("");
@@ -60,7 +60,7 @@ export default function DossiePage() {
 
       <CabecalhoDaPagina
         eyebrow="Rotina"
-        titulo="Dossiê do aluno"
+        titulo="Ficha do aluno"
         apoio="Ficha, frequência, ocorrências, reuniões, diário e portaria de cada criança. Escolha uma para abrir e imprimir."
       />
 
@@ -126,7 +126,7 @@ export default function DossiePage() {
                       </span>
                     </span>
                     <span className="hidden items-center gap-1 text-[12.5px] text-muted-foreground sm:inline-flex">
-                      <FileText className="size-3.5" /> Abrir dossiê
+                      <FileText className="size-3.5" /> Abrir ficha
                     </span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </Link>

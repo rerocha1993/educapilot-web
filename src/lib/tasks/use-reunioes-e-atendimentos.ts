@@ -320,7 +320,7 @@ export function useMinhasReunioes(habilitado = true) {
 // ------------------------------------------------------------------ comandos
 
 function invalidar(queryClient: ReturnType<typeof useQueryClient>) {
-  // A reunião aparece também no dossiê do aluno, na linha do tempo e na nota do funcionário.
+  // A reunião aparece também na ficha do aluno, na linha do tempo e na nota do funcionário.
   void queryClient.invalidateQueries({ queryKey: [CHAVE] });
   void queryClient.invalidateQueries({ queryKey: ["resumo-do-aluno"] });
   void queryClient.invalidateQueries({ queryKey: ["rh-desempenho"] });

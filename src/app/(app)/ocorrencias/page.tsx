@@ -325,7 +325,7 @@ export default function OcorrenciasPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 print:hidden">
-        <h2 className="font-heading text-[15.5px] font-semibold">Dossiê do aluno</h2>
+        <h2 className="font-heading text-[15.5px] font-semibold">Ficha do aluno</h2>
         <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
           Tudo o que a escola registrou sobre o aluno: ficha, frequência, ocorrências, reuniões com os pais, diário e linha do tempo, pronto para imprimir.
         </p>
@@ -384,12 +384,12 @@ export default function OcorrenciasPage() {
               className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
             >
               <FileText className="size-4" />
-              Abrir dossiê
+              Abrir ficha
             </Link>
           ) : (
             <Button variant="outline" className="w-full md:w-auto" disabled>
               <FileText className="size-4" />
-              Abrir dossiê
+              Abrir ficha
             </Button>
           )}
         </div>
@@ -483,7 +483,7 @@ export default function OcorrenciasPage() {
               className={buttonVariants({ variant: "outline", className: "w-full sm:w-fit" })}
             >
               <FileText className="size-4" />
-              Dossiê do aluno
+              Ficha do aluno
             </Link>
           )}
 

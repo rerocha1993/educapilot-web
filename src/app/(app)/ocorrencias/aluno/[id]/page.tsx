@@ -19,7 +19,7 @@ import { useResumoDoAluno } from "@/lib/tasks/use-resumo-do-aluno";
 const ANOS_NA_LISTA = 3;
 
 /**
- * Dossiê do aluno (evolução do resumo anual): ficha, frequência, ocorrências, reuniões com os pais,
+ * Ficha do aluno (evolução do resumo anual): ficha, frequência, ocorrências, reuniões com os pais,
  * diário, portaria e a linha do tempo, de 1º de janeiro até hoje. Abre a partir de Ocorrências e imprime
  * em A4 com capa (o menu e os controles levam `print:hidden`; a folha cuida do resto). A rota continua
  * /ocorrencias/aluno/[id] para não quebrar os atalhos que já existem.
@@ -53,9 +53,9 @@ export default function ResumoDoAlunoPage() {
 
       <div className="print:hidden">
         <CabecalhoDaPagina
-          eyebrow="← Dossiê do aluno"
-          eyebrowHref="/dossie"
-          titulo={data ? `Dossiê · ${data.aluno.nome}` : "Dossiê do aluno"}
+          eyebrow="← Ficha do aluno"
+          eyebrowHref="/ficha-do-aluno"
+          titulo={data ? `Ficha · ${data.aluno.nome}` : "Ficha do aluno"}
           apoio={
             data ? (
               <>
@@ -99,7 +99,7 @@ export default function ResumoDoAlunoPage() {
                 disabled={!data}
               >
                 <Printer className="size-4" />
-                Imprimir dossiê
+                Imprimir ficha
               </Button>
             </div>
           }
@@ -110,14 +110,14 @@ export default function ResumoDoAlunoPage() {
 
       {isError && (
         <ErroDeCarga
-          texto={error instanceof Error ? error.message : "Não foi possível carregar o dossiê do aluno."}
+          texto={error instanceof Error ? error.message : "Não foi possível carregar a ficha do aluno."}
           onTentar={() => void refetch()}
         />
       )}
 
       {isLoading && (
         <div role="status" aria-live="polite" className="mx-auto flex w-full max-w-[210mm] flex-col gap-4">
-          <span className="sr-only">Carregando o dossiê do aluno…</span>
+          <span className="sr-only">Carregando a ficha do aluno…</span>
           <Skeleton className="h-36 w-full rounded-xl" />
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {Array.from({ length: 4 }, (_, i) => (

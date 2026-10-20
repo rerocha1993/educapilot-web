@@ -18,7 +18,7 @@ import { ROTULO_DE_QUEM_FAZ, ROTULO_DO_STATUS, VARIANTE_DO_STATUS, textoDasNotas
 import { cn } from "@/lib/utils";
 
 /**
- * A folha do dossiê do aluno. Serve a tela e o papel: na impressão (A4 retrato) o menu e os controles
+ * A folha da ficha do aluno. Serve a tela e o papel: na impressão (A4 retrato) o menu e os controles
  * somem (print:hidden na página), a primeira folha é a capa e cada bloco evita quebrar no meio.
  *
  * Cada bloco diz de onde vem o dado. Bloco que o acesso de quem abriu não cobre nem aparece vazio:
@@ -222,13 +222,13 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
 
       {/* Capa: só no papel. Escola, aluno, período, quando e por quem foi emitido. */}
       <section
-        aria-label="Capa do dossiê"
+        aria-label="Capa da ficha"
         className="hidden print:flex print:min-h-[250mm] print:flex-col print:justify-between print:break-after-page"
       >
         <div>
           {escola && <p className="text-[12pt] font-bold uppercase tracking-[.16em]">{escola}</p>}
           <div className="mt-[60mm]">
-            <p className="text-[14pt] uppercase tracking-[.2em]">Dossiê do aluno</p>
+            <p className="text-[14pt] uppercase tracking-[.2em]">Ficha do aluno</p>
             <h1 className="mt-3 break-words font-heading text-[34pt] font-semibold leading-tight">{aluno.nome}</h1>
             <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-5">
               <Dado rotulo="Turma">{aluno.turma ?? "—"}</Dado>
@@ -248,7 +248,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         {escola && (
           <p className="text-[11.5px] font-bold uppercase tracking-[.16em] text-action print:text-[10pt] print:text-black">{escola}</p>
         )}
-        <p className="mt-0.5 text-sm text-muted-foreground print:text-[10pt]">Dossiê do aluno</p>
+        <p className="mt-0.5 text-sm text-muted-foreground print:text-[10pt]">Ficha do aluno</p>
         <h1 className="mt-1 break-words font-heading text-[26px] font-semibold leading-tight tracking-[-.02em] print:text-[20pt]">
           {aluno.nome}
         </h1>
@@ -265,7 +265,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
           <Dado rotulo="Uso de imagem">
             {aluno.autorizaUsoDeImagem === true ? "Autorizado" : aluno.autorizaUsoDeImagem === false ? "Não autorizado" : "Não informado"}
           </Dado>
-          <Dado rotulo="Período do dossiê">{intervalo}</Dado>
+          <Dado rotulo="Período da ficha">{intervalo}</Dado>
         </dl>
 
         {aluno.responsaveis.length > 0 && (

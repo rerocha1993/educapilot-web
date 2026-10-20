@@ -197,7 +197,7 @@ export default function ReuniaoPage() {
                 <>
                   {aluno?.studentId != null && (
                     <Link href={`/ocorrencias/aluno/${aluno.studentId}`} className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}>
-                      Dossiê do aluno
+                      Ficha do aluno
                     </Link>
                   )}
                   {!cancelada && (

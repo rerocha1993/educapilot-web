@@ -4,7 +4,7 @@ import { unwrapApiResponse } from "@/lib/api/unwrap";
 import type { Encaminhamento, QuemFaz, StatusDaReuniao, TipoDeEnvolvido } from "@/lib/tasks/use-reunioes-e-atendimentos";
 
 /**
- * Dossiê do aluno (antes "resumo anual", em Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
+ * Ficha do aluno (antes "resumo anual", em Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
  *
  * Tipado à mão: o Swagger gerado ainda não conhece este endpoint. Depois do deploy dá para regenerar
  * `src/lib/api/generated/tasks.d.ts` e trocar o cast por uma chamada tipada.
@@ -298,7 +298,7 @@ export function useResumoDoAluno(studentId: number | null, ano?: number) {
         "/api/Occurrence/student/{studentId}/summary",
         { params: { path: { studentId: studentId! }, query: ano ? { ano } : undefined } }
       );
-      const data = unwrapApiResponse(result, "Não foi possível carregar o dossiê do aluno.");
+      const data = unwrapApiResponse(result, "Não foi possível carregar a ficha do aluno.");
       return data as unknown as ResumoDoAluno;
     },
     enabled: studentId !== null && Number.isFinite(studentId),
