@@ -273,6 +273,7 @@ export const PENDENCIAS: ItemDoInicio[] = [
 // ------------------------------------------------------------------ blocos
 
 export type IdDeBloco =
+  | "frase"
   | "numeros"
   | "precificacao"
   | "aniversariantes"
@@ -283,6 +284,7 @@ export type IdDeBloco =
   | "atalhos";
 
 export const BLOCOS: { id: IdDeBloco; rotulo: string; descricao: string }[] = [
+  { id: "frase", rotulo: "Frase do dia", descricao: "Uma frase curta, diferente a cada dia, logo abaixo da saudação." },
   { id: "numeros", rotulo: "Números do dia", descricao: "Os números do dia da escola." },
   {
     id: "precificacao",
@@ -369,7 +371,7 @@ export interface PadraoDoPapel {
  * menor alcance — mesma normalização que o backend faz ao gravar.
  */
 const GESTAO: PadraoDoPapel = {
-  blocos: ["numeros", "precificacao", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
+  blocos: ["frase", "numeros", "precificacao", "aniversariantes", "calendario", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["vence-hoje", "a-receber", "em-atraso"],
   pendencias: ["mensalidades-vencidas", "comprovantes-a-lancar", "contratos-conferencia", "envios-aguardando", "ponto-pendente", "chamada-aberta"],
   atalhos: ["inadimplencia", "contratos", "alunos", "relatorios"],
@@ -377,7 +379,7 @@ const GESTAO: PadraoDoPapel = {
 };
 
 const COORDENACAO: PadraoDoPapel = {
-  blocos: ["numeros", "aniversariantes", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
+  blocos: ["frase", "numeros", "aniversariantes", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
   numeros: ["presencas", "envios-aguardando", "contratos-assinados"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas", "envios-aguardando"],
   atalhos: ["chamada", "planejamento", "ocorrencias", "checklist", "relatorios"],
@@ -388,7 +390,7 @@ const COORDENACAO: PadraoDoPapel = {
 };
 
 const SECRETARIA: PadraoDoPapel = {
-  blocos: ["numeros", "precisa", "formularios", "atalhos", "tarefas"],
+  blocos: ["frase", "numeros", "precisa", "formularios", "atalhos", "tarefas"],
   numeros: ["contratos-assinados", "envios-aguardando", "presencas"],
   pendencias: ["contratos-conferencia", "comprovantes-a-lancar", "envios-aguardando", "chamada-aberta", "faltas-sem-justificativa"],
   atalhos: ["contratos", "envios", "alunos", "formularios"],
@@ -398,7 +400,7 @@ const SECRETARIA: PadraoDoPapel = {
 };
 
 const PROFESSOR: PadraoDoPapel = {
-  blocos: ["numeros", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
+  blocos: ["frase", "numeros", "calendario", "precisa", "tarefas", "atalhos", "formularios"],
   numeros: ["presencas"],
   pendencias: ["chamada-aberta", "faltas-sem-justificativa", "tarefas-atrasadas"],
   atalhos: ["chamada", "ocorrencias", "planejamento", "checklist"],

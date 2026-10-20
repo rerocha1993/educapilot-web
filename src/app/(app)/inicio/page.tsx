@@ -13,6 +13,7 @@ import {
 import { Aniversariantes } from "@/components/inicio/aniversariantes";
 import { AtalhosDoInicio } from "@/components/inicio/atalhos-do-inicio";
 import { CartaoDeTarefas } from "@/components/inicio/cartao-de-tarefas";
+import { FraseDoDia } from "@/components/inicio/frase-do-dia";
 import { EsteMes } from "@/components/inicio/este-mes";
 import { ForaDoAlvo } from "@/components/inicio/fora-do-alvo";
 import {
@@ -125,6 +126,7 @@ export default function InicioPage() {
   const dataLonga = `${semana.charAt(0).toUpperCase()}${semana.slice(1)} · ${hoje.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}`;
 
   const conteudo: Record<IdDeBloco, () => ReactNode> = {
+    frase: () => <FraseDoDia agora={hoje} />,
     numeros: () =>
       isLoading ? (
         <EsqueletoDosNumeros quantidade={numeros.length} />
@@ -149,6 +151,8 @@ export default function InicioPage() {
   };
 
   const permitido: Record<IdDeBloco, boolean> = {
+    // Sem permissão a exigir: a frase é de todo mundo (quem não quer, desliga em Personalizar).
+    frase: true,
     numeros: catalogoDeNumeros.length > 0,
     // O painel de precificação exige a área do Financeiro; sem ela o bloco nem entra na lista.
     precificacao: rotaVisivel("/finance/precificacao"),
