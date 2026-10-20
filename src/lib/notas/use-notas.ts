@@ -326,6 +326,19 @@ export function useSalvarPeriodos() {
   });
 }
 
+/** Quem pode ser professora de uma matéria na turma (usuários ativos da equipe). Só a gestão lê. */
+export function useProfessoresPossiveis() {
+  return useQuery({
+    queryKey: [CHAVE, "professores"],
+    queryFn: async () => {
+      const result = await api().GET(`${RAIZ}/professores`);
+      const pessoas = lista(unwrapApiResponse(result, "Não foi possível carregar as professoras.") as unknown as { userId: string; nome: string }[]);
+      return pessoas.slice().sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    },
+    staleTime: 60_000,
+  });
+}
+
 export function useMaterias() {
   return useQuery({
     queryKey: [CHAVE, "materias"],

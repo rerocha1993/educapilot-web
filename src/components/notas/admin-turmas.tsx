@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, GraduationCap, Plus, Save, Trash2 } from "lucide-react";
 
@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatarNota, lerNota } from "@/lib/notas/calculos";
 import { useClasses } from "@/lib/kernel/use-classes";
-import { useUsers } from "@/lib/kernel/use-users";
 import {
   ROTULO_DO_TIPO,
   useAnosLetivos,
   useConfiguracaoDaTurma,
   useMaterias,
+  useProfessoresPossiveis,
   useSalvarConfiguracaoDaTurma,
   type ConfiguracaoDaTurma,
   type EscalaItem,
@@ -138,15 +138,8 @@ const daEscala = (linhas: LinhaDeEscala[]): EscalaItem[] =>
 function FormularioDaTurma({ config }: { config: ConfiguracaoDaTurma }) {
   const salvar = useSalvarConfiguracaoDaTurma();
   const { data: materias } = useMaterias();
-  const { data: usuarios } = useUsers(1, 200);
-
-  const professores = useMemo(
-    () =>
-      (usuarios?.items ?? [])
-        .filter((u) => u.userType === "Teacher" && u.ativo !== false)
-        .sort((a, b) => a.fullName.localeCompare(b.fullName, "pt-BR")),
-    [usuarios]
-  );
+  // A lista vem do servidor (usuários ativos da equipe, não só o perfil Professor: coordenação também dá aula).
+  const { data: professores = [] } = useProfessoresPossiveis();
 
   const [tipo, setTipo] = useState<TipoDeAvaliacao>(config.tipo);
   const [media, setMedia] = useState(formatarNota(config.mediaMinima ?? 6));
@@ -254,8 +247,8 @@ function FormularioDaTurma({ config }: { config: ConfiguracaoDaTurma }) {
                 >
                   <option value={SEM_PROFESSOR}>Sem professor definido</option>
                   {professores.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.fullName}
+                    <option key={p.userId} value={p.userId}>
+                      {p.nome}
                     </option>
                   ))}
                 </select>

@@ -238,7 +238,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/admin/alunos", label: "Alunos", icon: UserRound },
     { href: "/admin/responsaveis", label: "Responsáveis", icon: Contact },
     { href: "/admin/usuarios", label: "Usuários", icon: Users },
-    { href: "/admin/avaliacao", label: "Matérias e avaliação", icon: BookOpen },
+    { href: "/admin/avaliacao", label: "Matérias e avaliação", area: "materias-avaliacao", icon: BookOpen },
     { href: "/admin/progressao", label: "Progressão de turma", icon: ArrowRightLeft },
     { href: "/admin/email", label: "E-mail da escola", icon: Mail },
     { href: "/admin/importar", label: "Importação em massa", icon: UploadCloud },

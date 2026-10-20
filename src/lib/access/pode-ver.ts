@@ -38,8 +38,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/admin\/responsaveis/, modulo: "admin", area: "responsaveis" },
   { padrao: /^\/admin\/usuarios/, modulo: "admin", area: "usuarios" },
   { padrao: /^\/admin\/progressao/, modulo: "admin", area: "progressao" },
-  // Matérias e avaliação: cadastro de anos, matérias e configuração por turma. Só a gestão; o backend confere.
-  { padrao: /^\/admin\/avaliacao/, modulo: "admin", area: null },
+  // Matérias e avaliação: cadastro de anos, matérias e configuração por turma. Área própria admin:materias-avaliacao.
+  { padrao: /^\/admin\/avaliacao/, modulo: "admin", area: "materias-avaliacao" },
   { padrao: /^\/admin\/email/, modulo: "admin", area: "email" },
   { padrao: /^\/admin\/importar/, modulo: "admin", area: "importar" },
   { padrao: /^\/admin/, modulo: "admin", area: null },
