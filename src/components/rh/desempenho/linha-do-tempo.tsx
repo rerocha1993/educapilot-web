@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Award, BriefcaseBusiness, CalendarOff, ClipboardCheck, DoorOpen, TriangleAlert } from "lucide-react";
+import { Award, BriefcaseBusiness, CalendarOff, ClipboardCheck, DoorOpen, TriangleAlert, UsersRound } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +19,7 @@ const ICONE: Record<string, ReactNode> = {
   Advertencia: <TriangleAlert />,
   Reconhecimento: <Award />,
   Afastamento: <CalendarOff />,
+  Reuniao: <UsersRound />,
 };
 
 const COR: Record<string, string> = {
@@ -26,10 +27,11 @@ const COR: Record<string, string> = {
   Reconhecimento: "bg-success-soft text-success-soft-foreground",
   Avaliacao: "bg-secondary text-secondary-foreground",
   Afastamento: "bg-accent text-accent-foreground",
+  Reuniao: "bg-action-soft text-action-soft-foreground",
 };
 
 /**
- * Linha do tempo da trajetória: admissão, marcos, avaliações concluídas, advertências, reconhecimentos e afastamentos
+ * Linha do tempo da trajetória: admissão, marcos, avaliações concluídas, advertências, reconhecimentos, reuniões e afastamentos
  * (só o tipo e as datas: nunca atestado, CID nem observação de saúde). Compacta, com filtro por tipo e por ano.
  */
 export function LinhaDoTempo({ funcionarioId }: { funcionarioId: string }) {

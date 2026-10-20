@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   // `node server.js`, sem precisar de npm install no servidor.
   output: "standalone",
 
+  // A Reunião com os pais virou "Reuniões e atendimentos": os endereços antigos (favoritos, links do dossiê)
+  // seguem funcionando. Os parâmetros (?turma=&aluno=) passam junto.
+  async redirects() {
+    return [
+      { source: "/reunioes-pais", destination: "/reunioes-e-atendimentos", permanent: false },
+      { source: "/reunioes-pais/:caminho*", destination: "/reunioes-e-atendimentos/:caminho*", permanent: false },
+    ];
+  },
+
   async headers() {
     return [
       {

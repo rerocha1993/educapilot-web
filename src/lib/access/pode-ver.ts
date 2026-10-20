@@ -126,7 +126,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/planejamento-semanal/, modulo: "tasks", area: "planejamento" },
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
-  // Reunião com os pais é área própria e precisa vir antes de /reunioes (o prefixo casaria as duas).
+  // Reuniões e atendimentos (antiga Reunião com os pais; o /reunioes-pais redireciona) é área própria e precisa vir antes de /reunioes.
+  { padrao: /^\/reunioes-e-atendimentos/, modulo: "tasks", area: "reunioes-pais" },
   { padrao: /^\/reunioes-pais/, modulo: "tasks", area: "reunioes-pais" },
   { padrao: /^\/reunioes/, modulo: "tasks", area: "reunioes" },
   { padrao: /^\/calendario/, modulo: "tasks", area: "calendario" },

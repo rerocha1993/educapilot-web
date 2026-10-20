@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 import {
+  COMPONENTE_DE_REUNIOES,
   JANELAS,
   ROTULO_DA_JANELA,
   formatarNota,
@@ -45,12 +46,19 @@ const numero = (texto: string) => (texto.trim() === "" ? NaN : Number(texto.repl
 
 // ------------------------------------------------------------------ aba Nota
 
-function EditorDaNota({ config }: { config: ConfiguracaoDeDesempenho }) {
+function EditorDaNota({ config: configDoServidor }: { config: ConfiguracaoDeDesempenho }) {
+  const config = configDoServidor.componentes.some((c) => c.chave === COMPONENTE_DE_REUNIOES.chave)
+    ? configDoServidor
+    : { ...configDoServidor, componentes: [...configDoServidor.componentes, COMPONENTE_DE_REUNIOES] };
   const salvar = useSalvarConfiguracaoDeDesempenho();
   const previa = usePreviaDaNota();
 
   const [pesos, setPesos] = useState<Record<string, string>>(() =>
-    Object.fromEntries(Object.entries(config.pesos).map(([k, v]) => [k, String(v)]))
+    // Componente que a escola ainda não configurou (Reuniões, por exemplo) começa em 0: não muda a nota de ninguém.
+    Object.fromEntries([
+      ...config.componentes.filter((c) => c.chave !== "Reconhecimentos").map((c): [string, string] => [c.chave, "0"]),
+      ...Object.entries(config.pesos).map(([k, v]): [string, string] => [k, String(v)]),
+    ])
   );
   const [faixas, setFaixas] = useState<{ nome: string; minimo: string }[]>(() =>
     [...config.faixas].sort((a, b) => b.minimo - a.minimo).map((f) => ({ nome: f.nome, minimo: String(f.minimo) }))
@@ -120,6 +128,11 @@ function EditorDaNota({ config }: { config: ConfiguracaoDeDesempenho }) {
                     {c.nome}
                   </label>
                   <p className="text-[11.5px] leading-snug text-muted-foreground">{c.descricao}</p>
+                  {c.chave === "Reunioes" && (
+                    <p className="text-[11.5px] leading-snug font-medium text-action-soft-foreground">
+                      Só as reuniões com nota entram. A escola que já tinha pesos salvos começa com 0 aqui, até você ajustar.
+                    </p>
+                  )}
                   {c.chave === "Ocorrencias" && (
                     <p className="text-[11.5px] leading-snug font-medium text-action-soft-foreground">
                       Peso baixo de propósito: ocorrência na sala não é culpa individual, é indicador de contexto.

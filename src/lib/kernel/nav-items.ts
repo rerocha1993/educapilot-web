@@ -78,7 +78,7 @@ export const ENTRADAS_DO_MODULO: Record<string, string[]> = {
     "/planejamento-semanal",
     "/materiais",
     "/reunioes",
-    "/reunioes-pais",
+    "/reunioes-e-atendimentos",
     "/calendario",
     "/relatorios",
   ],

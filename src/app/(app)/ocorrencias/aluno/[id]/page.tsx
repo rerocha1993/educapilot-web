@@ -83,9 +83,9 @@ export default function ResumoDoAlunoPage() {
                   ))}
                 </select>
               </label>
-              {data && !data.ocultos.includes("Reuniões com os pais") && (
+              {data && !data.ocultos.some((o) => o === "Reuniões com os pais" || o === "Reuniões e atendimentos") && (
                 <Link
-                  href={`/reunioes-pais/nova?turma=${data.aluno.classId}&aluno=${data.aluno.id}`}
+                  href={`/reunioes-e-atendimentos/nova?turma=${data.aluno.classId}&aluno=${data.aluno.id}`}
                   className={buttonVariants({ variant: "action", className: "w-full md:w-auto" })}
                 >
                   <Plus className="size-4" />

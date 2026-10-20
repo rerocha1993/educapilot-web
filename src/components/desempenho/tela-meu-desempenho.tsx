@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatarSoData } from "@/lib/format/date";
 import { formatarNota } from "@/lib/rh/use-desempenho";
 import { useIniciarAutoavaliacao, useMeuDesempenho } from "@/lib/rh/use-meu-desempenho";
+import { useMinhasReunioes } from "@/lib/tasks/use-reunioes-e-atendimentos";
 
 /**
  * "Meu desempenho": o que o funcionário vê de si. A nota e os componentes dela (com a explicação), as avaliações do gestor
@@ -26,6 +27,8 @@ export function TelaMeuDesempenho() {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useMeuDesempenho();
   const iniciar = useIniciarAutoavaliacao();
+  // Só pede depois de saber que há ficha; falha da lista não derruba a tela inteira.
+  const reunioes = useMinhasReunioes(data?.status === "ok");
 
   async function fazerAutoavaliacao() {
     try {
@@ -108,6 +111,44 @@ export function TelaMeuDesempenho() {
           </div>
         </>
       )}
+
+      <section className="rounded-xl border border-border bg-card p-4" aria-label="Reuniões e atendimentos">
+        <h3 className="font-heading text-base font-semibold">Reuniões e atendimentos</h3>
+        <p className="text-[12.5px] text-muted-foreground">
+          As reuniões já finalizadas em que você esteve. Aparecem só a data, o assunto, quem conduziu e as notas; a pauta e a ata ficam com a escola.
+        </p>
+        {reunioes.isError ? (
+          <ErroDeCarga texto="Não foi possível carregar as suas reuniões." onTentar={() => reunioes.refetch()} />
+        ) : reunioes.isLoading ? (
+          <Skeleton className="mt-2 h-10 w-full" />
+        ) : (reunioes.data ?? []).length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma reunião finalizada com você ainda.</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-border">
+            {reunioes.data!.map((r, i) => (
+              <li key={`${r.data}-${r.assunto}-${i}`} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 py-2 text-[13px] sm:grid-cols-[5.5rem_minmax(0,1fr)_auto]">
+                <span className="font-numeric text-muted-foreground sm:row-auto">{formatarSoData(r.data)}</span>
+                <span className="order-3 col-span-2 min-w-0 break-words sm:order-none sm:col-span-1">
+                  <span className="font-medium">{r.assunto}</span>
+                  {r.condutores.length > 0 && <span className="text-muted-foreground"> · conduzida por {r.condutores.join(", ")}</span>}
+                </span>
+                <span className="text-right font-numeric">
+                  {r.notaDoAssunto == null && r.notaDoDesfecho == null ? (
+                    <span className="text-muted-foreground">sem nota</span>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground">assunto </span>
+                      {r.notaDoAssunto ?? "—"}
+                      <span className="text-muted-foreground"> · desfecho </span>
+                      {r.notaDoDesfecho ?? "—"}
+                    </>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="rounded-xl border border-border bg-card p-4" aria-label="Feedbacks">
         <h3 className="font-heading text-base font-semibold">Feedbacks compartilhados com você</h3>

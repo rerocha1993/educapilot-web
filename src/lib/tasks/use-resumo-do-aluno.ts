@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
-import type { QuemFaz, ReuniaoComPais } from "@/lib/tasks/use-reunioes-com-pais";
+import type { Encaminhamento, QuemFaz, StatusDaReuniao, TipoDeEnvolvido } from "@/lib/tasks/use-reunioes-e-atendimentos";
 
 /**
  * Dossiê do aluno (antes "resumo anual", em Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
@@ -172,11 +172,34 @@ export interface EventoDaLinhaDoTempo {
 export interface PendenciaDoDossie {
   reuniaoId: string;
   dataDaReuniao: string;
-  tipoDaReuniao: string;
+  /** Assunto da reunião (antes "tipo"; o servidor pode ainda mandar o nome antigo). */
+  assuntoDaReuniao?: string;
+  tipoDaReuniao?: string;
   descricao: string;
   responsavel: QuemFaz;
-  prazo: string | null;
+  prazo?: string | null;
   vencido: boolean;
+}
+
+/** Uma reunião em que o aluno esteve. Os campos antigos (tipo, conduzidaPor, responsaveis) ficam opcionais. */
+export interface ReuniaoDoDossie {
+  id: string;
+  data: string;
+  hora?: string | null;
+  assunto?: string;
+  tipo?: string;
+  status: StatusDaReuniao;
+  envolvidos?: { tipo: TipoDeEnvolvido; nome: string; detalhe?: string | null }[];
+  condutores?: string[];
+  conduzidaPor?: string;
+  responsaveis?: { nome: string }[];
+  pauta?: string | null;
+  conversado?: string | null;
+  motivoDoCancelamento?: string | null;
+  encaminhamentos: Encaminhamento[];
+  /** Só para a gestão: para os demais nem vêm no JSON. */
+  notaDoAssunto?: number | null;
+  notaDoDesfecho?: number | null;
 }
 
 export interface ReunioesComPaisDoDossie {
@@ -187,8 +210,13 @@ export interface ReunioesComPaisDoDossie {
   combinadosEmAberto: number;
   combinadosVencidos: number;
   pendencias: PendenciaDoDossie[];
+  /** Quantas reuniões (realizadas) de cada assunto no período. */
+  porAssunto?: { assunto: string; total: number }[];
+  /** Média das notas das reuniões do período. Só para a gestão. */
+  mediaDaNotaDoAssunto?: number | null;
+  mediaDaNotaDoDesfecho?: number | null;
   /** Da mais antiga para a mais nova; traz a ata (registro interno). */
-  itens: ReuniaoComPais[];
+  itens: ReuniaoDoDossie[];
 }
 
 export interface ContagemPorRotulo {
@@ -236,7 +264,7 @@ export interface ResumoDoAluno {
     paisAvisados: OcorrenciaDoResumo[] | null;
   };
   portaria: PortariaDoResumo | null;
-  /** Nulo sem a área "Reunião com os pais". */
+  /** Nulo sem a área "Reuniões e atendimentos". */
   reunioesComPais: ReunioesComPaisDoDossie | null;
   /** Nulo sem a área do diário. */
   diario: DiarioDoDossie | null;

@@ -14,7 +14,7 @@ import type {
   ResumoDoAluno,
   TipoDeEventoDoResumo,
 } from "@/lib/tasks/use-resumo-do-aluno";
-import { ROTULO_DE_QUEM_FAZ, ROTULO_DO_STATUS, VARIANTE_DO_STATUS } from "@/lib/tasks/use-reunioes-com-pais";
+import { ROTULO_DE_QUEM_FAZ, ROTULO_DO_STATUS, VARIANTE_DO_STATUS, textoDasNotas } from "@/lib/tasks/use-reunioes-e-atendimentos";
 import { cn } from "@/lib/utils";
 
 /**
@@ -338,7 +338,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         )}
         {totais.reunioesComPaisRealizadas !== null && (
           <Estatistica
-            rotulo="Reuniões com os pais"
+            rotulo="Reuniões e atendimentos"
             valor={totais.reunioesComPaisRealizadas}
             rodape={
               <>
@@ -351,7 +351,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         )}
         {totais.combinadosEmAberto !== null && (
           <Estatistica
-            rotulo="Combinados em aberto"
+            rotulo="Encaminhamentos em aberto"
             valor={totais.combinadosEmAberto}
             tom={totais.combinadosVencidos ? "danger" : undefined}
             rodape={
@@ -513,18 +513,45 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
       )}
 
       {reunioesComPais && (
-        <Bloco id="bloco-reunioes-pais" titulo="Reuniões com os pais" fonte={fonte("Reuniões com os pais")} quebraLivre>
+        <Bloco
+          id="bloco-reunioes-pais"
+          titulo="Reuniões e atendimentos"
+          fonte={fonte("Reuniões e atendimentos") || fonte("Reuniões com os pais")}
+          quebraLivre
+        >
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
             <Dado rotulo="Realizadas">{reunioesComPais.realizadas}</Dado>
             <Dado rotulo="Agendadas">{reunioesComPais.agendadas}</Dado>
             <Dado rotulo="Família não veio">{reunioesComPais.responsavelNaoCompareceu}</Dado>
             <Dado rotulo="Canceladas">{reunioesComPais.canceladas}</Dado>
+            {/* Médias das notas: só a gestão recebe; para os demais o campo nem existe. */}
+            {reunioesComPais.mediaDaNotaDoAssunto != null && (
+              <Dado rotulo="Nota média do assunto">{PERCENTUAL.format(reunioesComPais.mediaDaNotaDoAssunto)}</Dado>
+            )}
+            {reunioesComPais.mediaDaNotaDoDesfecho != null && (
+              <Dado rotulo="Nota média do desfecho">{PERCENTUAL.format(reunioesComPais.mediaDaNotaDoDesfecho)}</Dado>
+            )}
           </dl>
 
+          {(reunioesComPais.porAssunto?.length ?? 0) > 0 && (
+            <div className="mt-4">
+              <Subtitulo>Por assunto</Subtitulo>
+              <ul aria-label="Reuniões por assunto" className="flex flex-wrap gap-2">
+                {reunioesComPais.porAssunto!.map((a) => (
+                  <li key={a.assunto}>
+                    <Badge variant="outline" className="h-7 gap-1.5 px-2.5">
+                      {a.assunto} <span className="font-numeric">{a.total}</span>
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="mt-4">
-            <Subtitulo>Combinados em aberto (de qualquer data)</Subtitulo>
+            <Subtitulo>Encaminhamentos em aberto (de qualquer data)</Subtitulo>
             {reunioesComPais.pendencias.length === 0 ? (
-              <Vazio>Nenhum combinado em aberto.</Vazio>
+              <Vazio>Nenhum encaminhamento em aberto.</Vazio>
             ) : (
               <ul className="flex flex-col gap-1.5">
                 {reunioesComPais.pendencias.map((p, i) => (
@@ -539,7 +566,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px]">
                       <Badge variant="outline">{ROTULO_DE_QUEM_FAZ[p.responsavel]}</Badge>
                       <span>
-                        Reunião de <span className="font-numeric">{formatarSoData(p.dataDaReuniao)}</span> ({p.tipoDaReuniao})
+                        Reunião de <span className="font-numeric">{formatarSoData(p.dataDaReuniao)}</span> ({p.assuntoDaReuniao ?? p.tipoDaReuniao})
                       </span>
                       {p.prazo && (
                         <span>
@@ -565,14 +592,14 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               )}
             </div>
             {reunioesComPais.itens.length === 0 ? (
-              <Vazio>Nenhuma reunião com os pais no período.</Vazio>
+              <Vazio>Nenhuma reunião ou atendimento no período.</Vazio>
             ) : (
               <ol className="flex flex-col gap-2">
                 {reunioesComPais.itens.map((r) => (
                   <li key={r.id} className="rounded-lg border border-border bg-background p-3 print:break-inside-avoid print:bg-transparent">
                     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                       <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-                        {r.tipo}
+                        {r.assunto ?? r.tipo}
                         <Badge variant={VARIANTE_DO_STATUS[r.status]}>{ROTULO_DO_STATUS[r.status]}</Badge>
                       </span>
                       <span className="font-numeric text-xs text-muted-foreground">
@@ -581,8 +608,13 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
                       </span>
                     </div>
                     <p className="mt-1 text-[12.5px] text-muted-foreground">
-                      Conduzida por {r.conduzidaPor}
-                      {r.responsaveis.length > 0 && <> · com {r.responsaveis.map((x) => x.nome).join(", ")}</>}
+                      Conduzida por {r.condutores?.join(", ") ?? r.conduzidaPor}
+                      {(r.envolvidos ?? r.responsaveis ?? []).length > 0 && <> · com {(r.envolvidos ?? r.responsaveis ?? []).map((x) => x.nome).join(", ")}</>}
+                      {textoDasNotas(r.notaDoAssunto, r.notaDoDesfecho) && (
+                        <>
+                          {" "}· notas <span className="font-numeric">{textoDasNotas(r.notaDoAssunto, r.notaDoDesfecho)}</span>
+                        </>
+                      )}
                     </p>
                     {r.status === "Cancelada" && r.motivoDoCancelamento && (
                       <p className="mt-1.5 break-words text-sm text-muted-foreground">Motivo do cancelamento: {r.motivoDoCancelamento}</p>
@@ -624,7 +656,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
                       </ul>
                     )}
                     <p className="mt-2 text-right text-[12.5px] print:hidden">
-                      <Link href={`/reunioes-pais/${r.id}`} className="font-medium text-action hover:underline">
+                      <Link href={`/reunioes-e-atendimentos/${r.id}`} className="font-medium text-action hover:underline">
                         Abrir reunião
                       </Link>
                     </p>
