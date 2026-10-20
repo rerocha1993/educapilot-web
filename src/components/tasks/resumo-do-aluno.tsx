@@ -1111,7 +1111,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
           {graficos?.convivencia != null && <GraficoDeConvivencia pontos={graficos.convivencia} indice={indice} />}
           {graficos?.diario != null && <GraficoDoDiario pontos={graficos.diario} />}
           {graficos?.notas != null && (
-            <GraficoDeNotas notas={graficos.notas} className="md:col-span-2 xl:col-span-3 print:col-span-3" />
+            <GraficoDeNotas notas={graficos.notas} />
           )}
         </section>
       )}

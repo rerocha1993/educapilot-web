@@ -27,9 +27,9 @@ export function PublicacaoDoBoletim({ classId, periodoId, turma, periodo }: { cl
   if (isError || !situacao) return null;
 
   const faltas = [
-    situacao.notasFaltando > 0 && `${plural(situacao.notasFaltando, "nota ou texto sem lançar", "notas ou textos sem lançar")}`,
-    situacao.materiasSemInstrumento > 0 && `${plural(situacao.materiasSemInstrumento, "matéria sem nenhuma avaliação", "matérias sem nenhuma avaliação")}`,
-    situacao.comportamentoFaltando > 0 && `${plural(situacao.comportamentoFaltando, "criança sem conceito de comportamento", "crianças sem conceito de comportamento")}`,
+    situacao.faltando.notas > 0 && `${plural(situacao.faltando.notas, "nota ou texto sem lançar", "notas ou textos sem lançar")}`,
+    situacao.faltando.materiasSemAvaliacao > 0 && `${plural(situacao.faltando.materiasSemAvaliacao, "matéria sem nenhuma avaliação", "matérias sem nenhuma avaliação")}`,
+    situacao.faltando.comportamento > 0 && `${plural(situacao.faltando.comportamento, "criança sem conceito de comportamento", "crianças sem conceito de comportamento")}`,
   ].filter(Boolean) as string[];
 
   async function handlePublicar() {

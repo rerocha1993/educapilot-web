@@ -152,9 +152,8 @@ export interface SituacaoDaPublicacao {
   publicadoEm?: string | null;
   atualizadoAposPublicarEm?: string | null;
   totalDeAlunos: number;
-  notasFaltando: number;
-  materiasSemInstrumento: number;
-  comportamentoFaltando: number;
+  /** O que ainda falta lançar no período, na forma do SituacaoDaPublicacaoDto do servidor. */
+  faltando: { notas: number; materiasSemAvaliacao: number; comportamento: number };
   avisados?: number | null;
 }
 

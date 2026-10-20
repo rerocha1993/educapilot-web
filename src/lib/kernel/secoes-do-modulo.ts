@@ -276,6 +276,9 @@ export function secaoAtiva(
 ): string | null {
   let melhor: string | null = null;
 
+  // A ficha de uma criança continua em /ocorrencias/aluno/[id] (atalhos antigos), mas é da seção Ficha do aluno.
+  if (pathname.startsWith("/ocorrencias/aluno/") && secoes.some((s) => s.href === "/ficha-do-aluno")) return "/ficha-do-aluno";
+
   for (const secao of secoes) {
     const bate =
       secao.href === "/"
