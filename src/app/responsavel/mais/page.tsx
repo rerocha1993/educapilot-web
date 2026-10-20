@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Camera, ChevronRight, DoorOpen, Images, LogOut, NotebookPen, Salad, ShoppingBag, type LucideIcon } from "lucide-react";
+import { CalendarDays, Camera, ChevronRight, DoorOpen, GraduationCap, Images, LogOut, NotebookPen, Salad, ShoppingBag, type LucideIcon } from "lucide-react";
 
 import { ErroDoPortal } from "@/components/relacionamento/portal/comum";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export default function MaisDoResponsavelPage() {
 
       <nav aria-label="Atalhos" className="flex flex-col gap-2">
         <Atalho href="/responsavel/agenda" icone={CalendarDays} titulo="Agenda" texto="Eventos da escola e rotina da turma" />
+        <Atalho href="/responsavel/boletim" icone={GraduationCap} titulo="Boletim" texto="Notas e comportamento, quando a escola publica" />
         <Atalho href="/responsavel/diario" icone={NotebookPen} titulo="Diário" texto="Alimentação, sono e o dia do seu filho" />
         <Atalho href="/responsavel/cardapio" icone={Salad} titulo="Cardápio" texto="O que a escola serve na semana" />
         <Atalho href="/responsavel/portaria" icone={DoorOpen} titulo="Portaria" texto="Estou a caminho, entrada e saída" />

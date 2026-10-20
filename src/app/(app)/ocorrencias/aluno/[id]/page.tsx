@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Printer } from "lucide-react";
+import { ClipboardList, Plus, Printer } from "lucide-react";
 
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { ErroDeCarga } from "@/components/rh/campo";
@@ -92,6 +92,13 @@ export default function ResumoDoAlunoPage() {
                   Registrar reunião
                 </Link>
               )}
+              <Link
+                href={`/notas/boletim/${studentId}?ano=${ano}`}
+                className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
+              >
+                <ClipboardList className="size-4" />
+                Boletim
+              </Link>
               <Button
                 variant="outline"
                 className="w-full md:w-auto"
