@@ -480,12 +480,15 @@ export default function PublicFormFillPage() {
   const conviteInvalido = convite !== null && conviteConferido.data?.valido === false;
   const precisaIdentificar = vinculadoAFicha && !porConvite;
   const conviteCarregando = convite !== null && conviteConferido.isLoading;
-  const mostrarBusca = !conviteCarregando && !porConvite && (usaAutoPreenchimento || precisaIdentificar);
+  // Pelo link geral (sem convite) o servidor não aceita resposta de formulário da ficha: a auditoria de 10/2026
+  // apaga aluno e responsável vindos do navegador. Avisa logo, em vez de deixar a família preencher tudo à toa.
+  const semConviteNaFicha = vinculadoAFicha && !porConvite && !conviteCarregando;
+  const mostrarBusca = !semConviteNaFicha && !conviteCarregando && !porConvite && (usaAutoPreenchimento || precisaIdentificar);
 
   // Com a regra ligada, o formulário só aparece depois da busca. Sem ela, tudo à mostra desde
   // o início — que é como os formulários existentes já funcionam.
   const exigeIdentificacao = !porConvite && ((usaAutoPreenchimento && !!regras.exigirIdentificacao) || precisaIdentificar);
-  const mostrarCampos = !conviteCarregando && (!exigeIdentificacao || autoPreenchido || (preenchendoManualmente && !precisaIdentificar));
+  const mostrarCampos = !semConviteNaFicha && !conviteCarregando && (!exigeIdentificacao || autoPreenchido || (preenchendoManualmente && !precisaIdentificar));
 
   // Há contrato quando um campo de contrato foi (ou vai ser) respondido. Campo escondido por
   // condição não é enviado e não gera contrato nenhum — por isso a conta sai dos campos visíveis,
@@ -636,10 +639,17 @@ export default function PublicFormFillPage() {
               </div>
             )}
 
-            {conviteInvalido && (
+            {conviteInvalido && !vinculadoAFicha && (
               <div role="alert" className="rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-soft-foreground">
-                {conviteConferido.data?.mensagem ?? "Este link não é mais válido."} Você ainda pode se identificar abaixo
-                {vinculadoAFicha ? "." : " e preencher."}
+                {conviteConferido.data?.mensagem ?? "Este link não é mais válido."} Você ainda pode se identificar abaixo e preencher.
+              </div>
+            )}
+
+            {semConviteNaFicha && (
+              <div role="alert" className="rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-soft-foreground">
+                {conviteInvalido ? `${conviteConferido.data?.mensagem ?? "Este link não é mais válido."} ` : ""}
+                Este formulário faz parte da ficha do aluno e precisa do link que a escola envia para a sua família (cada criança
+                tem o seu). Peça o link à escola.
               </div>
             )}
 
