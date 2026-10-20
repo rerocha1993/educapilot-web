@@ -3,7 +3,9 @@ import Link from "next/link";
 import { MarcaEducaPilot } from "@/components/auth/marca";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade · EducaPilot",
+  title: "Política de Privacidade",
+  alternates: { canonical: "/privacidade" },
+  robots: { index: true, follow: true },
   description:
     "Como o EducaPilot e as escolas que o usam tratam os dados das famílias que conversam pelo WhatsApp sobre matrículas.",
 };
