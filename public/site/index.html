@@ -281,6 +281,47 @@ header .botao { min-height: 44px; padding: 0 16px; font-size: 15px; }
 @media (max-width: 860px) { .duvidas .grade { grid-template-columns: 1fr; gap: 32px; padding-top: 40px; } .duvidas .grade > div:first-child { position: static; } .perguntas summary { grid-template-columns: 32px minmax(0, 1fr) 32px; } .perguntas details p { padding: 0 0 22px 44px; } }
 
 /* ===== 6. Convite final ===== */
+/* ===== 4b. Guia gratuito (e-book interativo em /ebook) ===== */
+.guia { border-top: var(--linha); background: var(--lilas); padding-bottom: 104px; }
+.guia .grade-guia { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 64px; align-items: center; padding-top: 56px; }
+.guia h2 { margin-top: 22px; font-size: clamp(34px, 4.6vw, 60px); line-height: 1.02; }
+.guia h2 em { font-style: normal; color: var(--roxo); }
+.guia .descricao { margin-top: 22px; font-size: clamp(17px, 1.6vw, 19px); color: var(--tinta-2); max-width: 520px; }
+.guia-numeros { display: flex; flex-wrap: wrap; gap: 10px; margin: 26px 0 0; padding: 0; list-style: none; }
+.guia-numeros li { display: flex; align-items: baseline; gap: 8px; padding: 10px 14px; border: var(--linha); border-radius: 6px; background: var(--papel); font-size: 15px; font-weight: 600; }
+.guia-numeros b { font: 700 24px/1 var(--titulo); color: var(--roxo); }
+.guia .acoes { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.guia .rodape-guia { display: block; margin-top: 16px; font-size: 14px; color: var(--tinta-2); }
+.guia .quadro { display: block; max-width: 620px; justify-self: end; width: 100%; text-decoration: none; color: inherit; }
+.guia-app { display: grid; grid-template-columns: 150px minmax(0, 1fr); min-height: 360px; border: var(--linha); border-radius: 8px; overflow: hidden; background: #F7F6F3; transition: transform .2s; }
+.guia .quadro:hover .guia-app { transform: translate(-3px, -3px); }
+.guia-app .lado { background: linear-gradient(180deg, #241548, #170B33); color: #D6CFE9; padding: 14px 10px; font-size: 12px; }
+.guia-app .lado .logo { display: flex; align-items: center; gap: 6px; padding: 0 4px 12px; font: 600 13px/1 var(--titulo); color: #fff; }
+.guia-app .lado .logo img { width: 18px; height: 18px; }
+.guia-app .lado .logo span { color: var(--laranja); }
+.guia-app .lado .prog { margin: 0 2px 12px; height: 5px; border-radius: 9px; background: #33225F; overflow: hidden; }
+.guia-app .lado .prog i { display: block; width: 38%; height: 100%; background: var(--laranja); }
+.guia-app .lado div.item { display: flex; align-items: center; gap: 7px; padding: 6px; border-radius: 7px; line-height: 1.2; }
+.guia-app .lado div.item b { flex: none; min-width: 22px; height: 18px; display: grid; place-items: center; border-radius: 5px; background: #33225F; color: #9D92C6; font: 600 9.5px/1 var(--titulo); }
+.guia-app .lado div.item.feita::after { content: "✓"; margin-left: auto; color: #6FCF9B; font-size: 11px; }
+.guia-app .lado div.item.ativo { background: rgba(255,255,255,.09); color: #fff; }
+.guia-app .lado div.item.ativo b { background: var(--laranja); color: #fff; }
+.guia-app .corpo { padding: 14px 16px; min-width: 0; }
+.guia-app .trilha { font-size: 11px; color: #6F6879; padding-bottom: 10px; border-bottom: 1px solid #E9E5DF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guia-app .trilha b { color: #2A2530; }
+.guia-app .cartao { margin-top: 12px; padding: 12px 14px; border: 1px solid #E9E5DF; border-radius: 12px; background: #fff; }
+.guia-app .cartao small { display: block; font-size: 11px; color: #6F6879; }
+.guia-app .cartao strong { display: block; margin-top: 2px; font: 700 26px/1.1 var(--titulo); color: #5C4B8C; letter-spacing: -.02em; }
+.guia-app .barras { display: flex; align-items: flex-end; gap: 10px; height: 64px; margin-top: 10px; }
+.guia-app .barras i { flex: 1; border-radius: 6px 6px 0 0; background: #5C4B8C; }
+.guia-app .barras i:nth-child(2) { background: var(--laranja); }
+.guia-app .teste { margin-top: 12px; padding: 10px 12px; border: 1px solid #E9E5DF; border-radius: 12px; background: #fff; font-size: 12px; }
+.guia-app .teste b { display: block; margin-bottom: 6px; font: 600 12.5px/1.3 var(--titulo); color: #2A2530; }
+.guia-app .teste span { display: block; margin-top: 4px; padding: 5px 8px; border: 1px solid #E4DFD8; border-radius: 8px; color: #413B49; }
+.guia-app .teste span.certa { border-color: #BFE0CE; background: #EAF4EE; }
+@media (max-width: 900px) { .guia .grade-guia { grid-template-columns: 1fr; gap: 48px; padding-top: 40px; } .guia .quadro { justify-self: start; } .guia { padding-bottom: 80px; } }
+@media (max-width: 520px) { .guia-app { grid-template-columns: 1fr; min-height: 0; } .guia-app .lado { display: none; } .guia .acoes .botao { width: 100%; } }
+
 .convite { background: var(--laranja); border-top: var(--linha); }
 .convite .miolo { padding-top: 104px; padding-bottom: 104px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 48px; align-items: end; }
 .convite h2 { font-size: clamp(38px, 5.6vw, 76px); line-height: 1; }
@@ -318,6 +359,7 @@ footer a { color: #fff; text-underline-offset: 4px; }
       <a href="#como-funciona">Como funciona</a>
       <a href="#o-que-organiza">O que organiza</a>
       <a href="#quem-somos">Quem somos</a>
+      <a href="#guia">Guia gratuito</a>
       <a href="#duvidas">Dúvidas</a>
     </nav>
     <a class="entrar" href="/login">Entrar</a>
@@ -444,10 +486,64 @@ footer a { color: #fff; text-underline-offset: 4px; }
   </div>
 </section>
 
+<!-- 4b. GUIA GRATUITO -->
+<section class="secao guia" id="guia">
+  <div class="miolo">
+    <div class="regua"><span>Guia gratuito</span><span>04</span></div>
+    <div class="grade-guia">
+      <div>
+        <span class="etiqueta"><i></i>Grátis · direto no navegador</span>
+        <h2 data-surge>Como organizar a gestão da sua escola <em>do zero.</em></h2>
+        <p class="descricao" data-surge>Um guia interativo em 9 capítulos: faça o diagnóstico, calcule caixa, vagas e conversão com os números da sua escola e siga um plano de 14 dias.</p>
+        <ul class="guia-numeros" data-surge>
+          <li><b>23</b>lições curtas</li>
+          <li><b>20</b>testes rápidos</li>
+          <li><b>14</b>dias de plano</li>
+        </ul>
+        <div class="acoes" data-surge>
+          <a class="botao botao-laranja" href="/ebook">Abrir o guia gratuito
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="botao botao-vazado" href="/ebook/EducaPilot-gestao-escolar.pdf" download>Baixar em PDF</a>
+        </div>
+        <small class="rodape-guia">Sem cadastro. O que você preenche fica salvo só no seu aparelho.</small>
+      </div>
+      <a class="quadro" href="/ebook" aria-label="Abrir o guia interativo" data-surge>
+        <div class="guia-app" aria-hidden="true">
+          <div class="lado">
+            <div class="logo"><img src="/icon-192-claro.png" alt="" width="18" height="18">Educa<span>Pilot</span></div>
+            <div class="prog"><i></i></div>
+            <div class="item feita"><b>1.1</b>Diagnóstico</div>
+            <div class="item feita"><b>1.2</b>Prioridades</div>
+            <div class="item ativo"><b>2.1</b>Previsão de caixa</div>
+            <div class="item"><b>2.2</b>Despesas</div>
+            <div class="item"><b>3.1</b>Vagas</div>
+            <div class="item"><b>4.1</b>Matrículas</div>
+            <div class="item"><b>5.1</b>Secretaria</div>
+          </div>
+          <div class="corpo">
+            <div class="trilha">Capítulo 2 · Financeiro / <b>Previsão de caixa</b></div>
+            <div class="cartao">
+              <small>Menor saldo projetado · próximos 30 dias</small>
+              <strong>R$ 5.000</strong>
+              <div class="barras"><i style="height:100%"></i><i style="height:36%"></i><i style="height:50%"></i></div>
+            </div>
+            <div class="teste">
+              <b>Teste rápido</b>
+              <span>A · R$ 14.000</span>
+              <span class="certa">B · R$ 6.000 ✓</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- 5. DÚVIDAS ANTES DE COMEÇAR -->
 <section class="secao duvidas" id="duvidas">
   <div class="miolo">
-    <div class="regua"><span>Dúvidas antes de começar</span><span>04</span></div>
+    <div class="regua"><span>Dúvidas antes de começar</span><span>05</span></div>
     <div class="grade">
       <div>
         <h2>Vamos esclarecer?</h2>
@@ -487,6 +583,7 @@ footer a { color: #fff; text-underline-offset: 4px; }
     <a class="marca" href="/"><img src="/site/assets/logo-marca.png" alt="" width="15" height="28"><span>EducaPilot</span></a>
     <span>Integração com Agenda Edu · Assinatura eletrônica Autentique</span>
     <nav aria-label="Links legais">
+      <a href="/ebook">Guia gratuito</a>
       <a href="/privacidade">Política de privacidade</a>
       <a href="/login">Entrar</a>
     </nav>
