@@ -37,10 +37,15 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/site/index.html", request.url));
   }
 
+  // E-book interativo (public/ebook): arquivo único, aberto para qualquer visitante, logado ou não.
+  if (request.nextUrl.pathname === "/ebook") {
+    return NextResponse.rewrite(new URL("/ebook/index.html", request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   // sw.js fica de fora: o service worker do push precisa ser servido direto, sem passar pelo proxy.
-  matcher: ["/((?!_next/static|_next/image|site/|sw\\.js$).*)"],
+  matcher: ["/((?!_next/static|_next/image|site/|ebook/|sw\\.js$).*)"],
 };
