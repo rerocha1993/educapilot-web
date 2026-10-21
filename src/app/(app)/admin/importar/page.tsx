@@ -3,6 +3,7 @@
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { AgendaEduCard } from "@/components/integrations/agenda-edu-card";
 import { PreCadastrosCard } from "@/components/integrations/pre-cadastros-card";
+import { SponteCard } from "@/components/integrations/sponte-card";
 import { TuitionImportCard } from "@/components/finance/tuition-import-card";
 import { ImportacaoDeCadastros } from "@/components/registry/importacao-de-cadastros";
 
@@ -12,13 +13,17 @@ export default function ImportarPage() {
       <CabecalhoDaPagina
         eyebrow="Administração"
         titulo="Importação em massa"
-        apoio="Alunos, responsáveis e turmas por planilha Excel, com conferência antes de gravar."
+        apoio="Alunos, responsáveis e turmas por planilha Excel, com conferência antes de gravar. Também dá para trazer tudo direto da Sponte ou do Agenda Edu."
       />
 
       <ImportacaoDeCadastros />
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2">
         <AgendaEduCard />
+        <SponteCard />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
         <PreCadastrosCard />
         <TuitionImportCard />
       </div>

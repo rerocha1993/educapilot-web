@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,8 +51,8 @@ export function PreCadastrosCard() {
           <span className="font-mono tabular-nums">{pendentes.length}</span> aluno(s) aguardando complemento
         </h2>
         <p className="mt-1 text-[13.5px] leading-[1.55] text-pretty">
-          Vieram do Agenda Edu sem um dado obrigatório. Complete o que falta para cadastrá-los, ou
-          descarte se não devem entrar. Corrigir no Agenda Edu e importar de novo também resolve.
+          Vieram da importação (Agenda Edu ou Sponte) sem um dado obrigatório. Complete o que falta para
+          cadastrá-los, ou descarte se não devem entrar. Corrigir na origem e importar de novo também resolve.
         </p>
       </div>
 
@@ -62,6 +63,11 @@ export function PreCadastrosCard() {
       </div>
     </div>
   );
+}
+
+/** "AgendaEdu" vira "Agenda Edu"; o resto aparece como veio. */
+function rotuloDaOrigem(origem: string): string {
+  return origem === "AgendaEdu" ? "Agenda Edu" : origem;
 }
 
 function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
@@ -103,7 +109,14 @@ function LinhaPreCadastro({ pendente }: { pendente: PreCadastro }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3">
       <div>
-        <div className="text-sm font-medium break-words">{pendente.nome}</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium break-words">{pendente.nome}</span>
+          {pendente.origem && (
+            <Badge variant="outline" className="text-[11px]">
+              {rotuloDaOrigem(pendente.origem)}
+            </Badge>
+          )}
+        </div>
         <div className="text-xs text-muted-foreground">
           {pendente.motivo}
           {pendente.quantidadeResponsaveis > 0 && (
