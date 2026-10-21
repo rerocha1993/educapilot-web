@@ -125,7 +125,7 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   // Rotina
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
   // Ficha do aluno: a lista de entrada do dossiê, que mora em /ocorrencias/aluno/[id]; mesma área.
-  { padrao: /^\/dossie/, modulo: "tasks", area: "ocorrencias" },
+  { padrao: /^\/ficha-do-aluno/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
   // Notas e boletim (lançamento, comportamento, publicação): área própria da Rotina.
   { padrao: /^\/notas/, modulo: "tasks", area: "notas" },

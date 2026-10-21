@@ -36,6 +36,11 @@ function idade(nascimento: string | null | undefined): string | null {
   return `${anos} anos`;
 }
 
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  return ((partes[0]?.[0] ?? "") + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
+}
+
 export default function FichaDoAlunoPage() {
   const { data: alunos, isLoading, isError } = useAllStudents();
   const { data: turmas } = useClasses();
@@ -52,6 +57,16 @@ export default function FichaDoAlunoPage() {
       .sort((a, b) => a.fullName.localeCompare(b.fullName, "pt-BR"));
   }, [alunos, busca, turmaId]);
 
+  // Uma faixa por turma, na ordem das turmas da escola: 60 nomes soltos numa coluna só não se leem.
+  const grupos = useMemo(() => {
+    const ordem = new Map((turmas ?? []).map((t, i) => [t.id, i]));
+    const porTurma = new Map<number, typeof lista>();
+    for (const a of lista) porTurma.set(a.classId, [...(porTurma.get(a.classId) ?? []), a]);
+    return [...porTurma.entries()]
+      .sort(([x], [y]) => (ordem.get(x) ?? 999) - (ordem.get(y) ?? 999))
+      .map(([classId, criancas]) => ({ classId, nome: nomeDaTurma.get(classId) ?? "Sem turma", criancas }));
+  }, [lista, turmas, nomeDaTurma]);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="md:hidden">
@@ -64,7 +79,7 @@ export default function FichaDoAlunoPage() {
         apoio="Ficha, frequência, ocorrências, reuniões, diário e portaria de cada criança. Escolha uma para abrir e imprimir."
       />
 
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_14rem]">
+      <div className="grid max-w-3xl gap-2 md:grid-cols-[minmax(0,1fr)_14rem]">
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -92,9 +107,9 @@ export default function FichaDoAlunoPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col gap-1.5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-2">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 rounded-xl" />
           ))}
         </div>
       ) : isError ? (
@@ -106,34 +121,36 @@ export default function FichaDoAlunoPage() {
           texto={busca || turmaId != null ? "Confira o nome ou troque a turma." : undefined}
         />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-5">
           <p className="text-[12.5px] text-muted-foreground">
             <span className="font-numeric">{lista.length}</span> {lista.length === 1 ? "criança" : "crianças"}
           </p>
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-            {lista.map((a) => {
-              const anos = idade(a.birthDate);
-              return (
-                <li key={a.id}>
-                  <Link
-                    href={`/ocorrencias/aluno/${a.id}`}
-                    className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{a.fullName}</span>
-                      <span className="block truncate text-[12.5px] text-muted-foreground">
-                        {[nomeDaTurma.get(a.classId), anos].filter(Boolean).join(" · ") || "Sem turma"}
+          {grupos.map((g) => (
+            <section key={g.classId} aria-label={g.nome} className="flex flex-col gap-2">
+              <h2 className="flex items-baseline gap-2 text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                {g.nome} <span className="font-numeric font-normal normal-case tracking-normal">{g.criancas.length}</span>
+              </h2>
+              <ul className="grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-2">
+                {g.criancas.map((a) => (
+                  <li key={a.id} className="min-w-0">
+                    <Link
+                      href={`/ocorrencias/aluno/${a.id}`}
+                      className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-muted/50 focus-visible:border-primary focus-visible:outline-none"
+                    >
+                      <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-muted font-heading text-[12.5px] font-semibold text-muted-foreground">
+                        {iniciais(a.fullName)}
                       </span>
-                    </span>
-                    <span className="hidden items-center gap-1 text-[12.5px] text-muted-foreground sm:inline-flex">
-                      <FileText className="size-3.5" /> Abrir ficha
-                    </span>
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] font-medium">{a.fullName}</span>
+                        <span className="block truncate text-[12px] text-muted-foreground">{idade(a.birthDate) ?? "Idade não informada"}</span>
+                      </span>
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
       )}
     </div>
