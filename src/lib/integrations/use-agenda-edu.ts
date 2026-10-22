@@ -99,6 +99,8 @@ export interface PreCadastro {
   motivo: string;
   quantidadeResponsaveis: number;
   criadoEm: string;
+  /** De onde veio o aluno: "AgendaEdu" ou "Sponte". */
+  origem?: string | null;
 }
 
 export function usePreCadastros() {
