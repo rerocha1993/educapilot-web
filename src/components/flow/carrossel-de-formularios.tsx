@@ -121,7 +121,7 @@ function CartaoDoFormulario({ resumo }: { resumo: ResumoDeFormulario }) {
 
   return (
     <Link
-      href={`/flow/${formId}/respostas`}
+      href={`/flow/respostas/${formId}`}
       className="flex w-[82%] shrink-0 snap-start flex-col gap-3 rounded-xl border border-border bg-card px-4.5 pt-4 pb-4 transition-colors hover:border-action-brand sm:w-[300px]"
     >
       <div className="flex items-start justify-between gap-2">
