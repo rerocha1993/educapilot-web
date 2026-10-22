@@ -82,6 +82,7 @@ import { CAMPO_CADASTRO_OPTIONS, rotuloDoDestino } from "@/lib/registry/campos-d
 import { ContractRulesPanel } from "@/components/flow/contract-rules-panel";
 import { InterruptorDeContrato } from "@/components/flow/interruptor-de-contrato";
 import { IdentificationRulePanel } from "@/components/flow/identification-rule-panel";
+import { FichaRulePanel } from "@/components/flow/ficha-rule-panel";
 import { CepRulePanel } from "@/components/flow/cep-rule-panel";
 import { RegistryRulePanel } from "@/components/flow/registry-rule-panel";
 import {
@@ -782,6 +783,7 @@ export default function FormBuilderPage() {
           {/* O contrato vem primeiro: é a regra que realmente executa hoje, e a mais cara de
               errar. As regras abaixo dela ainda são só intenção. */}
           <div className="flex flex-col gap-3">
+            {form && <FichaRulePanel form={form} />}
             {form && <IdentificationRulePanel form={form} />}
             <CepRulePanel campos={campos} />
             <RegistryRulePanel campos={campos} />

@@ -196,7 +196,11 @@ export default function FichaDoFuncionarioPage() {
             )}
             {ver("desempenho") && (
               <TabsContent value="desempenho" className="pt-3">
-                <PainelDeDesempenho funcionarioId={id} />
+                <PainelDeDesempenho
+                  funcionarioId={id}
+                  podeDecidir={podeEscrever}
+                  onDesligar={funcionario.ativo && podeEscrever ? () => setDialogo("desligar") : undefined}
+                />
               </TabsContent>
             )}
           </Tabs>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Printer } from "lucide-react";
+import { ClipboardList, Plus, Printer } from "lucide-react";
 
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { ErroDeCarga } from "@/components/rh/campo";
@@ -19,7 +19,7 @@ import { useResumoDoAluno } from "@/lib/tasks/use-resumo-do-aluno";
 const ANOS_NA_LISTA = 3;
 
 /**
- * Dossiê do aluno (evolução do resumo anual): ficha, frequência, ocorrências, reuniões com os pais,
+ * Ficha do aluno (evolução do resumo anual): ficha, frequência, ocorrências, reuniões com os pais,
  * diário, portaria e a linha do tempo, de 1º de janeiro até hoje. Abre a partir de Ocorrências e imprime
  * em A4 com capa (o menu e os controles levam `print:hidden`; a folha cuida do resto). A rota continua
  * /ocorrencias/aluno/[id] para não quebrar os atalhos que já existem.
@@ -53,9 +53,9 @@ export default function ResumoDoAlunoPage() {
 
       <div className="print:hidden">
         <CabecalhoDaPagina
-          eyebrow="← Ocorrências"
-          eyebrowHref="/ocorrencias"
-          titulo={data ? `Dossiê · ${data.aluno.nome}` : "Dossiê do aluno"}
+          eyebrow="← Ficha do aluno"
+          eyebrowHref="/ficha-do-aluno"
+          titulo={data ? `Ficha · ${data.aluno.nome}` : "Ficha do aluno"}
           apoio={
             data ? (
               <>
@@ -83,15 +83,22 @@ export default function ResumoDoAlunoPage() {
                   ))}
                 </select>
               </label>
-              {data && !data.ocultos.includes("Reuniões com os pais") && (
+              {data && !data.ocultos.some((o) => o === "Reuniões com os pais" || o === "Reuniões e atendimentos") && (
                 <Link
-                  href={`/reunioes-pais/nova?turma=${data.aluno.classId}&aluno=${data.aluno.id}`}
+                  href={`/reunioes-e-atendimentos/nova?turma=${data.aluno.classId}&aluno=${data.aluno.id}`}
                   className={buttonVariants({ variant: "action", className: "w-full md:w-auto" })}
                 >
                   <Plus className="size-4" />
                   Registrar reunião
                 </Link>
               )}
+              <Link
+                href={`/notas/boletim/${studentId}?ano=${ano}`}
+                className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
+              >
+                <ClipboardList className="size-4" />
+                Boletim
+              </Link>
               <Button
                 variant="outline"
                 className="w-full md:w-auto"
@@ -99,7 +106,7 @@ export default function ResumoDoAlunoPage() {
                 disabled={!data}
               >
                 <Printer className="size-4" />
-                Imprimir dossiê
+                Imprimir ficha
               </Button>
             </div>
           }
@@ -110,22 +117,27 @@ export default function ResumoDoAlunoPage() {
 
       {isError && (
         <ErroDeCarga
-          texto={error instanceof Error ? error.message : "Não foi possível carregar o dossiê do aluno."}
+          texto={error instanceof Error ? error.message : "Não foi possível carregar a ficha do aluno."}
           onTentar={() => void refetch()}
         />
       )}
 
       {isLoading && (
-        <div role="status" aria-live="polite" className="mx-auto flex w-full max-w-[210mm] flex-col gap-4">
-          <span className="sr-only">Carregando o dossiê do aluno…</span>
+        <div role="status" aria-live="polite" className="mx-auto flex w-full max-w-[1280px] flex-col gap-4">
+          <span className="sr-only">Carregando a ficha do aluno…</span>
           <Skeleton className="h-36 w-full rounded-xl" />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} className="h-28 rounded-xl" />
+          <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 lg:grid-cols-[repeat(6,minmax(0,1fr))]">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={i} className="h-20 rounded-xl" />
             ))}
           </div>
-          <Skeleton className="h-48 w-full rounded-xl" />
-          <Skeleton className="h-48 w-full rounded-xl" />
+          <div className="grid grid-cols-[repeat(1,minmax(0,1fr))] gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))]">
+            {Array.from({ length: 3 }, (_, i) => (
+              <Skeleton key={i} className="h-56 rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
         </div>
       )}
 

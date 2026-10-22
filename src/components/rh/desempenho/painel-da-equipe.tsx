@@ -24,11 +24,13 @@ import {
   useFecharMes,
   type LinhaDoDesempenho,
 } from "@/lib/rh/use-desempenho";
+import { RECOMENDACOES, ROTULO_DA_RECOMENDACAO } from "@/lib/rh/use-parecer";
 import { cn } from "@/lib/utils";
 
 import { Campo, ErroDeCarga } from "../campo";
 import { Confirmacao } from "../confirmacao";
 import { AvisoDeApoio, FaixaBadge, MiniLinha, Variacao, useTomDaFaixa } from "./pecas";
+import { SeloDoParecer } from "./selo-do-parecer";
 
 const TODOS = "todos";
 type Chave = "nome" | "cargo" | "nota" | "variacao" | "baixo";
@@ -136,6 +138,7 @@ export function PainelDaEquipe() {
   const [cargo, setCargo] = useState(TODOS);
   const [departamento, setDepartamento] = useState(TODOS);
   const [faixa, setFaixa] = useState(TODOS);
+  const [parecer, setParecer] = useState(TODOS);
   const [busca, setBusca] = useState("");
   const [ordem, setOrdem] = useState<{ chave: Chave; asc: boolean }>({ chave: "nome", asc: true });
   const [dialogo, setDialogo] = useState<"mes" | "encerrar" | null>(null);
@@ -156,7 +159,7 @@ export function PainelDaEquipe() {
     [linhas, cargo, departamento, busca]
   );
   const tabela = useMemo(() => {
-    const filtradas = doRecorte.filter((l) => faixa === TODOS || l.faixa === faixa);
+    const filtradas = doRecorte.filter((l) => (faixa === TODOS || l.faixa === faixa) && (parecer === TODOS || l.recomendacao === parecer));
     const f = ordem.asc ? 1 : -1;
     const num = (n: number | null) => n ?? Number.NEGATIVE_INFINITY;
     return [...filtradas].sort((a, b) => {
@@ -173,7 +176,7 @@ export function PainelDaEquipe() {
           return f * a.nome.localeCompare(b.nome, "pt-BR");
       }
     });
-  }, [doRecorte, faixa, ordem]);
+  }, [doRecorte, faixa, parecer, ordem]);
 
   const comNota = doRecorte.filter((l) => l.nota != null);
   const media = comNota.length ? comNota.reduce((s, l) => s + l.nota!, 0) / comNota.length : null;
@@ -267,6 +270,19 @@ export function PainelDaEquipe() {
             <Filtro rotulo="Cargo" valor={cargo} opcoes={cargos} onChange={setCargo} todos="Todos os cargos" />
             <Filtro rotulo="Departamento" valor={departamento} opcoes={departamentos} onChange={setDepartamento} todos="Todos os departamentos" />
             <Filtro rotulo="Faixa" valor={faixa} opcoes={data.faixas} onChange={setFaixa} todos="Todas as faixas" />
+            <Select value={parecer} onValueChange={(v) => v && setParecer(v)}>
+              <SelectTrigger aria-label="Parecer" className="w-full md:w-52">
+                <SelectValue>{() => (parecer === TODOS ? "Todos os pareceres" : ROTULO_DA_RECOMENDACAO[parecer])}</SelectValue>
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger={false}>
+                <SelectItem value={TODOS}>Todos os pareceres</SelectItem>
+                {RECOMENDACOES.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {ROTULO_DA_RECOMENDACAO[r]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -318,6 +334,13 @@ export function PainelDaEquipe() {
                       <FaixaBadge faixa={l.faixa} />
                       <MiniLinha valores={l.evolucao} />
                     </div>
+                    {l.recomendacao != null && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Parecer</span>
+                        <SeloDoParecer recomendacao={l.recomendacao} />
+                        {l.revisaoVencida === true && <Badge variant="overdue">revisão vencida</Badge>}
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -330,6 +353,7 @@ export function PainelDaEquipe() {
                       <Ordenar rotulo="Cargo" chave="cargo" ordem={ordem} onOrdenar={ordenar} />
                       <Ordenar rotulo="Nota" chave="nota" ordem={ordem} onOrdenar={ordenar} className="text-right" />
                       <TableHead>Faixa</TableHead>
+                      <TableHead>Parecer</TableHead>
                       <Ordenar rotulo="Variação" chave="variacao" ordem={ordem} onOrdenar={ordenar} className="text-right" />
                       <TableHead>Evolução</TableHead>
                       <Ordenar rotulo="Mais baixo" chave="baixo" ordem={ordem} onOrdenar={ordenar} />
@@ -353,6 +377,12 @@ export function PainelDaEquipe() {
                         <TableCell className="text-right font-mono font-semibold tabular-nums">{formatarNota(l.nota)}</TableCell>
                         <TableCell>
                           <FaixaBadge faixa={l.faixa} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <SeloDoParecer recomendacao={l.recomendacao} />
+                            {l.revisaoVencida === true && <Badge variant="overdue">revisão vencida</Badge>}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <Variacao valor={l.variacao} />

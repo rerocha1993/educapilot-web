@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { tasksApi } from "@/lib/api/client";
 import { unwrapApiResponse } from "@/lib/api/unwrap";
-import type { QuemFaz, ReuniaoComPais } from "@/lib/tasks/use-reunioes-com-pais";
+import type { Encaminhamento, QuemFaz, StatusDaReuniao, TipoDeEnvolvido } from "@/lib/tasks/use-reunioes-e-atendimentos";
 
 /**
- * Dossiê do aluno (antes "resumo anual", em Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
+ * Ficha do aluno (antes "resumo anual", em Ocorrências) — GET /api/Occurrence/student/{studentId}/summary?ano=.
  *
  * Tipado à mão: o Swagger gerado ainda não conhece este endpoint. Depois do deploy dá para regenerar
  * `src/lib/api/generated/tasks.d.ts` e trocar o cast por uma chamada tipada.
@@ -85,6 +85,11 @@ export interface TotaisDoResumo {
   /** Combinados de reunião ainda não cumpridos, de qualquer data. */
   combinadosEmAberto: number | null;
   combinadosVencidos: number | null;
+  /**
+   * Índice de convivência: soma dos pontos das ocorrências (Leve 1, Moderada 3, Grave 5, sem gravidade 1).
+   * Quanto menor, melhor. Ausente/nulo sem a área de Ocorrências.
+   */
+  indiceDeConvivencia?: number | null;
 }
 
 export interface FaltasDoMes {
@@ -120,11 +125,22 @@ export interface OcorrenciaDoResumo {
   observacao: string | null;
   solucao: string | null;
   paisAvisados: boolean;
+  /** Leve, Moderada ou Grave. Ausente nas ocorrências antigas ("Não informada"). */
+  gravidade?: string | null;
+}
+
+export interface GravidadesDoResumo {
+  leve: number;
+  moderada: number;
+  grave: number;
+  semGravidade: number;
 }
 
 export interface OcorrenciasDoResumo {
   total: number;
   comPaisAvisados: number;
+  /** Quantas de cada gravidade; as antigas ficam em semGravidade. */
+  porGravidade?: GravidadesDoResumo | null;
   porCategoria: { categoria: string; total: number }[];
   itens: OcorrenciaDoResumo[];
 }
@@ -172,11 +188,34 @@ export interface EventoDaLinhaDoTempo {
 export interface PendenciaDoDossie {
   reuniaoId: string;
   dataDaReuniao: string;
-  tipoDaReuniao: string;
+  /** Assunto da reunião (antes "tipo"; o servidor pode ainda mandar o nome antigo). */
+  assuntoDaReuniao?: string;
+  tipoDaReuniao?: string;
   descricao: string;
   responsavel: QuemFaz;
-  prazo: string | null;
+  prazo?: string | null;
   vencido: boolean;
+}
+
+/** Uma reunião em que o aluno esteve. Os campos antigos (tipo, conduzidaPor, responsaveis) ficam opcionais. */
+export interface ReuniaoDoDossie {
+  id: string;
+  data: string;
+  hora?: string | null;
+  assunto?: string;
+  tipo?: string;
+  status: StatusDaReuniao;
+  envolvidos?: { tipo: TipoDeEnvolvido; nome: string; detalhe?: string | null }[];
+  condutores?: string[];
+  conduzidaPor?: string;
+  responsaveis?: { nome: string }[];
+  pauta?: string | null;
+  conversado?: string | null;
+  motivoDoCancelamento?: string | null;
+  encaminhamentos: Encaminhamento[];
+  /** Só para a gestão: para os demais nem vêm no JSON. */
+  notaDoAssunto?: number | null;
+  notaDoDesfecho?: number | null;
 }
 
 export interface ReunioesComPaisDoDossie {
@@ -187,8 +226,13 @@ export interface ReunioesComPaisDoDossie {
   combinadosEmAberto: number;
   combinadosVencidos: number;
   pendencias: PendenciaDoDossie[];
+  /** Quantas reuniões (realizadas) de cada assunto no período. */
+  porAssunto?: { assunto: string; total: number }[];
+  /** Média das notas das reuniões do período. Só para a gestão. */
+  mediaDaNotaDoAssunto?: number | null;
+  mediaDaNotaDoDesfecho?: number | null;
   /** Da mais antiga para a mais nova; traz a ata (registro interno). */
-  itens: ReuniaoComPais[];
+  itens: ReuniaoDoDossie[];
 }
 
 export interface ContagemPorRotulo {
@@ -223,6 +267,93 @@ export interface FinanceiroDoDossie {
   emDia: boolean;
 }
 
+/* ---------- Gráficos (mês a mês) ---------- */
+
+/** Proporções vêm como fração de 0 a 1 (0,905 = 90,5%). `mes` é "yyyy-MM". Meses sem registro vêm zerados. */
+export interface PontoDeFrequencia {
+  mes: string;
+  diasLetivos: number;
+  presencas: number;
+  /** Nulo/ausente no mês sem chamada. */
+  percentual?: number | null;
+}
+
+export interface PontoDeConvivencia {
+  mes: string;
+  leve: number;
+  moderada: number;
+  grave: number;
+  semGravidade: number;
+  /** Índice do mês (Leve 1, Moderada 3, Grave 5, sem gravidade 1). */
+  pontos: number;
+}
+
+export interface PontoDeAtrasos {
+  mes: string;
+  chegada?: number | null;
+  saidaMinutos?: number | null;
+}
+
+export interface PontoDoDiario {
+  mes: string;
+  dias: number;
+  boaAceitacao?: number | null;
+  sonoMedioMin?: number | null;
+  humorPositivo?: number | null;
+}
+
+/** Reservado para o ramo de notas: o servidor manda nulo até os ramos se juntarem. */
+export interface NotasDosGraficos {
+  materias: { materia: string; pontos: { periodo: string; media?: number | null }[] }[];
+  comportamento: { periodo: string; conceito?: string | null; valor?: number | null }[];
+}
+
+export interface GraficosDoResumo {
+  frequencia?: PontoDeFrequencia[] | null;
+  convivencia?: PontoDeConvivencia[] | null;
+  atrasos?: PontoDeAtrasos[] | null;
+  diario?: PontoDoDiario[] | null;
+  notas?: NotasDosGraficos | null;
+}
+
+/* ---------- Formulários vinculados ---------- */
+
+export type QuemVeOFormulario = "Gestao" | "GestaoEProfessores";
+
+/** Um campo já legível: texto, caixas de seleção (opcoes + marcadas) ou tabela (linhas x colunas). */
+export interface CampoRespondido {
+  rotulo: string;
+  tipo: string;
+  texto?: string | null;
+  opcoes?: string[] | null;
+  marcadas?: string[] | null;
+  colunas?: string[] | null;
+  linhas?: { linha: string; resposta?: string | null }[] | null;
+}
+
+export interface RespostaNaFicha {
+  id: string;
+  /** Dia já formatado pelo servidor, "dd/MM/yyyy". */
+  data: string;
+  hora?: string | null;
+  status: string;
+  /** "Familia" (link ou convite) ou "Equipe". */
+  origem: string;
+  preenchidoPor: string;
+  campos: CampoRespondido[];
+}
+
+export interface FormularioNaFicha {
+  formId: string;
+  /** Título da seção na ficha (ex.: "Anamnese"). */
+  secao: string;
+  quemVe: QuemVeOFormulario;
+  /** O formulário está no ar. Arquivado, mostra só o histórico. */
+  aceitaEnvios: boolean;
+  ultima?: RespostaNaFicha | null;
+  anteriores?: RespostaNaFicha[] | null;
+}
+
 export interface ResumoDoAluno {
   aluno: AlunoDoResumo;
   periodo: PeriodoDoResumo;
@@ -236,12 +367,16 @@ export interface ResumoDoAluno {
     paisAvisados: OcorrenciaDoResumo[] | null;
   };
   portaria: PortariaDoResumo | null;
-  /** Nulo sem a área "Reunião com os pais". */
+  /** Nulo sem a área "Reuniões e atendimentos". */
   reunioesComPais: ReunioesComPaisDoDossie | null;
   /** Nulo sem a área do diário. */
   diario: DiarioDoDossie | null;
   /** Nulo sem acesso a pagamentos. */
   financeiro: FinanceiroDoDossie | null;
+  /** Séries mensais. Cada série é nula quando o acesso de quem pediu não cobre o dado. */
+  graficos?: GraficosDoResumo | null;
+  /** Formulários vinculados que quem pediu pode ver. Ausente/vazio: nenhum. */
+  formularios?: FormularioNaFicha[] | null;
   /** O que o sistema não registra sobre o aluno (notas, avaliação pedagógica etc.). */
   naoRegistrado: { assunto: string; explicacao: string }[];
   emitidoPor: string | null;
@@ -270,7 +405,7 @@ export function useResumoDoAluno(studentId: number | null, ano?: number) {
         "/api/Occurrence/student/{studentId}/summary",
         { params: { path: { studentId: studentId! }, query: ano ? { ano } : undefined } }
       );
-      const data = unwrapApiResponse(result, "Não foi possível carregar o dossiê do aluno.");
+      const data = unwrapApiResponse(result, "Não foi possível carregar a ficha do aluno.");
       return data as unknown as ResumoDoAluno;
     },
     enabled: studentId !== null && Number.isFinite(studentId),

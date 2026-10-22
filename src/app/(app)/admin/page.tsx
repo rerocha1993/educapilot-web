@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, GraduationCap, UserRound, UploadCloud, ArrowRightLeft, Contact, Mail, FileSignature } from "lucide-react";
+import { Users, GraduationCap, UserRound, UploadCloud, ArrowRightLeft, BookOpen, Contact, Mail, FileSignature } from "lucide-react";
 import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { podeVerRota } from "@/lib/access/pode-ver";
 import { useVisibilidade } from "@/lib/access/use-visibilidade";
@@ -46,6 +46,12 @@ const SECTIONS = [
     label: "Usuários",
     description: "Professores, coordenação e convites.",
     icon: Users,
+  },
+  {
+    href: "/admin/avaliacao",
+    label: "Matérias e avaliação",
+    description: "Anos letivos e períodos, matérias e como cada turma é avaliada (nota, conceito ou descritivo).",
+    icon: BookOpen,
   },
   {
     href: "/admin/progressao",

@@ -1,6 +1,8 @@
 import {
+  FileUser,
   ArrowLeftRight,
   ArrowRightLeft,
+  BookOpen,
   Bot,
   CalendarCheck,
   CalendarDays,
@@ -8,6 +10,7 @@ import {
   CalendarRange,
   ChartColumn,
   CircleAlert,
+  ClipboardList,
   ClipboardCheck,
   Clock,
   Contact,
@@ -116,9 +119,11 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/", label: "Chamada", icon: ClipboardCheck },
     { href: "/checklist", label: "Checklist", icon: ListChecks },
     { href: "/ocorrencias", label: "Ocorrências", icon: TriangleAlert },
+    { href: "/ficha-do-aluno", label: "Ficha do aluno", icon: FileUser },
+    { href: "/notas", label: "Notas", icon: ClipboardList },
     { href: "/materiais", label: "Materiais", icon: Package },
     { href: "/reunioes", label: "Reuniões", icon: Handshake },
-    { href: "/reunioes-pais", label: "Reunião com os pais", icon: UsersRound },
+    { href: "/reunioes-e-atendimentos", label: "Reuniões e atendimentos", icon: UsersRound },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
     { href: "/planejamento-semanal", label: "Planejamento semanal", icon: CalendarRange },
     { href: "/relatorios", label: "Relatórios", icon: ChartColumn },
@@ -233,6 +238,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/admin/alunos", label: "Alunos", icon: UserRound },
     { href: "/admin/responsaveis", label: "Responsáveis", icon: Contact },
     { href: "/admin/usuarios", label: "Usuários", icon: Users },
+    { href: "/admin/avaliacao", label: "Matérias e avaliação", area: "materias-avaliacao", icon: BookOpen },
     { href: "/admin/progressao", label: "Progressão de turma", icon: ArrowRightLeft },
     { href: "/admin/email", label: "E-mail da escola", icon: Mail },
     { href: "/admin/importar", label: "Importação em massa", icon: UploadCloud },
@@ -269,6 +275,9 @@ export function secaoAtiva(
   pathname: string
 ): string | null {
   let melhor: string | null = null;
+
+  // A ficha de uma criança continua em /ocorrencias/aluno/[id] (atalhos antigos), mas é da seção Ficha do aluno.
+  if (pathname.startsWith("/ocorrencias/aluno/") && secoes.some((s) => s.href === "/ficha-do-aluno")) return "/ficha-do-aluno";
 
   for (const secao of secoes) {
     const bate =

@@ -4,11 +4,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useConfiguracaoDeDesempenho, useDesempenhoDoFuncionario } from "@/lib/rh/use-desempenho";
 
 import { ErroDeCarga } from "../campo";
+import { CartaoDeParecer } from "./cartao-de-parecer";
 import { GraficoDeEvolucao } from "./grafico-de-evolucao";
+import { HistoricoDeDecisoes } from "./historico-de-decisoes";
 import { HistoricoDeFeedbacks } from "./historico-de-feedbacks";
 import { LinhaDoTempo } from "./linha-do-tempo";
 import { BarrasDeComponentes, ComoChegamosNessaNota, ResumoDaNota } from "./nota-explicada";
 import { PainelDeTrajetoria } from "./painel-de-trajetoria";
+import { PainelDoPlano } from "./painel-do-plano";
 import { Variacao } from "./pecas";
 
 /**
@@ -16,7 +19,17 @@ import { Variacao } from "./pecas";
  * marcadores da trajetória; barras por componente; "como chegamos nessa nota"; feedbacks; linha do tempo e cadastros.
  * Layout em duas colunas no computador para não gastar uma linha por objeto.
  */
-export function PainelDeDesempenho({ funcionarioId }: { funcionarioId: string }) {
+export function PainelDeDesempenho({
+  funcionarioId,
+  podeDecidir = false,
+  onDesligar,
+}: {
+  funcionarioId: string;
+  /** Escrita no RH: libera "Registrar decisão". */
+  podeDecidir?: boolean;
+  /** Abre o "Desligar" da ficha (só quando a pessoa está ativa). */
+  onDesligar?: () => void;
+}) {
   const { data, isLoading, isError, refetch } = useDesempenhoDoFuncionario(funcionarioId);
   const { data: configuracao } = useConfiguracaoDeDesempenho();
 
@@ -33,6 +46,8 @@ export function PainelDeDesempenho({ funcionarioId }: { funcionarioId: string })
 
   return (
     <div className="flex flex-col gap-3">
+      <CartaoDeParecer funcionarioId={funcionarioId} podeDecidir={podeDecidir} onDesligar={onDesligar} />
+
       <ResumoDaNota nota={data.nota} variacao={<Variacao valor={data.variacao} />}>
         {data.cicloAberto && (
           <p className="text-xs text-muted-foreground">
@@ -57,6 +72,11 @@ export function PainelDeDesempenho({ funcionarioId }: { funcionarioId: string })
       <div className="grid gap-3 lg:grid-cols-2">
         <HistoricoDeFeedbacks funcionarioId={funcionarioId} avaliacoes={data.avaliacoes} cicloAberto={data.cicloAberto} />
         <LinhaDoTempo funcionarioId={funcionarioId} />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <PainelDoPlano funcionarioId={funcionarioId} />
+        <HistoricoDeDecisoes funcionarioId={funcionarioId} />
       </div>
 
       <PainelDeTrajetoria funcionarioId={funcionarioId} />

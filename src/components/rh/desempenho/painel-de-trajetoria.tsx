@@ -113,18 +113,22 @@ export function PainelDeTrajetoria({ funcionarioId }: { funcionarioId: string })
                           onClick={() => baixarArquivoDaAdvertencia(a).catch((e) => toast.error(e instanceof Error ? e.message : "Não foi possível baixar."))}
                         />
                       )}
-                      <BotaoDeIcone
-                        rotulo="Excluir advertência"
-                        icone={<Trash2 />}
-                        perigo
-                        onClick={() => setDialogo({ tipo: "excluir", de: "advertencias", id: a.id, texto: `Advertência de ${formatarSoData(a.data)}` })}
-                      />
+                      {/* A que veio de reunião só sai cancelando a reunião: excluir aqui deixaria os dois fora de sintonia. */}
+                      {a.reuniaoId == null && (
+                        <BotaoDeIcone
+                          rotulo="Excluir advertência"
+                          icone={<Trash2 />}
+                          perigo
+                          onClick={() => setDialogo({ tipo: "excluir", de: "advertencias", id: a.id, texto: `Advertência de ${formatarSoData(a.data)}` })}
+                        />
+                      )}
                     </>
                   }
                 >
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Badge variant="secondary">{ROTULO_DA_ADVERTENCIA[a.tipo] ?? a.tipo}</Badge>
                     <Badge variant={gravidadeVariante[a.gravidade as keyof typeof gravidadeVariante] ?? "secondary"}>{a.gravidade}</Badge>
+                    {a.reuniaoId != null && <Badge variant="outline">Registrada em reunião</Badge>}
                     {a.registradaPorNome && <span className="text-xs text-muted-foreground">por {a.registradaPorNome}</span>}
                   </div>
                   <p className="mt-1 break-words whitespace-pre-wrap">{a.motivo}</p>

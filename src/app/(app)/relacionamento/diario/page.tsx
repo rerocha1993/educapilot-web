@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { CartaoDoAluno } from "@/components/relacionamento/diario/cartao-do-aluno";
 import { somarDias } from "@/components/relacionamento/diario/comum";
 import { DialogDeBlocos } from "@/components/relacionamento/diario/dialog-de-blocos";
+import { nomeDoModelo } from "@/lib/relacionamento/diario-modelos";
 import { LancamentoRapido } from "@/components/relacionamento/diario/lancamento-rapido";
 import { PainelDoAluno } from "@/components/relacionamento/diario/painel-do-aluno";
 import { RelacionamentoNav } from "@/components/relacionamento/relacionamento-nav";
@@ -204,8 +205,8 @@ export default function DiarioPage() {
               >
                 Só quem falta
               </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => setBlocosAberto(true)}>
-                <SlidersHorizontal /> Blocos da turma
+              <Button type="button" variant="default" size="sm" onClick={() => setBlocosAberto(true)}>
+                <SlidersHorizontal /> Formato do diário da turma{dadosDoPainel ? ` · ${nomeDoModelo(dadosDoPainel.blocos)}` : ""}
               </Button>
               <Button
                 type="button"

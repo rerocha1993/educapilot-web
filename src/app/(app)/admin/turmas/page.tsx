@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Plus, SlidersHorizontal, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,34 @@ import {
   type SaveClassInput,
 } from "@/lib/kernel/use-classes";
 import { cn } from "@/lib/utils";
+import { DialogDeBlocos } from "@/components/relacionamento/diario/dialog-de-blocos";
+import { useBlocosDaTurma } from "@/lib/relacionamento/use-diario";
+import { nomeDoModelo } from "@/lib/relacionamento/diario-modelos";
+
+/**
+ * "Diário: <modelo>" no cartão da turma, com atalho para ajustar. Quem não tem acesso ao diário não
+ * recebe os blocos (a consulta falha) e o cartão fica sem a linha, em vez de mostrar um erro.
+ */
+function DiarioDaTurma({ classId, turma }: { classId: number; turma: string }) {
+  const blocos = useBlocosDaTurma(classId);
+  const [aberto, setAberto] = useState(false);
+  if (!blocos.data) return null;
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2 border-t border-border px-4 py-2">
+        <span className="min-w-0 truncate text-xs text-muted-foreground">
+          Diário: <strong className="font-semibold text-foreground">{nomeDoModelo(blocos.data)}</strong>
+        </span>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setAberto(true)} aria-label={`Ajustar o diário da turma ${turma}`}>
+          <SlidersHorizontal className="size-3.5" />
+          Ajustar
+        </Button>
+      </div>
+      <DialogDeBlocos classId={classId} turma={turma} aberto={aberto} onFechar={() => setAberto(false)} />
+    </>
+  );
+}
 
 export default function TurmasPage() {
   const { data: classes, isLoading, isError } = useClasses();
@@ -122,13 +150,16 @@ export default function TurmasPage() {
               .filter(Boolean);
 
             return (
-              <button
+              <div
                 key={c.id}
-                onClick={() => setSelectedId(c.id ?? null)}
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  "min-w-0 rounded-xl border bg-card transition-colors hover:border-primary",
                   selectedId === c.id ? "border-primary bg-accent/40" : "border-border"
                 )}
+              >
+              <button
+                onClick={() => setSelectedId(c.id ?? null)}
+                className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <div className="flex min-w-0 flex-col gap-1">
                   <span className="truncate font-heading text-sm font-semibold">{c.className}</span>
@@ -141,6 +172,8 @@ export default function TurmasPage() {
                   {c.students?.length ?? 0}
                 </Badge>
               </button>
+              {c.id != null && <DiarioDaTurma classId={c.id} turma={c.className ?? ""} />}
+              </div>
             );
           })}
         </div>

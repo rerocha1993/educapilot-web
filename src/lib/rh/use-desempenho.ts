@@ -27,7 +27,20 @@ export const COMPONENTES = [
   "Demandas",
   "Ocorrencias",
   "Advertencias",
+  "Reunioes",
 ] as const;
+
+/**
+ * Descrição do componente Reuniões, para o caso de o servidor ainda não mandá-lo na lista de componentes: a
+ * configuração mostra o peso de qualquer jeito. O texto é o do contrato.
+ */
+export const COMPONENTE_DE_REUNIOES = {
+  chave: "Reunioes",
+  nome: "Reuniões e atendimentos",
+  descricao:
+    "Média das notas (assunto e desfecho) das reuniões em que a pessoa esteve. Advertência verbal conta em Advertências.",
+  pesoPadrao: 10,
+} as const;
 
 export const TIPOS_DE_ADVERTENCIA = ["Verbal", "Escrita", "Suspensao"] as const;
 export const ROTULO_DA_ADVERTENCIA: Record<string, string> = { Verbal: "Verbal", Escrita: "Escrita", Suspensao: "Suspensão" };
@@ -51,6 +64,8 @@ export const TIPOS_DA_LINHA_DO_TEMPO = [
   "Advertencia",
   "Reconhecimento",
   "Afastamento",
+  "Reuniao",
+  "Decisao",
 ] as const;
 export const ROTULO_DA_LINHA_DO_TEMPO: Record<string, string> = {
   Admissao: "Admissão",
@@ -59,6 +74,8 @@ export const ROTULO_DA_LINHA_DO_TEMPO: Record<string, string> = {
   Advertencia: "Advertências",
   Reconhecimento: "Reconhecimentos",
   Afastamento: "Afastamentos",
+  Reuniao: "Reuniões",
+  Decisao: "Decisões",
 };
 
 export const JANELAS = ["AnoLetivo", "Ciclo", "Ultimos12Meses"] as const;
@@ -147,6 +164,10 @@ export interface LinhaDoDesempenho {
   componenteMaisBaixoNota: number | null;
   avaliacaoNoCiclo: "SemAvaliacao" | "Rascunho" | "Concluida" | null;
   poucosDados: boolean;
+  /** Parecer de permanência (a API omite o nulo). */
+  recomendacao?: string | null;
+  revisaoVencida?: boolean;
+  temPlanoEmAndamento?: boolean;
 }
 
 export interface DesempenhoDaEquipe {
@@ -280,6 +301,8 @@ export interface Advertencia {
   temArquivo: boolean;
   arquivoNome: string | null;
   registradaPorNome: string | null;
+  /** Veio de uma reunião de advertência verbal: some se a reunião for cancelada. O servidor omite o nulo. */
+  reuniaoId?: string | null;
 }
 
 export interface Reconhecimento {

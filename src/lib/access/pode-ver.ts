@@ -38,6 +38,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/admin\/responsaveis/, modulo: "admin", area: "responsaveis" },
   { padrao: /^\/admin\/usuarios/, modulo: "admin", area: "usuarios" },
   { padrao: /^\/admin\/progressao/, modulo: "admin", area: "progressao" },
+  // Matérias e avaliação: cadastro de anos, matérias e configuração por turma. Área própria admin:materias-avaliacao.
+  { padrao: /^\/admin\/avaliacao/, modulo: "admin", area: "materias-avaliacao" },
   { padrao: /^\/admin\/email/, modulo: "admin", area: "email" },
   { padrao: /^\/admin\/importar/, modulo: "admin", area: "importar" },
   { padrao: /^\/admin/, modulo: "admin", area: null },
@@ -122,11 +124,16 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
 
   // Rotina
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
+  // Ficha do aluno: a lista de entrada do dossiê, que mora em /ocorrencias/aluno/[id]; mesma área.
+  { padrao: /^\/ficha-do-aluno/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
+  // Notas e boletim (lançamento, comportamento, publicação): área própria da Rotina.
+  { padrao: /^\/notas/, modulo: "tasks", area: "notas" },
   { padrao: /^\/planejamento-semanal/, modulo: "tasks", area: "planejamento" },
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
-  // Reunião com os pais é área própria e precisa vir antes de /reunioes (o prefixo casaria as duas).
+  // Reuniões e atendimentos (antiga Reunião com os pais; o /reunioes-pais redireciona) é área própria e precisa vir antes de /reunioes.
+  { padrao: /^\/reunioes-e-atendimentos/, modulo: "tasks", area: "reunioes-pais" },
   { padrao: /^\/reunioes-pais/, modulo: "tasks", area: "reunioes-pais" },
   { padrao: /^\/reunioes/, modulo: "tasks", area: "reunioes" },
   { padrao: /^\/calendario/, modulo: "tasks", area: "calendario" },
