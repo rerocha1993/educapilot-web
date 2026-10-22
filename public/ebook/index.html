@@ -654,6 +654,32 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
 .mini .turma:last-child .trilho span { background: var(--laranja); }
 .mini .turma b { font-family: var(--titulo); text-align: right; }
 
+
+/* ===== Cadastro (acesso pessoal ao guia) ===== */
+.cadastro-corpo { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+.cadastro-corpo .cab-cad { margin-bottom: 18px; }
+.cadastro-corpo .cab-cad h1 { font-size: clamp(26px, 3.6vw, 34px); margin-top: 12px; }
+.cadastro-corpo .cab-cad p { margin-top: 10px; color: var(--tinta-2); font-size: 16px; }
+.cadastro-corpo .etiqueta { background: var(--laranja-claro); color: var(--laranja-texto); }
+.form-guia { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.form-guia label.inteiro, .form-guia .inteiro { grid-column: 1 / -1; }
+.form-guia .aceite { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: #413B49; cursor: pointer; }
+.form-guia .aceite input { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--roxo); }
+.form-guia .isca { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.form-guia .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.form-guia .enviar .botao { min-height: 46px; padding: 0 22px; font-size: 15px; }
+.form-guia .erro-form { color: var(--vermelho); font-size: 14px; font-weight: 600; }
+.beneficios { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
+.beneficios li { padding: 12px 14px; border: 1px solid var(--linha-fina); border-radius: 14px; background: var(--papel); font-size: 13.5px; line-height: 1.4; color: var(--tinta-2); }
+.beneficios li b { display: block; font: 600 15px/1.3 var(--titulo); color: var(--tinta); margin-bottom: 2px; }
+.liberado { text-align: left; }
+.liberado h2 { font-size: 24px; }
+.liberado .link-pessoal { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--muted); font: 600 13.5px/1.4 ui-monospace, Consolas, monospace; word-break: break-all; color: var(--tinta); }
+@media (max-width: 600px) { .form-guia { grid-template-columns: 1fr; } .beneficios { grid-template-columns: 1fr; } .form-guia .enviar .botao { width: 100%; } }
+.app.sem-acesso .menu a[data-trava] .estado { border: 0; }
+.app.sem-acesso .menu a[data-trava] .estado::before { content: ""; width: 12px; height: 12px; background: var(--lateral-mudo); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h6V7a3 3 0 0 0-6 0v3Z'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h6V7a3 3 0 0 0-6 0v3Z'/%3E%3C/svg%3E") center / contain no-repeat; }
+.app.sem-acesso .menu a[data-trava] .estado svg { display: none; }
+
 /* =================================================================
    IMPRESSÃO / PDF — A4, mesmo visual leve
    ================================================================= */
@@ -687,6 +713,8 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
 
   .miolo { max-width: none; padding: 0; }
   .secao { padding: 0 0 4mm; }
+  .tela > .secao:last-child, section.secao.tela { padding-bottom: 0; }
+  .faca-hoje, .lista-conferir { margin-bottom: 0; }
   .secao.nova-pagina { break-before: page; }
   .intro { padding-top: 0; }
   .intro p:first-child { font-size: 12.5pt; }
@@ -821,7 +849,7 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
     <button class="botao botao-pequeno botao-laranja" type="button" data-imprimir>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/></svg>Imprimir com meus dados
     </button>
-    <a class="botao botao-pequeno" href="https://educa-pilot.com/ebook/EducaPilot-gestao-escolar.pdf" download>Baixar o PDF em branco</a>
+    <a class="botao botao-pequeno" href="https://educa-pilot.com/ebook/EducaPilot-gestao-escolar.pdf" download data-pdf>Baixar o PDF em branco</a>
     <div class="rodape-tela">O que você preenche fica salvo só neste aparelho. <button type="button" id="apagar-tudo">Apagar tudo e recomeçar</button></div>
   </div>
 </aside>
@@ -897,6 +925,58 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
 
     <div class="titulo-bloco"><h2>Capítulos</h2><span id="cap-resumo"></span></div>
     <div class="capitulos" id="capitulos"></div>
+  </div>
+</section>
+
+<!-- ============ CADASTRO (acesso pessoal, só na tela) ============ -->
+<section class="tela so-tela" id="cadastro" data-chave="cadastro">
+  <div class="cadastro-corpo">
+    <div id="cad-form-bloco">
+      <div class="cab-cad">
+        <span class="etiqueta"><i></i>Grátis · leva 1 minuto</span>
+        <h1>Libere o seu acesso ao guia completo</h1>
+        <p>Você já viu como o guia funciona. Para continuar a partir do diagnóstico, deixe seus dados: você recebe um link pessoal que guarda o seu progresso em qualquer aparelho.</p>
+      </div>
+      <div class="ferramenta" style="margin:0">
+        <div class="caixa">
+          <div class="corpo">
+            <form class="form-guia" id="form-guia" novalidate>
+              <label><span class="rotulo">Seu nome</span><input class="entrada" name="nome" autocomplete="name" required maxlength="120"></label>
+              <label><span class="rotulo">Nome da escola</span><input class="entrada" name="escola" autocomplete="organization" required maxlength="160"></label>
+              <label><span class="rotulo">E-mail</span><input class="entrada" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="160"></label>
+              <label><span class="rotulo">WhatsApp <small>(com DDD)</small></span><input class="entrada" name="whatsApp" type="tel" autocomplete="tel" inputmode="tel" required maxlength="20" placeholder="(11) 90000-0000"></label>
+              <label><span class="rotulo">Seu cargo</span><select class="escolha" name="cargo" required><option value="">Escolha…</option><option>Direção / mantenedora</option><option>Coordenação</option><option>Secretaria</option><option>Financeiro</option><option>Outro</option></select></label>
+              <label><span class="rotulo">Número de alunos</span><select class="escolha" name="faixaDeAlunos"><option value="">Prefiro não dizer</option><option>Até 50</option><option>51 a 150</option><option>151 a 300</option><option>Mais de 300</option></select></label>
+              <label class="isca" aria-hidden="true">Site<input name="site" tabindex="-1" autocomplete="off"></label>
+              <label class="aceite inteiro"><input type="checkbox" name="aceite" required><span>Aceito que o EducaPilot guarde estes dados e o meu progresso no guia e entre em contato por e-mail ou WhatsApp para apresentar o sistema. Posso pedir a exclusão quando quiser. <a href="https://educa-pilot.com/privacidade#guia-gratuito" target="_blank" rel="noopener">Como usamos seus dados</a></span></label>
+              <div class="enviar inteiro">
+                <button class="botao botao-laranja" type="submit" id="cad-enviar">Liberar meu acesso →</button>
+                <span class="erro-form" id="cad-erro" role="alert"></span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <ul class="beneficios">
+        <li><b>23 lições curtas</b>Uma tela por vez, no seu ritmo.</li>
+        <li><b>Ferramentas com seus números</b>Caixa, vagas, conversão, atrasos e mais.</li>
+        <li><b>Plano de 14 dias</b>Para tirar a organização do papel.</li>
+      </ul>
+    </div>
+    <div class="ferramenta liberado" id="cad-liberado" hidden style="margin:0">
+      <div class="caixa">
+        <div class="corpo">
+          <span class="etiqueta" style="background:var(--verde-claro);color:var(--verde)"><i style="background:var(--verde)"></i>Acesso liberado</span>
+          <h2 style="margin-top:12px" id="cad-ola">Pronto!</h2>
+          <p style="margin-top:8px;color:var(--tinta-2)">Este é o seu link pessoal. Com ele você abre o guia com o seu progresso no computador ou no celular. Também vamos enviar o link e o PDF para o seu e-mail.</p>
+          <div class="link-pessoal" id="cad-link"></div>
+          <div class="acoes-linha">
+            <button class="botao botao-pequeno" type="button" data-copiar="cad-link">Copiar link</button>
+            <button class="botao botao-laranja" type="button" id="cad-continuar">Continuar para o diagnóstico →</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -2114,7 +2194,9 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
   }
   var avisoTimer;
   function gravar(quieto) {
-    if (MODO_PDF || !podeSalvar) return;
+    if (MODO_PDF) return;
+    if (!quieto) { estado.atualizadoEm = Date.now(); agendarEnvio(); }
+    if (!podeSalvar) return;
     try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { return; }
     if (quieto) return;
     var s = document.getElementById('salvo');
@@ -2728,6 +2810,118 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
     location.reload();
   });
 
+
+  /* ---------- acesso pessoal: cadastro, link com token e progresso guardado no EducaPilot ---------- */
+  // Só o "Início" e a primeira lição são livres; o resto pede o cadastro. Fora do site (arquivo aberto do disco)
+  // o guia continua livre: o cadastro só existe em educa-pilot.com.
+  var LIVRES = ['inicio', 'antes', 'cadastro'];
+  var NO_SITE = /^https?:$/.test(location.protocol);
+  var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  var API = (LOCAL && new URLSearchParams(location.search).get('api')) || (LOCAL ? 'https://localhost:7141' : 'https://api.educa-pilot.com');
+  var CHAVE_ACESSO = 'educapilot-guia-acesso';
+  var VERSAO_POLITICA = '2026-10-21';
+  var acesso = null, destinoDepoisDoCadastro = 'c1', envioTimer = null;
+  function lerAcesso() { try { return JSON.parse(localStorage.getItem(CHAVE_ACESSO)) || null; } catch (e) { return null; } }
+  function gravarAcesso(a) { acesso = a; try { if (a) localStorage.setItem(CHAVE_ACESSO, JSON.stringify(a)); else localStorage.removeItem(CHAVE_ACESSO); } catch (e) {} marcarAcesso(); }
+  function temAcesso() { return MODO_PDF || !NO_SITE || !!(acesso && acesso.token); }
+  function marcarAcesso() { if (app) app.classList.toggle('sem-acesso', !temAcesso()); }
+  function linkPessoal(token) { return location.origin + location.pathname + '?acesso=' + encodeURIComponent(token); }
+  acesso = lerAcesso();
+  // Link pessoal (?acesso=...): guarda o token e tira da barra de endereço.
+  (function () {
+    var q = new URLSearchParams(location.search), t = q.get('acesso');
+    if (!t || MODO_PDF) return;
+    gravarAcesso({ token: t, nome: '' });
+    q.delete('acesso');
+    var resto = q.toString();
+    try { history.replaceState(null, '', location.pathname + (resto ? '?' + resto : '') + location.hash); } catch (e) {}
+  })();
+
+  function chamar(metodo, caminho, corpo, comToken) {
+    var h = { 'Accept': 'application/json' };
+    if (corpo) h['Content-Type'] = 'application/json';
+    if (comToken && acesso) h['X-Guia-Token'] = acesso.token;
+    return fetch(API + caminho, { method: metodo, headers: h, body: corpo ? JSON.stringify(corpo) : undefined, keepalive: metodo === 'PUT' && !!corpo && JSON.stringify(corpo).length < 60000 });
+  }
+  // Confere o token e, se o progresso guardado no EducaPilot for mais novo, traz para este aparelho.
+  function conferirAcesso() {
+    if (MODO_PDF || !NO_SITE || !acesso) return;
+    chamar('GET', '/api/guia/acesso', null, true).then(function (r) {
+      if (r.status === 401) { gravarAcesso(null); if (LIVRES.indexOf(telaAtual) < 0) navegar('cadastro'); return null; }
+      return r.ok ? r.json() : null;
+    }).then(function (d) {
+      if (!d) return;
+      acesso.nome = d.nome || acesso.nome; gravarAcesso(acesso);
+      if (!d.estado) { if (estado.atualizadoEm) enviarProgresso(); return; }
+      var remoto; try { remoto = JSON.parse(d.estado); } catch (e) { return; }
+      if ((remoto.atualizadoEm || 0) > (estado.atualizadoEm || 0) + 1000) {
+        try { localStorage.setItem(CHAVE, d.estado); } catch (e) { return; }
+        if (!sessionStorage.getItem('guia-restaurado')) { sessionStorage.setItem('guia-restaurado', '1'); location.reload(); }
+      } else if ((estado.atualizadoEm || 0) > (remoto.atualizadoEm || 0) + 1000) enviarProgresso();
+    }).catch(function () { /* sem internet: segue com o que está no aparelho */ });
+  }
+  function agendarEnvio() {
+    if (MODO_PDF || !NO_SITE || !acesso) return;
+    clearTimeout(envioTimer);
+    envioTimer = setTimeout(enviarProgresso, 3000);
+  }
+  function enviarProgresso() {
+    clearTimeout(envioTimer); envioTimer = null;
+    if (MODO_PDF || !NO_SITE || !acesso || typeof LICOES === 'undefined') return;
+    var areas = [];
+    DIAG.forEach(function (d, i) {
+      var nota = num(document.querySelector('[data-campo="d_' + (i + 1) + '"]').value);
+      if ((nota === 0 || nota === 1) && areas.indexOf(d[1]) < 0) areas.push(d[1]);
+    });
+    var corpo = {
+      licoesConcluidas: LICOES.filter(function (t) { return estado.feitas && estado.feitas[t.id]; }).length,
+      totalLicoes: LICOES.length,
+      notaDiagnostico: isFinite(resumo.diag) ? resumo.diag : null,
+      areasFracas: areas,
+      estado: JSON.stringify(estado)
+    };
+    if (corpo.estado.length > 100000) return;
+    chamar('PUT', '/api/guia/progresso', corpo, true).then(function (r) { if (r.status === 401) gravarAcesso(null); }).catch(function () {});
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && envioTimer) enviarProgresso(); });
+
+  // Formulário de cadastro
+  var formGuia = document.getElementById('form-guia');
+  formGuia.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = formGuia.elements, erro = document.getElementById('cad-erro'), botao = document.getElementById('cad-enviar');
+    var dados = {
+      nome: f.nome.value.trim(), escola: f.escola.value.trim(), email: f.email.value.trim(), whatsApp: f.whatsApp.value.trim(),
+      cargo: f.cargo.value, faixaDeAlunos: f.faixaDeAlunos.value || null, aceite: f.aceite.checked,
+      versaoPolitica: VERSAO_POLITICA, origem: 'ebook', site: f.site.value
+    };
+    var falta = !dados.nome ? 'Preencha o seu nome.' : !dados.escola ? 'Preencha o nome da escola.' : !/^\S+@\S+\.\S+$/.test(dados.email) ? 'Confira o e-mail.'
+      : dados.whatsApp.replace(/\D/g, '').length < 10 ? 'Confira o WhatsApp com DDD.' : !dados.cargo ? 'Escolha o seu cargo.' : !dados.aceite ? 'Para liberar o acesso, marque o aceite.' : '';
+    if (falta) { erro.textContent = falta; return; }
+    erro.textContent = ''; botao.disabled = true; botao.textContent = 'Liberando…';
+    chamar('POST', '/api/guia/cadastro', dados, false).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, status: r.status, d: d }; });
+    }).then(function (res) {
+      if (!res.ok || !res.d.token) {
+        erro.textContent = res.status === 429 ? 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.' : (res.d.erro || 'Não foi possível liberar agora. Tente de novo em instantes.');
+        return;
+      }
+      gravarAcesso({ token: res.d.token, nome: dados.nome });
+      document.getElementById('cad-form-bloco').hidden = true;
+      document.getElementById('cad-liberado').hidden = false;
+      document.getElementById('cad-ola').textContent = 'Pronto, ' + dados.nome.split(' ')[0] + '! Seu acesso está liberado.';
+      document.getElementById('cad-link').textContent = linkPessoal(res.d.token);
+      enviarProgresso();
+    }).catch(function () {
+      erro.textContent = 'Sem conexão com o EducaPilot agora. Confira a internet e tente de novo.';
+    }).then(function () { botao.disabled = false; botao.textContent = 'Liberar meu acesso →'; });
+  });
+  document.getElementById('cad-continuar').addEventListener('click', function () { navegar(destinoDepoisDoCadastro); });
+  document.addEventListener('click', function (e) {
+    var pdf = e.target.closest('[data-pdf]');
+    if (pdf && !temAcesso()) { e.preventDefault(); destinoDepoisDoCadastro = estado.tela && LIVRES.indexOf(estado.tela) < 0 ? estado.tela : 'c1'; navegar('cadastro'); }
+  }, true);
+
   /* ---------- guia: menu lateral, telas, testes rápidos ---------- */
   var SETA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   var TELAS = [
@@ -2809,7 +3003,7 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
     try { if (location.hash.slice(1) !== id) history.pushState(null, '', '#' + id); } catch (e) {}
   }
   function item(t) {
-    return '<a href="#' + t.id + '" data-menu="' + t.id + '"><span class="num">' + t.n + '</span><span class="rot">' + t.t + '</span>' + (t.id === 'inicio' ? '' : '<span class="estado" aria-hidden="true">' + VISTO + '</span>') + '</a>';
+    return '<a href="#' + t.id + '" data-menu="' + t.id + '"' + (LIVRES.indexOf(t.id) < 0 ? ' data-trava' : '') + '><span class="num">' + t.n + '</span><span class="rot">' + t.t + '</span>' + (t.id === 'inicio' ? '' : '<span class="estado" aria-hidden="true">' + VISTO + '</span>') + '</a>';
   }
   function montarMenu() {
     var html = '<div class="itens">' + item(TELAS[0]) + '</div>';
@@ -2888,10 +3082,12 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
     var alvo = document.getElementById(id) || document.getElementById('inicio');
     var tela = alvo.closest('.tela'); if (!tela) return;
     var chave = tela.dataset.chave;
+    if (LIVRES.indexOf(chave) < 0 && !temAcesso()) { destinoDepoisDoCadastro = id; return ir('cadastro'); }
+    if (chave === 'cadastro' && temAcesso() && document.getElementById('cad-liberado').hidden) { return ir(destinoDepoisDoCadastro); }
     Array.prototype.forEach.call(document.querySelectorAll('.tela'), function (t) { t.classList.toggle('ativa', t === tela); });
     telaAtual = chave;
-    estado.tela = chave; gravar(true);
-    var info = TELAS.find(function (t) { return t.id === chave; }), pos = LICOES.indexOf(info);
+    if (chave !== 'cadastro') { estado.tela = chave; gravar(true); }
+    var info = TELAS.find(function (t) { return t.id === chave; }) || { id: chave, t: 'Liberar acesso', grupo: 'Guia gratuito' }, pos = LICOES.indexOf(info);
     document.getElementById('topo-grupo').textContent = info.grupo || 'Guia interativo';
     document.getElementById('topo-titulo').textContent = info.t;
     document.getElementById('topo-contador').textContent = pos >= 0 ? 'Lição ' + (pos + 1) + ' de ' + LICOES.length : '';
@@ -2963,7 +3159,9 @@ ol.numerada li::before { content: counter(n); position: absolute; left: 0; top: 
   desenharOcup();
   if (!MODO_PDF) { montarMenu(); montarPassos(); }
   tudo();
+  marcarAcesso();
   if (!MODO_PDF) ir(location.hash.slice(1) || estado.tela || 'inicio');
+  conferirAcesso();
 
   /* ---------- modo de geração do PDF: cada campo vira uma âncora com o nome do campo ---------- */
   if (MODO_PDF) {

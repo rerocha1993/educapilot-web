@@ -6,18 +6,22 @@ import { cn } from "@/lib/utils";
 import { useRequireMasterSession } from "@/lib/auth/use-require-master-session";
 import { clearMasterSession } from "@/lib/auth/master-session";
 import { Button } from "@/components/ui/button";
+import { useContatosNovos } from "@/lib/master/use-contatos-do-site";
 
 const NAV = [
   { href: "/master/tenants", label: "Escolas" },
   { href: "/master/modulos", label: "Catálogo de módulos" },
   { href: "/master/uso-de-ia", label: "Uso de IA" },
   { href: "/master/arquivos", label: "Arquivos" },
+  { href: "/master/contatos", label: "Contatos do site" },
 ];
 
 export default function MasterPanelLayout({ children }: { children: React.ReactNode }) {
   const session = useRequireMasterSession();
   const pathname = usePathname();
   const router = useRouter();
+  const novos = useContatosNovos(session !== null);
+  const quantidadeDeNovos = novos.data?.quantidade ?? 0;
 
   if (!session) return null;
 
@@ -28,7 +32,7 @@ export default function MasterPanelLayout({ children }: { children: React.ReactN
           <span className="font-mono text-xs uppercase tracking-wide text-[#B9AEDD]">
             Kernel
           </span>
-          <nav className="flex gap-4">
+          <nav className="flex flex-wrap gap-x-4 gap-y-1">
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -39,6 +43,14 @@ export default function MasterPanelLayout({ children }: { children: React.ReactN
                 )}
               >
                 {item.label}
+                {item.href === "/master/contatos" && quantidadeDeNovos > 0 && (
+                  <span
+                    className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-action px-1.5 text-[11px] font-semibold leading-5 text-action-foreground"
+                    title={`${quantidadeDeNovos} contato(s) novo(s) ainda não vistos`}
+                  >
+                    {quantidadeDeNovos > 99 ? "99+" : quantidadeDeNovos}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
