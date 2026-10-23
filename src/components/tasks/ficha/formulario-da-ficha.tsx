@@ -42,14 +42,16 @@ function mostrarStatus(r: RespostaNaFicha) {
 }
 
 function quando(r: RespostaNaFicha) {
-  return `${r.data}${r.hora ? ` às ${r.hora}` : ""}`;
+  const br = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.data);
+  const data = br ? `${br[3]}/${br[2]}/${br[1]}` : r.data;
+  return `${data}${r.hora ? ` às ${r.hora}` : ""}`;
 }
 
 /** Texto curto para o cabeçalho da seção recolhida. */
 export function resumoDoFormulario(f: FormularioNaFicha): string {
   if (!f.ultima) return "Ainda não preenchido";
   const anteriores = f.anteriores?.length ?? 0;
-  return `Preenchido em ${f.ultima.data}${anteriores > 0 ? ` · ${anteriores} ${anteriores === 1 ? "anterior" : "anteriores"}` : ""}`;
+  return `Preenchido em ${quando({ ...f.ultima, hora: null })}${anteriores > 0 ? ` · ${anteriores} ${anteriores === 1 ? "anterior" : "anteriores"}` : ""}`;
 }
 
 function Anexo({ valor }: { valor: string }) {

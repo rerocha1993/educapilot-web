@@ -71,7 +71,7 @@ function Vazio({ children }: { children: ReactNode }) {
 
 function Subtitulo({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground print:text-[8pt]">{children}</h3>
+    <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground print:break-after-avoid print:text-[8pt]">{children}</h3>
   );
 }
 
@@ -242,9 +242,10 @@ interface DefinicaoDeSecao {
  * escala de cinza e as opções da caixa "Imprimir ficha" (data-print-* no article).
  */
 const ESTILO_DA_IMPRESSAO = `
-@page { size: A4 portrait; margin: 24mm 12mm 18mm 12mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #000; } }
-.ficha-cabecalho { position: fixed; top: -20mm; left: 0; right: 0; height: 16mm; font-size: 8.5pt; line-height: 1.35; border-bottom: 1px solid #000; color: #000; background: #fff; }
-.ficha-rodape { position: fixed; bottom: -15mm; left: 0; right: 0; font-size: 7.5pt; line-height: 1.3; border-top: 1px solid #000; padding-top: 1mm; color: #000; background: #fff; }
+@page { size: A4 portrait; margin: 12mm 12mm 14mm 12mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #000; } }
+.ficha-cabecalho { font-size: 8.5pt; line-height: 1.35; border-bottom: 1px solid #000; padding-bottom: 1.5mm; margin-bottom: 3mm; color: #000; font-weight: normal; text-align: left; }
+.ficha-rodape { font-size: 7.5pt; line-height: 1.3; border-top: 1px solid #000; padding-top: 1mm; margin-top: 3mm; color: #000; text-align: left; }
+html, body { background: #fff !important; }
 article figure { filter: grayscale(1) contrast(1.2); }
 .ficha-omitido { display: none; }
 article[data-print-textos="nao"] .ficha-ata, article[data-print-textos="nao"] .ficha-resposta-texto { display: none !important; }
@@ -995,20 +996,31 @@ export function ResumoDoAlunoFolha({
     <article
       data-print-textos={impressao.incluirTextos ? "sim" : "nao"}
       data-print-saude={impressao.incluirSaude ? "sim" : "nao"}
-      className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-foreground print:max-w-none print:gap-3"
+      className="mx-auto w-full max-w-[1280px] text-foreground print:max-w-none"
     >
+      {/* No papel, o cabeçalho e o rodapé são o thead e o tfoot de uma tabela: o navegador os repete em toda página e
+          reserva o espaço deles, sem sobrepor o conteúdo. Na tela a tabela vira blocos comuns e os dois somem. */}
+      <table className="block w-full print:table">
+        <thead className="hidden print:table-header-group">
+          <tr className="print:table-row">
+            <td className="ficha-cabecalho">
+              <span className="font-bold uppercase tracking-wider">{escola ?? "Escola"}</span> · Ficha do aluno: <strong>{aluno.nome}</strong>
+              {aluno.turma ? ` (${aluno.turma})` : ""} · Período <span className="font-numeric">{intervalo}</span>
+              <br />
+              Emitida em <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span> por {resumo.emitidoPor ?? "pessoa não identificada"}
+            </td>
+          </tr>
+        </thead>
+        <tfoot className="hidden print:table-footer-group">
+          <tr className="print:table-row">
+            <td className="ficha-rodape">CONFIDENCIAL. {AVISO_DE_SIGILO}</td>
+          </tr>
+        </tfoot>
+        <tbody className="block print:table-row-group">
+          <tr className="block print:table-row">
+            <td className="block print:table-cell">
+              <div className="flex flex-col gap-4 print:gap-3">
       <style media="print">{ESTILO_DA_IMPRESSAO}</style>
-
-      {/* Cabeçalho e rodapé que se repetem em todas as páginas do papel (position: fixed se repete na impressão). */}
-      <div aria-hidden className="ficha-cabecalho hidden print:block">
-        <span className="font-bold uppercase tracking-wider">{escola ?? "Escola"}</span> · Ficha do aluno: <strong>{aluno.nome}</strong>
-        {aluno.turma ? ` (${aluno.turma})` : ""} · Período <span className="font-numeric">{intervalo}</span>
-        <br />
-        Emitida em <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span> por {resumo.emitidoPor ?? "pessoa não identificada"}
-      </div>
-      <div aria-hidden className="ficha-rodape hidden print:block">
-        CONFIDENCIAL. {AVISO_DE_SIGILO}
-      </div>
 
       {/* Topo compacto: quem é o aluno, em poucas linhas. É o que identifica o papel. */}
       <header className="rounded-xl border border-border bg-card p-4 md:p-5 print:rounded-none print:border-0 print:border-b-2 print:border-black print:px-0 print:pt-0">
@@ -1221,6 +1233,11 @@ export function ResumoDoAlunoFolha({
         <span className="font-numeric">{formatarSoData(periodo.fim)}</span>
         {periodo.ateHoje ? " (dia da emissão)" : ""}. {AVISO_DE_SIGILO}
       </p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </article>
   );
 }

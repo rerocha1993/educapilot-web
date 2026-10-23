@@ -190,7 +190,7 @@ export default function EnviosDoFormularioPage() {
         nome:
           valorPorRotulo(r, rotulos, ["nome do responsável", "nome responsável"]) ??
           r.nomeReferencia ??
-          valorPorRotulo(r, rotulos, ["nome do aluno", "nome completo"]) ??
+          valorPorRotulo(r, rotulos, ["nome da criança", "nome do aluno", "nome completo"]) ??
           "Sem nome",
         email: valorPorRotulo(r, rotulos, ["e-mail", "email"]),
         naFicha: !!origem && fichaDoFormulario(decodeFormConfig(origem.config)) !== null,

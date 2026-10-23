@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronRight, ClipboardList, Contact } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClasses } from "@/lib/kernel/use-classes";
@@ -73,11 +74,13 @@ export default function FichaAlunoPage() {
             <span className="font-mono tabular-nums">{calcularIdade(student.birthDate)}</span> anos
           </p>
         </div>
-        {student.allergies && (
-          <Badge variant="overdue" className="md:ml-auto">
-            Alergia registrada
-          </Badge>
-        )}
+        <div className="flex flex-wrap items-center gap-2 md:ml-auto">
+          {student.allergies && <Badge variant="overdue">Alergia registrada</Badge>}
+          <Link href={`/ocorrencias/aluno/${studentId}`} className={buttonVariants({ variant: "outline" })}>
+            <ClipboardList className="size-4" />
+            Abrir ficha completa
+          </Link>
+        </div>
       </div>
 
       <Tabs defaultValue="dados">

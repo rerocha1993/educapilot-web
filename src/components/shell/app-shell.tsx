@@ -269,7 +269,7 @@ export function AppShell({
     // min-h-dvh + flex-1: o `min-h-full` daqui dependia de uma altura definida no body, que não
     // existe (ele só tem min-height). Sem isso o shell ficava do tamanho do conteúdo e a barra
     // escura terminava no meio da tela em página curta.
-    <div className="flex min-h-dvh flex-1">
+    <div className="flex min-h-dvh flex-1 print:block print:min-h-0">
       {/* Navegação escura da entrega de design: a barra é a tinta da interface, e o laranja marca
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
@@ -338,7 +338,7 @@ export function AppShell({
         )}
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col print:block">
         <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex print:hidden!">
           <div className="flex min-w-0 items-center gap-2 text-[13px] text-muted-foreground">
             <span className="truncate">{session.name}</span>
@@ -410,7 +410,7 @@ export function AppShell({
             para a barra de abas fixa. */}
         <main
           className={cn(
-            "min-w-0 flex-1 overflow-auto bg-background p-4 md:px-6 md:pb-11 md:pt-6",
+            "min-w-0 flex-1 overflow-auto bg-background p-4 md:px-6 md:pb-11 md:pt-6 print:overflow-visible print:bg-white! print:p-0!",
             telaLimpaNoCelular
               ? "pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]"
               : "pb-[calc(6rem+env(safe-area-inset-bottom))]"
