@@ -10,6 +10,13 @@ import { useCatalogoDeAcesso, type AcessoDoUsuario } from "@/lib/access/use-aces
 import { useClasses } from "@/lib/kernel/use-classes";
 
 /**
+ * Áreas que o "módulo inteiro" (lista vazia) NÃO inclui: só valem marcadas uma a uma. "Ficha do aluno" abre saúde e
+ * financeiro de qualquer criança, então não pode vir de carona em quem já tinha a Rotina completa. O servidor
+ * (ResumoDoAlunoService.TemAreaFicha) faz a mesma conta.
+ */
+const SO_MARCADAS_UMA_A_UMA = ["ficha"];
+
+/**
  * Acesso que não pode ser gravado: quem não é gestão sem nenhum módulo marcado.
  *
  * "Nenhuma permissão gravada" é a regra de legado que libera tudo (ver podeVerArea). Deixar gravar
@@ -71,8 +78,10 @@ export function SeletorDeAcesso({
     const modulo = valor.modulos.find((m) => m.moduloSlug === moduloSlug);
     if (!modulo) return false;
 
-    // Lista vazia significa módulo inteiro — então todas aparecem marcadas.
-    return modulo.areas.length === 0 ? todas.includes(areaSlug) : modulo.areas.includes(areaSlug);
+    // Lista vazia significa módulo inteiro — então todas aparecem marcadas (menos as que só valem marcadas uma a uma).
+    return modulo.areas.length === 0
+      ? todas.includes(areaSlug) && !SO_MARCADAS_UMA_A_UMA.includes(areaSlug)
+      : modulo.areas.includes(areaSlug);
   }
 
   function alternarArea(moduloSlug: string, areaSlug: string, todas: string[], marcada: boolean) {
@@ -83,14 +92,17 @@ export function SeletorDeAcesso({
 
         // Expande o "vazio = tudo" antes de tirar uma: sem isso, desmarcar a primeira área de um
         // módulo liberado por inteiro deixaria a lista vazia — ou seja, tudo liberado de novo.
-        const atuais = m.areas.length === 0 ? todas : m.areas;
+        const implicitas = todas.filter((a) => !SO_MARCADAS_UMA_A_UMA.includes(a));
+        const atuais = m.areas.length === 0 ? implicitas : m.areas;
         const proximas = marcada
           ? [...new Set([...atuais, areaSlug])]
           : atuais.filter((a) => a !== areaSlug);
 
         // Voltou a ter todas: grava vazio de novo, para que uma área nova criada amanhã já entre
         // para quem tinha o módulo completo.
-        return { ...m, areas: proximas.length === todas.length ? [] : proximas };
+        const comoModuloInteiro =
+          proximas.length === implicitas.length && implicitas.every((a) => proximas.includes(a));
+        return { ...m, areas: comoModuloInteiro ? [] : proximas };
       })
         // Desmarcou a última área: o módulo sai. Ficar com a lista vazia seria "módulo inteiro" —
         // tirar a única área liberava todas as outras.

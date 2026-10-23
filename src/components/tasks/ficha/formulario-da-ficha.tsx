@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { podeVerArea, podeVerRota } from "@/lib/access/pode-ver";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { copiarTexto } from "@/lib/copiar";
 import { formatarData } from "@/lib/format/date";
 import { useCriarConvite, type ConviteCriado } from "@/lib/flow/use-convites";
@@ -282,6 +284,10 @@ export function FormularioDaFichaConteudo({
 }) {
   const [convite, setConvite] = useState(false);
   const [aberta, setAberta] = useState<string | null>(null);
+  // Quem só tem a área "Ficha do aluno" lê o dossiê, mas não gera link nem preenche: cada ação pede a área dela.
+  const { data: meuAcesso } = useMeuAcesso();
+  const podeEnviar = podeVerArea(meuAcesso, "tasks", "ocorrencias") || podeVerArea(meuAcesso, "tasks", "reunioes-pais");
+  const podePreencher = podeVerRota(meuAcesso, `/flow/${f.formId}/preencher`);
   const anteriores = f.anteriores ?? [];
 
   const semAluno = f.respostasSemAlunoParecidas ?? 0;
@@ -302,19 +308,25 @@ export function FormularioDaFichaConteudo({
       )}
 
       {f.aceitaEnvios ? (
-        <div className="flex flex-wrap gap-2 print:hidden">
-          <Button variant="outline" onClick={() => setConvite(true)}>
-            <Send className="size-4" />
-            Enviar {f.secao} para a família
-          </Button>
-          <Link
-            href={`/flow/${f.formId}/preencher?aluno=${studentId}&volta=${encodeURIComponent(voltaPara)}`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            <PenLine className="size-4" />
-            Preencher aqui
-          </Link>
-        </div>
+        (podeEnviar || podePreencher) && (
+          <div className="flex flex-wrap gap-2 print:hidden">
+            {podeEnviar && (
+              <Button variant="outline" onClick={() => setConvite(true)}>
+                <Send className="size-4" />
+                Enviar {f.secao} para a família
+              </Button>
+            )}
+            {podePreencher && (
+              <Link
+                href={`/flow/${f.formId}/preencher?aluno=${studentId}&volta=${encodeURIComponent(voltaPara)}`}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                <PenLine className="size-4" />
+                Preencher aqui
+              </Link>
+            )}
+          </div>
+        )
       ) : (
         <p className="text-[12.5px] text-muted-foreground print:hidden">
           Este formulário não está aberto para novas respostas. Só o histórico aparece aqui.
