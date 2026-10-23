@@ -445,7 +445,7 @@ export default function EnviosDoFormularioPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <AbasDeFormularios />
 
       <CabecalhoDaPagina
@@ -509,7 +509,7 @@ export default function EnviosDoFormularioPage() {
           </Select>
         )}
 
-        <div className="relative w-full md:w-auto md:min-w-56 md:flex-1">
+        <div className="relative w-full md:w-72 md:flex-none">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-8"
