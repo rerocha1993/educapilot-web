@@ -3,7 +3,7 @@
 Casca nativa em **Capacitor 8** que abre o site já publicado. Não há cópia das telas aqui: cada deploy do `educapilot-web` vale na hora no app. O código do app só muda ao trocar plugin, permissão ou configuração nativa.
 
 - Identificador: `com.educapilot.app` (não muda depois de publicado).
-- Endereço aberto: `APP_URL` (variável) em `capacitor.config.ts`. Hoje aponta para o **staging** com a escola demo; trocar para produção antes das lojas.
+- Endereço aberto: `APP_URL` (variável) em `capacitor.config.ts`. Hoje aponta para `https://educa-pilot.com/login`.
 - Plano completo: `../../APP-MOVEL-PASSO-A-PASSO.md` e `../../APP-MOVEL-REQUISITOS.md`.
 
 ## Estrutura

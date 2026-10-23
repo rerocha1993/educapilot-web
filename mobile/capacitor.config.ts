@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 // A casca abre o site publicado (modo remoto): cada deploy do front vale na hora, sem nova versão da loja.
-// Troque APP_URL pelo endereço de produção antes de publicar nas lojas (ver README.md).
-const APP_URL = process.env.APP_URL ?? 'https://educapilot-web-staging.azurewebsites.net/login';
+// APP_URL pode ser trocado por variável de ambiente (ex.: apontar para um staging) ao rodar `cap sync`.
+const APP_URL = process.env.APP_URL ?? 'https://educa-pilot.com/login';
 const host = new URL(APP_URL).host;
 
 const config: CapacitorConfig = {
