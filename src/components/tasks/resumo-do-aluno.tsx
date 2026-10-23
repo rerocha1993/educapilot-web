@@ -306,25 +306,54 @@ export function ResumoDoAlunoFolha({
   // ---- As seções. Cada uma só entra se o acesso de quem abriu cobre o dado.
   const secoes: DefinicaoDeSecao[] = [];
 
-  if (!resumo.ocultos.includes("Dados de saúde da ficha")) {
+  // A anamnese é saúde: entra dentro da seção Saúde, junto do que está no cadastro, em vez de abrir uma seção só dela.
+  // Só quando a seção Saúde existe para quem abriu; senão a anamnese segue como seção própria.
+  const temSecaoSaude = !resumo.ocultos.includes("Dados de saúde da ficha");
+  const anamnesesNaSaude = temSecaoSaude ? formularios.filter((f) => /anamnese/i.test(f.secao)) : [];
+  const idsNaSaude = new Set(anamnesesNaSaude.map((f) => f.formId));
+
+  if (temSecaoSaude) {
     secoes.push({
       id: "saude",
-      classe: "ficha-saude",
+      // Com anamnese dentro, só a parte do cadastro some quando a impressão exclui os dados de saúde (a anamnese segue a opção de textos).
+      classe: anamnesesNaSaude.length > 0 ? undefined : "ficha-saude",
       titulo: "Saúde",
-      resumo: saudeVazia ? "Nada informado no cadastro" : saude?.alergias ? `Alergias: ${saude.alergias}` : "Há informações de saúde no cadastro",
-      fonte: "Cadastro do aluno (Administração › Alunos). Dado sensível de criança: só quem cuida do cadastro, do diário ou do cardápio vê.",
+      resumo:
+        saudeVazia && anamnesesNaSaude.length > 0
+          ? resumoDoFormulario(anamnesesNaSaude[0])
+          : saudeVazia
+            ? "Nada informado no cadastro"
+            : saude?.alergias
+              ? `Alergias: ${saude.alergias}`
+              : "Há informações de saúde no cadastro",
+      fonte:
+        anamnesesNaSaude.length > 0
+          ? "Cadastro do aluno (Administração › Alunos) e anamnese preenchida pela família. Dado sensível de criança: trate com sigilo."
+          : "Cadastro do aluno (Administração › Alunos). Dado sensível de criança: só quem cuida do cadastro, do diário ou do cardápio vê.",
+      larga: anamnesesNaSaude.length > 0,
+      quebraLivre: anamnesesNaSaude.length > 0,
       corpo: (
         <>
-          {saudeVazia ? (
-            <Vazio>Nada informado no cadastro (alergias, medicação, restrição alimentar, convênio).</Vazio>
-          ) : (
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
-              <Dado rotulo="Alergias">{saude?.alergias ?? "Nada informado"}</Dado>
-              <Dado rotulo="Medicação contínua">{saude?.medicacaoContinua ?? "Nada informado"}</Dado>
-              <Dado rotulo="Restrição alimentar">{saude?.restricaoAlimentar ?? "Nada informado"}</Dado>
-              <Dado rotulo="Convênio">{saude?.convenio ?? "Nada informado"}</Dado>
-            </dl>
+          {saudeVazia && anamnesesNaSaude.length > 0 ? null : (
+            <div className="ficha-saude">
+              {saudeVazia ? (
+                <Vazio>Nada informado no cadastro (alergias, medicação, restrição alimentar, convênio).</Vazio>
+              ) : (
+                <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+                  <Dado rotulo="Alergias">{saude?.alergias ?? "Nada informado"}</Dado>
+                  <Dado rotulo="Medicação contínua">{saude?.medicacaoContinua ?? "Nada informado"}</Dado>
+                  <Dado rotulo="Restrição alimentar">{saude?.restricaoAlimentar ?? "Nada informado"}</Dado>
+                  <Dado rotulo="Convênio">{saude?.convenio ?? "Nada informado"}</Dado>
+                </dl>
+              )}
+            </div>
           )}
+          {anamnesesNaSaude.map((f) => (
+            <div key={f.formId} className={saudeVazia ? "" : "mt-5 border-t border-border pt-4"}>
+              <h4 className="mb-2 text-sm font-semibold">{f.secao}</h4>
+              <FormularioDaFichaConteudo f={f} studentId={aluno.id} voltaPara={`/ocorrencias/aluno/${aluno.id}`} />
+            </div>
+          ))}
         </>
       ),
     });
@@ -942,6 +971,7 @@ export function ResumoDoAlunoFolha({
 
   // Um formulário vinculado, uma seção (o título é o que a escola escolheu no construtor).
   for (const f of formularios) {
+    if (idsNaSaude.has(f.formId)) continue;
     secoes.push({
       id: `form-${f.formId}`,
       titulo: f.secao,
