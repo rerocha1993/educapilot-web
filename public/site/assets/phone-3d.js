@@ -1,4 +1,4 @@
-import * as THREE from 'https://unpkg.com/three@0.184.0/build/three.module.js';
+import * as THREE from './three.module.min.js';
 
 /* <phone-3d> — real three.js phone with the EducaPilot home screen as a texture.
    data-mode="hero" | "panel" controls framing. Scroll drives a damped dolly-in + turn. */

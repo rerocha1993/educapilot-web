@@ -18,6 +18,8 @@ export interface FormResponseDto {
   tenantId: string;
   userId: string | null;
   referenciaId: string | null;
+  /** Aluno a que o envio está ligado (aparece na ficha dele). Ausente: envio sem aluno. */
+  alunoId?: number | null;
   nomeReferencia: string | null;
   observacoes: string | null;
   status: string; // livre — usamos Pendente/Revisar/Concluída por convenção

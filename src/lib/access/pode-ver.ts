@@ -12,7 +12,7 @@ import type { AcessoDoUsuario } from "./use-acessos";
  *
  * A ordem importa: vale o primeiro prefixo que casa, então o mais específico vem antes.
  */
-const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
+const ROTAS: { padrao: RegExp; modulo: string; area: string | null; ou?: string[] }[] = [
   // Fluxos (Kanban de tarefas + formulários)
   { padrao: /^\/flow\/tarefas\/equipe/, modulo: "flow", area: "equipe" },
   { padrao: /^\/flow\/tarefas\/automacoes/, modulo: "flow", area: "recorrencias" },
@@ -38,6 +38,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/admin\/responsaveis/, modulo: "admin", area: "responsaveis" },
   { padrao: /^\/admin\/usuarios/, modulo: "admin", area: "usuarios" },
   { padrao: /^\/admin\/progressao/, modulo: "admin", area: "progressao" },
+  // Matérias e avaliação: cadastro de anos, matérias e configuração por turma. Área própria admin:materias-avaliacao.
+  { padrao: /^\/admin\/avaliacao/, modulo: "admin", area: "materias-avaliacao" },
   { padrao: /^\/admin\/email/, modulo: "admin", area: "email" },
   { padrao: /^\/admin\/importar/, modulo: "admin", area: "importar" },
   { padrao: /^\/admin/, modulo: "admin", area: null },
@@ -97,6 +99,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/rh\/documentos/, modulo: "rh", area: "documentos" },
   { padrao: /^\/rh\/relatorios/, modulo: "rh", area: "relatorios" },
   { padrao: /^\/rh\/configuracao/, modulo: "rh", area: "configuracao" },
+  // Desempenho e feedback (nota, avaliação, advertência): área própria, nunca herdada de funcionários nem de relatórios.
+  { padrao: /^\/rh\/desempenho/, modulo: "rh", area: "desempenho" },
   { padrao: /^\/rh/, modulo: "rh", area: null },
 
   // Relacionamento (avisos, cronograma, famílias, atividades e mural). A entrada do módulo só redireciona.
@@ -105,6 +109,8 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relacionamento\/familias/, modulo: "relacionamento", area: "familias" },
   { padrao: /^\/relacionamento\/atividades/, modulo: "relacionamento", area: "atividades" },
   { padrao: /^\/relacionamento\/mural/, modulo: "relacionamento", area: "mural" },
+  { padrao: /^\/relacionamento\/diario/, modulo: "relacionamento", area: "diario" },
+  { padrao: /^\/relacionamento\/cardapio/, modulo: "relacionamento", area: "cardapio" },
   { padrao: /^\/relacionamento\/chat/, modulo: "relacionamento", area: "chat" },
   // Mensalidades e inadimplência (antes em /finance) são da área Pagamentos, como cobranças e
   // planos; o backend aceita relacionamento:pagamentos nas APIs delas. As duas linhas abaixo
@@ -117,11 +123,20 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relacionamento/, modulo: "relacionamento", area: null },
 
   // Rotina
+  // Ficha do aluno: a lista de entrada do dossiê e a ficha em si (/ocorrencias/aluno/[id]). Abre com a área própria
+  // "ficha" ou com Ocorrências (quem já entrava assim continua entrando). Precisa vir antes de /ocorrencias.
+  { padrao: /^\/ocorrencias\/aluno\//, modulo: "tasks", area: "ficha", ou: ["ocorrencias"] },
+  { padrao: /^\/ficha-do-aluno/, modulo: "tasks", area: "ficha", ou: ["ocorrencias"] },
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
+  // Notas e boletim (lançamento, comportamento, publicação): área própria da Rotina.
+  { padrao: /^\/notas/, modulo: "tasks", area: "notas" },
   { padrao: /^\/planejamento-semanal/, modulo: "tasks", area: "planejamento" },
   { padrao: /^\/relatorios/, modulo: "tasks", area: "relatorios" },
   { padrao: /^\/materiais/, modulo: "tasks", area: "materiais" },
+  // Reuniões e atendimentos (antiga Reunião com os pais; o /reunioes-pais redireciona) é área própria e precisa vir antes de /reunioes.
+  { padrao: /^\/reunioes-e-atendimentos/, modulo: "tasks", area: "reunioes-pais" },
+  { padrao: /^\/reunioes-pais/, modulo: "tasks", area: "reunioes-pais" },
   { padrao: /^\/reunioes/, modulo: "tasks", area: "reunioes" },
   { padrao: /^\/calendario/, modulo: "tasks", area: "calendario" },
   { padrao: /^\/$/, modulo: "tasks", area: "chamada" },
@@ -130,12 +145,14 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
 export interface AcessoDaRota {
   modulo: string;
   area: string | null;
+  /** Outras áreas do mesmo módulo que também abrem a rota. */
+  ou?: string[];
 }
 
 /** Módulo e área de uma rota, ou nulo para rotas fora do controle de acesso (ex.: /settings). */
 export function acessoDaRota(pathname: string): AcessoDaRota | null {
   const achado = ROTAS.find((r) => r.padrao.test(pathname));
-  return achado ? { modulo: achado.modulo, area: achado.area } : null;
+  return achado ? { modulo: achado.modulo, area: achado.area, ou: achado.ou } : null;
 }
 
 /**
@@ -143,8 +160,9 @@ export function acessoDaRota(pathname: string): AcessoDaRota | null {
  *
  * Três regras, nesta ordem:
  *
- * 1. Sem nenhuma permissão gravada, vê tudo. É o caso de quem já usava o sistema antes de as
- *    permissões existirem; sem isso, a publicação teria esvaziado o menu de todo mundo.
+ * 1. Sem nenhuma permissão, só a gestão vê tudo. Desde a auditoria de 10/2026 o servidor devolve,
+ *    para conta antiga sem permissão gravada, as áreas sugeridas do perfil; lista vazia que chegue
+ *    aqui para quem não é gestão é "nada", igual ao PodeVer da API.
  * 2. Módulo fora da lista: não vê nada dele.
  * 3. Módulo sem área marcada significa módulo inteiro — uma área criada amanhã já entra para quem
  *    tinha o módulo completo, em vez de sumir do acesso.
@@ -154,8 +172,10 @@ export function podeVerArea(
   modulo: string,
   area: string | null
 ): boolean {
-  const modulos = acesso?.modulos ?? [];
-  if (modulos.length === 0) return true;
+  // Sem acesso carregado ainda: não esconde nada (a API é quem barra de verdade).
+  if (!acesso) return true;
+  const modulos = acesso.modulos ?? [];
+  if (modulos.length === 0) return acesso.userType === "Admin" || acesso.userType === "Master";
 
   const doModulo = modulos.find((m) => (m.moduloSlug ?? "").trim().toLowerCase() === modulo.toLowerCase());
   if (!doModulo) return false;
@@ -169,5 +189,9 @@ export function podeVerArea(
 /** A pessoa pode abrir esta rota. Rota fora do catálogo é sempre liberada. */
 export function podeVerRota(acesso: AcessoDoUsuario | undefined, pathname: string): boolean {
   const rota = acessoDaRota(pathname);
-  return !rota || podeVerArea(acesso, rota.modulo, rota.area);
+  return (
+    !rota ||
+    podeVerArea(acesso, rota.modulo, rota.area) ||
+    (rota.ou ?? []).some((a) => podeVerArea(acesso, rota.modulo, a))
+  );
 }

@@ -7,7 +7,7 @@ const moeda = (v: number) =>
 // Cartão escuro do modelo ("Caixa de envios"): os tons abaixo só existem sobre esse fundo e não
 // têm token na paleta clara — por isso vêm em hex, direto da entrega de design.
 const ROTULO = "text-xs text-[#A9A2B8]";
-const NUMERO = "mt-1.5 font-heading text-[27px] leading-none font-semibold tracking-[-.03em] font-mono tabular-nums";
+const NUMERO = "mt-1 font-heading text-[22px] leading-none font-semibold tracking-[-.03em] font-mono tabular-nums";
 
 /**
  * Resumo dos envios em tela.
@@ -36,13 +36,13 @@ export function ResumoDosEnvios({
   turmas: { rotulo: string; itens: [string, number][] } | null;
 }) {
   return (
-    <div className="flex flex-col gap-5 rounded-xl bg-[linear-gradient(135deg,#17141B,#2A2333)] px-5 py-5 text-white">
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 rounded-xl bg-[linear-gradient(135deg,#17141B,#2A2333)] px-4 py-4 text-white">
+      <div className="flex flex-col gap-3">
         <p className="text-[11.5px] font-bold tracking-[.16em] text-[#8F87A0] uppercase">
           {escopo}
         </p>
 
-        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,160px),1fr))]">
+        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,120px),1fr))]">
           {dinheiro && (
             <>
               <div>

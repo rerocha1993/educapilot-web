@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { formatarData } from "@/lib/format/date";
 import {
   useCartoesDaReuniao,
@@ -143,106 +144,143 @@ export function DemandasDaReuniao({
     }
   }
 
-  return (
-    <div className="flex flex-col gap-3">
-      {cartoesCarregando && <Skeleton className="h-12 w-full" />}
+  const colunas = "@xl:grid-cols-[minmax(0,1fr)_10rem_9.5rem_6.5rem]";
+  const total = listaDeCartoes.length + rascunhos.length;
 
-      {!cartoesCarregando && listaDeCartoes.length === 0 && (
-        <p className="text-[13px] leading-[1.5] text-muted-foreground">
-          O que for combinado aqui vira cartão no quadro de quem ficou responsável.
+  return (
+    // Container query: a coluna da reunião é estreita em tela média mesmo com a janela larga, então
+    // a tabela depende da largura do bloco, e não da janela.
+    <section aria-label="Demandas desta reunião" className="@container rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-heading text-[15.5px] font-semibold">
+          Demandas desta reunião
+          {total > 0 && <span className="ml-1.5 font-numeric text-xs font-normal text-muted-foreground">{total}</span>}
+        </h2>
+        <Button variant="outline" size="sm" onClick={acrescentar}>
+          <Plus /> Demanda
+        </Button>
+      </div>
+
+      {cartoesCarregando && <Skeleton className="mt-3 h-12 w-full" />}
+
+      {/* Estado vazio de uma linha: o que for combinado vira cartão no quadro de quem ficou responsável. */}
+      {!cartoesCarregando && total === 0 && (
+        <p className="mt-2 text-[13px] leading-[1.5] text-muted-foreground">
+          Nenhuma demanda ainda. O que for combinado aqui vira cartão no quadro de quem ficou responsável.
         </p>
       )}
 
-      {listaDeCartoes.length > 0 && (
-        <ul className="overflow-hidden rounded-lg border border-border">
-          {listaDeCartoes.map((c) => (
-            <li key={c.id} className="border-b border-muted last:border-0">
-              {/* A demanda se resolve no quadro, não aqui: a linha é só o rastro do combinado. */}
-              <Link
-                href="/flow/tarefas"
-                className="flex min-h-12 flex-col gap-1 px-3 py-2.5 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-              >
-                <span className="min-w-0 break-words text-sm font-medium">{c.titulo}</span>
-                <span className="flex shrink-0 flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>{c.responsavelNome}</span>
-                  {c.prazo && <span className="font-numeric">{formatarData(c.prazo)}</span>}
-                  {c.concluidoEm ? (
-                    <Badge variant="success">Concluído</Badge>
-                  ) : (
-                    <Badge variant="pending">No quadro</Badge>
+      {total > 0 && (
+        <div className="mt-3 overflow-hidden rounded-lg border border-border">
+          <div
+            className={cn(
+              "hidden gap-3 border-b border-border bg-muted/50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground @xl:grid",
+              colunas
+            )}
+          >
+            <span>O quê</span>
+            <span>Quem</span>
+            <span>Prazo</span>
+            <span className="sr-only">Situação</span>
+          </div>
+
+          <ul>
+            {listaDeCartoes.map((c) => (
+              <li key={c.id} className="border-b border-muted last:border-0">
+                {/* A demanda se resolve no quadro, não aqui: a linha é só o rastro do combinado. */}
+                <Link
+                  href="/flow/tarefas"
+                  className={cn(
+                    "flex min-h-11 flex-col gap-1 px-3 py-2 transition-colors hover:bg-muted/60 @xl:grid @xl:items-center @xl:gap-3",
+                    colunas
                   )}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                >
+                  <span className="min-w-0 break-words text-sm font-medium">{c.titulo}</span>
+                  <span className="truncate text-xs text-muted-foreground">{c.responsavelNome}</span>
+                  <span className="font-numeric text-xs text-muted-foreground">{c.prazo ? formatarData(c.prazo) : ""}</span>
+                  <span>
+                    {c.concluidoEm ? (
+                      <Badge variant="success">Concluído</Badge>
+                    ) : (
+                      <Badge variant="pending">No quadro</Badge>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
+
+            {rascunhos.map((r) => (
+              // No celular cada demanda é um bloco empilhado, com os rótulos visíveis; a partir
+              // de ~576px do bloco vira uma linha da tabela, com os rótulos só no cabeçalho.
+              <li
+                key={r.chave}
+                className={cn(
+                  "grid gap-2 border-b border-muted bg-action-soft/30 px-3 py-2.5 last:border-0 @xl:items-center @xl:gap-3 @xl:py-2",
+                  colunas
+                )}
+              >
+                <div className="flex min-w-0 flex-col gap-1 @xl:block">
+                  <Label className="text-xs text-muted-foreground @xl:sr-only">Demanda</Label>
+                  <Input
+                    value={r.titulo}
+                    onChange={(e) => alterar(r.chave, { titulo: e.target.value })}
+                    placeholder="O que ficou combinado..."
+                    aria-label="O que ficou combinado"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1 @xl:block">
+                  <Label className="text-xs text-muted-foreground @xl:sr-only">Quem vai fazer</Label>
+                  <Select
+                    value={responsavelDe(r) || null}
+                    onValueChange={(v) => v && alterar(r.chave, { responsavelUserId: String(v) })}
+                  >
+                    <SelectTrigger className="w-full" aria-label="Quem vai fazer">
+                      <SelectValue>{() => nomeDe(responsavelDe(r)) || "Escolha"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {listaDePessoas.map((p) => (
+                        <SelectItem key={p.userId} value={p.userId}>
+                          {p.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-1 @xl:block">
+                  <Label className="text-xs text-muted-foreground @xl:sr-only">Prazo (opcional)</Label>
+                  <Input
+                    type="date"
+                    value={r.prazo}
+                    onChange={(e) => alterar(r.chave, { prazo: e.target.value })}
+                    aria-label="Prazo (opcional)"
+                  />
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Remover demanda"
+                  onClick={() => remover(r.chave)}
+                  className="justify-self-end text-muted-foreground"
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
-      {rascunhos.map((r) => (
-        // No celular cada demanda é um bloco empilhado: título, responsável e prazo lado a lado
-        // em 375px espremeriam o título a ponto de não caber nem uma frase curta.
-        <div
-          key={r.chave}
-          className="flex flex-col gap-2 rounded-lg border border-border p-2.5 sm:flex-row sm:items-end"
-        >
-          <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
-            <Label className="text-xs text-muted-foreground">Demanda</Label>
-            <Input
-              value={r.titulo}
-              onChange={(e) => alterar(r.chave, { titulo: e.target.value })}
-              placeholder="O que ficou combinado..."
-            />
-          </div>
-
-          <div className="flex flex-col gap-[5px] sm:w-44">
-            <Label className="text-xs text-muted-foreground">Quem vai fazer</Label>
-            <Select
-              value={responsavelDe(r) || undefined}
-              onValueChange={(v) => v && alterar(r.chave, { responsavelUserId: String(v) })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue>{() => nomeDe(responsavelDe(r)) || "Escolha"}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {listaDePessoas.map((p) => (
-                  <SelectItem key={p.userId} value={p.userId}>
-                    {p.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-[5px] sm:w-40">
-            <Label className="text-xs text-muted-foreground">Prazo (opcional)</Label>
-            <Input
-              type="date"
-              value={r.prazo}
-              onChange={(e) => alterar(r.chave, { prazo: e.target.value })}
-            />
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Remover demanda"
-            onClick={() => remover(r.chave)}
-            className="self-end text-muted-foreground"
-          >
-            <Trash2 />
+      {/* Sem rascunho não há o que salvar — e o laranja da tela é da reunião, não daqui. */}
+      {rascunhos.length > 0 && (
+        <div className="mt-3 flex justify-end">
+          <Button onClick={salvar} disabled={salvando || criar.isPending}>
+            Salvar demandas
           </Button>
         </div>
-      ))}
-
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="outline" onClick={acrescentar}>
-          <Plus /> Demanda
-        </Button>
-        {/* Sem rascunho não há o que salvar — e o laranja da tela é da reunião, não daqui. */}
-        <Button onClick={salvar} disabled={rascunhos.length === 0 || salvando || criar.isPending}>
-          Salvar demandas
-        </Button>
-      </div>
-    </div>
+      )}
+    </section>
   );
 }

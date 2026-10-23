@@ -35,16 +35,37 @@ export function DetalheDaFonte({ cobranca: x }: { cobranca: Cobranca }) {
   return <span className="block text-xs break-words text-muted-foreground">{texto}</span>;
 }
 
-/** A conta em que a cobrança cai, com o ícone de como ela recebe. Cobrança antiga não tem carteira. */
-export function CarteiraDaCobranca({ cobranca: x }: { cobranca: Cobranca }) {
+/**
+ * A conta em que a cobrança cai, com o ícone de como ela recebe. Cobrança antiga não tem carteira.
+ * Com `onFiltrar`, o nome é um botão que aplica o filtro de carteira da lista.
+ */
+export function CarteiraDaCobranca({
+  cobranca: x,
+  onFiltrar,
+}: {
+  cobranca: Cobranca;
+  onFiltrar?: (contaId: string) => void;
+}) {
   if (!x.contaNome) {
     return <span className="text-xs text-muted-foreground">Sem carteira</span>;
   }
   const Icone = x.origem === "Asaas" ? Zap : HandCoins;
+  const contaId = x.contaFinanceiraId;
   return (
     <span className="inline-flex max-w-full items-center gap-1.5 text-sm text-foreground">
       <Icone aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 break-words">{x.contaNome}</span>
+      {onFiltrar && contaId ? (
+        <button
+          type="button"
+          title="Ver só as cobranças desta carteira"
+          onClick={() => onFiltrar(contaId)}
+          className="min-w-0 rounded-md text-left break-words underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          {x.contaNome}
+        </button>
+      ) : (
+        <span className="min-w-0 break-words">{x.contaNome}</span>
+      )}
     </span>
   );
 }

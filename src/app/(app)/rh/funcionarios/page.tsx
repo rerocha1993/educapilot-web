@@ -14,11 +14,13 @@ import { RhNav } from "@/components/rh/rh-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatarSoData } from "@/lib/format/date";
 import { usePodeEscreverNoRh } from "@/lib/rh/use-pode-escrever";
-import { ROTULO_DO_CONTRATO, useFuncionarios, type FuncionarioResumo } from "@/lib/rh/use-rh";
+import { iniciais } from "@/lib/matriculas/rotulos";
+import { ROTULO_DO_CONTRATO, useFuncionarios, type FuncionarioResumo, type TipoDeContrato } from "@/lib/rh/use-rh";
 import { cn } from "@/lib/utils";
 
 type Situacao = "ativos" | "desligados";
@@ -40,19 +42,112 @@ function bate(f: FuncionarioResumo, termo: string): boolean {
   return normalizar([f.nomeCompleto, f.cargo, f.departamento, f.email].filter(Boolean).join(" ")).includes(termo);
 }
 
+const TODOS = "todos";
+
+/** Avatar de iniciais: a lista ainda não traz foto, então o nome ocupa o lugar dela. */
+function Avatar({ nome, inativo }: { nome: string; inativo?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "grid size-8 shrink-0 place-items-center rounded-full text-[11px] font-bold",
+        inativo ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
+      )}
+    >
+      {iniciais(nome)}
+    </span>
+  );
+}
+
+function Filtro({
+  rotulo,
+  valor,
+  onChange,
+  opcoes,
+}: {
+  rotulo: string;
+  valor: string;
+  onChange: (v: string) => void;
+  opcoes: { valor: string; rotulo: string }[];
+}) {
+  return (
+    <Select value={valor} onValueChange={(v) => onChange(v ?? TODOS)}>
+      <SelectTrigger className="h-10 w-full md:h-9 md:w-48" aria-label={rotulo}>
+        <SelectValue>{() => (valor === TODOS ? rotulo : (opcoes.find((o) => o.valor === valor)?.rotulo ?? rotulo))}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={TODOS}>{rotulo}</SelectItem>
+        {opcoes.map((o) => (
+          <SelectItem key={o.valor} value={o.valor}>
+            {o.rotulo}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function FuncionariosPage() {
   const router = useRouter();
   const podeEscrever = usePodeEscreverNoRh();
   const [situacao, setSituacao] = useState<Situacao>("ativos");
   const [busca, setBusca] = useState("");
   const [novo, setNovo] = useState(false);
+  const [cargo, setCargo] = useState(TODOS);
+  const [departamento, setDepartamento] = useState(TODOS);
+  const [contrato, setContrato] = useState(TODOS);
 
-  const { data, isLoading, isError, refetch } = useFuncionarios({ ativos: situacao === "ativos" });
+  // Uma só carga com todos: as abas Ativos e Desligados mostram a contagem das duas sem ida dupla
+  // ao servidor, e a separação é feita aqui.
+  const { data, isLoading, isError, refetch } = useFuncionarios({ ativos: null });
+
+  const todos = useMemo(() => data ?? [], [data]);
+  const ativos = useMemo(() => todos.filter((f) => f.ativo), [todos]);
+  const desligados = useMemo(() => todos.filter((f) => !f.ativo), [todos]);
+  const daAba = situacao === "ativos" ? ativos : desligados;
+
+  const cargos = useMemo(
+    () => [...new Set(daAba.map((f) => f.cargo).filter((c): c is string => !!c))].sort((x, y) => x.localeCompare(y)),
+    [daAba]
+  );
+  const departamentos = useMemo(
+    () =>
+      [...new Set(daAba.map((f) => f.departamento).filter((c): c is string => !!c))].sort((x, y) =>
+        x.localeCompare(y)
+      ),
+    [daAba]
+  );
+  const contratos = useMemo(() => [...new Set(daAba.map((f) => f.tipoDeContrato))], [daAba]);
 
   // A busca é feita sobre a lista já carregada: a escola tem dezenas de funcionários, e filtrar na
   // tela responde a cada letra sem uma ida ao servidor.
   const termo = normalizar(busca.trim());
-  const lista = useMemo(() => (data ?? []).filter((f) => bate(f, termo)), [data, termo]);
+  const lista = useMemo(
+    () =>
+      daAba.filter(
+        (f) =>
+          bate(f, termo) &&
+          (cargo === TODOS || f.cargo === cargo) &&
+          (departamento === TODOS || f.departamento === departamento) &&
+          (contrato === TODOS || f.tipoDeContrato === contrato)
+      ),
+    [daAba, termo, cargo, departamento, contrato]
+  );
+  const filtrando = !!termo || cargo !== TODOS || departamento !== TODOS || contrato !== TODOS;
+
+  // Totais por tipo de contrato acompanham os filtros.
+  const porContrato = useMemo(() => {
+    const mapa = new Map<TipoDeContrato, number>();
+    for (const f of lista) mapa.set(f.tipoDeContrato, (mapa.get(f.tipoDeContrato) ?? 0) + 1);
+    return [...mapa.entries()].sort((x, y) => y[1] - x[1]);
+  }, [lista]);
+
+  function limparFiltros() {
+    setBusca("");
+    setCargo(TODOS);
+    setDepartamento(TODOS);
+    setContrato(TODOS);
+  }
 
   const situacaoDe = (f: FuncionarioResumo) =>
     f.ativo ? (
@@ -81,37 +176,108 @@ export default function FuncionariosPage() {
         }
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative md:w-80">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar por nome, cargo ou e-mail"
-            aria-label="Buscar funcionário"
-            className="pl-8"
-          />
+      {/* Números antes da lista: quem está na escola, quem saiu e como a equipe se divide por contrato
+          (esta divisão acompanha a aba e os filtros). */}
+      {!isLoading && !isError && todos.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span>
+            <span className="font-numeric font-medium text-foreground">{ativos.length}</span>{" "}
+            {ativos.length === 1 ? "ativo" : "ativos"}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            <span className="font-numeric font-medium text-foreground">{desligados.length}</span>{" "}
+            {desligados.length === 1 ? "desligado" : "desligados"}
+          </span>
+          {porContrato.map(([tipo, n]) => (
+            <span key={tipo} className="inline-flex items-center gap-x-2">
+              <span aria-hidden>·</span>
+              <span>
+                {ROTULO_DO_CONTRATO[tipo]} <span className="font-numeric font-medium text-foreground">{n}</span>
+              </span>
+            </span>
+          ))}
+        </p>
+      )}
+
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div role="group" aria-label="Situação" className="flex w-max max-w-full gap-1 rounded-lg bg-muted p-1">
+            {SITUACOES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-pressed={situacao === s.id}
+                onClick={() => {
+                  setSituacao(s.id);
+                  // Cargos e departamentos mudam de uma aba para a outra: filtro antigo deixaria a lista vazia.
+                  setCargo(TODOS);
+                  setDepartamento(TODOS);
+                  setContrato(TODOS);
+                }}
+                className={cn(
+                  "inline-flex min-h-10 items-center gap-1.5 rounded-md px-3.5 text-[13.5px] whitespace-nowrap transition-colors md:min-h-8",
+                  situacao === s.id
+                    ? "bg-card font-semibold text-foreground shadow-[0_1px_3px_rgba(42,37,48,.12)]"
+                    : "font-medium text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {s.rotulo}
+                {!isLoading && (
+                  <span className="font-numeric text-xs opacity-75">
+                    {s.id === "ativos" ? ativos.length : desligados.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative md:w-72">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por nome, cargo ou e-mail"
+              aria-label="Buscar funcionário"
+              className="h-10 pl-8 md:h-9"
+            />
+          </div>
         </div>
 
-        <div role="group" aria-label="Situação" className="flex w-max max-w-full gap-1 rounded-lg bg-muted p-1">
-          {SITUACOES.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              aria-pressed={situacao === s.id}
-              onClick={() => setSituacao(s.id)}
-              className={cn(
-                "inline-flex min-h-10 items-center rounded-md px-3.5 text-[13.5px] whitespace-nowrap transition-colors md:min-h-8",
-                situacao === s.id
-                  ? "bg-card font-semibold text-foreground shadow-[0_1px_3px_rgba(42,37,48,.12)]"
-                  : "font-medium text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {s.rotulo}
-            </button>
-          ))}
-        </div>
+        {(cargos.length > 1 || departamentos.length > 1 || contratos.length > 1) && (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 md:flex md:flex-wrap md:items-center">
+            {cargos.length > 1 && (
+              <Filtro
+                rotulo="Todos os cargos"
+                valor={cargo}
+                onChange={setCargo}
+                opcoes={cargos.map((c) => ({ valor: c, rotulo: c }))}
+              />
+            )}
+            {departamentos.length > 1 && (
+              <Filtro
+                rotulo="Todos os departamentos"
+                valor={departamento}
+                onChange={setDepartamento}
+                opcoes={departamentos.map((c) => ({ valor: c, rotulo: c }))}
+              />
+            )}
+            {contratos.length > 1 && (
+              <Filtro
+                rotulo="Todos os contratos"
+                valor={contrato}
+                onChange={setContrato}
+                opcoes={contratos.map((c) => ({ valor: c, rotulo: ROTULO_DO_CONTRATO[c] }))}
+              />
+            )}
+            {filtrando && (
+              <Button variant="ghost" size="sm" onClick={limparFiltros} className="justify-self-start">
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {isError ? (
@@ -126,21 +292,21 @@ export default function FuncionariosPage() {
         <EstadoVazio
           icone={<UsersRound />}
           titulo={
-            termo
+            filtrando
               ? "Ninguém encontrado"
               : situacao === "ativos"
                 ? "Nenhum funcionário cadastrado"
                 : "Nenhum funcionário desligado"
           }
           texto={
-            termo
-              ? "Tente outro nome, cargo ou e-mail."
+            filtrando
+              ? "Tente outro nome, cargo ou e-mail, ou limpe os filtros."
               : situacao === "ativos"
                 ? "Cadastre a equipe, ou crie as fichas a partir dos usuários na Visão geral."
                 : "Quem for desligado aparece aqui, com os registros preservados."
           }
           acao={
-            !termo &&
+            !filtrando &&
             situacao === "ativos" &&
             podeEscrever && (
               <Button variant="outline" onClick={() => setNovo(true)}>
@@ -156,7 +322,12 @@ export default function FuncionariosPage() {
             {lista.map((f) => (
               <Link key={f.id} href={`/rh/funcionarios/${f.id}`} className="block">
                 <CartaoDaLista
-                  titulo={f.nomeCompleto}
+                  titulo={
+                    <span className="flex items-center gap-2.5">
+                      <Avatar nome={f.nomeCompleto} inativo={!f.ativo} />
+                      <span className="min-w-0">{f.nomeCompleto}</span>
+                    </span>
+                  }
                   subtitulo={[f.cargo, f.departamento].filter(Boolean).join(" · ") || "Sem cargo"}
                   etiquetas={situacaoDe(f)}
                   detalhes={
@@ -187,18 +358,23 @@ export default function FuncionariosPage() {
                 {lista.map((f) => (
                   <TableRow
                     key={f.id}
-                    className="cursor-pointer"
+                    className="cursor-pointer [&>td]:py-1.5"
                     onClick={() => router.push(`/rh/funcionarios/${f.id}`)}
                   >
                     <TableCell>
-                      <Link
-                        href={`/rh/funcionarios/${f.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="font-medium hover:underline"
-                      >
-                        {f.nomeCompleto}
-                      </Link>
-                      {f.email && <p className="text-xs text-muted-foreground">{f.email}</p>}
+                      <div className="flex items-center gap-2.5">
+                        <Avatar nome={f.nomeCompleto} inativo={!f.ativo} />
+                        <div className="min-w-0">
+                          <Link
+                            href={`/rh/funcionarios/${f.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-medium hover:underline"
+                          >
+                            {f.nomeCompleto}
+                          </Link>
+                          {f.email && <p className="truncate text-xs text-muted-foreground">{f.email}</p>}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {f.cargo ?? "—"}
@@ -214,6 +390,17 @@ export default function FuncionariosPage() {
               </TableBody>
             </Table>
           </div>
+
+          <p className="text-xs text-muted-foreground">
+            <span className="font-numeric">{lista.length}</span>{" "}
+            {lista.length === 1 ? "funcionário" : "funcionários"}
+            {filtrando && (
+              <>
+                {" "}
+                de <span className="font-numeric">{daAba.length}</span>
+              </>
+            )}
+          </p>
         </>
       )}
 

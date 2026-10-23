@@ -28,6 +28,36 @@ export interface PublicFormDto {
   campos: PublicFormFieldDto[];
 }
 
+export interface ConvitePublico {
+  valido: boolean;
+  mensagem?: string | null;
+  alunoNome?: string | null;
+  turma?: string | null;
+}
+
+/** Confere o convite do link (?convite=): GET /api/PublicForms/{token}/convite/{convite}. Tipado à mão. */
+export function useConvitePublico(token: string | undefined, convite: string | null, habilitado = true) {
+  return useQuery({
+    queryKey: ["public-form", token, "convite", convite],
+    enabled: !!token && !!convite && habilitado,
+    retry: 0,
+    queryFn: async () => {
+      const cliente = flowApi as unknown as {
+        GET: (c: string, o: { params: { path: { token: string; convite: string } } }) => Promise<{ data?: unknown; response: Response }>;
+      };
+      try {
+        const r = await cliente.GET("/api/PublicForms/{token}/convite/{convite}", {
+          params: { path: { token: token!, convite: convite! } },
+        });
+        if (!r.response.ok) return { valido: false, mensagem: "Este link não é mais válido. Peça outro à escola." } as ConvitePublico;
+        return r.data as ConvitePublico;
+      } catch {
+        return { valido: false, mensagem: "Não foi possível conferir o link agora. Tente novamente em instantes." } as ConvitePublico;
+      }
+    },
+  });
+}
+
 // Correção (2026-08): achado ao vivo testando o link com um usuário real — a tela
 // mostrava a MESMA mensagem ("link não é válido") tanto pra um token genuinamente
 // inexistente quanto pra qualquer falha temporária (backend fora do ar, rede
@@ -80,6 +110,12 @@ export interface PublicSubmissionInput {
   nomeReferencia?: string | null;
   observacoes?: string | null;
   itens: { fieldId: string; valor: string | null }[];
+  /** Código do convite (?convite= do link): uso único, o servidor confere e define o aluno. */
+  convite?: string | null;
+  /** Aluno achado na identificação (formulário vinculado à ficha sem convite). */
+  alunoId?: number | null;
+  /** Responsável achado na identificação (vai junto com o aluno). */
+  responsavelId?: string | null;
 }
 
 export function useSubmitPublicForm(token: string) {
@@ -92,7 +128,11 @@ export function useSubmitPublicForm(token: string) {
           referenciaId: null,
           nomeReferencia: dto.nomeReferencia ?? null,
           observacoes: dto.observacoes ?? null,
+          alunoId: dto.convite ? null : (dto.alunoId ?? null),
+          responsavelId: dto.convite ? null : (dto.responsavelId ?? null),
           itens: dto.itens,
+          // `convite` ainda não consta no openapi gerado; o servidor ignora o que não conhece.
+          ...(dto.convite ? { convite: dto.convite } : {}),
         },
       });
       if (!result.response.ok || result.error) {

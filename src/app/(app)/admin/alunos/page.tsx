@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound, Camera } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, AlertTriangle, IdCard, UserRound, Camera, FileSpreadsheet } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -188,6 +188,10 @@ export default function AlunosPage() {
     s.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
+  const comAlergia = filteredStudents.filter((s) => !!s.allergies?.trim()).length;
+  // Sem "sim" registrado a escola não pode usar a imagem: vale tanto para "não" quanto para "não informado".
+  const semImagem = filteredStudents.filter((s) => s.autorizaUsoDeImagem !== true).length;
+
   async function handleSave() {
     if (!fullName.trim() || !birthDate || classId === null) return;
     if (periodoAlterado && !periodoCompleto(periodoAlterado)) {
@@ -242,15 +246,21 @@ export default function AlunosPage() {
         titulo="Alunos"
         apoio="Cadastro com data de nascimento, período e turma."
         acoes={
-          <Button
-            variant="action"
-            onClick={() => abrirCadastro("new")}
-            disabled={selectedClassId === null}
-            className="w-full md:w-auto"
-          >
-            <Plus className="size-4" />
-            Novo aluno
-          </Button>
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
+            <Link href="/admin/importar" className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}>
+              <FileSpreadsheet className="size-4" />
+              Importar planilha
+            </Link>
+            <Button
+              variant="action"
+              onClick={() => abrirCadastro("new")}
+              disabled={selectedClassId === null}
+              className="w-full md:w-auto"
+            >
+              <Plus className="size-4" />
+              Novo aluno
+            </Button>
+          </div>
         }
       />
 
@@ -284,9 +294,38 @@ export default function AlunosPage() {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {/* Números antes da lista: acompanham a turma escolhida e a busca. */}
+          {!studentsLoading && filteredStudents.length > 0 && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              <span>
+                <span className="font-numeric font-medium text-foreground">{filteredStudents.length}</span>{" "}
+                {filteredStudents.length === 1 ? "aluno" : "alunos"}
+              </span>
+              {comAlergia > 0 && (
+                <>
+                  <span aria-hidden>·</span>
+                  <Badge variant="overdue" className="gap-1">
+                    <AlertTriangle aria-hidden />
+                    <span className="font-numeric">{comAlergia}</span> com alergia
+                  </Badge>
+                </>
+              )}
+              {semImagem > 0 && (
+                <>
+                  <span aria-hidden>·</span>
+                  <Badge variant="pending" className="gap-1">
+                    <Camera aria-hidden />
+                    <span className="font-numeric">{semImagem}</span> sem autorização de imagem
+                  </Badge>
+                </>
+              )}
+            </p>
+          )}
+
           <div className="relative w-full md:w-72">
             <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              aria-label="Buscar aluno"
               placeholder="Buscar por nome"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -433,12 +472,6 @@ export default function AlunosPage() {
             </Table>
           </div>
 
-          {/* Matrícula, responsável e status fazem parte do wireframe A9, mas o backend
-              ainda não tem esses campos em Student — ver design/handoff/README.md. */}
-          <p className="text-xs text-muted-foreground">
-            Matrícula, responsável e status ainda não são suportados pelo backend —
-            próxima etapa.
-          </p>
         </div>
       </div>
 
@@ -564,11 +597,9 @@ export default function AlunosPage() {
                   <Input value={healthInsurance} onChange={(e) => setHealthInsurance(e.target.value)} />
                 </div>
               </div>
-              {/* Timeline de registros recentes faz parte do wireframe R5, mas não tem
-                  fonte de dados no backend (não é um histórico, é só o estado atual). */}
+              {/* Não há histórico de registros de saúde: os campos guardam só o estado atual. */}
               <p className="mt-3 text-xs text-muted-foreground">
-                Histórico de registros de saúde ainda não é suportado pelo backend —
-                estes campos guardam só o estado atual.
+                Estes campos guardam só a informação mais recente; ao salvar, ela substitui a anterior.
               </p>
             </div>
           </div>

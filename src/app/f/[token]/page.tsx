@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Paperclip } from "lucide-react";
+import { CheckCircle2, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ import {
 import { MarcaEducaPilot } from "@/components/auth/marca";
 import { RematriculaLookup } from "@/components/integrations/rematricula-lookup";
 import { decodeFormConfig } from "@/lib/flow/form-config";
+import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
 import { ContractField } from "@/components/flow/contract-field";
 import { CampoTabela } from "@/components/flow/campo-tabela";
 import { condicaoAtendida } from "@/lib/flow/condicao";
@@ -36,6 +37,7 @@ import { valorDaParte, type EnderecoCep } from "@/lib/flow/cep";
 import type { DadosRematricula } from "@/lib/integrations/use-rematricula";
 import {
   usePublicForm,
+  useConvitePublico,
   useSubmitPublicForm,
   useUploadPublicFormFile,
   PublicFormLoadError,
@@ -407,11 +409,21 @@ function Etapas({ etapas, atual }: { etapas: string[]; atual: number }) {
   );
 }
 
+const semAssinatura = () => () => {};
+
 export default function PublicFormFillPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
 
+  // Link identificado (/f/{token}?convite=...): a escola gerou o convite na ficha do aluno. A query
+  // string só existe no navegador, então a busca do formulário espera a hidratação para já nascer
+  // com o convite (sem piscar a identificação).
+  const busca = useQueryStringLocal();
+  const convite = busca.get("convite")?.trim() || null;
+  const noNavegador = useSyncExternalStore(semAssinatura, () => true, () => false);
+
   const { data: form, isLoading, isError, error, refetch, isFetching } = usePublicForm(token);
+  const conviteConferido = useConvitePublico(token, convite, noNavegador);
   const submitForm = useSubmitPublicForm(token);
   const loadErrorKind = error instanceof PublicFormLoadError ? error.kind : "unavailable";
 
@@ -421,6 +433,9 @@ export default function PublicFormFillPage() {
   // Id da resposta enviada: e por ele que a tela acompanha a assinatura logo depois do envio.
   const [respostaId, setRespostaId] = useState<string | null>(null);
   const [autoPreenchido, setAutoPreenchido] = useState(false);
+  // Aluno achado na identificação: o formulário vinculado à ficha grava a resposta nele.
+  const [alunoId, setAlunoId] = useState<number | null>(null);
+  const [responsavelId, setResponsavelId] = useState<string | null>(null);
 
   // Valores que o campo já nasce trazendo (Config.valorPadrao). Aplicados uma vez, quando os
   // campos chegam: depois disso a resposta é do respondente, e reaplicar apagaria o que digitou.
@@ -458,10 +473,18 @@ export default function PublicFormFillPage() {
 
   const regras = decodeFormConfig(form?.config);
 
+  // Formulário da ficha do aluno (anamnese) pelo link geral: preenche como qualquer outro, com a identificação que a
+  // escola configurou. O servidor não grava aluno vindo do navegador; a resposta chega sem aluno e a escola vincula
+  // depois na Caixa de envios. O link por criança (convite) já traz o aluno.
+  const porConvite = convite !== null && conviteConferido.data?.valido === true;
+  const conviteInvalido = convite !== null && conviteConferido.data?.valido === false;
+  const conviteCarregando = convite !== null && conviteConferido.isLoading;
+  const mostrarBusca = !conviteCarregando && !porConvite && usaAutoPreenchimento;
+
   // Com a regra ligada, o formulário só aparece depois da busca. Sem ela, tudo à mostra desde
   // o início — que é como os formulários existentes já funcionam.
-  const exigeIdentificacao = usaAutoPreenchimento && !!regras.exigirIdentificacao;
-  const mostrarCampos = !exigeIdentificacao || autoPreenchido || preenchendoManualmente;
+  const exigeIdentificacao = !porConvite && usaAutoPreenchimento && !!regras.exigirIdentificacao;
+  const mostrarCampos = !conviteCarregando && (!exigeIdentificacao || autoPreenchido || preenchendoManualmente);
 
   // Há contrato quando um campo de contrato foi (ou vai ser) respondido. Campo escondido por
   // condição não é enviado e não gera contrato nenhum — por isso a conta sai dos campos visíveis,
@@ -471,7 +494,7 @@ export default function PublicFormFillPage() {
 
   // Etapas mostradas no topo: só existem as que este formulário de fato tem.
   const etapas = [
-    ...(usaAutoPreenchimento ? ["Identificação"] : []),
+    ...(mostrarBusca ? ["Identificação"] : []),
     "Preenchimento",
     ...(temContrato ? ["Assinatura"] : []),
   ];
@@ -518,6 +541,8 @@ export default function PublicFormFillPage() {
 
       return proximos;
     });
+    setAlunoId(dados.alunoId ?? null);
+    setResponsavelId(dados.responsavelId ?? null);
     setAutoPreenchido(true);
   }
 
@@ -526,6 +551,9 @@ export default function PublicFormFillPage() {
       const criada = await submitForm.mutateAsync({
         nomeReferencia: nomeReferencia.trim() || null,
         observacoes: observacoes.trim() || null,
+        convite: porConvite ? convite : null,
+        alunoId,
+        responsavelId,
         itens: camposVisiveis.map((c) => ({ fieldId: c.id, valor: answers[c.id] ?? null })),
       });
       setRespostaId((criada as { id?: string } | undefined)?.id ?? null);
@@ -591,7 +619,29 @@ export default function PublicFormFillPage() {
               )}
             </div>
 
-            {usaAutoPreenchimento && (
+            {porConvite && (
+              <div className="flex items-center gap-2 rounded-xl border border-success-border bg-success-soft px-4 py-3 text-sm text-success-soft-foreground">
+                <CheckCircle2 className="size-4 shrink-0" />
+                <span className="min-w-0 break-words">
+                  {conviteConferido.data?.alunoNome ? (
+                    <>
+                      Respondendo por <strong>{conviteConferido.data.alunoNome}</strong>
+                      {conviteConferido.data.turma ? ` (${conviteConferido.data.turma})` : ""}. Não precisa se identificar.
+                    </>
+                  ) : (
+                    "Este link foi gerado pela escola para um aluno. Não precisa se identificar."
+                  )}
+                </span>
+              </div>
+            )}
+
+            {conviteInvalido && (
+              <div role="alert" className="rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-soft-foreground">
+                {conviteConferido.data?.mensagem ?? "Este link não é mais válido."} Você ainda pode se identificar abaixo e preencher.
+              </div>
+            )}
+
+            {mostrarBusca && (
               <RematriculaLookup
                 token={token}
                 onEncontrado={aplicarDados}

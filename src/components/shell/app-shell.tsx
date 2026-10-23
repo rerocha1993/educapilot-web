@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  TrendingUp,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -42,6 +43,7 @@ import { BuscaGlobal } from "@/components/shell/busca-global";
 import { useTemaIos } from "@/lib/nativo/use-tema-ios";
 import { useChatTempoReal } from "@/lib/relacionamento/chat-tempo-real";
 import { useResumoDoChat } from "@/lib/relacionamento/use-chat";
+import { useMeuDesempenhoDisponivel } from "@/lib/rh/use-meu-desempenho";
 import { useMeuPontoDisponivel } from "@/lib/rh/use-meu-ponto";
 
 // Novo (2026-09, feedback do cliente) — "pode recolher o sidebar, para dar mais
@@ -56,6 +58,7 @@ const COLLAPSE_STORAGE_KEY = "educapilot_sidebar_collapsed";
  * da tela. O caminho de volta é a seta da própria página.
  */
 const MEU_PONTO_HREF = "/meu-ponto";
+const MEU_DESEMPENHO_HREF = "/meu-desempenho";
 
 // Celular (abaixo de md): a sidebar some e dá lugar a um cabeçalho com menu, uma barra de abas
 // embaixo e a tela Início com atalhos. A barra tem a aba Início e até quatro módulos, divididos em
@@ -113,6 +116,8 @@ export function AppShell({
   const { data: modulosAtivos } = useActiveModules();
   // O atalho só existe para quem tem ficha de funcionário e a escola ligou o ponto pelo celular.
   const comMeuPonto = useMeuPontoDisponivel(session.role !== "Responsavel");
+  // Idem para o desempenho: o atalho só existe para quem tem ficha de funcionário ligada ao login.
+  const comMeuDesempenho = useMeuDesempenhoDisponivel(session.role !== "Responsavel");
   const telaLimpaNoCelular = pathname === MEU_PONTO_HREF;
 
   const [collapsed, setCollapsed] = useState(false);
@@ -219,7 +224,9 @@ export function AppShell({
         ? TITULO_DO_MODULO.admin
         : pathname === MEU_PONTO_HREF
           ? "Meu ponto"
-          : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
+          : pathname === MEU_DESEMPENHO_HREF || pathname.startsWith(`${MEU_DESEMPENHO_HREF}/`)
+            ? "Meu desempenho"
+            : (TITULO_DO_MODULO[moduloDaRota(pathname) ?? ""] ?? "");
 
   const menuDoUsuario = (tamanho: "sm" | "lg") => (
     <DropdownMenu>
@@ -250,6 +257,12 @@ export function AppShell({
             Meu ponto
           </DropdownMenuItem>
         )}
+        {comMeuDesempenho && (
+          <DropdownMenuItem onClick={() => router.push(MEU_DESEMPENHO_HREF)}>
+            <TrendingUp className="size-4" />
+            Meu desempenho
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => setAlterandoSenha(true)}>
           <KeyRound className="size-4" />
           Alterar senha
@@ -266,7 +279,7 @@ export function AppShell({
     // min-h-dvh + flex-1: o `min-h-full` daqui dependia de uma altura definida no body, que não
     // existe (ele só tem min-height). Sem isso o shell ficava do tamanho do conteúdo e a barra
     // escura terminava no meio da tela em página curta.
-    <div className={cn("flex min-h-dvh flex-1", temaIos && "tema-ios")}>
+    <div className={cn("flex min-h-dvh flex-1 print:block print:min-h-0", temaIos && "tema-ios")}>
       {/* Navegação escura da entrega de design: a barra é a tinta da interface, e o laranja marca
           só o item ativo — é a única decisão que existe aqui. */}
       <aside
@@ -335,7 +348,7 @@ export function AppShell({
         )}
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col print:block">
         <header className="sticky top-0 z-20 hidden h-14 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-6 backdrop-blur md:flex print:hidden!">
           <div className="flex min-w-0 items-center gap-2 text-[13px] text-muted-foreground">
             <span className="truncate">{session.name}</span>
@@ -407,7 +420,7 @@ export function AppShell({
             para a barra de abas fixa. */}
         <main
           className={cn(
-            "min-w-0 flex-1 overflow-auto bg-background p-4 md:px-6 md:pb-11 md:pt-6",
+            "min-w-0 flex-1 overflow-auto bg-background p-4 md:px-6 md:pb-11 md:pt-6 print:overflow-visible print:bg-white! print:p-0!",
             telaLimpaNoCelular
               ? "pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]"
               : "pb-[calc(6rem+env(safe-area-inset-bottom))]"
@@ -503,6 +516,16 @@ export function AppShell({
                 >
                   <Clock className="size-5 text-sidebar-muted" />
                   Meu ponto
+                </Link>
+              )}
+              {comMeuDesempenho && (
+                <Link
+                  href={MEU_DESEMPENHO_HREF}
+                  onClick={fecharMenu}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-sidebar-foreground active:bg-sidebar-accent"
+                >
+                  <TrendingUp className="size-5 text-sidebar-muted" />
+                  Meu desempenho
                 </Link>
               )}
               <button

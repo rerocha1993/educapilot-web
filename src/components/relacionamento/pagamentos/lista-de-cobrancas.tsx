@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Receipt } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 
+import { BarraDeLote } from "@/components/finance/barra-de-lote";
+import { DialogDeBaixaEmLote } from "@/components/finance/dialog-de-baixa-em-lote";
+import { FaixaDeTotais } from "@/components/finance/faixa-de-totais";
 import { ResumoDoPagamento } from "@/components/finance/resumo-do-pagamento";
 import { EtiquetaDaCobranca } from "@/components/finance/projetos/comum";
 import {
@@ -18,12 +21,14 @@ import { EstadoVazio } from "@/components/padroes/estado-vazio";
 import { ErroDeCarga } from "@/components/rh/campo";
 import { CartaoDaLista } from "@/components/rh/lista-movel";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { situacaoPelaData } from "@/lib/finance/diferenca-do-pagamento";
 import { rotuloDaForma } from "@/lib/finance/use-recibos";
 import { formatarSoData } from "@/lib/format/date";
+import { estaEmAberto } from "@/lib/relacionamento/pagamentos-util";
 import { formatarMoeda } from "@/lib/rh/formatar";
 import { TAMANHOS_DA_PAGINA, useCobrancasDaEscola, type Cobranca } from "@/lib/relacionamento/use-pagamentos";
 import { cn } from "@/lib/utils";
@@ -42,7 +47,11 @@ export function ListaDeCobrancas({
   semNenhuma: { titulo: string; texto?: string; acao?: ReactNode };
 }) {
   const [dialogo, setDialogo] = useState<DialogoDeCobranca | null>(null);
+  const [emLote, setEmLote] = useState(false);
+  // A seleção vale para a página e o filtro em que foi feita: mudou um dos dois, ela some sozinha.
+  const [selecao, setSelecao] = useState<{ chave: string; ids: Set<string> }>({ chave: "", ids: new Set() });
   const recorrente = f.tipo === "recorrente";
+  const chaveDaLista = JSON.stringify([f.filtroDoServidor, f.pagina, f.tamanho]);
 
   const { data, isLoading, isError, isFetching, isPlaceholderData, refetch } = useCobrancasDaEscola(
     f.filtroDoServidor,
@@ -56,6 +65,26 @@ export function ListaDeCobrancas({
   const primeiroDaPagina = total === 0 ? 0 : (f.pagina - 1) * f.tamanho + 1;
   const ultimoDaPagina = Math.min(f.pagina * f.tamanho, total);
   const atualizando = isFetching && isPlaceholderData;
+
+  // Só cobrança em aberto entra no lote ("Marcar paga" não existe para as outras).
+  const marcaveis = lista.filter((x) => estaEmAberto(x.status));
+  const idsMarcados = selecao.chave === chaveDaLista ? selecao.ids : new Set<string>();
+  const marcadas = marcaveis.filter((x) => idsMarcados.has(x.id));
+  const todasMarcadas = marcaveis.length > 0 && marcadas.length === marcaveis.length;
+  const somaMarcada = marcadas.reduce((s, x) => s + x.valor, 0);
+
+  function alternar(id: string, marcado: boolean) {
+    const novo = new Set(idsMarcados);
+    if (marcado) novo.add(id);
+    else novo.delete(id);
+    setSelecao({ chave: chaveDaLista, ids: novo });
+  }
+
+  function alternarTodas(marcado: boolean) {
+    setSelecao({ chave: chaveDaLista, ids: marcado ? new Set(marcaveis.map((x) => x.id)) : new Set() });
+  }
+
+  const totais = data?.totais ?? null;
 
   if (isError) return <ErroDeCarga texto="Não foi possível carregar as cobranças." onTentar={() => refetch()} />;
 
@@ -111,11 +140,33 @@ export function ListaDeCobrancas({
 
   return (
     <div className={cn("grid gap-3 transition-opacity", atualizando && "opacity-60")} aria-busy={atualizando}>
+      <BarraDeLote
+        quantidade={marcadas.length}
+        soma={formatarMoeda(somaMarcada)}
+        rotuloDaAcao={`Marcar ${marcadas.length} ${marcadas.length === 1 ? "como paga" : "como pagas"}`}
+        icone={<Check />}
+        onAcao={() => setEmLote(true)}
+        onLimpar={() => setSelecao({ chave: chaveDaLista, ids: new Set() })}
+      />
+
       <div className="flex flex-col gap-2 md:hidden">
         {lista.map((x) => (
           <CartaoDaLista
             key={x.id}
-            titulo={x.nomeDoResponsavel}
+            titulo={
+              estaEmAberto(x.status) ? (
+                <label className="-my-1 flex min-h-11 cursor-pointer items-center gap-2.5">
+                  <Checkbox
+                    aria-label={`Marcar a cobrança de ${x.nomeDoResponsavel}`}
+                    checked={idsMarcados.has(x.id)}
+                    onCheckedChange={(v) => alternar(x.id, v)}
+                  />
+                  {x.nomeDoResponsavel}
+                </label>
+              ) : (
+                x.nomeDoResponsavel
+              )
+            }
             subtitulo={[x.alunoNome, x.descricao].filter(Boolean).join(" · ")}
             etiquetas={<EtiquetaDaCobranca status={x.status} />}
             detalhes={
@@ -128,7 +179,7 @@ export function ListaDeCobrancas({
                 {x.status === "Paga" && <PagamentoDaCobranca x={x} />}
                 <span className="flex items-center justify-between gap-2">
                   <span>Carteira</span>
-                  <CarteiraDaCobranca cobranca={x} />
+                  <CarteiraDaCobranca cobranca={x} onFiltrar={f.definirCarteira} />
                 </span>
                 <span className="flex items-center justify-between gap-2">
                   <span>{recorrente ? "Plano" : "Origem"}</span>
@@ -148,6 +199,15 @@ export function ListaDeCobrancas({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  aria-label="Marcar todas as cobranças em aberto da página"
+                  checked={todasMarcadas}
+                  indeterminate={marcadas.length > 0 && !todasMarcadas}
+                  disabled={marcaveis.length === 0}
+                  onCheckedChange={alternarTodas}
+                />
+              </TableHead>
               <TableHead>Responsável</TableHead>
               <TableHead>Aluno</TableHead>
               <TableHead>Descrição</TableHead>
@@ -161,7 +221,16 @@ export function ListaDeCobrancas({
           </TableHeader>
           <TableBody>
             {lista.map((x) => (
-              <TableRow key={x.id}>
+              <TableRow key={x.id} className="[&>td]:py-1.5" data-state={idsMarcados.has(x.id) ? "selected" : undefined}>
+                <TableCell>
+                  {estaEmAberto(x.status) && (
+                    <Checkbox
+                      aria-label={`Marcar a cobrança de ${x.nomeDoResponsavel}`}
+                      checked={idsMarcados.has(x.id)}
+                      onCheckedChange={(v) => alternar(x.id, v)}
+                    />
+                  )}
+                </TableCell>
                 <TableCell className="font-medium whitespace-normal">{x.nomeDoResponsavel}</TableCell>
                 <TableCell className="whitespace-normal">{x.alunoNome ?? "—"}</TableCell>
                 <TableCell className="max-w-56 whitespace-normal">{x.descricao || "—"}</TableCell>
@@ -179,7 +248,7 @@ export function ListaDeCobrancas({
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-normal">
-                  <CarteiraDaCobranca cobranca={x} />
+                  <CarteiraDaCobranca cobranca={x} onFiltrar={f.definirCarteira} />
                 </TableCell>
                 <TableCell className="whitespace-normal">
                   <EtiquetaDaFonte cobranca={x} />
@@ -195,6 +264,41 @@ export function ListaDeCobrancas({
           </TableBody>
         </Table>
       </div>
+
+      {/* Totais do filtro inteiro (todas as páginas): seguem período, carteira, turma, situação, origem e busca. */}
+      {totais && (
+        <FaixaDeTotais
+          rotulo="Totais do filtro atual"
+          itens={[
+            {
+              chave: "total",
+              rotulo: f.filtrando ? "Total do filtro" : "Total",
+              valor: formatarMoeda(totais.valorTotal),
+              detalhe: `${total} ${total === 1 ? "cobrança" : "cobranças"}`,
+            },
+            {
+              chave: "aberto",
+              rotulo: "Em aberto",
+              valor: formatarMoeda(totais.valorEmAberto),
+              detalhe: `${totais.quantidadeEmAberto} no prazo`,
+            },
+            {
+              chave: "vencido",
+              rotulo: "Vencido",
+              valor: formatarMoeda(totais.valorVencido),
+              detalhe: `${totais.quantidadeVencidas} ${totais.quantidadeVencidas === 1 ? "cobrança" : "cobranças"}`,
+              tom: totais.valorVencido > 0 ? "danger" : undefined,
+            },
+            {
+              chave: "pago",
+              rotulo: "Pago",
+              valor: formatarMoeda(totais.valorPago),
+              detalhe: `${totais.quantidadePagas} ${totais.quantidadePagas === 1 ? "paga" : "pagas"}`,
+              tom: totais.valorPago > 0 ? "success" : undefined,
+            },
+          ]}
+        />
+      )}
 
       <nav aria-label="Páginas de cobranças" className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <p aria-live="polite" className="text-xs text-muted-foreground">
@@ -240,6 +344,22 @@ export function ListaDeCobrancas({
       </nav>
 
       <DialogosDaCobranca dialogo={dialogo} onFechar={() => setDialogo(null)} />
+
+      {emLote && (
+        <DialogDeBaixaEmLote
+          tipo="cobranca"
+          itens={marcadas.map((x) => ({
+            id: x.id,
+            rotulo: x.nomeDoResponsavel,
+            valor: x.valor,
+            contaId: x.contaFinanceiraId,
+          }))}
+          onConcluir={(pagas) =>
+            setSelecao({ chave: chaveDaLista, ids: new Set([...idsMarcados].filter((id) => !pagas.includes(id))) })
+          }
+          onFechar={() => setEmLote(false)}
+        />
+      )}
     </div>
   );
 }

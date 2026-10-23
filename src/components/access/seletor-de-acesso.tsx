@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,6 +8,13 @@ import { AREAS_SUGERIDAS, PERFIS, ehGestao } from "@/lib/access/perfis";
 import { cn } from "@/lib/utils";
 import { useCatalogoDeAcesso, type AcessoDoUsuario } from "@/lib/access/use-acessos";
 import { useClasses } from "@/lib/kernel/use-classes";
+
+/**
+ * Áreas que o "módulo inteiro" (lista vazia) NÃO inclui: só valem marcadas uma a uma. "Ficha do aluno" abre saúde e
+ * financeiro de qualquer criança, então não pode vir de carona em quem já tinha a Rotina completa. O servidor
+ * (ResumoDoAlunoService.TemAreaFicha) faz a mesma conta.
+ */
+const SO_MARCADAS_UMA_A_UMA = ["ficha"];
 
 /**
  * Acesso que não pode ser gravado: quem não é gestão sem nenhum módulo marcado.
@@ -39,6 +47,16 @@ export function SeletorDeAcesso({
   const { data: catalogo, isLoading } = useCatalogoDeAcesso();
   const { data: turmas } = useClasses();
 
+  // O catálogo só traz o que a escola contratou. A sugestão do perfil (e acessos antigos) pode citar módulo que
+  // esta escola não tem: some daqui, para o que está marcado ser sempre o que aparece na tela, e para o aviso
+  // "marque ao menos um módulo" valer de verdade.
+  useEffect(() => {
+    if (!catalogo) return;
+    const disponiveis = new Set(catalogo.map((m) => m.slug));
+    if (valor.modulos.every((m) => disponiveis.has(m.moduloSlug))) return;
+    onChange({ ...valor, modulos: valor.modulos.filter((m) => disponiveis.has(m.moduloSlug)) });
+  }, [catalogo, valor, onChange]);
+
   // Só o professor trabalha por turma: é dele a lista que limita quais alunos aparecem. Secretaria
   // e coordenação atendem a escola inteira, e a pergunta "quais turmas?" só confundia ali.
   const ehProfessor = valor.userType === "Teacher";
@@ -60,8 +78,10 @@ export function SeletorDeAcesso({
     const modulo = valor.modulos.find((m) => m.moduloSlug === moduloSlug);
     if (!modulo) return false;
 
-    // Lista vazia significa módulo inteiro — então todas aparecem marcadas.
-    return modulo.areas.length === 0 ? todas.includes(areaSlug) : modulo.areas.includes(areaSlug);
+    // Lista vazia significa módulo inteiro — então todas aparecem marcadas (menos as que só valem marcadas uma a uma).
+    return modulo.areas.length === 0
+      ? todas.includes(areaSlug) && !SO_MARCADAS_UMA_A_UMA.includes(areaSlug)
+      : modulo.areas.includes(areaSlug);
   }
 
   function alternarArea(moduloSlug: string, areaSlug: string, todas: string[], marcada: boolean) {
@@ -72,14 +92,17 @@ export function SeletorDeAcesso({
 
         // Expande o "vazio = tudo" antes de tirar uma: sem isso, desmarcar a primeira área de um
         // módulo liberado por inteiro deixaria a lista vazia — ou seja, tudo liberado de novo.
-        const atuais = m.areas.length === 0 ? todas : m.areas;
+        const implicitas = todas.filter((a) => !SO_MARCADAS_UMA_A_UMA.includes(a));
+        const atuais = m.areas.length === 0 ? implicitas : m.areas;
         const proximas = marcada
           ? [...new Set([...atuais, areaSlug])]
           : atuais.filter((a) => a !== areaSlug);
 
         // Voltou a ter todas: grava vazio de novo, para que uma área nova criada amanhã já entre
         // para quem tinha o módulo completo.
-        return { ...m, areas: proximas.length === todas.length ? [] : proximas };
+        const comoModuloInteiro =
+          proximas.length === implicitas.length && implicitas.every((a) => proximas.includes(a));
+        return { ...m, areas: comoModuloInteiro ? [] : proximas };
       })
         // Desmarcou a última área: o módulo sai. Ficar com a lista vazia seria "módulo inteiro" —
         // tirar a única área liberava todas as outras.
@@ -95,7 +118,8 @@ export function SeletorDeAcesso({
    */
   function escolherPerfil(perfil: string) {
     const emBranco = valor.modulos.length === 0;
-    const sugestao = AREAS_SUGERIDAS[perfil] ?? [];
+    const disponiveis = new Set((catalogo ?? []).map((m) => m.slug));
+    const sugestao = (AREAS_SUGERIDAS[perfil] ?? []).filter((m) => disponiveis.has(m.moduloSlug));
 
     onChange({
       ...valor,

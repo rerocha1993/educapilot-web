@@ -3,6 +3,7 @@ import { Outfit, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import { QueryProvider } from "@/lib/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SessaoNativa } from "@/components/nativo/sessao-nativa";
+import { URL_DO_SITE } from "@/lib/seo/site";
 import "./globals.css";
 
 // Tipografia da direção visual 2026-09 (entrega "EducaPilot Sistema"): títulos em Outfit,
@@ -25,9 +26,14 @@ const fontMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+// As telas do sistema não entram no Google (robots noindex aqui, no layout raiz). As páginas públicas
+// (/privacidade) liberam a indexação na própria metadata; o site institucional na raiz é um HTML
+// estático (public/site) com as próprias tags.
 export const metadata: Metadata = {
-  title: "EducaPilot",
-  description: "Gestão escolar multi-tenant",
+  metadataBase: new URL(URL_DO_SITE),
+  title: { default: "EducaPilot", template: "%s · EducaPilot" },
+  description: "Sistema de gestão escolar: chamada, rematrícula com contrato assinado, financeiro, portaria e eventos.",
+  robots: { index: false, follow: false },
   appleWebApp: { capable: true, title: "EducaPilot", statusBarStyle: "default" },
 };
 

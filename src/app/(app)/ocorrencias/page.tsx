@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Printer } from "lucide-react";
+import Link from "next/link";
+import { FileText, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +37,8 @@ import {
   OCCURRENCE_CATEGORIES,
   type OccurrenceCategoria,
 } from "@/lib/tasks/use-occurrences";
+import { GRAVIDADES, GRAVIDADE_DESCRICAO, type Gravidade } from "@/lib/tasks/gravidade";
+import { SeloDeGravidade } from "@/components/tasks/selo-de-gravidade";
 import {
   useWeeklyObservations,
   useSendWeeklyObservation,
@@ -81,6 +84,7 @@ const EMPTY_FORM = {
   classId: null as number | null,
   studentIds: [] as number[],
   categoria: "Comportamento" as OccurrenceCategoria,
+  gravidade: null as Gravidade | null,
   observation: "",
   solution: "",
   notify: false,
@@ -97,12 +101,14 @@ export default function OcorrenciasPage() {
   // ocorrências das turmas das colegas. Começa na primeira turma dele e só busca com turma escolhida.
   const ehProfessor = getSession()?.role === "Teacher";
   const reportClassId = turmaEscolhida ?? (ehProfessor ? (classes?.[0]?.id ?? null) : null);
+  const [filtroGravidade, setFiltroGravidade] = useState<Gravidade | null>(null);
 
   const { data, isLoading, isError } = useOccurrencesReport(
     startDate,
     endDate,
     reportClassId,
-    !ehProfessor || reportClassId !== null
+    !ehProfessor || reportClassId !== null,
+    filtroGravidade
   );
 
   const [week, setWeek] = useState(currentWeekOfMonth());
@@ -129,9 +135,15 @@ export default function OcorrenciasPage() {
   const { data: studentOccurrences, isLoading: studentOccurrencesLoading } =
     useOccurrencesByStudent(selectedStudent?.id ?? null);
   const studentOccurrencesInRange = (studentOccurrences ?? []).filter((o) => {
+    if (filtroGravidade != null && o.gravidade !== filtroGravidade) return false;
     const created = new Date(o.createdAt);
     return created >= startDate && created < new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
   });
+
+  // Resumo do ano: o caminho "procurar o aluno" para quem não está olhando o ranking do relatório.
+  const [resumoTurmaId, setResumoTurmaId] = useState<number | null>(null);
+  const [resumoAlunoId, setResumoAlunoId] = useState<number | null>(null);
+  const { data: alunosDoResumo, isLoading: alunosDoResumoLoading } = useStudentsByClass(resumoTurmaId);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -156,12 +168,13 @@ export default function OcorrenciasPage() {
   }
 
   async function handleSubmit() {
-    if (form.classId === null || form.studentIds.length === 0 || !form.observation.trim()) return;
+    if (form.classId === null || form.studentIds.length === 0 || !form.observation.trim() || form.gravidade == null) return;
     try {
       await createOccurrences.mutateAsync({
         childIds: form.studentIds,
         classId: form.classId,
         categoria: form.categoria,
+        gravidade: form.gravidade,
         observation: form.observation.trim(),
         solution: form.solution.trim() || undefined,
         parentsNotified: form.notify,
@@ -238,6 +251,22 @@ export default function OcorrenciasPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={filtroGravidade ?? "__all__"}
+              onValueChange={(v) => setFiltroGravidade(v === "__all__" ? null : (v as Gravidade))}
+            >
+              <SelectTrigger className="h-9 w-full md:w-44" aria-label="Filtrar por gravidade">
+                <SelectValue>{() => (filtroGravidade ? `Gravidade: ${filtroGravidade}` : "Todas as gravidades")}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todas as gravidades</SelectItem>
+                {GRAVIDADES.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" className="w-full md:w-auto" onClick={() => window.print()}>
               <Printer className="size-4" />
               Exportar PDF
@@ -289,8 +318,7 @@ export default function OcorrenciasPage() {
         <div className="rounded-xl border border-border bg-card p-4">
           <h2 className="font-heading text-[15.5px] font-semibold">Alunos com mais registros</h2>
           <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
-            A cor do ponto é a categoria mais comum do aluno no período — o backend não tem um
-            conceito de gravidade separado.
+            A cor do ponto é a categoria mais comum do aluno no período.
           </p>
 
           {isLoading && <Skeleton className="h-32 w-full" />}
@@ -316,6 +344,77 @@ export default function OcorrenciasPage() {
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 print:hidden">
+        <h2 className="font-heading text-[15.5px] font-semibold">Ficha do aluno</h2>
+        <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
+          Tudo o que a escola registrou sobre o aluno: ficha, frequência, ocorrências, reuniões com os pais, diário e linha do tempo, pronto para imprimir.
+        </p>
+        <div className="flex flex-col gap-2 md:flex-row md:items-end">
+          <div className="flex flex-col gap-[5px] md:w-56">
+            <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Turma</span>
+            <Select
+              value={resumoTurmaId?.toString() ?? ""}
+              onValueChange={(v) => {
+                if (!v) return;
+                setResumoTurmaId(Number(v));
+                setResumoAlunoId(null);
+              }}
+            >
+              <SelectTrigger className="h-10 w-full md:h-9">
+                <SelectValue placeholder="Selecione">
+                  {() => classes?.find((c) => c.id === resumoTurmaId)?.className ?? "Selecione"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {classes?.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.className}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-[5px] md:w-72">
+            <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">Aluno</span>
+            <Select
+              value={resumoAlunoId?.toString() ?? ""}
+              onValueChange={(v) => v && setResumoAlunoId(Number(v))}
+              disabled={resumoTurmaId === null || alunosDoResumoLoading}
+            >
+              <SelectTrigger className="h-10 w-full md:h-9">
+                <SelectValue placeholder={resumoTurmaId === null ? "Escolha a turma primeiro" : "Selecione"}>
+                  {() =>
+                    alunosDoResumo?.find((a) => a.id === resumoAlunoId)?.fullName ??
+                    (resumoTurmaId === null ? "Escolha a turma primeiro" : "Selecione")
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {alunosDoResumo?.map((a) => (
+                  <SelectItem key={a.id} value={String(a.id)}>
+                    {a.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {resumoAlunoId !== null ? (
+            <Link
+              href={`/ocorrencias/aluno/${resumoAlunoId}`}
+              className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
+            >
+              <FileText className="size-4" />
+              Abrir ficha
+            </Link>
+          ) : (
+            <Button variant="outline" className="w-full md:w-auto" disabled>
+              <FileText className="size-4" />
+              Abrir ficha
+            </Button>
+          )}
         </div>
       </div>
 
@@ -401,6 +500,16 @@ export default function OcorrenciasPage() {
             <DialogTitle>Ocorrências de {selectedStudent?.name}</DialogTitle>
           </DialogHeader>
 
+          {selectedStudent && (
+            <Link
+              href={`/ocorrencias/aluno/${selectedStudent.id}`}
+              className={buttonVariants({ variant: "outline", className: "w-full sm:w-fit" })}
+            >
+              <FileText className="size-4" />
+              Ficha do aluno
+            </Link>
+          )}
+
           {studentOccurrencesLoading && <Skeleton className="h-24 w-full" />}
 
           {!studentOccurrencesLoading && studentOccurrencesInRange.length === 0 && (
@@ -419,6 +528,7 @@ export default function OcorrenciasPage() {
                     <span className="flex items-center gap-1.5 text-sm font-medium">
                       <span className={cn("size-2 shrink-0 rounded-full", CATEGORIA_DOT[o.categoria])} />
                       {o.categoria}
+                      <SeloDeGravidade gravidade={o.gravidade} className="ml-1" />
                     </span>
                     <span className="font-numeric text-xs text-muted-foreground">
                       {formatarData(o.createdAt)}
@@ -521,6 +631,34 @@ export default function OcorrenciasPage() {
               </div>
             </div>
 
+            <div>
+              <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
+                Gravidade (obrigatória)
+              </span>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Gravidade da ocorrência" aria-required="true">
+                {GRAVIDADES.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.gravidade === g}
+                    onClick={() => setForm((f) => ({ ...f, gravidade: g }))}
+                    className={cn(
+                      "rounded-full border px-3 py-2 text-sm font-medium transition-colors md:py-1.5",
+                      form.gravidade === g
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-transparent text-foreground hover:bg-accent"
+                    )}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {form.gravidade ? GRAVIDADE_DESCRICAO[form.gravidade] : "Escolha a gravidade para poder registrar."}
+              </p>
+            </div>
+
             <div className="flex flex-col gap-[5px]">
               <span className="text-[10.5px] font-bold uppercase tracking-[.14em] text-muted-foreground">
                 Descrição
@@ -567,6 +705,7 @@ export default function OcorrenciasPage() {
                 createOccurrences.isPending ||
                 form.classId === null ||
                 form.studentIds.length === 0 ||
+                form.gravidade == null ||
                 !form.observation.trim()
               }
             >

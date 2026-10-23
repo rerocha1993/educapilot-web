@@ -1,6 +1,8 @@
 import {
+  FileUser,
   ArrowLeftRight,
   ArrowRightLeft,
+  BookOpen,
   Bot,
   CalendarCheck,
   CalendarDays,
@@ -8,6 +10,7 @@ import {
   CalendarRange,
   ChartColumn,
   CircleAlert,
+  ClipboardList,
   ClipboardCheck,
   Clock,
   Contact,
@@ -32,6 +35,8 @@ import {
   Megaphone,
   MessageCircle,
   MessageSquare,
+  NotebookPen,
+  Salad,
   Package,
   PiggyBank,
   ReceiptText,
@@ -114,8 +119,11 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/", label: "Chamada", icon: ClipboardCheck },
     { href: "/checklist", label: "Checklist", icon: ListChecks },
     { href: "/ocorrencias", label: "Ocorrências", icon: TriangleAlert },
+    { href: "/ficha-do-aluno", label: "Ficha do aluno", icon: FileUser },
+    { href: "/notas", label: "Notas", icon: ClipboardList },
     { href: "/materiais", label: "Materiais", icon: Package },
     { href: "/reunioes", label: "Reuniões", icon: Handshake },
+    { href: "/reunioes-e-atendimentos", label: "Reuniões e atendimentos", icon: UsersRound },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
     { href: "/planejamento-semanal", label: "Planejamento semanal", icon: CalendarRange },
     { href: "/relatorios", label: "Relatórios", icon: ChartColumn },
@@ -160,7 +168,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/finance/orcamento", label: "Orçamento anual", icon: PiggyBank, grupo: GRUPO_PLANEJAMENTO },
     { href: "/finance/projetos", label: "Projetos e eventos", icon: FolderKanban, grupo: GRUPO_PLANEJAMENTO },
     { href: "/finance/precificacao", label: "Precificação", icon: Tag, grupo: GRUPO_PLANEJAMENTO },
-    { href: "/finance/contas", label: "Contas", icon: Landmark, grupo: GRUPO_TESOURARIA },
+    { href: "/finance/contas", label: "Contas e carteiras", icon: Landmark, grupo: GRUPO_TESOURARIA },
     { href: "/finance/conciliacao", label: "Conciliação", icon: ArrowLeftRight, grupo: GRUPO_TESOURARIA },
     { href: "/finance/plano-de-contas", label: "Plano de contas", icon: ListTree, grupo: GRUPO_TESOURARIA },
     { href: "/finance/fechamento", label: "Fechamento", icon: Lock, grupo: GRUPO_TESOURARIA },
@@ -175,6 +183,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/rh/ponto", label: "Ponto", area: "ponto", icon: Clock, grupo: GRUPO_JORNADA },
     { href: "/rh/atestados", label: "Atestados", area: "atestados", icon: Stethoscope, grupo: GRUPO_JORNADA },
     { href: "/rh/afastamentos", label: "Afastamentos", area: "afastamentos", icon: CalendarOff, grupo: GRUPO_JORNADA },
+    { href: "/rh/desempenho", label: "Desempenho", area: "desempenho", icon: TrendingUp },
     { href: "/rh/relatorios", label: "Relatórios", area: "relatorios", icon: ChartColumn },
     { href: "/rh/configuracao", label: "Configuração", area: "configuracao", icon: SlidersHorizontal },
   ],
@@ -192,6 +201,8 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/relacionamento/loja", label: "Loja", area: "loja", icon: Store, grupo: GRUPO_PAGAMENTOS },
     { href: "/relacionamento/chat", label: "Chat", area: "chat", icon: MessageCircle, grupo: GRUPO_COMUNICACAO },
     { href: "/relacionamento/avisos", label: "Avisos e eventos", area: "avisos", icon: Megaphone, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/diario", label: "Diário", area: "diario", icon: NotebookPen, grupo: GRUPO_COMUNICACAO },
+    { href: "/relacionamento/cardapio", label: "Cardápio", area: "cardapio", icon: Salad, grupo: GRUPO_COMUNICACAO },
     { href: "/relacionamento/atividades", label: "Atividades", area: "atividades", icon: Shapes, grupo: GRUPO_COMUNICACAO },
     { href: "/relacionamento/cronograma", label: "Cronograma", area: "cronograma", icon: CalendarDays, grupo: GRUPO_COMUNICACAO },
     { href: "/relacionamento/mural", label: "Mural", area: "mural", icon: Images, grupo: GRUPO_COMUNICACAO },
@@ -227,6 +238,7 @@ export const SECOES_DO_MODULO: Record<string, readonly SecaoDoModulo[]> = {
     { href: "/admin/alunos", label: "Alunos", icon: UserRound },
     { href: "/admin/responsaveis", label: "Responsáveis", icon: Contact },
     { href: "/admin/usuarios", label: "Usuários", icon: Users },
+    { href: "/admin/avaliacao", label: "Matérias e avaliação", area: "materias-avaliacao", icon: BookOpen },
     { href: "/admin/progressao", label: "Progressão de turma", icon: ArrowRightLeft },
     { href: "/admin/email", label: "E-mail da escola", icon: Mail },
     { href: "/admin/importar", label: "Importação em massa", icon: UploadCloud },
@@ -263,6 +275,9 @@ export function secaoAtiva(
   pathname: string
 ): string | null {
   let melhor: string | null = null;
+
+  // A ficha de uma criança continua em /ocorrencias/aluno/[id] (atalhos antigos), mas é da seção Ficha do aluno.
+  if (pathname.startsWith("/ocorrencias/aluno/") && secoes.some((s) => s.href === "/ficha-do-aluno")) return "/ficha-do-aluno";
 
   for (const secao of secoes) {
     const bate =

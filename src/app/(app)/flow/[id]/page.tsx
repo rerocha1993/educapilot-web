@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { decodeFormConfig, fichaDoFormulario } from "@/lib/flow/form-config";
+import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -82,6 +84,7 @@ import { CAMPO_CADASTRO_OPTIONS, rotuloDoDestino } from "@/lib/registry/campos-d
 import { ContractRulesPanel } from "@/components/flow/contract-rules-panel";
 import { InterruptorDeContrato } from "@/components/flow/interruptor-de-contrato";
 import { IdentificationRulePanel } from "@/components/flow/identification-rule-panel";
+import { FichaRulePanel } from "@/components/flow/ficha-rule-panel";
 import { CepRulePanel } from "@/components/flow/cep-rule-panel";
 import { RegistryRulePanel } from "@/components/flow/registry-rule-panel";
 import {
@@ -238,6 +241,9 @@ export default function FormBuilderPage() {
   const toggleAutomation = useToggleAutomation(formId);
 
   const [editandoDados, setEditandoDados] = useState(false);
+  const buscaDaUrl = useQueryStringLocal();
+  const [abaEscolhida, setAbaEscolhida] = useState<string | null>(null);
+  const aba = abaEscolhida ?? (buscaDaUrl.get("aba") === "automacoes" ? "automacoes" : "campos");
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
   const [fieldForm, setFieldForm] = useState(EMPTY_FIELD_FORM);
 
@@ -627,7 +633,29 @@ export default function FormBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      <Tabs defaultValue="campos">
+      {form && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-[13px]">
+          {fichaDoFormulario(decodeFormConfig(form.config)) ? (
+            <>
+              <span>
+                Aparece na <span className="font-semibold">ficha do aluno</span> como “{fichaDoFormulario(decodeFormConfig(form.config))?.secao}”.
+              </span>
+              <Link href={`/flow/respostas/${formId}?semAluno=1`} className="font-medium text-action hover:underline">
+                Ver envios sem aluno
+              </Link>
+            </>
+          ) : (
+            <>
+              <span>Este formulário <span className="font-semibold">não aparece na ficha do aluno</span>. Ligue se for uma anamnese ou outro dado do aluno.</span>
+              <Button variant="outline" size="sm" onClick={() => setAbaEscolhida("automacoes")}>
+                Mostrar na ficha do aluno
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
+      <Tabs value={aba} onValueChange={(v) => setAbaEscolhida(String(v))}>
         <TabsList className="gap-1 rounded-lg bg-muted p-1">
           <TabsTrigger value="campos" className={ABA_PILULA}>
             Campos
@@ -782,6 +810,7 @@ export default function FormBuilderPage() {
           {/* O contrato vem primeiro: é a regra que realmente executa hoje, e a mais cara de
               errar. As regras abaixo dela ainda são só intenção. */}
           <div className="flex flex-col gap-3">
+            {form && <FichaRulePanel form={form} />}
             {form && <IdentificationRulePanel form={form} />}
             <CepRulePanel campos={campos} />
             <RegistryRulePanel campos={campos} />
@@ -821,10 +850,8 @@ export default function FormBuilderPage() {
             ))}
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            As regras aqui são só configuração — o backend ainda não tem um motor que
-            realmente execute nada quando uma resposta é enviada (não dispara
-            notificação, não cria ocorrência, etc.). Salvamos a intenção pra quando esse
-            motor existir.
+            Por enquanto estas regras só ficam registradas: quando uma resposta chega, elas ainda
+            não enviam aviso nem criam ocorrência.
           </p>
         </TabsContent>
       </Tabs>

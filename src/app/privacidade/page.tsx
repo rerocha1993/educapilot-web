@@ -5,7 +5,9 @@ import { SecaoLegal as Secao } from "@/components/legal/secao-legal";
 import { CNPJ, EMAIL_PRIVACIDADE, RAZAO_SOCIAL } from "@/lib/legal/contato";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade · EducaPilot",
+  title: "Política de Privacidade",
+  alternates: { canonical: "/privacidade" },
+  robots: { index: true, follow: true },
   description:
     "Como o EducaPilot e as escolas que o usam tratam os dados no aplicativo, no portal e no atendimento de matrículas pelo WhatsApp.",
 };
@@ -32,7 +34,7 @@ export const metadata: Metadata = {
  * uma família depender dele.
  */
 
-const ATUALIZADO_EM = "14 de outubro de 2026";
+const ATUALIZADO_EM = "21 de outubro de 2026";
 
 export default function PaginaPrivacidade() {
   return (
@@ -43,6 +45,14 @@ export default function PaginaPrivacidade() {
         <p className="text-[15px] leading-relaxed text-foreground/85">
           Esta página explica quais informações são guardadas quando uma família conversa pelo WhatsApp com uma escola
           que usa o EducaPilot, por que elas são necessárias, quem responde por elas e como pedir para apagá-las.
+        </p>
+        <p className="text-[15px] leading-relaxed text-foreground/85">
+          Quem se cadastra para receber o guia gratuito do EducaPilot em educa-pilot.com/ebook encontra as regras desse
+          cadastro na seção{" "}
+          <a className="text-primary underline" href="#guia-gratuito">
+            Guia gratuito e contatos do site
+          </a>
+          , em que o EducaPilot é o controlador dos dados.
         </p>
         <p className="text-sm text-muted-foreground">Última atualização: {ATUALIZADO_EM}</p>
       </header>
@@ -250,6 +260,59 @@ export default function PaginaPrivacidade() {
         <p>
           Quem usa o aplicativo ou o portal pode pedir a exclusão da conta e dos dados pela página{" "}
           <Link href="/excluir-conta">Excluir conta e dados</Link>.
+        </p>
+      </Secao>
+
+      <Secao titulo="Guia gratuito e contatos do site" id="guia-gratuito">
+        <p>
+          Esta seção vale para quem se cadastra para receber o <strong>guia gratuito de gestão escolar</strong> em
+          educa-pilot.com/ebook. Aqui o cenário é outro: não há escola no meio. O <strong>{RAZAO_SOCIAL}</strong>
+          {CNPJ ? ` (CNPJ ${CNPJ})` : ""} é o <strong>controlador</strong> dos seus dados, ou seja, decide para que eles são
+          usados e responde por eles.
+        </p>
+        <p>
+          <strong>Quais dados coletamos</strong>
+        </p>
+        <ul>
+          <li>
+            os que você preenche no cadastro: <strong>nome, e-mail, WhatsApp, nome da escola, cargo e faixa de alunos</strong>;
+          </li>
+          <li>
+            <strong>data, IP e navegador</strong> do momento em que você aceitou, para registrar o seu consentimento;
+          </li>
+          <li>
+            enquanto você usa o guia, o seu <strong>progresso</strong> e as <strong>respostas que preenche</strong>, por exemplo a
+            pontuação do diagnóstico, as áreas que mais precisam de atenção e os números digitados nas ferramentas.
+          </li>
+        </ul>
+        <p>
+          <strong>Para que usamos</strong>
+        </p>
+        <ul>
+          <li>dar a você acesso pessoal ao guia e guardar o seu progresso;</li>
+          <li>enviar o link de acesso e o PDF por e-mail;</li>
+          <li>a equipe do EducaPilot entrar em contato com você, por e-mail ou WhatsApp, para apresentar o sistema;</li>
+          <li>melhorar o material.</li>
+        </ul>
+        <p>
+          <strong>Base legal.</strong> O tratamento se apoia no seu <strong>consentimento</strong> (art. 7º, I da LGPD), dado
+          por você no formulário. Você pode <strong>revogar esse consentimento a qualquer momento</strong>, sem custo e sem
+          prejuízo do que já foi feito.
+        </p>
+        <p>
+          <strong>Com quem compartilhamos.</strong> Não vendemos os seus dados nem os compartilhamos com terceiros para fins de
+          marketing. Usamos provedores de infraestrutura, como hospedagem e envio de e-mail, que tratam os dados em nosso nome e
+          só para fazer o serviço funcionar.
+        </p>
+        <p>
+          <strong>Por quanto tempo guardamos.</strong> Enquanto houver relacionamento com você e por até{" "}
+          <strong>24 meses sem nenhuma interação</strong>. Depois disso, ou antes, se você pedir, os dados são apagados.
+        </p>
+        <p>
+          <strong>Seus direitos.</strong> Você pode pedir acesso, correção, cópia, exclusão dos dados ou revogar o consentimento a
+          qualquer momento. Basta escrever para <a href={`mailto:${EMAIL_PRIVACIDADE}`}>{EMAIL_PRIVACIDADE}</a> ou simplesmente
+          responder ao e-mail do guia que você recebeu, dizendo o e-mail usado no cadastro. Pedir para parar de receber contato
+          tem efeito imediato, e as demais solicitações são atendidas em até 15 dias.
         </p>
       </Secao>
 

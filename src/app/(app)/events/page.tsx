@@ -50,8 +50,7 @@ export default function EventsDashboardPage() {
         titulo="Dashboard de vendas"
         apoio={
           <>
-            Não existe conceito de &quot;evento&quot; (nome, prazo, status) no backend — este painel
-            soma tudo que já foi vendido no tenant, sem recorte por campanha.
+            Soma tudo que a escola já vendeu, sem separar por campanha.
           </>
         }
       />
@@ -145,11 +144,6 @@ export default function EventsDashboardPage() {
         </>
       )}
 
-      <p className="text-xs text-muted-foreground">
-        &quot;Pré-pedidos sem confirmação&quot; (painel de Pendências do wireframe) não
-        existe como conceito no backend — todo pedido criado já é um pedido de
-        verdade, não há rascunho.
-      </p>
     </div>
   );
 }

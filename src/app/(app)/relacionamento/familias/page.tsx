@@ -80,6 +80,8 @@ export default function FamiliasPage() {
   const marcados = lista.filter((f) => selecionados.has(f.guardianId));
   const todosMarcados = lista.length > 0 && marcados.length === lista.length;
   const semAcesso = lista.filter((f) => !f.temLogin).length;
+  const comEmail = lista.filter((f) => !!f.email?.trim()).length;
+  const semEmail = lista.length - comEmail;
 
   function alternar(id: number, marcado: boolean) {
     setSelecionados((atual) => {
@@ -157,6 +159,40 @@ export default function FamiliasPage() {
         }
       />
 
+      {/* Números antes da lista: acompanham a busca e o filtro de acesso. */}
+      {data && lista.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground" aria-live="polite">
+          <span>
+            <span className="font-numeric font-medium text-foreground">{lista.length}</span>{" "}
+            {lista.length === 1 ? "família" : "famílias"}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            <span className="font-numeric font-medium text-foreground">{comEmail}</span> com e-mail
+          </span>
+          {semEmail > 0 && (
+            <>
+              <span aria-hidden>·</span>
+              <span className="text-warning-soft-foreground">
+                <span className="font-numeric font-medium">{semEmail}</span> sem e-mail
+              </span>
+            </>
+          )}
+          {semAcesso > 0 && !somenteSemLogin && (
+            <>
+              <span aria-hidden>·</span>
+              <button
+                type="button"
+                onClick={() => setSomenteSemLogin(true)}
+                className="inline-flex min-h-8 items-center rounded-md px-1 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <span className="font-numeric mr-1 font-medium text-foreground">{semAcesso}</span> sem acesso ao portal
+              </button>
+            </>
+          )}
+        </p>
+      )}
+
       <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
         <div className="relative md:w-72">
           <Search
@@ -180,13 +216,7 @@ export default function FamiliasPage() {
           </Label>
         </div>
 
-        {data && (
-          <p className="text-sm text-muted-foreground md:ml-auto" aria-live="polite">
-            {lista.length} {lista.length === 1 ? "responsável" : "responsáveis"}
-            {!somenteSemLogin && semAcesso > 0 && <> · {semAcesso} sem acesso</>}
-          </p>
-        )}
-      </div>
+            </div>
 
       {isError && <ErroDeCarga texto="Não foi possível carregar as famílias." onTentar={() => refetch()} />}
 
@@ -237,7 +267,7 @@ export default function FamiliasPage() {
               </TableHeader>
               <TableBody>
                 {lista.map((f) => (
-                  <TableRow key={f.guardianId} data-state={selecionados.has(f.guardianId) ? "selected" : undefined}>
+                  <TableRow key={f.guardianId} className="[&>td]:py-1.5" data-state={selecionados.has(f.guardianId) ? "selected" : undefined}>
                     <TableCell>
                       <Checkbox
                         aria-label={`Marcar ${f.nome}`}
@@ -262,7 +292,7 @@ export default function FamiliasPage() {
                         title={f.email ? undefined : "O responsável não tem e-mail cadastrado"}
                         onClick={() => void reenviarLink(f)}
                       >
-                        {reenviando === f.guardianId ? "Enviando..." : "Reenviar link"}
+                        {reenviando === f.guardianId ? "Enviando..." : "Reenviar convite"}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -299,7 +329,7 @@ export default function FamiliasPage() {
                     disabled={!f.email || reenviando === f.guardianId}
                     onClick={() => void reenviarLink(f)}
                   >
-                    {reenviando === f.guardianId ? "Enviando..." : "Reenviar link"}
+                    {reenviando === f.guardianId ? "Enviando..." : "Reenviar convite"}
                   </Button>
                 </div>
               </li>

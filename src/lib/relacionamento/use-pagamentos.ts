@@ -120,9 +120,22 @@ export interface FiltroDeCobrancas {
   planoId: string | null;
 }
 
+/** Somas do filtro inteiro (todas as páginas). Cancelada e estornada ficam de fora. */
+export interface TotaisDeCobrancas {
+  valorTotal: number;
+  quantidadeEmAberto: number;
+  valorEmAberto: number;
+  quantidadeVencidas: number;
+  valorVencido: number;
+  quantidadePagas: number;
+  valorPago: number;
+}
+
 export interface PaginaDeCobrancas {
   itens: Cobranca[];
   total: number;
+  /** Nulo quando a API ainda não devolve os totais. */
+  totais: TotaisDeCobrancas | null;
   /** Começa em 1. */
   pagina: number;
   tamanho: number;
@@ -385,6 +398,7 @@ export function useCobrancasDaEscola(filtro: FiltroDeCobrancas, pagina: number, 
         total?: number;
         pagina?: number;
         tamanho?: number;
+        totais?: Partial<TotaisDeCobrancas> | null;
       } | null>(
         `/cobrancas${consulta({
           status: filtro.status,
@@ -404,7 +418,24 @@ export function useCobrancasDaEscola(filtro: FiltroDeCobrancas, pagina: number, 
         "Não foi possível carregar as cobranças."
       );
       const itens = (r?.itens ?? []).map(cobranca);
-      return { itens, total: r?.total ?? itens.length, pagina: r?.pagina ?? pagina, tamanho: r?.tamanho ?? tamanho };
+      const t = r?.totais;
+      return {
+        itens,
+        total: r?.total ?? itens.length,
+        totais: t
+          ? {
+              valorTotal: t.valorTotal ?? 0,
+              quantidadeEmAberto: t.quantidadeEmAberto ?? 0,
+              valorEmAberto: t.valorEmAberto ?? 0,
+              quantidadeVencidas: t.quantidadeVencidas ?? 0,
+              valorVencido: t.valorVencido ?? 0,
+              quantidadePagas: t.quantidadePagas ?? 0,
+              valorPago: t.valorPago ?? 0,
+            }
+          : null,
+        pagina: r?.pagina ?? pagina,
+        tamanho: r?.tamanho ?? tamanho,
+      };
     },
   });
 }

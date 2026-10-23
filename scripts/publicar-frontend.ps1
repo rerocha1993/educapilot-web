@@ -10,13 +10,34 @@
   tenta falar com o localhost de quem abriu a pagina -- e falha com "failed to
   fetch", sem nenhum erro no build. Definir aqui (process.env) e o unico jeito de
   garantir que ganha.
+
+  Parametros (padrao = producao atual, na conta nova da Azure: Talita.maciel.educapilot): -ApiUrl, -ResourceGroup, -AppName e -Subscription. A API fica em
+  api.educa-pilot.com para que a troca de conta da Azure seja so DNS; antes de compilar o script confere que esse
+  endereco responde, para nao publicar um site apontando para uma API que nao existe.
 #>
+param(
+    [string]$ApiUrl        = "https://api.educa-pilot.com",
+    [string]$ResourceGroup = "rg-educapilot",
+    [string]$AppName       = "educapilot-web-br",
+    [string]$Subscription  = "60642ebc-601f-462f-9586-c2c51267501b"
+)
 
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$apiUrl   = "https://api.educa-pilot.com"
+$apiUrl   = $ApiUrl.TrimEnd('/')
 $zipPath  = "$env:TEMP\educapilot-frontend-deploy.zip"
+
+# PowerShell 5.1 não liga TLS 1.2 sozinho: sem isso a conferência falha com certificados novos.
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+Write-Host "==> Conferindo a API em $apiUrl..." -ForegroundColor Cyan
+try {
+    Invoke-WebRequest -Uri "$apiUrl/api/Class" -Method Get -UseBasicParsing -TimeoutSec 240 | Out-Null
+} catch {
+    $status = $_.Exception.Response.StatusCode.value__
+    # 401 = a API existe e pediu login; qualquer outra coisa (DNS, certificado, 404, 5xx) aborta.
+    if ($status -ne 401) { throw "A API em $apiUrl nao respondeu como esperado ($($_.Exception.Message)). Nada foi publicado." }
+}
 
 Push-Location $repoRoot
 try {
@@ -71,8 +92,9 @@ try {
     $ErrorActionPreference = "Continue"
     try {
         az webapp deploy `
-            --resource-group rg-educapilot `
-            --name educapilot-web-br `
+            --subscription $Subscription `
+            --resource-group $ResourceGroup `
+            --name $AppName `
             --src-path $zipPath `
             --type zip `
             --only-show-errors `
@@ -83,7 +105,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Deploy falhou." }
 
     Write-Host ""
-    Write-Host "Publicado: https://educa-pilot.com" -ForegroundColor Green
+    Write-Host "Publicado: https://$AppName.azurewebsites.net (API: $apiUrl)" -ForegroundColor Green
 }
 finally {
     Pop-Location

@@ -106,6 +106,8 @@ export default function ChamadaPage() {
   }, [selectedClassId, dateStr, existingAttendance, roster]);
 
   const presentCount = Object.values(marks).filter((m) => m.status === "P").length;
+  const absentCount = Object.values(marks).filter((m) => m.status === "F").length;
+  const lateCount = Object.values(marks).filter((m) => m.status === "A").length;
 
   // Painel "Faltas pendentes da turma" — GET /api/Absence não filtra por turma no
   // backend, então filtra aqui. Sem filtro de data: mostra tudo que ainda não foi
@@ -190,6 +192,16 @@ export default function ChamadaPage() {
             <Badge variant="success">
               <span className="font-numeric">{presentCount}</span> presentes
             </Badge>
+            {absentCount > 0 && (
+              <Badge variant="overdue">
+                <span className="font-numeric">{absentCount}</span> {absentCount === 1 ? "falta" : "faltas"}
+              </Badge>
+            )}
+            {lateCount > 0 && (
+              <Badge variant="pending">
+                <span className="font-numeric">{lateCount}</span> {lateCount === 1 ? "atraso" : "atrasos"}
+              </Badge>
+            )}
           </span>
         }
         acoes={
@@ -258,68 +270,59 @@ export default function ChamadaPage() {
             texto={selectedClassId === null ? "Selecione uma turma." : "Turma sem alunos."}
           />
         ) : (
-          <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
-            {/* No celular cada aluno vira um bloco (nome em cima, presença embaixo com os
-                três botões dividindo a largura): lado a lado o nome ficava espremido. */}
-            <table className="w-full text-sm md:min-w-[420px]">
-              <thead className="hidden md:table-header-group">
-                <tr className="border-b border-border bg-muted/50 text-left">
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
-                    Aluno
-                  </th>
-                  <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[.1em] text-muted-foreground">
-                    Presença
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {(classesLoading || studentsLoading || attendanceLoading) &&
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i} className="border-b border-border last:border-0">
-                      <td className="px-4 py-3" colSpan={2}>
-                        <Skeleton className="h-5 w-full" />
-                      </td>
-                    </tr>
-                  ))}
+          // Grade de cartões: um aluno por cartão em vez de uma linha de largura inteira. Cada cartão
+          // tem avatar, nome e os três chips; o escolhido é tingido pela situação do dado.
+          <div className="min-w-0">
+            <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+              {(classesLoading || studentsLoading || attendanceLoading) &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <li key={i}>
+                    <Skeleton className="h-[88px] w-full rounded-xl" />
+                  </li>
+                ))}
 
-                {roster.map((student) => {
-                  const status = marks[student.id]?.status ?? null;
-                  return (
-                    <tr
-                      key={student.id}
-                      className="flex flex-col gap-2 border-b border-border px-3 py-2.5 last:border-0 md:table-row md:p-0"
+              {roster.map((student) => {
+                const status = marks[student.id]?.status ?? null;
+                return (
+                  <li
+                    key={student.id}
+                    className="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3"
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        aria-hidden
+                        className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground"
+                      >
+                        {iniciais(student.fullName)}
+                      </span>
+                      <span className="min-w-0 break-words text-sm font-medium leading-snug">{student.fullName}</span>
+                    </span>
+                    <div
+                      role="group"
+                      aria-label={`Presença de ${student.fullName}`}
+                      className="grid grid-cols-3 gap-1 rounded-[9px] bg-muted p-[3px]"
                     >
-                      <td className="md:px-4 md:py-2.5">
-                        <span className="flex min-w-0 items-center gap-3">
-                          <span className="grid size-[30px] shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground">
-                            {iniciais(student.fullName)}
-                          </span>
-                          <span className="min-w-0 break-words font-medium">{student.fullName}</span>
-                        </span>
-                      </td>
-                      <td className="md:h-11 md:px-4 md:py-2 md:text-right">
-                        <div className="grid grid-cols-3 gap-1 rounded-[9px] bg-muted p-[3px] md:inline-grid">
-                          {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((s) => (
-                            <button
-                              key={s}
-                              onClick={() => setStatus(student.id, s)}
-                              className={cn(
-                                "rounded-[7px] px-3 py-3 text-[12.5px] font-semibold transition-colors md:py-1.5",
-                                status === s
-                                  ? STATUS_SELECTED[s]
-                                  : "text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              {STATUS_LABELS[s]}
-                            </button>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      {(Object.keys(STATUS_LABELS) as AttendanceStatus[]).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          aria-pressed={status === s}
+                          onClick={() => setStatus(student.id, s)}
+                          className={cn(
+                            "rounded-[7px] px-2 py-2.5 text-[12.5px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:py-1.5",
+                            status === s
+                              ? STATUS_SELECTED[s]
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {STATUS_LABELS[s]}
+                        </button>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
 
@@ -328,16 +331,16 @@ export default function ChamadaPage() {
             justificativa inline, sem precisar sair da chamada. A rota /faltas e a
             aba própria foram removidas — este painel passou a ser o único lugar
             pra justificar falta. */}
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="self-start rounded-xl border border-border bg-card p-4">
           <h2 className="font-heading text-[15.5px] font-semibold">Faltas pendentes da turma</h2>
           <p className="mb-3 mt-1 text-[12.5px] leading-[1.5] text-muted-foreground">
             Justifique sem sair da chamada.
           </p>
 
           {selectedClassId === null ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Selecione uma turma.</p>
+            <p className="py-1 text-sm text-muted-foreground">Selecione uma turma.</p>
           ) : pendingAbsences.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p className="py-1 text-sm text-muted-foreground">
               Nenhuma falta pendente de justificativa.
             </p>
           ) : (
@@ -396,22 +399,16 @@ export default function ChamadaPage() {
         </div>
       </div>
 
-      {/* Chegada (horário) e Observação por aluno fazem parte do wireframe R1, mas o
-          backend não tem esses campos em Attendance ainda — ver
-          design/handoff/README.md e SharedKernel/.../Attendance.cs. */}
-      <p className="text-xs text-muted-foreground">
-        Horário de chegada e observação por aluno ainda não são suportados pelo
-        backend — próxima etapa.
-      </p>
-
       {/* No celular a barra flutua acima das abas; no computador ela gruda no fim do conteúdo, e
           não na janela — assim acompanha o menu lateral recolhido ou expandido sem largura fixa. */}
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] flex items-center justify-between border-t border-border bg-background/90 px-4 py-3 backdrop-blur-[10px] md:sticky md:inset-x-auto md:-mx-6 md:bottom-0 md:px-6">
-        <span className="text-sm text-muted-foreground">
+        <span className="min-w-0 pr-3 text-sm text-muted-foreground">
           <span className="font-numeric">{roster.length}</span> alunos ·{" "}
           <strong className="font-semibold text-foreground">
             <span className="font-numeric">{presentCount}</span> presentes
-          </strong>
+          </strong>{" "}
+          · <span className="font-numeric">{absentCount}</span> {absentCount === 1 ? "falta" : "faltas"} ·{" "}
+          <span className="font-numeric">{lateCount}</span> {lateCount === 1 ? "atraso" : "atrasos"}
         </span>
         <Button onClick={handleSave} disabled={saveAttendance.isPending || roster.length === 0}>
           {saveAttendance.isPending ? "Salvando..." : "Salvar"}

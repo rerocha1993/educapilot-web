@@ -41,10 +41,8 @@ export default function ReferenceDataPage() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Só essas 3 tabelas têm implementação real no backend hoje (alunos/turmas/
-        usuários) — não existe endpoint para criar uma nova tabela de referência
-        (&quot;+ Nova tabela&quot; do wireframe) nem para contar em quantos formulários
-        cada uma é usada.
+        Estas são as tabelas de referência disponíveis: alunos, turmas e usuários. Ainda não é
+        possível criar outras.
       </p>
     </div>
   );

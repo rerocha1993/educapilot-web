@@ -48,6 +48,7 @@ export function EnvioDeFotos({
   restante,
   enviarLote,
   desabilitado = false,
+  semLegenda = false,
 }: {
   /** Fotos por chamada: 10 nas atividades, 20 no mural. */
   limiteDoLote: number;
@@ -56,6 +57,8 @@ export function EnvioDeFotos({
   /** Envia um lote (já reduzido) com as legendas na mesma ordem. Rejeita com a frase do erro. */
   enviarLote: (arquivos: File[], legendas: string[]) => Promise<{ legendasNaoGravadas: number }>;
   desabilitado?: boolean;
+  /** Sem o campo de legenda (diário do aluno: a foto vai sem texto). */
+  semLegenda?: boolean;
 }) {
   const [itens, setItens] = useState<Item[]>([]);
   const [progresso, setProgresso] = useState<Progresso | null>(null);
@@ -268,14 +271,16 @@ export function EnvioDeFotos({
                     <X aria-hidden className="size-4" />
                   </button>
                 </div>
-                <Input
-                  value={item.legenda}
-                  maxLength={200}
-                  disabled={enviando}
-                  aria-label={`Legenda de ${item.arquivo.name}`}
-                  placeholder="Legenda (opcional)"
-                  onChange={(e) => mudarLegenda(item.chave, e.target.value)}
-                />
+                {!semLegenda && (
+                  <Input
+                    value={item.legenda}
+                    maxLength={200}
+                    disabled={enviando}
+                    aria-label={`Legenda de ${item.arquivo.name}`}
+                    placeholder="Legenda (opcional)"
+                    onChange={(e) => mudarLegenda(item.chave, e.target.value)}
+                  />
+                )}
                 {item.erro && (
                   <p role="alert" className="px-0.5 text-xs text-destructive">
                     {item.erro}

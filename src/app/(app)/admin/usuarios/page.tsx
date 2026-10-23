@@ -35,6 +35,7 @@ import {
 import { toast } from "sonner";
 import { useUsers, useSaveUser, useDeleteUser, useSendInvite, type UserDto } from "@/lib/kernel/use-users";
 import { cn } from "@/lib/utils";
+import { iniciais } from "@/lib/matriculas/rotulos";
 import { AcessoDialog } from "@/components/access/acesso-dialog";
 import { SeletorDeAcesso, acessoSemModulo } from "@/components/access/seletor-de-acesso";
 import { AREAS_SUGERIDAS } from "@/lib/access/perfis";
@@ -70,6 +71,20 @@ function SemUsuarios({ semBorda = false }: { semBorda?: boolean }) {
   );
 }
 
+function Avatar({ nome, inativo }: { nome: string; inativo: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "grid size-8 shrink-0 place-items-center rounded-full text-[11px] font-bold",
+        inativo ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
+      )}
+    >
+      {iniciais(nome)}
+    </span>
+  );
+}
+
 export default function UsuariosPage() {
   const { data, isLoading, isError } = useUsers(1, 100);
   const saveUser = useSaveUser();
@@ -79,12 +94,14 @@ export default function UsuariosPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [turmasDe, setTurmasDe] = useState<UserDto | null>(null);
+  const [soInativos, setSoInativos] = useState(false);
 
   const users = data?.items ?? [];
   const roles = Array.from(new Set(users.map((u) => u.userType))).sort();
 
   const filtered = users.filter((u) => {
     if (roleFilter && u.userType !== roleFilter) return false;
+    if (soInativos && u.ativo) return false;
     const q = search.toLowerCase();
     return !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
@@ -118,6 +135,16 @@ export default function UsuariosPage() {
     modulos: (AREAS_SUGERIDAS.Teacher ?? []).map((m) => ({ ...m, areas: [...m.areas] })),
     classIds: [],
   });
+
+  // Totais acompanham a busca e o papel escolhido (o filtro de inativos não entra na conta, senão
+  // o número de ativos sumiria justamente quando ele está ligado).
+  const doRecorte = users.filter((u) => {
+    if (roleFilter && u.userType !== roleFilter) return false;
+    const q = search.toLowerCase();
+    return !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+  });
+  const totalAtivos = doRecorte.filter((u) => u.ativo).length;
+  const totalInativos = doRecorte.length - totalAtivos;
 
   async function handleSave() {
     if (!editing || !fullName.trim() || !email.trim()) return;
@@ -177,6 +204,39 @@ export default function UsuariosPage() {
         }
       />
 
+      {/* Números antes da lista. */}
+      {!isLoading && users.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span>
+            <span className="font-numeric font-medium text-foreground">{doRecorte.length}</span>{" "}
+            {doRecorte.length === 1 ? "usuário" : "usuários"}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            <span className="font-numeric font-medium text-foreground">{totalAtivos}</span>{" "}
+            {totalAtivos === 1 ? "ativo" : "ativos"}
+          </span>
+          {totalInativos > 0 && (
+            <>
+              <span aria-hidden>·</span>
+              <button
+                type="button"
+                aria-pressed={soInativos}
+                onClick={() => setSoInativos((v) => !v)}
+                className={cn(
+                  "inline-flex min-h-8 items-center rounded-md px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  soInativos ? "font-semibold text-foreground underline" : "hover:text-foreground hover:underline"
+                )}
+              >
+                <span className="font-numeric mr-1 font-medium text-foreground">{totalInativos}</span>
+                {totalInativos === 1 ? "inativo" : "inativos"}
+                {soInativos && " (só estes)"}
+              </button>
+            </>
+          )}
+        </p>
+      )}
+
       <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
         <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
           <div className="flex w-max gap-1 rounded-lg bg-muted p-1">
@@ -204,6 +264,7 @@ export default function UsuariosPage() {
         <div className="relative w-full md:w-72">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            aria-label="Buscar usuário"
             placeholder="Buscar por nome ou e-mail"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -226,7 +287,10 @@ export default function UsuariosPage() {
         {filtered.map((u) => (
           <div key={u.id} className="flex items-start gap-2 rounded-xl border border-border bg-card p-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <p className="font-medium break-words">{u.fullName}</p>
+              <p className="flex items-center gap-2.5 font-medium break-words">
+                <Avatar nome={u.fullName} inativo={!u.ativo} />
+                <span className="min-w-0">{u.fullName}</span>
+              </p>
               <p className="text-sm break-all text-muted-foreground">{u.email}</p>
               <div className="flex flex-wrap gap-1">
                 <Badge variant="secondary">{ROLE_LABELS[u.userType] ?? u.userType}</Badge>
@@ -287,8 +351,13 @@ export default function UsuariosPage() {
             )}
 
             {filtered.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell className="font-medium">{u.fullName}</TableCell>
+              <TableRow key={u.id} className="[&>td]:py-1.5">
+                <TableCell className="font-medium">
+                  <span className="flex items-center gap-2.5">
+                    <Avatar nome={u.fullName} inativo={!u.ativo} />
+                    {u.fullName}
+                  </span>
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                 <TableCell>
                   <Badge variant="secondary">{ROLE_LABELS[u.userType] ?? u.userType}</Badge>
@@ -329,13 +398,6 @@ export default function UsuariosPage() {
           </TableBody>
         </Table>
       </div>
-
-      {/* Turmas por usuário: resolvido em 2026-09 (ícone de turmas na linha). A lista de
-          convites pendentes continua sem endpoint no backend (InviteToken não tem
-          GetAll/GetByTenant) — ver design/handoff. */}
-      <p className="text-xs text-muted-foreground">
-        A lista de convites pendentes ainda não é suportada pelo backend — próxima etapa.
-      </p>
 
       {/* key: remonta ao trocar de usuário, zerando a seleção do anterior. */}
       <AcessoDialog
