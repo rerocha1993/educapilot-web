@@ -36,6 +36,11 @@ const VARIANTE_DO_STATUS: Record<string, "success" | "pending" | "waiting"> = {
 
 const ROTULO_DA_ORIGEM: Record<string, string> = { Familia: "pela família", Equipe: "pela equipe" };
 
+/** "Concluída" é o normal e não diz nada; só contrato e matrícula têm etapa de aprovação (Pendente, Revisar). */
+function mostrarStatus(r: RespostaNaFicha) {
+  return r.status !== "Concluída";
+}
+
 function quando(r: RespostaNaFicha) {
   return `${r.data}${r.hora ? ` às ${r.hora}` : ""}`;
 }
@@ -161,12 +166,15 @@ function RespostaLegivel({ r }: { r: RespostaNaFicha }) {
           <span className="font-medium text-foreground">{r.preenchidoPor}</span>
           {ROTULO_DA_ORIGEM[r.origem] ? ` (${ROTULO_DA_ORIGEM[r.origem]})` : ""}
         </span>
-        <Badge variant={VARIANTE_DO_STATUS[r.status] ?? "outline"}>{r.status}</Badge>
+        {mostrarStatus(r) && <Badge variant={VARIANTE_DO_STATUS[r.status] ?? "outline"}>{r.status}</Badge>}
+      </p>
+      <p className="ficha-omitido hidden rounded border border-black px-2 py-1.5 text-[9pt]">
+        O texto das respostas não foi incluído nesta impressão (dado de saúde da criança). Consulte a ficha no sistema.
       </p>
       {r.campos.length === 0 ? (
         <p className="py-2 text-sm text-muted-foreground">Esta resposta não tem campos.</p>
       ) : (
-        <dl className="grid grid-cols-[repeat(1,minmax(0,1fr))] gap-x-5 gap-y-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+        <dl className="ficha-resposta-texto grid grid-cols-[repeat(1,minmax(0,1fr))] gap-x-5 gap-y-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
           {r.campos.map((c, i) => (
             <CampoLegivel key={`${c.rotulo}-${i}`} c={c} />
           ))}
@@ -274,8 +282,23 @@ export function FormularioDaFichaConteudo({
   const [aberta, setAberta] = useState<string | null>(null);
   const anteriores = f.anteriores ?? [];
 
+  const semAluno = f.respostasSemAlunoParecidas ?? 0;
+
   return (
     <div className="flex flex-col gap-4">
+      {semAluno > 0 && (
+        <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-[13px] print:hidden">
+          <span>
+            Há <span className="font-semibold">{semAluno}</span> {semAluno === 1 ? "resposta" : "respostas"} de {f.secao} sem aluno que{" "}
+            {semAluno === 1 ? "parece ser deste aluno" : "parecem ser deste aluno"}.
+          </span>
+          <Link href={`/flow/respostas/${f.formId}?semAluno=1`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link2 className="size-4" />
+            Vincular
+          </Link>
+        </div>
+      )}
+
       {f.aceitaEnvios ? (
         <div className="flex flex-wrap gap-2 print:hidden">
           <Button variant="outline" onClick={() => setConvite(true)}>
@@ -314,7 +337,7 @@ export function FormularioDaFichaConteudo({
                 <li key={r.id} className="border-t border-border py-2 first:border-t-0 print:break-inside-avoid">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                     <span className="font-numeric">{quando(r)}</span>
-                    <Badge variant={VARIANTE_DO_STATUS[r.status] ?? "outline"}>{r.status}</Badge>
+                    {mostrarStatus(r) && <Badge variant={VARIANTE_DO_STATUS[r.status] ?? "outline"}>{r.status}</Badge>}
                     <span className="min-w-0 break-words text-muted-foreground">{r.preenchidoPor}</span>
                     <button
                       type="button"

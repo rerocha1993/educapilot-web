@@ -97,7 +97,7 @@ function EixoY({ ticks, max, formatar }: { ticks: number[]; max: number; formata
 }
 
 function EixoX({ meses, rotulo }: { meses: string[]; rotulo: (m: string) => string }) {
-  const passo = AREA_L / meses.length;
+  const passo = AREA_L / Math.max(1, meses.length);
   return (
     <g>
       {meses.map((m, i) => (
@@ -132,7 +132,7 @@ export function GraficoDePresenca({ pontos, className }: { pontos: PontoDeFreque
   );
   if (comChamada.length === 0) return base;
 
-  const passo = AREA_L / pontos.length;
+  const passo = AREA_L / Math.max(1, pontos.length);
   const larguraDaBarra = Math.min(26, passo * 0.62);
   const resumo = comChamada.map((p) => `${rotuloDoMes(p.mes)} ${PERCENTUAL.format((p.percentual ?? 0) * 100)}%`).join(", ");
 
@@ -243,7 +243,7 @@ export function GraficoDeConvivencia({
   }
 
   const max = tetoInteiro(Math.max(...pontos.map(total)));
-  const passo = AREA_L / pontos.length;
+  const passo = AREA_L / Math.max(1, pontos.length);
   const larguraDaBarra = Math.min(26, passo * 0.62);
   const ticks = [0, max / 4, max / 2, (max * 3) / 4, max].filter((t) => Number.isInteger(t));
   const resumo = pontos
@@ -348,7 +348,7 @@ function LinhasEmEscala({
   formatarValor: (v: number) => string;
   descricao: string;
 }) {
-  const passo = AREA_L / categorias.length;
+  const passo = AREA_L / Math.max(1, categorias.length);
   const xDe = (i: number) => MARGEM.esq + passo * (i + 0.5);
   const yDe = (v: number) => MARGEM.topo + AREA_A - (Math.max(0, Math.min(max, v)) / max) * AREA_A;
 

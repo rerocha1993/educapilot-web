@@ -37,6 +37,9 @@ import {
 } from "@/lib/flow/use-form-fields";
 import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
+import { VincularAlunoDialog, BlocoDoAluno } from "@/components/flow/vincular-aluno-dialog";
+import { decodeFormConfig, fichaDoFormulario } from "@/lib/flow/form-config";
+import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
 
 // Caixa de envios (2026-09).
 //
@@ -128,6 +131,9 @@ export default function EnviosDoFormularioPage() {
   const [turmaEscolhida, setTurmaEscolhida] = useState<string>(TODAS);
   const [campoContado, setCampoContado] = useState<string | null>(null);
   const [aberta, setAberta] = useState<string | null>(null);
+  const busca_url = useQueryStringLocal();
+  const [soSemAluno, setSoSemAluno] = useState<boolean | null>(null);
+  const [vinculando, setVinculando] = useState<string | null>(null);
 
   const idsAtivos = [formId];
   const { respostas, isLoading } = useRespostasDosFormularios(idsAtivos);
@@ -187,6 +193,7 @@ export default function EnviosDoFormularioPage() {
           valorPorRotulo(r, rotulos, ["nome do aluno", "nome completo"]) ??
           "Sem nome",
         email: valorPorRotulo(r, rotulos, ["e-mail", "email"]),
+        naFicha: !!origem && fichaDoFormulario(decodeFormConfig(origem.config)) !== null,
         temTurma: !!campoTurma,
         turma: campoTurma ? valorDoItem(r, campoTurma.id)?.trim() || null : null,
       };
@@ -222,8 +229,14 @@ export default function EnviosDoFormularioPage() {
   // Turma que saiu da seleção não pode esconder a lista inteira em silêncio.
   const turmaAtiva = turmasDisponiveis.includes(turmaEscolhida) ? turmaEscolhida : TODAS;
 
+  const naFichaDoForm = linhas.length > 0 && linhas[0].naFicha;
+  const totalSemAluno = linhas.filter((l) => l.naFicha && !l.resposta.alunoId).length;
+  // ?semAluno=1 vem do aviso da ficha; a pessoa pode trocar no botão.
+  const filtrarSemAluno = soSemAluno ?? busca_url.get("semAluno") === "1";
+
   const lista = linhas
     .filter((l) => turmaAtiva === TODAS || (l.temTurma && (l.turma ?? SEM_TURMA) === turmaAtiva))
+    .filter((l) => !filtrarSemAluno || (l.naFicha && !l.resposta.alunoId))
     .filter(({ nome, email }) => {
       const termo = busca.trim().toLowerCase();
       if (!termo) return true;
@@ -338,7 +351,7 @@ export default function EnviosDoFormularioPage() {
           acoes={
             <>
               <TagDoTipo tipo={linha?.tipo ?? null} />
-              <BadgeDeSituacao situacao={detalhe.status} />
+              {!(linha?.naFicha && detalhe.status !== "Revisar") && <BadgeDeSituacao situacao={detalhe.status} />}
               {/* Só na ficha aberta, nunca na lista: excluir de uma lista de dezenas de famílias é
                   clique errado esperando acontecer. Resposta com contrato assinado o servidor
                   recusa, e o motivo aparece no aviso. */}
@@ -360,6 +373,8 @@ export default function EnviosDoFormularioPage() {
           <span className="font-mono tabular-nums">{formatarDataHora(detalhe.dataPreenchimento)}</span>
         </p>
 
+        {linha?.naFicha && <BlocoDoAluno formId={detalhe.formId} responseId={detalhe.id} onVincular={() => setVinculando(detalhe.id)} />}
+
         {/* Todos os campos do formulário, na ordem em que a família preencheu — inclusive os que
             ficaram em branco. Esconder os vazios faria parecer que o campo não existe, quando o
             que aconteceu foi ninguém responder. */}
@@ -373,6 +388,12 @@ export default function EnviosDoFormularioPage() {
             </div>
           ))}
         </div>
+
+        <VincularAlunoDialog
+          formId={detalhe.formId}
+          responseId={vinculando}
+          onFechar={() => setVinculando(null)}
+        />
 
         {detalhe.observacoes && (
           <div className="rounded-xl border border-border bg-card px-4 py-3">
@@ -475,6 +496,18 @@ export default function EnviosDoFormularioPage() {
         </span>
       </div>
 
+      {naFichaDoForm && (totalSemAluno > 0 || filtrarSemAluno) && (
+        <div role="note" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/50 px-4 py-3 text-[13px]">
+          <span>
+            <span className="font-semibold">{totalSemAluno}</span> {totalSemAluno === 1 ? "envio não está ligado" : "envios não estão ligados"} a um aluno e por isso{" "}
+            {totalSemAluno === 1 ? "não aparece" : "não aparecem"} na ficha. Abra o envio e use “Vincular a um aluno”.
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setSoSemAluno(!filtrarSemAluno)}>
+            {filtrarSemAluno ? "Ver todos os envios" : "Ver só os sem aluno"}
+          </Button>
+        </div>
+      )}
+
       {chaveContada && (
         <ContagemPorCampo
           campos={camposParaContar}
@@ -503,7 +536,7 @@ export default function EnviosDoFormularioPage() {
 
       {lista.length > 0 && (
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          {lista.map(({ resposta, nome, email, tipo, formNome }) => (
+          {lista.map(({ resposta, nome, email, tipo, formNome, naFicha }) => (
             <button
               key={resposta.id}
               type="button"
@@ -522,8 +555,12 @@ export default function EnviosDoFormularioPage() {
                 </p>
               </div>
               <div className="col-start-2 flex flex-wrap items-center gap-2 md:col-start-3 md:justify-end">
+                {naFicha && !resposta.alunoId && (
+                  <span className="rounded-md border border-border-dashed px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">Sem aluno</span>
+                )}
                 <TagDoTipo tipo={tipo} />
-                <BadgeDeSituacao situacao={resposta.status} />
+                {/* Anamnese e afins não têm o que aprovar: só contrato e matrícula mostram a situação. */}
+                {!(naFicha && resposta.status !== "Revisar") && <BadgeDeSituacao situacao={resposta.status} />}
                 <span className="font-mono text-xs whitespace-nowrap tabular-nums text-muted-foreground">
                   {formatarData(resposta.dataPreenchimento, {
                     day: "2-digit",

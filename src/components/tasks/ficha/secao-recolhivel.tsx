@@ -18,6 +18,7 @@ export function SecaoRecolhivel({
   onAlternar,
   larga = false,
   quebraLivre = false,
+  className,
   children,
 }: {
   id: string;
@@ -31,6 +32,8 @@ export function SecaoRecolhivel({
   larga?: boolean;
   /** Seções longas podem quebrar de página ao imprimir; as curtas não. */
   quebraLivre?: boolean;
+  /** Classe extra na seção (a impressão usa para omitir seções a pedido). */
+  className?: string;
   children: ReactNode;
 }) {
   const idDoTitulo = `secao-${id}-titulo`;
@@ -42,7 +45,8 @@ export function SecaoRecolhivel({
       className={cn(
         "min-w-0 rounded-xl border border-border bg-card print:rounded-none print:border-x-0 print:border-b print:border-t-0 print:py-3",
         aberta && larga && "lg:col-span-2",
-        !quebraLivre && "print:break-inside-avoid"
+        !quebraLivre && "print:break-inside-avoid",
+        className
       )}
     >
       <h2 className="m-0">
