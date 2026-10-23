@@ -350,6 +350,8 @@ export interface FormularioNaFicha {
   quemVe: QuemVeOFormulario;
   /** O formulário está no ar. Arquivado, mostra só o histórico. */
   aceitaEnvios: boolean;
+  /** Envios deste formulário sem aluno cujo nome de criança combina com o deste aluno. Só para quem pode vincular. */
+  respostasSemAlunoParecidas?: number;
   ultima?: RespostaNaFicha | null;
   anteriores?: RespostaNaFicha[] | null;
 }

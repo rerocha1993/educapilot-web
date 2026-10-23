@@ -3,9 +3,11 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Circle, CircleCheck, Lock } from "lucide-react";
+import { podeVerArea } from "@/lib/access/pode-ver";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatarDataHora, formatarSoData, hojeIsoBrasilia } from "@/lib/format/date";
 import type {
@@ -69,7 +71,7 @@ function Vazio({ children }: { children: ReactNode }) {
 
 function Subtitulo({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground print:text-[8pt]">{children}</h3>
+    <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground print:break-after-avoid print:text-[8pt]">{children}</h3>
   );
 }
 
@@ -231,10 +233,47 @@ interface DefinicaoDeSecao {
   fonte?: string;
   larga?: boolean;
   quebraLivre?: boolean;
+  classe?: string;
   corpo: ReactNode;
 }
 
-export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; escola: string | null }) {
+/**
+ * Papel (A4 retrato): margens que deixam lugar para o cabeçalho e o rodapé fixos, número de página, gráficos em
+ * escala de cinza e as opções da caixa "Imprimir ficha" (data-print-* no article).
+ */
+const ESTILO_DA_IMPRESSAO = `
+@page { size: A4 portrait; margin: 12mm 12mm 14mm 12mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 8pt; color: #000; } }
+.ficha-cabecalho { font-size: 8.5pt; line-height: 1.35; border-bottom: 1px solid #000; padding-bottom: 1.5mm; margin-bottom: 3mm; color: #000; font-weight: normal; text-align: left; }
+.ficha-rodape { font-size: 7.5pt; line-height: 1.3; border-top: 1px solid #000; padding-top: 1mm; margin-top: 3mm; color: #000; text-align: left; }
+html, body { background: #fff !important; }
+article figure { filter: grayscale(1) contrast(1.2); }
+.ficha-omitido { display: none; }
+article[data-print-textos="nao"] .ficha-ata, article[data-print-textos="nao"] .ficha-resposta-texto { display: none !important; }
+article[data-print-textos="nao"] .ficha-omitido { display: block !important; }
+article[data-print-saude="nao"] .ficha-saude { display: none !important; }
+`;
+
+/** O que a impressão leva. Ver a caixa "Imprimir ficha" na página. */
+export interface OpcoesDeImpressao {
+  /** Texto das atas de reunião e respostas dos formulários (anamnese etc.). */
+  incluirTextos: boolean;
+  /** Dados de saúde do cadastro (alergias, medicação, restrição, convênio). */
+  incluirSaude: boolean;
+}
+
+export const IMPRESSAO_PADRAO: OpcoesDeImpressao = { incluirTextos: false, incluirSaude: true };
+
+export function ResumoDoAlunoFolha({
+  resumo,
+  escola,
+  impressao = IMPRESSAO_PADRAO,
+}: {
+  resumo: ResumoDoAluno;
+  escola: string | null;
+  impressao?: OpcoesDeImpressao;
+}) {
+  const { data: meuAcesso } = useMeuAcesso();
+  const podeConfigurarFormularios = podeVerArea(meuAcesso, "flow", "formularios");
   const { aluno, periodo, totais, frequencia, ocorrencias, portaria, reunioes, reunioesComPais, diario, financeiro } = resumo;
   const graficos = resumo.graficos ?? null;
   const formularios = resumo.formularios ?? [];
@@ -270,6 +309,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
   if (!resumo.ocultos.includes("Dados de saúde da ficha")) {
     secoes.push({
       id: "saude",
+      classe: "ficha-saude",
       titulo: "Saúde",
       resumo: saudeVazia ? "Nada informado no cadastro" : saude?.alergias ? `Alergias: ${saude.alergias}` : "Há informações de saúde no cadastro",
       fonte: "Cadastro do aluno (Administração › Alunos). Dado sensível de criança: só quem cuida do cadastro, do diário ou do cardápio vê.",
@@ -298,7 +338,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         frequencia.diasLetivos === 0
           ? "Nenhuma chamada registrada"
           : `${plural(frequencia.faltas, "falta", "faltas")}${frequencia.faltasSemJustificativa > 0 ? ` (${frequencia.faltasSemJustificativa} sem justificativa)` : ""}` +
-            (percentual !== null ? ` · ${PERCENTUAL.format(percentual)}% de presença` : ""),
+            (percentual != null ? ` · ${PERCENTUAL.format(percentual)}% de presença` : ""),
       fonte: fonte("Frequência"),
       corpo: (
         <>
@@ -547,7 +587,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
                       </p>
                     )}
                     {mostrarAtas && r.conversado && (
-                      <p className="mt-1.5 whitespace-pre-line break-words text-sm">
+                      <p className="ficha-ata mt-1.5 whitespace-pre-line break-words text-sm">
                         <span className="font-medium">Conversado:</span> {r.conversado}
                       </p>
                     )}
@@ -596,7 +636,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
     id: "visitas",
     titulo: "Visitas",
     resumo:
-      reunioes.visitas === null
+      reunioes.visitas == null
         ? "Não incluído no seu acesso"
         : `${plural(reunioes.visitas.length, "visita", "visitas")} na portaria` +
           (reunioes.daTurma ? ` · ${plural(reunioes.daTurma.length, "reunião da turma", "reuniões da turma")}` : ""),
@@ -606,7 +646,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         <div className="flex flex-col gap-4">
           <div>
             <Subtitulo>Ocorrências com pais avisados</Subtitulo>
-            {reunioes.paisAvisados === null ? (
+            {reunioes.paisAvisados == null ? (
               <Vazio>Não incluído no seu acesso.</Vazio>
             ) : reunioes.paisAvisados.length === 0 ? (
               <Vazio>Nenhuma ocorrência com aviso aos pais no período.</Vazio>
@@ -625,7 +665,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
 
           <div>
             <Subtitulo>Reuniões da turma</Subtitulo>
-            {reunioes.daTurma === null ? (
+            {reunioes.daTurma == null ? (
               <Vazio>Não incluído no seu acesso.</Vazio>
             ) : reunioes.daTurma.length === 0 ? (
               <Vazio>Nenhuma reunião da turma no período.</Vazio>
@@ -647,7 +687,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
 
           <div>
             <Subtitulo>Visitas na portaria</Subtitulo>
-            {reunioes.visitas === null ? (
+            {reunioes.visitas == null ? (
               <Vazio>Não incluído no seu acesso.</Vazio>
             ) : reunioes.visitas.length === 0 ? (
               <Vazio>Nenhuma visita registrada para este aluno no período.</Vazio>
@@ -714,7 +754,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         diario.diasComDiario === 0
           ? "Nenhum diário registrado"
           : `${plural(diario.diasComDiario, "dia", "dias")} com diário` +
-            (diario.percentualDeBoaAceitacao !== null ? ` · ${PERCENTUAL.format(diario.percentualDeBoaAceitacao)}% comeu bem ou tudo` : ""),
+            (diario.percentualDeBoaAceitacao != null ? ` · ${PERCENTUAL.format(diario.percentualDeBoaAceitacao)}% comeu bem ou tudo` : ""),
       fonte: fonte("Diário"),
       corpo: (
         <>
@@ -725,11 +765,11 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
                 <Dado rotulo="Dias com diário">{diario.diasComDiario}</Dado>
                 <Dado rotulo="Comeu bem ou tudo">
-                  {diario.percentualDeBoaAceitacao === null ? "—" : `${PERCENTUAL.format(diario.percentualDeBoaAceitacao)}%`}
+                  {diario.percentualDeBoaAceitacao == null ? "—" : `${PERCENTUAL.format(diario.percentualDeBoaAceitacao)}%`}
                   <span className="block text-[11.5px] font-normal text-muted-foreground">de {diario.registrosDeAlimentacao} refeições</span>
                 </Dado>
                 <Dado rotulo="Sono por dia">
-                  {diario.minutosDeSonoPorDia === null ? "—" : minutosParaTexto(diario.minutosDeSonoPorDia)}
+                  {diario.minutosDeSonoPorDia == null ? "—" : minutosParaTexto(diario.minutosDeSonoPorDia)}
                   <span className="block text-[11.5px] font-normal text-muted-foreground">{diario.sonecas} sonecas</span>
                 </Dado>
                 <Dado rotulo="Higiene e reposições">
@@ -869,12 +909,44 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
     });
   }
 
+  if (formularios.length === 0 && !(meuAcesso && meuAcesso.userType === "Teacher")) {
+    secoes.push({
+      id: "formularios-vazio",
+      titulo: "Formulários (anamnese e outros)",
+      resumo: "Nenhum formulário está ligado à ficha",
+      fonte: "Formulários marcados como “Mostrar na ficha do aluno” aparecem aqui, com as respostas de cada aluno.",
+      corpo: (
+        <div className="flex flex-col gap-3 text-sm">
+          <p>
+            Nenhum formulário está ligado à ficha do aluno, por isso a anamnese não aparece aqui, mesmo que a família já tenha
+            respondido.
+          </p>
+          <ol className="list-decimal pl-5 text-muted-foreground">
+            <li>Abra o formulário da anamnese em Formulários.</li>
+            <li>Ligue “Mostrar na ficha do aluno” (aba Automações) e escolha quem pode ver.</li>
+            <li>Nos envios, use “Vincular a um aluno” para as respostas que chegaram sem o aluno identificado.</li>
+          </ol>
+          {podeConfigurarFormularios ? (
+            <div className="print:hidden">
+              <Link href="/flow" className={buttonVariants({ variant: "outline" })}>
+                Vincular um formulário à ficha
+              </Link>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Peça à direção da escola para ligar o formulário da anamnese à ficha.</p>
+          )}
+        </div>
+      ),
+    });
+  }
+
   // Um formulário vinculado, uma seção (o título é o que a escola escolheu no construtor).
   for (const f of formularios) {
     secoes.push({
       id: `form-${f.formId}`,
       titulo: f.secao,
       resumo: resumoDoFormulario(f),
+      classe: "ficha-form",
       fonte:
         f.quemVe === "Gestao"
           ? "Formulário vinculado à ficha. Visível só para a gestão. Pode ter dado de saúde: trate com sigilo."
@@ -921,31 +993,34 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
     (graficos?.frequencia != null) || (graficos?.convivencia != null) || (graficos?.diario != null) || (graficos?.notas != null);
 
   return (
-    <article className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 text-foreground print:max-w-none print:gap-3">
-      <style media="print">{"@page { size: A4 portrait; margin: 12mm; }"}</style>
-
-      {/* Capa: só no papel. Escola, aluno, período, quando e por quem foi emitido. */}
-      <section
-        aria-label="Capa da ficha"
-        className="hidden print:flex print:min-h-[250mm] print:flex-col print:justify-between print:break-after-page"
-      >
-        <div>
-          {escola && <p className="text-[12pt] font-bold uppercase tracking-[.16em]">{escola}</p>}
-          <div className="mt-[60mm]">
-            <p className="text-[14pt] uppercase tracking-[.2em]">Ficha do aluno</p>
-            <h1 className="mt-3 break-words font-heading text-[34pt] font-semibold leading-tight">{aluno.nome}</h1>
-            <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-5">
-              <Dado rotulo="Turma">{aluno.turma ?? "—"}</Dado>
-              <Dado rotulo="Período">{intervalo}</Dado>
-              <Dado rotulo="Emitido em">
-                <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span>
-              </Dado>
-              <Dado rotulo="Emitido por">{resumo.emitidoPor ?? "Não identificado"}</Dado>
-            </dl>
-          </div>
-        </div>
-        <p className="border-t border-black pt-3 text-[9pt]">{AVISO_DE_SIGILO}</p>
-      </section>
+    <article
+      data-print-textos={impressao.incluirTextos ? "sim" : "nao"}
+      data-print-saude={impressao.incluirSaude ? "sim" : "nao"}
+      className="mx-auto w-full max-w-[1280px] text-foreground print:max-w-none"
+    >
+      {/* No papel, o cabeçalho e o rodapé são o thead e o tfoot de uma tabela: o navegador os repete em toda página e
+          reserva o espaço deles, sem sobrepor o conteúdo. Na tela a tabela vira blocos comuns e os dois somem. */}
+      <table className="block w-full print:table">
+        <thead className="hidden print:table-header-group">
+          <tr className="print:table-row">
+            <td className="ficha-cabecalho">
+              <span className="font-bold uppercase tracking-wider">{escola ?? "Escola"}</span> · Ficha do aluno: <strong>{aluno.nome}</strong>
+              {aluno.turma ? ` (${aluno.turma})` : ""} · Período <span className="font-numeric">{intervalo}</span>
+              <br />
+              Emitida em <span className="font-numeric">{formatarDataHora(resumo.geradoEm)}</span> por {resumo.emitidoPor ?? "pessoa não identificada"}
+            </td>
+          </tr>
+        </thead>
+        <tfoot className="hidden print:table-footer-group">
+          <tr className="print:table-row">
+            <td className="ficha-rodape">CONFIDENCIAL. {AVISO_DE_SIGILO}</td>
+          </tr>
+        </tfoot>
+        <tbody className="block print:table-row-group">
+          <tr className="block print:table-row">
+            <td className="block print:table-cell">
+              <div className="flex flex-col gap-4 print:gap-3">
+      <style media="print">{ESTILO_DA_IMPRESSAO}</style>
 
       {/* Topo compacto: quem é o aluno, em poucas linhas. É o que identifica o papel. */}
       <header className="rounded-xl border border-border bg-card p-4 md:p-5 print:rounded-none print:border-0 print:border-b-2 print:border-black print:px-0 print:pt-0">
@@ -1015,19 +1090,23 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         aria-label="Totais do período"
         className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-cols-[repeat(6,minmax(0,1fr))] print:grid-cols-[repeat(6,minmax(0,1fr))] print:gap-2"
       >
-        {percentual !== null && totais.diasLetivos !== null && (
+        {totais.diasLetivos != null && (
           <Numero
             rotulo="Presença"
-            valor={`${PERCENTUAL.format(percentual)}%`}
-            tom={percentual < 75 ? "alerta" : undefined}
+            valor={percentual == null ? "—" : `${PERCENTUAL.format(percentual)}%`}
+            tom={percentual != null && percentual < 75 ? "alerta" : undefined}
             apoio={
-              <>
-                <span className="font-numeric">{totais.presencas}</span> de <span className="font-numeric">{totais.diasLetivos}</span> dias
-              </>
+              percentual == null ? (
+                "Sem chamadas no período"
+              ) : (
+                <>
+                  <span className="font-numeric">{totais.presencas}</span> de <span className="font-numeric">{totais.diasLetivos}</span> dias
+                </>
+              )
             }
           />
         )}
-        {totais.faltas !== null && (
+        {totais.faltas != null && (
           <Numero
             rotulo="Faltas"
             valor={totais.faltas}
@@ -1039,7 +1118,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
             }
           />
         )}
-        {totais.ocorrencias !== null && (
+        {totais.ocorrencias != null && (
           <Numero
             rotulo="Ocorrências"
             valor={totais.ocorrencias}
@@ -1058,7 +1137,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
             apoio="Leve 1, moderada 3, grave 5. Menor é melhor."
           />
         )}
-        {totais.reunioesComPaisRealizadas !== null && (
+        {totais.reunioesComPaisRealizadas != null && (
           <Numero
             rotulo="Reuniões e atendimentos"
             valor={totais.reunioesComPaisRealizadas}
@@ -1075,7 +1154,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
             }
           />
         )}
-        {totais.atrasosNaChegada !== null && (
+        {totais.atrasosNaChegada != null && (
           <Numero
             rotulo="Atrasos na chegada"
             valor={totais.atrasosNaChegada}
@@ -1140,6 +1219,7 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
             onAlternar={() => alternar(s.id)}
             larga={s.larga}
             quebraLivre={s.quebraLivre}
+            className={s.classe}
           >
             {s.corpo}
           </SecaoRecolhivel>
@@ -1153,6 +1233,11 @@ export function ResumoDoAlunoFolha({ resumo, escola }: { resumo: ResumoDoAluno; 
         <span className="font-numeric">{formatarSoData(periodo.fim)}</span>
         {periodo.ateHoje ? " (dia da emissão)" : ""}. {AVISO_DE_SIGILO}
       </p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </article>
   );
 }

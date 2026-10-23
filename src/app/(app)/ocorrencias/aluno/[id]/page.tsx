@@ -7,7 +7,9 @@ import { ClipboardList, Plus, Printer } from "lucide-react";
 
 import { CabecalhoDaPagina } from "@/components/padroes/cabecalho-da-pagina";
 import { ErroDeCarga } from "@/components/rh/campo";
-import { ResumoDoAlunoFolha } from "@/components/tasks/resumo-do-aluno";
+import { IMPRESSAO_PADRAO, ResumoDoAlunoFolha, type OpcoesDeImpressao } from "@/components/tasks/resumo-do-aluno";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,6 +39,15 @@ export default function ResumoDoAlunoPage() {
 
   // O que a pessoa escolheu aqui vale por cima da URL.
   const [anoEscolhido, setAnoEscolhido] = useState<number | null>(null);
+  const [impressao, setImpressao] = useState<OpcoesDeImpressao>(IMPRESSAO_PADRAO);
+  const [caixaDeImpressao, setCaixaDeImpressao] = useState(false);
+
+  // A caixa precisa estar fechada antes de imprimir, senão ela sai no papel. As seções abertas ou fechadas na tela
+  // não mudam: o papel abre todas por CSS (print:block) e a tela fica como estava.
+  function imprimir() {
+    setCaixaDeImpressao(false);
+    window.setTimeout(() => window.print(), 250);
+  }
   const ano = anoEscolhido ?? anoInicial;
   const anos = Array.from({ length: ANOS_NA_LISTA }, (_, i) => anoCorrente - i);
 
@@ -102,7 +113,7 @@ export default function ResumoDoAlunoPage() {
               <Button
                 variant="outline"
                 className="w-full md:w-auto"
-                onClick={() => window.print()}
+                onClick={() => setCaixaDeImpressao(true)}
                 disabled={!data}
               >
                 <Printer className="size-4" />
@@ -141,7 +152,55 @@ export default function ResumoDoAlunoPage() {
         </div>
       )}
 
-      {data && <ResumoDoAlunoFolha resumo={data} escola={painel?.escolaNome ?? null} />}
+      {data && <ResumoDoAlunoFolha resumo={data} escola={painel?.escolaNome ?? null} impressao={impressao} />}
+
+      <Dialog open={caixaDeImpressao} onOpenChange={setCaixaDeImpressao}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Imprimir ficha</DialogTitle>
+            <DialogDescription>
+              Sai em A4, com todas as seções abertas, cabeçalho e aviso de confidencialidade em todas as páginas. Para guardar em
+              PDF, escolha “Salvar como PDF” na janela de impressão.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-start gap-2.5 text-sm">
+              <Checkbox
+                className="mt-0.5"
+                checked={impressao.incluirTextos}
+                onCheckedChange={(v) => setImpressao((o) => ({ ...o, incluirTextos: v === true }))}
+              />
+              <span>
+                <span className="font-medium">Incluir texto das atas e respostas dos formulários</span>
+                <span className="block text-xs text-muted-foreground">
+                  A anamnese é dado de saúde da criança e as atas são internas. Desligado, o papel mostra que o texto foi omitido.
+                  Ligue só se for entregar a ficha a quem pode ler.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5 text-sm">
+              <Checkbox
+                className="mt-0.5"
+                checked={impressao.incluirSaude}
+                onCheckedChange={(v) => setImpressao((o) => ({ ...o, incluirSaude: v === true }))}
+              />
+              <span>
+                <span className="font-medium">Incluir dados de saúde</span>
+                <span className="block text-xs text-muted-foreground">Alergias, medicação, restrição alimentar e convênio do cadastro.</span>
+              </span>
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCaixaDeImpressao(false)}>
+              Cancelar
+            </Button>
+            <Button variant="action" onClick={imprimir}>
+              <Printer className="size-4" />
+              Imprimir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
