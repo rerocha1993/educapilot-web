@@ -274,6 +274,8 @@ export function ResumoDoAlunoFolha({
 }) {
   const { data: meuAcesso } = useMeuAcesso();
   const podeConfigurarFormularios = podeVerArea(meuAcesso, "flow", "formularios");
+  // Quem só tem a área "Ficha do aluno" não abre a reunião em si (a ata é de Reuniões e atendimentos).
+  const podeAbrirReuniao = podeVerArea(meuAcesso, "tasks", "reunioes-pais");
   const { aluno, periodo, totais, frequencia, ocorrencias, portaria, reunioes, reunioesComPais, diario, financeiro } = resumo;
   const graficos = resumo.graficos ?? null;
   const formularios = resumo.formularios ?? [];
@@ -646,11 +648,13 @@ export function ResumoDoAlunoFolha({
                         ))}
                       </ul>
                     )}
-                    <p className="mt-2 text-right text-[12.5px] print:hidden">
-                      <Link href={`/reunioes-e-atendimentos/${r.id}`} className="font-medium text-action hover:underline">
-                        Abrir reunião
-                      </Link>
-                    </p>
+                    {podeAbrirReuniao && (
+                      <p className="mt-2 text-right text-[12.5px] print:hidden">
+                        <Link href={`/reunioes-e-atendimentos/${r.id}`} className="font-medium text-action hover:underline">
+                          Abrir reunião
+                        </Link>
+                      </p>
+                    )}
                   </li>
                 ))}
               </ol>

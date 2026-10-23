@@ -12,7 +12,7 @@ import type { AcessoDoUsuario } from "./use-acessos";
  *
  * A ordem importa: vale o primeiro prefixo que casa, então o mais específico vem antes.
  */
-const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
+const ROTAS: { padrao: RegExp; modulo: string; area: string | null; ou?: string[] }[] = [
   // Fluxos (Kanban de tarefas + formulários)
   { padrao: /^\/flow\/tarefas\/equipe/, modulo: "flow", area: "equipe" },
   { padrao: /^\/flow\/tarefas\/automacoes/, modulo: "flow", area: "recorrencias" },
@@ -123,9 +123,11 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
   { padrao: /^\/relacionamento/, modulo: "relacionamento", area: null },
 
   // Rotina
+  // Ficha do aluno: a lista de entrada do dossiê e a ficha em si (/ocorrencias/aluno/[id]). Abre com a área própria
+  // "ficha" ou com Ocorrências (quem já entrava assim continua entrando). Precisa vir antes de /ocorrencias.
+  { padrao: /^\/ocorrencias\/aluno\//, modulo: "tasks", area: "ficha", ou: ["ocorrencias"] },
+  { padrao: /^\/ficha-do-aluno/, modulo: "tasks", area: "ficha", ou: ["ocorrencias"] },
   { padrao: /^\/ocorrencias/, modulo: "tasks", area: "ocorrencias" },
-  // Ficha do aluno: a lista de entrada do dossiê, que mora em /ocorrencias/aluno/[id]; mesma área.
-  { padrao: /^\/ficha-do-aluno/, modulo: "tasks", area: "ocorrencias" },
   { padrao: /^\/checklist/, modulo: "tasks", area: "checklist" },
   // Notas e boletim (lançamento, comportamento, publicação): área própria da Rotina.
   { padrao: /^\/notas/, modulo: "tasks", area: "notas" },
@@ -143,12 +145,14 @@ const ROTAS: { padrao: RegExp; modulo: string; area: string | null }[] = [
 export interface AcessoDaRota {
   modulo: string;
   area: string | null;
+  /** Outras áreas do mesmo módulo que também abrem a rota. */
+  ou?: string[];
 }
 
 /** Módulo e área de uma rota, ou nulo para rotas fora do controle de acesso (ex.: /settings). */
 export function acessoDaRota(pathname: string): AcessoDaRota | null {
   const achado = ROTAS.find((r) => r.padrao.test(pathname));
-  return achado ? { modulo: achado.modulo, area: achado.area } : null;
+  return achado ? { modulo: achado.modulo, area: achado.area, ou: achado.ou } : null;
 }
 
 /**
@@ -185,5 +189,9 @@ export function podeVerArea(
 /** A pessoa pode abrir esta rota. Rota fora do catálogo é sempre liberada. */
 export function podeVerRota(acesso: AcessoDoUsuario | undefined, pathname: string): boolean {
   const rota = acessoDaRota(pathname);
-  return !rota || podeVerArea(acesso, rota.modulo, rota.area);
+  return (
+    !rota ||
+    podeVerArea(acesso, rota.modulo, rota.area) ||
+    (rota.ou ?? []).some((a) => podeVerArea(acesso, rota.modulo, a))
+  );
 }

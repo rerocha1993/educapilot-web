@@ -10,6 +10,8 @@ import { ErroDeCarga } from "@/components/rh/campo";
 import { IMPRESSAO_PADRAO, ResumoDoAlunoFolha, type OpcoesDeImpressao } from "@/components/tasks/resumo-do-aluno";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { podeVerArea } from "@/lib/access/pode-ver";
+import { useMeuAcesso } from "@/lib/access/use-acessos";
 import { RotinaNav } from "@/components/tasks/rotina-nav";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,6 +57,8 @@ export default function ResumoDoAlunoPage() {
   const idValido = Number.isInteger(studentId) && studentId > 0;
   const { data, isLoading, isError, error, refetch } = useResumoDoAluno(idValido ? studentId : null, ano);
   const { data: painel } = usePainelInicio();
+  // Os atalhos da ficha para outras telas só aparecem para quem tem a área delas (a área "Ficha do aluno" só lê).
+  const { data: meuAcesso } = useMeuAcesso();
 
   return (
     <div className="flex flex-col gap-4">
@@ -94,7 +98,7 @@ export default function ResumoDoAlunoPage() {
                   ))}
                 </select>
               </label>
-              {data && !data.ocultos.some((o) => o === "Reuniões com os pais" || o === "Reuniões e atendimentos") && (
+              {data && podeVerArea(meuAcesso, "tasks", "reunioes-pais") && !data.ocultos.some((o) => o === "Reuniões com os pais" || o === "Reuniões e atendimentos") && (
                 <Link
                   href={`/reunioes-e-atendimentos/nova?turma=${data.aluno.classId}&aluno=${data.aluno.id}`}
                   className={buttonVariants({ variant: "action", className: "w-full md:w-auto" })}
@@ -103,13 +107,15 @@ export default function ResumoDoAlunoPage() {
                   Registrar reunião
                 </Link>
               )}
-              <Link
-                href={`/notas/boletim/${studentId}?ano=${ano}`}
-                className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
-              >
-                <ClipboardList className="size-4" />
-                Boletim
-              </Link>
+              {podeVerArea(meuAcesso, "tasks", "notas") && (
+                <Link
+                  href={`/notas/boletim/${studentId}?ano=${ano}`}
+                  className={buttonVariants({ variant: "outline", className: "w-full md:w-auto" })}
+                >
+                  <ClipboardList className="size-4" />
+                  Boletim
+                </Link>
+              )}
               <Button
                 variant="outline"
                 className="w-full md:w-auto"
