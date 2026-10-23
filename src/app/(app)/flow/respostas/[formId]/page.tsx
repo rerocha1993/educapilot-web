@@ -39,7 +39,12 @@ import { TagDoTipo } from "@/components/flow/tag-do-tipo";
 import { tipoDoFormulario } from "@/lib/flow/tipo-do-formulario";
 import { VincularAlunoDialog, BlocoDoAluno } from "@/components/flow/vincular-aluno-dialog";
 import { decodeFormConfig, fichaDoFormulario } from "@/lib/flow/form-config";
+import { cn } from "@/lib/utils";
 import { useQueryStringLocal } from "@/lib/auth/use-sessao-local";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AcaoEmLoteDialog } from "@/components/flow/acao-em-lote-dialog";
+import { useAcoesEmLote, type AcaoEmLote } from "@/lib/flow/use-acoes-em-lote";
 
 // Caixa de envios (2026-09).
 //
@@ -134,6 +139,10 @@ export default function EnviosDoFormularioPage() {
   const busca_url = useQueryStringLocal();
   const [soSemAluno, setSoSemAluno] = useState<boolean | null>(null);
   const [vinculando, setVinculando] = useState<string | null>(null);
+  // Ações em lote: a API diz quais existem para este formulário; a tela só desenha.
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [acaoAberta, setAcaoAberta] = useState<AcaoEmLote | null>(null);
+  const { data: acoesEmLote } = useAcoesEmLote(formId);
 
   const idsAtivos = [formId];
   const { respostas, isLoading } = useRespostasDosFormularios(idsAtivos);
@@ -242,6 +251,25 @@ export default function EnviosDoFormularioPage() {
       if (!termo) return true;
       return nome.toLowerCase().includes(termo) || (email ?? "").toLowerCase().includes(termo);
     });
+
+  // Só vale a seleção que ainda está na lista do filtro atual: trocar o filtro não deixa envio escondido marcado.
+  const idsSelecionados = lista.filter((l) => selecionados.has(l.resposta.id)).map((l) => l.resposta.id);
+  const todosSelecionados = lista.length > 0 && idsSelecionados.length === lista.length;
+  const temAcoes = (acoesEmLote ?? []).length > 0;
+
+  // O diálogo abre depois de o menu fechar: no mesmo instante, o clique que fecha o menu fechava o diálogo recém-aberto.
+  function abrirDepoisDoMenu(acao: AcaoEmLote) {
+    window.setTimeout(() => setAcaoAberta(acao), 150);
+  }
+
+  function alternarSelecao(id: string, ligado: boolean) {
+    setSelecionados((atual) => {
+      const novo = new Set(atual);
+      if (ligado) novo.add(id);
+      else novo.delete(id);
+      return novo;
+    });
+  }
 
   // A mesma pergunta em dois formulários são dois campos com ids diferentes. Agrupar pelo rótulo é
   // o que faz "matrícula + rematrícula" darem um número só, e não dois contadores iguais.
@@ -517,6 +545,64 @@ export default function EnviosDoFormularioPage() {
         />
       )}
 
+      {temAcoes && lista.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-2.5">
+          <label className="flex min-h-10 items-center gap-2 text-sm md:min-h-0">
+            <Checkbox
+              aria-label="Selecionar todos os envios do filtro atual"
+              checked={todosSelecionados}
+              onCheckedChange={(v) => setSelecionados(v ? new Set(lista.map((l) => l.resposta.id)) : new Set())}
+            />
+            <span>
+              Selecionar todos <span className="text-muted-foreground">({lista.length} no filtro atual)</span>
+            </span>
+          </label>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span role="status" aria-live="polite" className="text-sm text-muted-foreground">
+              <span className="font-mono tabular-nums">{idsSelecionados.length}</span> selecionado(s)
+            </span>
+            {idsSelecionados.length > 0 && (
+              <>
+                {(acoesEmLote ?? []).map((acao) => (
+                  <Button key={acao.id} variant="action" size="sm" title={acao.descricao} onClick={() => setAcaoAberta(acao)}>
+                    {acao.rotulo}
+                  </Button>
+                ))}
+                <Button variant="ghost" size="sm" onClick={() => setSelecionados(new Set())}>
+                  Limpar seleção
+                </Button>
+              </>
+            )}
+            {idsSelecionados.length === 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>Ações em lote</DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-64">
+                  {(acoesEmLote ?? []).map((acao) => (
+                    <DropdownMenuItem key={acao.id} onClick={() => abrirDepoisDoMenu(acao)}>
+                      <span className="flex flex-col">
+                        <span>{acao.rotulo}</span>
+                        <span className="text-xs text-muted-foreground">Em todos os envios elegíveis</span>
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
+      )}
+
+      <AcaoEmLoteDialog
+        formId={formId}
+        acao={acaoAberta}
+        respostaIds={idsSelecionados}
+        onFechar={() => {
+          setAcaoAberta(null);
+          setSelecionados(new Set());
+        }}
+      />
+
       {(isLoading || !forms) && <Skeleton className="h-64 w-full" />}
 
       {!isLoading && forms && lista.length === 0 && (
@@ -537,11 +623,23 @@ export default function EnviosDoFormularioPage() {
       {lista.length > 0 && (
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           {lista.map(({ resposta, nome, email, tipo, formNome, naFicha }) => (
+            <div key={resposta.id} className="flex items-stretch border-b border-border last:border-b-0">
+              {temAcoes && (
+                <label className="grid w-11 shrink-0 cursor-pointer place-items-center">
+                  <Checkbox
+                    aria-label={`Selecionar o envio de ${nome}`}
+                    checked={selecionados.has(resposta.id)}
+                    onCheckedChange={(v) => alternarSelecao(resposta.id, !!v)}
+                  />
+                </label>
+              )}
             <button
-              key={resposta.id}
               type="button"
               onClick={() => setAberta(resposta.id)}
-              className="grid grid-cols-[38px_minmax(0,1fr)] items-center gap-x-3.5 gap-y-2 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/50 md:grid-cols-[38px_minmax(0,1fr)_auto]"
+              className={cn(
+                "grid min-w-0 flex-1 grid-cols-[38px_minmax(0,1fr)] items-center gap-x-3.5 gap-y-2 py-3 pr-4 text-left transition-colors hover:bg-muted/50 md:grid-cols-[38px_minmax(0,1fr)_auto]",
+                temAcoes ? "pl-0" : "pl-4"
+              )}
             >
               <span className="grid size-[38px] place-items-center self-start rounded-[11px] bg-accent text-xs font-bold text-accent-foreground md:self-center">
                 {iniciaisDe(nome)}
@@ -569,6 +667,7 @@ export default function EnviosDoFormularioPage() {
                 </span>
               </div>
             </button>
+            </div>
           ))}
         </div>
       )}
