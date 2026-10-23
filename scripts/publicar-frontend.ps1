@@ -15,7 +15,7 @@
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$apiUrl   = "https://educapilot-api.azurewebsites.net"
+$apiUrl   = "https://api.educa-pilot.com"
 $zipPath  = "$env:TEMP\educapilot-frontend-deploy.zip"
 
 Push-Location $repoRoot
@@ -71,8 +71,8 @@ try {
     $ErrorActionPreference = "Continue"
     try {
         az webapp deploy `
-            --resource-group rg-educapilot-prod `
-            --name educapilot-web `
+            --resource-group rg-educapilot `
+            --name educapilot-web-br `
             --src-path $zipPath `
             --type zip `
             --only-show-errors `
@@ -83,7 +83,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Deploy falhou." }
 
     Write-Host ""
-    Write-Host "Publicado: https://educapilot-web.azurewebsites.net" -ForegroundColor Green
+    Write-Host "Publicado: https://educa-pilot.com" -ForegroundColor Green
 }
 finally {
     Pop-Location
