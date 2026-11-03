@@ -16,7 +16,9 @@ const config: CapacitorConfig = {
     // Tela local mostrada quando o site não abre (sem internet).
     errorPath: 'index.html',
   },
-  ios: { contentInset: 'always' },
+  // O site ocupa a tela inteira (viewport-fit=cover) e cuida das bordas com env(safe-area-inset-*);
+  // 'always' somava uma segunda margem e deixava uma faixa branca embaixo.
+  ios: { contentInset: 'never' },
   plugins: {
     PushNotifications: { presentationOptions: ['badge', 'sound', 'alert'] },
   },
