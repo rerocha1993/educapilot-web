@@ -41,6 +41,38 @@ function recarregarComSessaoNova(): boolean {
   return true;
 }
 
+let conferenciaEmAndamento: Promise<boolean> | null = null;
+
+/**
+ * Pergunta de novo ao servidor se o token ainda vale, antes de deslogar por causa de um 401.
+ *
+ * O servidor confere a revogação do token no banco a cada chamada; quando o banco tem uma queda
+ * passageira, ele responde 401 mesmo com o token bom (visto em 11/2026: "Connection reset by
+ * peer" no Azure SQL derrubou o login de quem estava no Início). Só um segundo 401 confirma.
+ * Qualquer outra resposta (200, 403, 5xx, sem rede) quer dizer que ninguém recusou o token.
+ * Várias telas recebem o 401 ao mesmo tempo, então elas dividem uma conferência só.
+ */
+function tokenAindaVale(): Promise<boolean> {
+  const sessao = getSession();
+  if (sessao?.expiresAt && Date.parse(sessao.expiresAt) <= Date.now()) return Promise.resolve(false);
+
+  conferenciaEmAndamento ??= (async () => {
+    const token = getToken();
+    if (!token) return false;
+    try {
+      const resposta = await fetch(`${baseUrl}/api/Acessos/meu`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return resposta.status !== 401;
+    } catch {
+      return true;
+    }
+  })().finally(() => {
+    conferenciaEmAndamento = null;
+  });
+  return conferenciaEmAndamento;
+}
+
 const sessionExpiryMiddleware: Middleware = {
   async onResponse({ request, response }) {
     const ehLogin = request.url.includes("/api/Auth/");
@@ -53,6 +85,9 @@ const sessionExpiryMiddleware: Middleware = {
         if (resultado === "falha") return response;
         if (resultado === "renovada" && recarregarComSessaoNova()) return response;
       }
+
+      // 401 isolado (falha passageira do servidor): mantém a sessão; só esta chamada falha.
+      if (await tokenAindaVale()) return response;
 
       clearSession();
 
