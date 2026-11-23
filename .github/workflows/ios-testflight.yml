@@ -9,6 +9,7 @@
 #   APPSTORE_API_ISSUER_ID   o "ID do emissor"
 #   APPSTORE_API_PRIVATE_KEY o conteúdo inteiro do arquivo AuthKey_XXXX.p8
 # A chave só existe na memória do Mac do GitHub durante o build e é apagada no fim.
+# Primeiro build disparado em 23/11/2026.
 
 name: iOS para o TestFlight
 
