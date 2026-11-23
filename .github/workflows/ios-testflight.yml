@@ -66,10 +66,10 @@ jobs:
           printf '%s\n' "$APPSTORE_API_PRIVATE_KEY" > "$RUNNER_TEMP/chave/AuthKey.p8"
           chmod 600 "$RUNNER_TEMP/chave/AuthKey.p8"
 
-      - name: Archive (Release, assinatura automática)
-        env:
-          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+      # O archive sai SEM assinatura: a assinatura automática de um archive exige perfil de
+      # desenvolvimento, e esse perfil exige um iPhone cadastrado na conta (a equipe não tem nenhum).
+      # Quem assina é o export, com o certificado de distribuição gerenciado pela Apple na nuvem.
+      - name: Archive (Release, sem assinar)
         run: |
           # Número do build sempre crescente: a Apple recusa um número repetido.
           BUILD=$((100 + ${{ github.run_number }}))
@@ -80,21 +80,13 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/chave/AuthKey.p8" \
-            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
-            -authenticationKeyIssuerID "$APPSTORE_API_ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             CURRENT_PROJECT_VERSION="$BUILD" \
             archive
-          # Sem aparelho cadastrado não existe perfil de desenvolvimento: com a identidade de distribuição
-          # a assinatura automática gera o perfil da App Store, que não depende de aparelho.
-          # Confere se as permissões (push) ficaram no app assinado.
-          codesign -d --entitlements - "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" || true
 
-      - name: Enviar para o App Store Connect (TestFlight)
+      - name: Exportar assinado para a App Store
         env:
           APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
           APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
@@ -105,7 +97,7 @@ jobs:
           <plist version="1.0">
           <dict>
             <key>method</key><string>app-store-connect</string>
-            <key>destination</key><string>upload</string>
+            <key>destination</key><string>export</string>
             <key>teamID</key><string>$TEAM_ID</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
@@ -120,7 +112,26 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/chave/AuthKey.p8" \
             -authenticationKeyID "$APPSTORE_API_KEY_ID" \
             -authenticationKeyIssuerID "$APPSTORE_API_ISSUER_ID"
+          ls -la "$RUNNER_TEMP/export"
+          # Conferência: quem assinou e quais permissões (push) foram para o app.
+          mkdir -p "$RUNNER_TEMP/confere" && cd "$RUNNER_TEMP/confere"
+          unzip -q "$RUNNER_TEMP/export/"*.ipa
+          codesign -dvv Payload/*.app 2>&1 | grep -E "Authority|TeamIdentifier" || true
+          codesign -d --entitlements - Payload/*.app || true
+
+      - name: Enviar para o App Store Connect (TestFlight)
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        run: |
+          # O altool procura a chave nesta pasta, com este nome.
+          mkdir -p ~/.appstoreconnect/private_keys
+          cp "$RUNNER_TEMP/chave/AuthKey.p8" ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8
+          xcrun altool --upload-app -t ios \
+            -f "$(ls "$RUNNER_TEMP/export/"*.ipa | head -1)" \
+            --apiKey "$APPSTORE_API_KEY_ID" \
+            --apiIssuer "$APPSTORE_API_ISSUER_ID"
 
       - name: Apagar a chave
         if: always()
-        run: rm -rf "$RUNNER_TEMP/chave"
+        run: rm -rf "$RUNNER_TEMP/chave" ~/.appstoreconnect/private_keys
