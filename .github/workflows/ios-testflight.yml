@@ -1,0 +1,120 @@
+# Monta o app do iPhone num Mac do GitHub e envia para o TestFlight, sem precisar de um Mac próprio.
+#
+# Roda quando alguém envia commits para a branch ios/testflight (só se mexer em mobile/ ou neste arquivo)
+# ou pelo botão "Run workflow" na aba Actions.
+#
+# Precisa de três segredos do repositório (Settings > Secrets and variables > Actions), tirados de uma
+# chave de API do App Store Connect (Usuários e acesso > Integrações > Chaves, papel Admin):
+#   APPSTORE_API_KEY_ID      o "ID da chave"
+#   APPSTORE_API_ISSUER_ID   o "ID do emissor"
+#   APPSTORE_API_PRIVATE_KEY o conteúdo inteiro do arquivo AuthKey_XXXX.p8
+# A chave só existe na memória do Mac do GitHub durante o build e é apagada no fim.
+
+name: iOS para o TestFlight
+
+on:
+  push:
+    branches: [ios/testflight]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/ios-testflight.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-26
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      TEAM_ID: 4SG39KXDW9
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Versões
+        run: |
+          xcodebuild -version
+          node -v
+
+      - name: Dependências e sincronização do Capacitor
+        run: |
+          npm ci
+          npx cap sync ios
+
+      - name: Chave da App Store Connect
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APPSTORE_API_KEY_ID" ] || [ -z "$APPSTORE_API_PRIVATE_KEY" ]; then
+            echo "::error::Faltam os segredos APPSTORE_API_KEY_ID / APPSTORE_API_PRIVATE_KEY."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/chave"
+          printf '%s\n' "$APPSTORE_API_PRIVATE_KEY" > "$RUNNER_TEMP/chave/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/chave/AuthKey.p8"
+
+      - name: Archive (Release, assinatura automática)
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        run: |
+          # Número do build sempre crescente: a Apple recusa um número repetido.
+          BUILD=$((100 + ${{ github.run_number }}))
+          echo "Build $BUILD"
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/chave/AuthKey.p8" \
+            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_API_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            archive
+
+      - name: Enviar para o App Store Connect (TestFlight)
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/chave/AuthKey.p8" \
+            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_API_ISSUER_ID"
+
+      - name: Apagar a chave
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/chave"

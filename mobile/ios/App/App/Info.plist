@@ -26,6 +26,14 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>O EducaPilot usa a câmera para você tirar fotos e enviar no chat e nas atividades da escola.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O EducaPilot acessa suas fotos para você escolher imagens e enviar no chat e nas atividades da escola.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O EducaPilot usa o microfone quando você grava um vídeo para enviar à escola.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O EducaPilot usa sua localização só quando você toca em "Estou a caminho", para avisar a escola que você está chegando.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -55,7 +63,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
