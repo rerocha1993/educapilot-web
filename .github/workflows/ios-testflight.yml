@@ -86,8 +86,13 @@ jobs:
             -authenticationKeyIssuerID "$APPSTORE_API_ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             CURRENT_PROJECT_VERSION="$BUILD" \
             archive
+          # Sem aparelho cadastrado não existe perfil de desenvolvimento: com a identidade de distribuição
+          # a assinatura automática gera o perfil da App Store, que não depende de aparelho.
+          # Confere se as permissões (push) ficaram no app assinado.
+          codesign -d --entitlements - "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" || true
 
       - name: Enviar para o App Store Connect (TestFlight)
         env:
